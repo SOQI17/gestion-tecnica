@@ -1,0 +1,91 @@
+{
+  "entities": {
+    "Engineer": {
+      "title": "Engineer",
+      "description": "A field engineer handling service assignments.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique engineer identifier" },
+        "name": { "type": "string", "description": "Full name of the engineer" },
+        "specialty": { "type": "string", "description": "Domain of expertise" },
+        "email": { "type": "string", "description": "Professional email address" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "avatar": { "type": "string", "description": "URL to profile photo" },
+        "availability": { "type": "string", "description": "Current active state on the field", "enum": ["Disponible", "En Campo", "Inactivo"] },
+        "skills": { "type": "array", "description": "List of core specialized skills" }
+      },
+      "required": ["id", "name", "specialty", "email", "phone", "avatar", "availability", "skills"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "A corporate or institutional client who receives support services.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique client identifier" },
+        "name": { "type": "string", "description": "Client company name" },
+        "address": { "type": "string", "description": "Location address of the client site" },
+        "industry": { "type": "string", "description": "Vertical industry division" },
+        "contactName": { "type": "string", "description": "Contact representative name" },
+        "contactPhone": { "type": "string", "description": "Contact representative phone number" },
+        "installedEquipments": { "type": "array", "description": "List of equipments belonging to this client" }
+      },
+      "required": ["id", "name", "address", "industry", "contactName", "contactPhone", "installedEquipments"]
+    },
+    "WorkOrder": {
+      "title": "WorkOrder",
+      "description": "A preventative or corrective work order task.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique work order identifier" },
+        "clientId": { "type": "string", "description": "Id of the client assigned" },
+        "engineerId": { "type": "string", "description": "Id of the field technician assigned" },
+        "plannedDate": { "type": "string", "description": "Planned execution date in YYYY-MM-DD" },
+        "type": { "type": "string", "description": "Type of service", "enum": ["Preventivo", "Correctivo", "Instalación", "Calibración"] },
+        "status": { "type": "string", "description": "Current progress milestone state", "enum": ["Pendiente", "En Proceso", "Realizado", "Reportado", "Conciliado"] },
+        "equipmentName": { "type": "string", "description": "The specific equipment involved" },
+        "notes": { "type": "string", "description": "Detailed notes or task descriptions" }
+      },
+      "required": ["id", "clientId", "engineerId", "plannedDate", "type", "status", "equipmentName", "notes"]
+    },
+    "TechnicalReport": {
+      "title": "TechnicalReport",
+      "description": "An official submission of service completed by an engineer.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique report reference identifier" },
+        "workOrderId": { "type": "string", "description": "Parent work order reference" },
+        "executionDate": { "type": "string", "description": "Execution completion date in YYYY-MM-DD" },
+        "hoursSpent": { "type": "number", "description": "Total active field hours spent" },
+        "technicalFindings": { "type": "string", "description": "Details about hardware or static findings" },
+        "actionsTaken": { "type": "string", "description": "Physical repair steps accomplished" },
+        "materialsUsed": { "type": "array", "description": "Spares and materials used on site" },
+        "nextRecommendations": { "type": "string", "description": "Field suggestions for future maintenance" },
+        "technicianSignature": { "type": "string", "description": "Digital or drawing format signature indicator" },
+        "clientSignatureName": { "type": "string", "description": "Auditor or client signature name" },
+        "clientSignatureData": { "type": "string", "description": "Base64 canvas sign data info" },
+        "validationState": { "type": "string", "description": "Validation milestone state", "enum": ["pendiente", "aprobado", "rechazado"] },
+        "validationNotes": { "type": "string", "description": "Auditing comments or guidelines" },
+        "validatedAt": { "type": "string", "description": "Auditing date context string" }
+      },
+      "required": ["id", "workOrderId", "executionDate", "hoursSpent", "technicalFindings", "actionsTaken", "materialsUsed", "nextRecommendations", "technicianSignature", "clientSignatureName"]
+    }
+  },
+  "firestore": {
+    "/engineers/{engineerId}": {
+      "schema": "Engineer",
+      "description": "Collection storing field engineers data"
+    },
+    "/clients/{clientId}": {
+      "schema": "Client",
+      "description": "Collection storing corporate clients data"
+    },
+    "/workOrders/{workOrderId}": {
+      "schema": "WorkOrder",
+      "description": "Collection storing scheduled and past service tasks"
+    },
+    "/reports/{reportId}": {
+      "schema": "TechnicalReport",
+      "description": "Collection storing official technical field reports"
+    }
+  }
+}

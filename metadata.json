@@ -1,0 +1,6 @@
+{
+  "name": "Gestión Técnica",
+  "description": "Sistema interactivo para la gestión de agendas, órdenes de trabajo y conciliación de reportes técnicos para ingenieros soporte.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
