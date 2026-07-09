@@ -134,6 +134,7 @@ export interface Contract {
   equipmentItems?: ContractEquipmentItem[]; // List of equipment covered
   maintenanceFrequency?: 'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno';
   maintenanceDates?: string[]; // Scheduled dates for maintenance
+  qcDate?: string; // Quality control date
   createdAt?: string;
 }
 

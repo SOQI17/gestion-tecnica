@@ -589,6 +589,9 @@ export default function AdminPortal({
   const [contractFormFrequency, setContractFormFrequency] = useState<'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno'>('Ninguno');
   const [contractFormMaintenanceDates, setContractFormMaintenanceDates] = useState<string[]>([]);
   const [tempMaintenanceDate, setTempMaintenanceDate] = useState('');
+  const [contractFormQcDate, setContractFormQcDate] = useState('');
+  const [selectedContractForDetails, setSelectedContractForDetails] = useState<Contract | null>(null);
+  const [isContractDetailsModalOpen, setIsContractDetailsModalOpen] = useState(false);
 
   // Create New WO States
   const [isCreatingWO, setIsCreatingWO] = useState(false);
@@ -1887,6 +1890,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
   const renderCalendarDays = () => {
     const calendarDays = [];
 
+    const getContractCommitmentsForDate = (dateStr: string) => {
+      const dayCommitments: { contract: Contract; client: Client | undefined; isQc: boolean; isDone: boolean; woStatus: string | null }[] = [];
+      contracts.forEach(con => {
+        if (con.maintenanceDates && con.maintenanceDates.includes(dateStr)) {
+          const client = clients.find(c => c.id === con.clientId);
+          
+          // Check if this date has a corresponding work order
+          const matchingWO = workOrders.find(
+            wo => wo.clientId === con.clientId && wo.plannedDate === dateStr
+          );
+          const isDone = matchingWO ? (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado') : false;
+          
+          // Is it the QC date?
+          const isQc = con.qcDate === dateStr || 
+            (!con.qcDate && con.maintenanceDates.indexOf(dateStr) === con.maintenanceDates.length - 1);
+
+          dayCommitments.push({
+            contract: con,
+            client,
+            isQc,
+            isDone,
+            woStatus: matchingWO ? matchingWO.status : null
+          });
+        }
+      });
+      return dayCommitments;
+    };
+
     // Days in current month
     const daysInMonth = new Date(calendarYear, calendarMonth, 0).getDate();
 
@@ -1949,6 +1980,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <div key={`pv-vac-${v.id}`} className="text-[8.5px] leading-tight p-1 rounded bg-teal-50 border border-teal-150 border-l-4 border-l-teal-500 text-teal-900 font-bold truncate flex items-center gap-1 select-none">
                     <span>🌴</span>
                     <span className="truncate">Vac: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
+                  </div>
+                );
+              })}
+
+              {/* Contract commitments for prev overflow day */}
+              {getContractCommitmentsForDate(prevDateStr).map((commitment, index) => {
+                const badgeBg = commitment.isDone 
+                  ? 'bg-emerald-50/70 border-emerald-250 text-emerald-950 border-l-4 border-l-emerald-600'
+                  : commitment.isQc
+                  ? 'bg-violet-50/70 border-violet-250 text-violet-955 border-l-4 border-l-violet-600'
+                  : 'bg-indigo-50/70 border-indigo-250 text-indigo-950 border-l-4 border-l-indigo-600';
+                return (
+                  <div
+                    key={`pv-con-maint-${commitment.contract.id}-${index}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedContractForDetails(commitment.contract);
+                      setIsContractDetailsModalOpen(true);
+                    }}
+                    className={`text-[8.5px] leading-tight p-1.5 rounded mb-1 text-left border transition-all cursor-pointer font-bold flex flex-col hover:shadow-xs select-none ${badgeBg}`}
+                    title={`Contrato: ${commitment.contract.id} - ${commitment.client?.name || ''}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="truncate max-w-[80px] font-black">{commitment.client?.name || 'Cliente'}</span>
+                      <span className="text-[7.5px] scale-95 font-extrabold select-none">
+                        {commitment.isDone ? '✅ Hecho' : commitment.isQc ? '📋 QC' : '🛠️ MTO'}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
@@ -2094,6 +2153,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 >
                   <span>🌴</span>
                   <span className="truncate">Vac: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
+                </div>
+              );
+            })}
+
+            {/* Contract commitments for current day */}
+            {getContractCommitmentsForDate(dateStr).map((commitment, index) => {
+              const badgeBg = commitment.isDone 
+                ? 'bg-emerald-50/70 border-emerald-250 text-emerald-955 border-l-4 border-l-emerald-600'
+                : commitment.isQc
+                ? 'bg-violet-50/70 border-violet-250 text-violet-955 border-l-4 border-l-violet-600'
+                : 'bg-indigo-50/70 border-indigo-250 text-indigo-950 border-l-4 border-l-indigo-600';
+              return (
+                <div
+                  key={`con-maint-${commitment.contract.id}-${index}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedContractForDetails(commitment.contract);
+                    setIsContractDetailsModalOpen(true);
+                  }}
+                  className={`text-[8.5px] leading-tight p-1.5 rounded mb-1 text-left border transition-all cursor-pointer font-bold flex flex-col hover:shadow-xs select-none ${badgeBg}`}
+                  title={`Contrato: ${commitment.contract.id} - ${commitment.client?.name || ''}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="truncate max-w-[80px] font-black">{commitment.client?.name || 'Cliente'}</span>
+                    <span className="text-[7.5px] scale-95 font-extrabold select-none">
+                      {commitment.isDone ? '✅ Hecho' : commitment.isQc ? '📋 QC' : '🛠️ MTO'}
+                    </span>
+                  </div>
                 </div>
               );
             })}
@@ -2274,6 +2361,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <div key={`nv-vac-${v.id}`} className="text-[8.5px] leading-tight p-1 rounded bg-teal-50 border border-teal-150 border-l-4 border-l-teal-500 text-teal-900 font-bold truncate flex items-center gap-1 select-none">
                     <span>🌴</span>
                     <span className="truncate">Vac: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
+                  </div>
+                );
+              })}
+
+              {/* Contract commitments for next overflow day */}
+              {getContractCommitmentsForDate(nextDateStr).map((commitment, index) => {
+                const badgeBg = commitment.isDone 
+                  ? 'bg-emerald-50/70 border-emerald-250 text-emerald-955 border-l-4 border-l-emerald-600'
+                  : commitment.isQc
+                  ? 'bg-violet-50/70 border-violet-250 text-violet-955 border-l-4 border-l-violet-600'
+                  : 'bg-indigo-50/70 border-indigo-250 text-indigo-950 border-l-4 border-l-indigo-600';
+                return (
+                  <div
+                    key={`nv-con-maint-${commitment.contract.id}-${index}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedContractForDetails(commitment.contract);
+                      setIsContractDetailsModalOpen(true);
+                    }}
+                    className={`text-[8.5px] leading-tight p-1.5 rounded mb-1 text-left border transition-all cursor-pointer font-bold flex flex-col hover:shadow-xs select-none ${badgeBg}`}
+                    title={`Contrato: ${commitment.contract.id} - ${commitment.client?.name || ''}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="truncate max-w-[80px] font-black">{commitment.client?.name || 'Cliente'}</span>
+                      <span className="text-[7.5px] scale-95 font-extrabold select-none">
+                        {commitment.isDone ? '✅ Hecho' : commitment.isQc ? '📋 QC' : '🛠️ MTO'}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
@@ -3380,7 +3495,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       coverage: contractFormCoverage.trim(),
       equipmentItems: contractFormEquipmentItems,
       maintenanceFrequency: contractFormFrequency,
-      maintenanceDates: contractFormMaintenanceDates
+      maintenanceDates: contractFormMaintenanceDates,
+      qcDate: contractFormQcDate || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : '')
     };
 
     // Auto-register new custom equipments under the selected client
@@ -3961,6 +4077,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 setContractFormFrequency('Ninguno');
                 setContractFormMaintenanceDates([]);
                 setTempMaintenanceDate('');
+                setContractFormQcDate('');
                 setIsContractModalOpen(true);
               }}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-indigo-600 transition-colors"
@@ -4057,7 +4174,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 paginated.map(con => {
                   const client = clients.find(c => c.id === con.clientId);
                   return (
-                    <tr key={con.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr 
+                      key={con.id} 
+                      onClick={() => {
+                        setSelectedContractForDetails(con);
+                        setIsContractDetailsModalOpen(true);
+                      }}
+                      className="hover:bg-indigo-50/20 transition-colors cursor-pointer"
+                    >
                       <td className="p-3.5 font-mono font-bold text-slate-900">{con.id}</td>
                       <td className="p-3.5 font-extrabold text-slate-900">{client?.name || `ID: ${con.clientId}`}</td>
                       <td className="p-3.5 font-bold text-indigo-700">{con.type}</td>
@@ -4077,7 +4201,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <td className="p-3.5 max-w-[200px] truncate" title={con.coverage}>{con.coverage || '-'}</td>
                       <td className="p-3.5 text-right no-print">
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setEditingContract(con);
                             setContractFormId(con.id);
                             setContractFormClientId(con.clientId);
@@ -4103,6 +4228,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setContractFormFrequency(con.maintenanceFrequency || 'Ninguno');
                             setContractFormMaintenanceDates(con.maintenanceDates || []);
                             setTempMaintenanceDate('');
+                            setContractFormQcDate(con.qcDate || '');
                             
                             setIsContractModalOpen(true);
                           }}
@@ -9553,479 +9679,504 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {isContractModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="contract-form-modal">
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-3xl p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Briefcase className="w-5 h-5 text-indigo-655" />
-                <span>{editingContract ? 'Editar Contrato / Garantía' : 'Nuevo Contrato / Garantía'}</span>
-              </h3>
-              <button
-                onClick={() => {
-                  setIsContractModalOpen(false);
-                  setEditingContract(null);
-                }}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+                   <form onSubmit={handleSaveContract} className="flex flex-col max-h-[85vh] text-xs">
+              <div className="flex-1 overflow-y-auto pr-3 space-y-4 max-h-[62vh]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Left Side: General Contract details and Client search */}
+                  <div className="space-y-3.5">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Código / Nº Contrato</label>
+                        <input
+                          type="text"
+                          required
+                          disabled={!!editingContract}
+                          value={contractFormId}
+                          onChange={(e) => setContractFormId(e.target.value)}
+                          placeholder="Ej. CONTRATO-2026-004"
+                          className="w-full bg-slate-55 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                        />
+                      </div>
 
-            <form onSubmit={handleSaveContract} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Left Side: General Contract details and Client search */}
-                <div className="space-y-3.5">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Código / Nº Contrato</label>
-                      <input
-                        type="text"
-                        required
-                        disabled={!!editingContract}
-                        value={contractFormId}
-                        onChange={(e) => setContractFormId(e.target.value)}
-                        placeholder="Ej. CONTRATO-2026-004"
-                        className="w-full bg-slate-55 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
-                      />
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Tipo de Cobertura</label>
+                        <select
+                          value={contractFormType}
+                          onChange={(e) => setContractFormType(e.target.value as any)}
+                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
+                        >
+                          <option value="Garantía extendida/Contrato">Garantía extendida / Contrato</option>
+                          <option value="Garantía de compra">Garantía de compra</option>
+                          <option value="Facturable">Facturable</option>
+                          <option value="Otro">Otro</option>
+                        </select>
+                      </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Tipo de Cobertura</label>
-                      <select
-                        value={contractFormType}
-                        onChange={(e) => setContractFormType(e.target.value as any)}
-                        className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
-                      >
-                        <option value="Garantía extendida/Contrato">Garantía extendida / Contrato</option>
-                        <option value="Garantía de compra">Garantía de compra</option>
-                        <option value="Facturable">Facturable</option>
-                        <option value="Otro">Otro</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Client Search and Select */}
-                  <div className="space-y-1.5 relative">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Cliente Cobertura</label>
-                    {!isCreatingNewClientForContract ? (
-                      <div>
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <input
-                              type="text"
-                              placeholder="Buscar cliente por nombre..."
-                              value={contractClientSearchQuery}
-                              onChange={(e) => {
-                                setContractClientSearchQuery(e.target.value);
-                                setIsContractClientDropdownOpen(true);
-                                const found = clients.find(c => c.name.toLowerCase() === e.target.value.toLowerCase());
-                                if (found) {
-                                  setContractFormClientId(found.id);
-                                } else {
-                                  setContractFormClientId('');
-                                }
-                              }}
-                              onFocus={() => setIsContractClientDropdownOpen(true)}
-                              className="w-full bg-slate-50 border border-slate-250 rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                            />
-                            {contractClientSearchQuery && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setContractClientSearchQuery('');
-                                  setContractFormClientId('');
+                    {/* Client Search and Select */}
+                    <div className="space-y-1.5 relative">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Cliente Cobertura</label>
+                      {!isCreatingNewClientForContract ? (
+                        <div>
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <input
+                                type="text"
+                                placeholder="Buscar cliente por nombre..."
+                                value={contractClientSearchQuery}
+                                onChange={(e) => {
+                                  setContractClientSearchQuery(e.target.value);
                                   setIsContractClientDropdownOpen(true);
+                                  const found = clients.find(c => c.name.toLowerCase() === e.target.value.toLowerCase());
+                                  if (found) {
+                                    setContractFormClientId(found.id);
+                                  } else {
+                                    setContractFormClientId('');
+                                  }
                                 }}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
-                              >
-                                ✕
-                              </button>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsCreatingNewClientForContract(true);
-                              setContractFormClientId('');
-                            }}
-                            className="bg-amber-50 hover:bg-amber-100 text-amber-705 border border-amber-200 px-3 py-2 rounded-lg font-bold text-3xs transition-colors shrink-0 cursor-pointer"
-                          >
-                            + Nuevo Cliente
-                          </button>
-                        </div>
-
-                        {/* Search Dropdown list */}
-                        {isContractClientDropdownOpen && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-30 max-h-40 overflow-y-auto divide-y divide-slate-100">
-                            {clients
-                              .filter(c => c.name.toLowerCase().includes(contractClientSearchQuery.toLowerCase()))
-                              .map(c => (
+                                onFocus={() => setIsContractClientDropdownOpen(true)}
+                                className="w-full bg-slate-50 border border-slate-250 rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                              />
+                              {contractClientSearchQuery && (
                                 <button
-                                  key={c.id}
                                   type="button"
                                   onClick={() => {
-                                    setContractFormClientId(c.id);
-                                    setContractClientSearchQuery(c.name);
-                                    setIsContractClientDropdownOpen(false);
+                                    setContractClientSearchQuery('');
+                                    setContractFormClientId('');
+                                    setIsContractClientDropdownOpen(true);
                                   }}
-                                  className="w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium transition-colors flex items-center justify-between cursor-pointer"
+                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
                                 >
-                                  <span>{c.name}</span>
-                                  <span className="text-[9px] text-slate-400 font-bold font-mono">{c.id}</span>
+                                  ✕
                                 </button>
-                              ))}
-                            {clients.filter(c => c.name.toLowerCase().includes(contractClientSearchQuery.toLowerCase())).length === 0 && (
-                              <div className="p-3 text-slate-400 italic text-center">
-                                No se encontraron clientes.
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-3 space-y-2.5 animate-in fade-in-50 duration-150">
-                        <div className="flex items-center justify-between">
-                          <span className="font-extrabold text-[9px] text-amber-800 tracking-wider">NUEVO CLIENTE</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsCreatingNewClientForContract(false);
-                              setContractFormClientId(clients[0]?.id || '');
-                              setContractClientSearchQuery(clients[0]?.name || '');
-                            }}
-                            className="text-slate-400 hover:text-slate-650 text-3xs font-bold cursor-pointer"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            placeholder="Nombre / Razón Social"
-                            required={isCreatingNewClientForContract}
-                            value={newContractClientName}
-                            onChange={(e) => setNewContractClientName(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
-                          />
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              placeholder="Sector / Industria"
-                              value={newContractClientIndustry}
-                              onChange={(e) => setNewContractClientIndustry(e.target.value)}
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Teléfono Contacto"
-                              value={newContractClientContactPhone}
-                              onChange={(e) => setNewContractClientContactPhone(e.target.value)}
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
-                            />
-                          </div>
-                          <input
-                            type="text"
-                            placeholder="Dirección Completa"
-                            value={newContractClientAddress}
-                            onChange={(e) => setNewContractClientAddress(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Nombre de Contacto"
-                            value={newContractClientContactName}
-                            onChange={(e) => setNewContractClientContactName(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Estado Contrato</label>
-                      <select
-                        value={contractFormStatus}
-                        onChange={(e) => setContractFormStatus(e.target.value as any)}
-                        className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
-                      >
-                        <option value="Activo">🟢 Activo</option>
-                        <option value="Pendiente">🟡 Pendiente</option>
-                        <option value="Vencido">🔴 Vencido</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Fecha Inicio</label>
-                      <input
-                        type="date"
-                        required
-                        value={contractFormStart}
-                        onChange={(e) => {
-                          setContractFormStart(e.target.value);
-                          if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
-                            const generated = generateMaintenanceDates(e.target.value, contractFormEnd, contractFormFrequency);
-                            setContractFormMaintenanceDates(generated);
-                          }
-                        }}
-                        className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Fecha Vencimiento</label>
-                      <input
-                        type="date"
-                        required
-                        value={contractFormEnd}
-                        onChange={(e) => {
-                          setContractFormEnd(e.target.value);
-                          if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
-                            const generated = generateMaintenanceDates(contractFormStart, e.target.value, contractFormFrequency);
-                            setContractFormMaintenanceDates(generated);
-                          }
-                        }}
-                        className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Especificaciones</label>
-                      <textarea
-                        value={contractFormCoverage}
-                        onChange={(e) => setContractFormCoverage(e.target.value)}
-                        rows={1}
-                        placeholder="Límites de repuestos o coberturas..."
-                        className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Side: Equipment and Maintenance scheduling */}
-                <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
-                  {/* Equipments Panel */}
-                  <div className="space-y-2">
-                    <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider">Equipos en Contrato</h4>
-                    
-                    {/* Load existing Client Equipment */}
-                    {contractFormClientId && !isCreatingNewClientForContract && (
-                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5 max-h-[110px] overflow-y-auto">
-                        <span className="font-bold text-[9px] text-indigo-750 block">Equipos Registrados de este Cliente</span>
-                        {(() => {
-                          const clientEquips = equipments.filter(eq => eq.clientId === contractFormClientId);
-                          if (clientEquips.length === 0) {
-                            return <span className="text-[9px] text-slate-400 italic">No hay equipos registrados.</span>;
-                          }
-                          return (
-                            <div className="space-y-1">
-                              {clientEquips.map(eq => {
-                                const alreadyAdded = contractFormEquipmentItems.some(item => item.name.toLowerCase() === eq.name.toLowerCase());
-                                return (
-                                  <div key={eq.id} className="flex items-center justify-between text-[10px] bg-white border border-slate-150 p-1 rounded-md shadow-3xs">
-                                    <div className="truncate">
-                                      <span className="font-bold text-slate-800">{eq.name}</span>
-                                      <span className="text-[8px] text-slate-400 font-medium block">Marca: {eq.brand || 'N/D'}</span>
-                                    </div>
-                                    {!alreadyAdded ? (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setContractFormEquipmentItems([...contractFormEquipmentItems, { name: eq.name, brand: eq.brand || 'N/D' }]);
-                                        }}
-                                        className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold px-1 py-0.5 rounded text-[8px] cursor-pointer"
-                                      >
-                                        + Agregar
-                                      </button>
-                                    ) : (
-                                      <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100">Agregado</span>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                              )}
                             </div>
-                          );
-                        })()}
-                      </div>
-                    )}
-
-                    {/* Add Custom / New Equipment to contract */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2 space-y-1.5">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Nombre Equipo"
-                          value={tempEquipName}
-                          onChange={(e) => setTempEquipName(e.target.value)}
-                          className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Marca"
-                          value={tempEquipBrand}
-                          onChange={(e) => setTempEquipBrand(e.target.value)}
-                          className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!tempEquipName.trim()) return;
-                            setContractFormEquipmentItems([
-                              ...contractFormEquipmentItems, 
-                              { name: tempEquipName.trim(), brand: tempEquipBrand.trim() || 'N/D' }
-                            ]);
-                            setTempEquipName('');
-                            setTempEquipBrand('');
-                          }}
-                          className="bg-indigo-650 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
-                        >
-                          Agregar
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* List of currently covered equipments */}
-                    <div className="border border-slate-205 rounded-xl divide-y divide-slate-100 max-h-[100px] overflow-y-auto bg-white">
-                      {contractFormEquipmentItems.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-1.5 hover:bg-slate-50/50 transition-colors">
-                          <div className="truncate">
-                            <p className="font-bold text-slate-800 text-[10px] leading-tight">{item.name}</p>
-                            <p className="text-[8px] text-slate-400 font-semibold leading-none mt-0.5">Marca: {item.brand}</p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                  setIsCreatingNewClientForContract(true);
+                                  setContractFormClientId('');
+                              }}
+                              className="bg-amber-50 hover:bg-amber-100 text-amber-755 border border-amber-200 px-3 py-2 rounded-lg font-bold text-3xs transition-colors shrink-0 cursor-pointer"
+                            >
+                              + Nuevo Cliente
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setContractFormEquipmentItems(contractFormEquipmentItems.filter((_, i) => i !== index));
-                            }}
-                            className="text-red-500 hover:text-red-755 font-black text-2xs p-1 cursor-pointer"
-                          >
-                            ✕
-                          </button>
+
+                          {/* Search Dropdown list */}
+                          {isContractClientDropdownOpen && (
+                            <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-30 max-h-40 overflow-y-auto divide-y divide-slate-100">
+                              {clients
+                                .filter(c => c.name.toLowerCase().includes(contractClientSearchQuery.toLowerCase()))
+                                .map(c => (
+                                  <button
+                                    key={c.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setContractFormClientId(c.id);
+                                      setContractClientSearchQuery(c.name);
+                                      setIsContractClientDropdownOpen(false);
+                                    }}
+                                    className="w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium transition-colors flex items-center justify-between cursor-pointer"
+                                  >
+                                    <span>{c.name}</span>
+                                    <span className="text-[9px] text-slate-400 font-bold font-mono">{c.id}</span>
+                                  </button>
+                                ))}
+                              {clients.filter(c => c.name.toLowerCase().includes(contractClientSearchQuery.toLowerCase())).length === 0 && (
+                                <div className="p-3 text-slate-400 italic text-center">
+                                  No se encontraron clientes.
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                      ))}
-                      {contractFormEquipmentItems.length === 0 && (
-                        <div className="p-3 text-center text-slate-400 italic text-[9px]">
-                          Ningún equipo asignado a la cobertura.
+                      ) : (
+                        <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-3 space-y-2.5 animate-in fade-in-50 duration-150">
+                          <div className="flex items-center justify-between">
+                            <span className="font-extrabold text-[9px] text-amber-800 tracking-wider">NUEVO CLIENTE</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsCreatingNewClientForContract(false);
+                                setContractFormClientId(clients[0]?.id || '');
+                                setContractClientSearchQuery(clients[0]?.name || '');
+                              }}
+                              className="text-slate-400 hover:text-slate-650 text-3xs font-bold cursor-pointer"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              placeholder="Nombre / Razón Social"
+                              required={isCreatingNewClientForContract}
+                              value={newContractClientName}
+                              onChange={(e) => setNewContractClientName(e.target.value)}
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                placeholder="Sector / Industria"
+                                value={newContractClientIndustry}
+                                onChange={(e) => setNewContractClientIndustry(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Teléfono Contacto"
+                                value={newContractClientContactPhone}
+                                onChange={(e) => setNewContractClientContactPhone(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
+                              />
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Dirección Completa"
+                              value={newContractClientAddress}
+                              onChange={(e) => setNewContractClientAddress(e.target.value)}
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Nombre de Contacto"
+                              value={newContractClientContactName}
+                              onChange={(e) => setNewContractClientContactName(e.target.value)}
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
-                  </div>
 
-                  {/* Maintenance Scheduling Panel */}
-                  <div className="space-y-2 pt-3 border-t border-slate-150">
-                    <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider">Mantenimientos Programados</h4>
-                    
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase">Frecuencia</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Estado Contrato</label>
                         <select
-                          value={contractFormFrequency}
-                          onChange={(e) => {
-                            const freq = e.target.value as any;
-                            setContractFormFrequency(freq);
-                            if (freq !== 'Ninguno' && freq !== 'Personalizado') {
-                              const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, freq);
-                              setContractFormMaintenanceDates(generated);
-                            }
-                          }}
-                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-705 cursor-pointer outline-hidden focus:bg-white"
+                          value={contractFormStatus}
+                          onChange={(e) => setContractFormStatus(e.target.value as any)}
+                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
                         >
-                          <option value="Ninguno">Ninguno</option>
-                          <option value="Mensual">Mensual</option>
-                          <option value="Bimestral">Bimestral</option>
-                          <option value="Trimestral">Trimestral</option>
-                          <option value="Cuatrimestral">Cuatrimestral</option>
-                          <option value="Semestral">Semestral</option>
-                          <option value="Anual">Anual</option>
-                          <option value="Personalizado">Personalizado (Fechas manuales)</option>
+                          <option value="Activo">🟢 Activo</option>
+                          <option value="Pendiente">🟡 Pendiente</option>
+                          <option value="Vencido">🔴 Vencido</option>
                         </select>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase">Frecuencia Acciones</label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado') {
-                              alert("Seleccione una frecuencia periódica para autogenerar visitas.");
-                              return;
-                            }
-                            const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency);
-                            setContractFormMaintenanceDates(generated);
-                          }}
-                          className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-1 rounded-lg text-3xs font-extrabold transition-all cursor-pointer"
-                        >
-                          Recalcular Fechas
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Add Specific Custom Date */}
-                    <div className="bg-slate-50 border border-slate-205 rounded-xl p-2 space-y-1.5">
-                      <span className="font-bold text-[9px] text-slate-650 block">Agregar Fecha Manual</span>
-                      <div className="flex gap-2">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Fecha Inicio</label>
                         <input
                           type="date"
-                          value={tempMaintenanceDate}
-                          onChange={(e) => setTempMaintenanceDate(e.target.value)}
-                          className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-3xs text-slate-700 outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!tempMaintenanceDate) return;
-                            if (contractFormMaintenanceDates.includes(tempMaintenanceDate)) {
-                              alert("Esta fecha ya está registrada.");
-                              return;
+                          required
+                          value={contractFormStart}
+                          onChange={(e) => {
+                            setContractFormStart(e.target.value);
+                            if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
+                              const generated = generateMaintenanceDates(e.target.value, contractFormEnd, contractFormFrequency);
+                              setContractFormMaintenanceDates(generated);
+                              if (generated.length > 0) {
+                                setContractFormQcDate(generated[generated.length - 1]);
+                              }
                             }
-                            const updated = [...contractFormMaintenanceDates, tempMaintenanceDate].sort();
-                            setContractFormMaintenanceDates(updated);
-                            setTempMaintenanceDate('');
                           }}
-                          className="bg-indigo-650 hover:bg-indigo-700 text-white font-extrabold px-3 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
-                        >
-                          Agregar
-                        </button>
+                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                        />
                       </div>
                     </div>
 
-                    {/* List of maintenance dates */}
-                    <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-[100px] overflow-y-auto bg-white">
-                      {contractFormMaintenanceDates.map((date, index) => {
-                        const fmtDate = (d: string) => {
-                          if (!d) return '—';
-                          const [y, m, day] = d.split('-');
-                          const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-                          return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
-                        };
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Fecha Vencimiento</label>
+                        <input
+                          type="date"
+                          required
+                          value={contractFormEnd}
+                          onChange={(e) => {
+                            setContractFormEnd(e.target.value);
+                            if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
+                              const generated = generateMaintenanceDates(contractFormStart, e.target.value, contractFormFrequency);
+                              setContractFormMaintenanceDates(generated);
+                              if (generated.length > 0) {
+                                setContractFormQcDate(generated[generated.length - 1]);
+                              }
+                            }
+                          }}
+                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                        />
+                      </div>
 
-                        return (
-                          <div key={index} className="flex items-center justify-between px-2.5 py-1 hover:bg-slate-50/50 transition-colors">
-                            <span className="font-mono text-slate-700 text-[10px] font-bold">{fmtDate(date)}</span>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Especificaciones</label>
+                        <textarea
+                          value={contractFormCoverage}
+                          onChange={(e) => setContractFormCoverage(e.target.value)}
+                          rows={1}
+                          placeholder="Límites de repuestos o coberturas..."
+                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Side: Equipment and Maintenance scheduling */}
+                  <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
+                    {/* Equipments Panel */}
+                    <div className="space-y-2">
+                      <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider">Equipos en Contrato</h4>
+                      
+                      {/* Load existing Client Equipment */}
+                      {contractFormClientId && !isCreatingNewClientForContract && (
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5 max-h-[110px] overflow-y-auto">
+                          <span className="font-bold text-[9px] text-indigo-750 block">Equipos Registrados de este Cliente</span>
+                          {(() => {
+                            const clientEquips = equipments.filter(eq => eq.clientId === contractFormClientId);
+                            if (clientEquips.length === 0) {
+                              return <span className="text-[9px] text-slate-400 italic">No hay equipos registrados.</span>;
+                            }
+                            return (
+                              <div className="space-y-1">
+                                {clientEquips.map(eq => {
+                                  const alreadyAdded = contractFormEquipmentItems.some(item => item.name.toLowerCase() === eq.name.toLowerCase());
+                                  return (
+                                    <div key={eq.id} className="flex items-center justify-between text-[10px] bg-white border border-slate-150 p-1 rounded-md shadow-3xs">
+                                      <div className="truncate">
+                                        <span className="font-bold text-slate-800">{eq.name}</span>
+                                        <span className="text-[8px] text-slate-400 font-medium block">Marca: {eq.brand || 'N/D'}</span>
+                                      </div>
+                                      {!alreadyAdded ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setContractFormEquipmentItems([...contractFormEquipmentItems, { name: eq.name, brand: eq.brand || 'N/D' }]);
+                                          }}
+                                          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold px-1 py-0.5 rounded text-[8px] cursor-pointer"
+                                        >
+                                          + Agregar
+                                        </button>
+                                      ) : (
+                                        <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100">Agregado</span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+
+                      {/* Add Custom / New Equipment to contract */}
+                      <div className="bg-slate-50 border border-slate-205 rounded-xl p-2 space-y-1.5">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Nombre Equipo"
+                            value={tempEquipName}
+                            onChange={(e) => setTempEquipName(e.target.value)}
+                            className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Marca"
+                            value={tempEquipBrand}
+                            onChange={(e) => setTempEquipBrand(e.target.value)}
+                            className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!tempEquipName.trim()) return;
+                              setContractFormEquipmentItems([
+                                ...contractFormEquipmentItems, 
+                                { name: tempEquipName.trim(), brand: tempEquipBrand.trim() || 'N/D' }
+                              ]);
+                              setTempEquipName('');
+                              setTempEquipBrand('');
+                            }}
+                            className="bg-indigo-650 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
+                          >
+                            Agregar
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* List of currently covered equipments */}
+                      <div className="border border-slate-205 rounded-xl divide-y divide-slate-100 max-h-[100px] overflow-y-auto bg-white">
+                        {contractFormEquipmentItems.map((item, index) => (
+                          <div key={index} className="flex items-center justify-between p-1.5 hover:bg-slate-50/50 transition-colors">
+                            <div className="truncate">
+                              <p className="font-bold text-slate-800 text-[10px] leading-tight">{item.name}</p>
+                              <p className="text-[8px] text-slate-400 font-semibold leading-none mt-0.5">Marca: {item.brand}</p>
+                            </div>
                             <button
                               type="button"
                               onClick={() => {
-                                setContractFormMaintenanceDates(contractFormMaintenanceDates.filter((_, i) => i !== index));
+                                setContractFormEquipmentItems(contractFormEquipmentItems.filter((_, i) => i !== index));
                               }}
-                              className="text-red-500 hover:text-red-750 font-black text-2xs p-0.5 cursor-pointer"
+                              className="text-red-500 hover:text-red-755 font-black text-2xs p-1 cursor-pointer"
                             >
                               ✕
                             </button>
                           </div>
-                        );
-                      })}
-                      {contractFormMaintenanceDates.length === 0 && (
-                        <div className="p-3 text-center text-slate-400 italic text-[9px]">
-                          Ninguna visita de mantenimiento programada.
+                        ))}
+                        {contractFormEquipmentItems.length === 0 && (
+                          <div className="p-3 text-center text-slate-400 italic text-[9px]">
+                            Ningún equipo asignado a la cobertura.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Maintenance Scheduling Panel */}
+                    <div className="space-y-2 pt-3 border-t border-slate-150">
+                      <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider">Mantenimientos Programados</h4>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="block text-[9px] font-bold text-slate-500 uppercase">Frecuencia</label>
+                          <select
+                            value={contractFormFrequency}
+                            onChange={(e) => {
+                              const freq = e.target.value as any;
+                              setContractFormFrequency(freq);
+                              if (freq !== 'Ninguno' && freq !== 'Personalizado') {
+                                const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, freq);
+                                setContractFormMaintenanceDates(generated);
+                                if (generated.length > 0) {
+                                  setContractFormQcDate(generated[generated.length - 1]);
+                                } else {
+                                  setContractFormQcDate('');
+                                }
+                              }
+                            }}
+                            className="w-full bg-slate-50 border border-slate-250 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-705 cursor-pointer outline-hidden focus:bg-white"
+                          >
+                            <option value="Ninguno">Ninguno</option>
+                            <option value="Mensual">Mensual</option>
+                            <option value="Bimestral">Bimestral</option>
+                            <option value="Trimestral">Trimestral</option>
+                            <option value="Cuatrimestral">Cuatrimestral</option>
+                            <option value="Semestral">Semestral</option>
+                            <option value="Anual">Anual</option>
+                            <option value="Personalizado">Personalizado (Fechas manuales)</option>
+                          </select>
                         </div>
-                      )}
+
+                        <div className="space-y-1">
+                          <label className="block text-[9px] font-bold text-slate-500 uppercase">Frecuencia Acciones</label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado') {
+                                alert("Seleccione una frecuencia periódica para autogenerar visitas.");
+                                return;
+                              }
+                              const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency);
+                              setContractFormMaintenanceDates(generated);
+                              if (generated.length > 0) {
+                                setContractFormQcDate(generated[generated.length - 1]);
+                              } else {
+                                setContractFormQcDate('');
+                              }
+                            }}
+                            className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-1 rounded-lg text-3xs font-extrabold transition-all cursor-pointer"
+                          >
+                            Recalcular Fechas
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Add Specific Custom Date */}
+                      <div className="bg-slate-50 border border-slate-205 rounded-xl p-2 space-y-1.5">
+                        <span className="font-bold text-[9px] text-slate-650 block">Agregar Fecha Manual</span>
+                        <div className="flex gap-2">
+                          <input
+                            type="date"
+                            value={tempMaintenanceDate}
+                            onChange={(e) => setTempMaintenanceDate(e.target.value)}
+                            className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-3xs text-slate-700 outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!tempMaintenanceDate) return;
+                              if (contractFormMaintenanceDates.includes(tempMaintenanceDate)) {
+                                alert("Esta fecha ya está registrada.");
+                                return;
+                              }
+                              const updated = [...contractFormMaintenanceDates, tempMaintenanceDate].sort();
+                              setContractFormMaintenanceDates(updated);
+                              setTempMaintenanceDate('');
+                              if (!contractFormQcDate) {
+                                setContractFormQcDate(updated[updated.length - 1]);
+                              }
+                            }}
+                            className="bg-indigo-650 hover:bg-indigo-700 text-white font-extrabold px-3 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
+                          >
+                            Agregar
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* List of maintenance dates with interactive Quality Control toggles */}
+                      <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-[110px] overflow-y-auto bg-white">
+                        {contractFormMaintenanceDates.map((date, index) => {
+                          const isQc = contractFormQcDate === date || (!contractFormQcDate && index === contractFormMaintenanceDates.length - 1);
+                          const fmtDate = (d: string) => {
+                            if (!d) return '—';
+                            const [y, m, day] = d.split('-');
+                            const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+                            return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+                          };
+
+                          return (
+                            <div key={index} className="flex items-center justify-between px-2.5 py-1.5 hover:bg-slate-50/50 transition-colors">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-slate-700 text-[10px] font-bold">{fmtDate(date)}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setContractFormQcDate(date);
+                                  }}
+                                  className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border transition-all cursor-pointer ${
+                                    isQc 
+                                      ? 'bg-violet-600 border-violet-600 text-white shadow-3xs' 
+                                      : 'bg-white hover:bg-slate-100 text-slate-400 border-slate-200'
+                                  }`}
+                                  title="Marcar esta visita como Control de Calidad"
+                                >
+                                  {isQc ? '📋 Control Calidad' : 'Hacer QC'}
+                                </button>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (contractFormQcDate === date) {
+                                    setContractFormQcDate('');
+                                  }
+                                  setContractFormMaintenanceDates(contractFormMaintenanceDates.filter((_, i) => i !== index));
+                                }}
+                                className="text-red-500 hover:text-red-750 font-black text-2xs p-0.5 cursor-pointer"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          );
+                        })}
+                        {contractFormMaintenanceDates.length === 0 && (
+                          <div className="p-3 text-center text-slate-400 italic text-[9px]">
+                            Ninguna visita de mantenimiento programada.
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 font-sans">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 font-sans mt-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -10044,6 +10195,182 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Detalles del Contrato */}
+      {isContractDetailsModalOpen && selectedContractForDetails && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="contract-details-modal">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-xl p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <Briefcase className="w-5 h-5 text-indigo-650" />
+                <span>Detalle de Contrato: {selectedContractForDetails.id}</span>
+              </h3>
+              <button
+                onClick={() => {
+                  setIsContractDetailsModalOpen(false);
+                  setSelectedContractForDetails(null);
+                }}
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Header Contract Info card */}
+              <div className="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                <div>
+                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Cliente</span>
+                  <span className="font-extrabold text-slate-800 text-[11px]">
+                    {clients.find(c => c.id === selectedContractForDetails.clientId)?.name || selectedContractForDetails.clientId}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Tipo Cobertura</span>
+                  <span className="font-bold text-indigo-705 text-[11px]">{selectedContractForDetails.type}</span>
+                </div>
+                <div>
+                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Vigencia</span>
+                  <span className="font-bold text-slate-700 text-[10px] font-mono">
+                    {selectedContractForDetails.startDate} al {selectedContractForDetails.endDate}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Frecuencia Programada</span>
+                  <span className="font-bold text-slate-700 text-[10px]">
+                    {selectedContractForDetails.maintenanceFrequency || 'Ninguna'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Covered Equipments */}
+              {selectedContractForDetails.equipmentItems && selectedContractForDetails.equipmentItems.length > 0 && (
+                <div className="space-y-1.5">
+                  <span className="font-extrabold text-[9px] text-slate-500 uppercase tracking-wider block">Equipos Cobertura</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedContractForDetails.equipmentItems.map((item, idx) => (
+                      <span key={idx} className="bg-slate-100 text-slate-800 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-bold">
+                        {item.name} ({item.brand})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Maintenance Agenda List */}
+              <div className="space-y-2">
+                <span className="font-extrabold text-[9px] text-slate-500 uppercase tracking-wider block">Cronograma de Visitas Programadas</span>
+                <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden bg-white max-h-[220px] overflow-y-auto">
+                  {selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.length > 0 ? (
+                    selectedContractForDetails.maintenanceDates.map((date, idx) => {
+                      // Check for matching work order
+                      const matchingWO = workOrders.find(
+                        wo => wo.clientId === selectedContractForDetails.clientId && wo.plannedDate === date
+                      );
+
+                      // Is it the designated QC date?
+                      const isQc = selectedContractForDetails.qcDate === date || 
+                        (!selectedContractForDetails.qcDate && idx === selectedContractForDetails.maintenanceDates!.length - 1);
+
+                      const fmtDate = (d: string) => {
+                        if (!d) return '—';
+                        const [y, m, day] = d.split('-');
+                        const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+                        return `${parseInt(day)} de ${months[parseInt(m)-1]}, ${y}`;
+                      };
+
+                      // Status determination
+                      let statusText = 'No Agendado (Pendiente)';
+                      let statusClasses = 'bg-slate-50 text-slate-500 border-slate-200';
+                      
+                      if (matchingWO) {
+                        if (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado') {
+                          statusText = 'Hecho (Realizado)';
+                          statusClasses = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                        } else if (matchingWO.status === 'En Proceso' || matchingWO.status === 'Reportado') {
+                          statusText = `Agendado (${matchingWO.status})`;
+                          statusClasses = 'bg-sky-50 text-sky-700 border-sky-200';
+                        } else {
+                          statusText = 'Agendado (Pendiente)';
+                          statusClasses = 'bg-amber-50 text-amber-700 border-amber-200';
+                        }
+                      }
+
+                      return (
+                        <div key={idx} className="flex items-center justify-between p-3 hover:bg-slate-50/50 transition-colors">
+                          <div className="space-y-0.5">
+                            <span className="font-mono text-slate-800 text-[11px] font-bold">{fmtDate(date)}</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {isQc ? (
+                                <span className="bg-violet-105 text-violet-800 border border-violet-200 font-extrabold text-[8px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                  📋 Control de Calidad
+                                </span>
+                              ) : (
+                                <span className="bg-indigo-50 text-indigo-850 border border-indigo-150 font-bold text-[8px] px-1.5 py-0.5 rounded">
+                                  🛠️ Mantenimiento Preventivo
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[8.5px] font-extrabold px-2 py-0.5 rounded-full border ${statusClasses}`}>
+                              {statusText}
+                            </span>
+                            {!matchingWO && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  // Pre-fill creation form and open Create WO modal
+                                  setNewWODate(date);
+                                  setNewWOClient(selectedContractForDetails.clientId);
+                                  const matchingClient = clients.find(c => c.id === selectedContractForDetails.clientId);
+                                  setNewWOClientSearch(matchingClient ? matchingClient.name : '');
+                                  if (selectedContractForDetails.equipmentItems && selectedContractForDetails.equipmentItems.length > 0) {
+                                    setNewWOEquipment(selectedContractForDetails.equipmentItems[0].name);
+                                  } else {
+                                    setNewWOEquipment('');
+                                  }
+                                  setNewWOType(isQc ? 'Especial' : 'Preventivo');
+                                  setNewWONotes(`Visita programada bajo Contrato ${selectedContractForDetails.id}${isQc ? ' - Control de Calidad' : ''}`);
+                                  
+                                  // Close contract details view and open work order creation
+                                  setIsContractDetailsModalOpen(false);
+                                  setIsCreatingWO(true);
+                                }}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-md text-[9px] transition-colors cursor-pointer"
+                              >
+                                Agendar
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="p-5 text-center text-slate-400 italic text-[10px]">
+                      Este contrato no posee visitas de mantenimiento agendadas.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-slate-100 font-sans">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsContractDetailsModalOpen(false);
+                  setSelectedContractForDetails(null);
+                }}
+                className="px-4 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors text-slate-700"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}
