@@ -79,6 +79,34 @@ const getVacationDuration = (startDateStr: string, endDateStr: string, includeWe
   }
 };
 
+const generateMaintenanceDates = (startDateStr: string, endDateStr: string, frequency: string): string[] => {
+  if (!startDateStr || !endDateStr || !frequency || frequency === 'Ninguno' || frequency === 'Personalizado') {
+    return [];
+  }
+  const start = new Date(startDateStr + 'T00:00:00');
+  const end = new Date(endDateStr + 'T00:00:00');
+  if (start > end) return [];
+
+  const dates: string[] = [];
+  const current = new Date(start);
+
+  let incrementMonths = 1;
+  if (frequency === 'Mensual') incrementMonths = 1;
+  else if (frequency === 'Bimestral') incrementMonths = 2;
+  else if (frequency === 'Trimestral') incrementMonths = 3;
+  else if (frequency === 'Semestral') incrementMonths = 6;
+  else if (frequency === 'Anual') incrementMonths = 12;
+
+  while (current <= end) {
+    const yyyy = current.getFullYear();
+    const mm = String(current.getMonth() + 1).padStart(2, '0');
+    const dd = String(current.getDate()).padStart(2, '0');
+    dates.push(`${yyyy}-${mm}-${dd}`);
+    current.setMonth(current.getMonth() + incrementMonths);
+  }
+  return dates;
+};
+
 const calculateYearsInCompany = (entryDate?: string): string => {
   if (!entryDate) return 'N/D';
   const entry = new Date(entryDate + 'T00:00:00');
@@ -555,6 +583,11 @@ export default function AdminPortal({
   const [contractFormEquipmentItems, setContractFormEquipmentItems] = useState<{ name: string; brand: string }[]>([]);
   const [tempEquipName, setTempEquipName] = useState('');
   const [tempEquipBrand, setTempEquipBrand] = useState('');
+
+  // Maintenance scheduling states
+  const [contractFormFrequency, setContractFormFrequency] = useState<'Mensual' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno'>('Ninguno');
+  const [contractFormMaintenanceDates, setContractFormMaintenanceDates] = useState<string[]>([]);
+  const [tempMaintenanceDate, setTempMaintenanceDate] = useState('');
 
   // Create New WO States
   const [isCreatingWO, setIsCreatingWO] = useState(false);
@@ -3344,7 +3377,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       endDate: contractFormEnd,
       status: contractFormStatus,
       coverage: contractFormCoverage.trim(),
-      equipmentItems: contractFormEquipmentItems
+      equipmentItems: contractFormEquipmentItems,
+      maintenanceFrequency: contractFormFrequency,
+      maintenanceDates: contractFormMaintenanceDates
     };
 
     // Auto-register new custom equipments under the selected client
@@ -3922,6 +3957,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 setContractFormEquipmentItems([]);
                 setTempEquipName('');
                 setTempEquipBrand('');
+                setContractFormFrequency('Ninguno');
+                setContractFormMaintenanceDates([]);
+                setTempMaintenanceDate('');
                 setIsContractModalOpen(true);
               }}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-indigo-600 transition-colors"
@@ -4061,6 +4099,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setContractFormEquipmentItems(con.equipmentItems || []);
                             setTempEquipName('');
                             setTempEquipBrand('');
+                            setContractFormFrequency(con.maintenanceFrequency || 'Ninguno');
+                            setContractFormMaintenanceDates(con.maintenanceDates || []);
+                            setTempMaintenanceDate('');
                             
                             setIsContractModalOpen(true);
                           }}
@@ -9718,7 +9759,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         type="date"
                         required
                         value={contractFormStart}
-                        onChange={(e) => setContractFormStart(e.target.value)}
+                        onChange={(e) => {
+                          setContractFormStart(e.target.value);
+                          if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
+                            const generated = generateMaintenanceDates(e.target.value, contractFormEnd, contractFormFrequency);
+                            setContractFormMaintenanceDates(generated);
+                          }
+                        }}
                         className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                       />
                     </div>
@@ -9731,7 +9778,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         type="date"
                         required
                         value={contractFormEnd}
-                        onChange={(e) => setContractFormEnd(e.target.value)}
+                        onChange={(e) => {
+                          setContractFormEnd(e.target.value);
+                          if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
+                            const generated = generateMaintenanceDates(contractFormStart, e.target.value, contractFormFrequency);
+                            setContractFormMaintenanceDates(generated);
+                          }
+                        }}
                         className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                       />
                     </div>
@@ -9749,111 +9802,220 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   </div>
                 </div>
 
-                {/* Right Side: Equipment covered under contract */}
-                <div className="space-y-3.5 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
-                  <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider">Equipos en Contrato</h4>
-                  
-                  {/* Load existing Client Equipment */}
-                  {contractFormClientId && !isCreatingNewClientForContract && (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 max-h-[140px] overflow-y-auto">
-                      <span className="font-bold text-[9px] text-indigo-750 block">Equipos Registrados de este Cliente</span>
-                      {(() => {
-                        const clientEquips = equipments.filter(eq => eq.clientId === contractFormClientId);
-                        if (clientEquips.length === 0) {
-                          return <span className="text-[10px] text-slate-400 italic">No hay equipos registrados para este cliente.</span>;
-                        }
-                        return (
-                          <div className="space-y-1.5">
-                            {clientEquips.map(eq => {
-                              const alreadyAdded = contractFormEquipmentItems.some(item => item.name.toLowerCase() === eq.name.toLowerCase());
-                              return (
-                                <div key={eq.id} className="flex items-center justify-between text-[11px] bg-white border border-slate-150 p-1.5 rounded-lg shadow-3xs">
-                                  <div className="truncate">
-                                    <span className="font-bold text-slate-800">{eq.name}</span>
-                                    <span className="text-[9px] text-slate-400 font-medium block">Marca: {eq.brand || 'N/D'}</span>
+                {/* Right Side: Equipment and Maintenance scheduling */}
+                <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
+                  {/* Equipments Panel */}
+                  <div className="space-y-2">
+                    <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider">Equipos en Contrato</h4>
+                    
+                    {/* Load existing Client Equipment */}
+                    {contractFormClientId && !isCreatingNewClientForContract && (
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5 max-h-[110px] overflow-y-auto">
+                        <span className="font-bold text-[9px] text-indigo-750 block">Equipos Registrados de este Cliente</span>
+                        {(() => {
+                          const clientEquips = equipments.filter(eq => eq.clientId === contractFormClientId);
+                          if (clientEquips.length === 0) {
+                            return <span className="text-[9px] text-slate-400 italic">No hay equipos registrados.</span>;
+                          }
+                          return (
+                            <div className="space-y-1">
+                              {clientEquips.map(eq => {
+                                const alreadyAdded = contractFormEquipmentItems.some(item => item.name.toLowerCase() === eq.name.toLowerCase());
+                                return (
+                                  <div key={eq.id} className="flex items-center justify-between text-[10px] bg-white border border-slate-150 p-1 rounded-md shadow-3xs">
+                                    <div className="truncate">
+                                      <span className="font-bold text-slate-800">{eq.name}</span>
+                                      <span className="text-[8px] text-slate-400 font-medium block">Marca: {eq.brand || 'N/D'}</span>
+                                    </div>
+                                    {!alreadyAdded ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setContractFormEquipmentItems([...contractFormEquipmentItems, { name: eq.name, brand: eq.brand || 'N/D' }]);
+                                        }}
+                                        className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold px-1 py-0.5 rounded text-[8px] cursor-pointer"
+                                      >
+                                        + Agregar
+                                      </button>
+                                    ) : (
+                                      <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100">Agregado</span>
+                                    )}
                                   </div>
-                                  {!alreadyAdded ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setContractFormEquipmentItems([...contractFormEquipmentItems, { name: eq.name, brand: eq.brand || 'N/D' }]);
-                                      }}
-                                      className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded text-[8px] transition-colors cursor-pointer"
-                                    >
-                                      + Agregar
-                                    </button>
-                                  ) : (
-                                    <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">Agregado</span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
 
-                  {/* Add Custom / New Equipment to contract */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
-                    <span className="font-bold text-[9px] text-slate-600 block">Agregar Equipo Manualmente</span>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Nombre Equipo"
-                        value={tempEquipName}
-                        onChange={(e) => setTempEquipName(e.target.value)}
-                        className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-700 outline-none"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Marca"
-                        value={tempEquipBrand}
-                        onChange={(e) => setTempEquipBrand(e.target.value)}
-                        className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-700 outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!tempEquipName.trim()) return;
-                          setContractFormEquipmentItems([
-                            ...contractFormEquipmentItems, 
-                            { name: tempEquipName.trim(), brand: tempEquipBrand.trim() || 'N/D' }
-                          ]);
-                          setTempEquipName('');
-                          setTempEquipBrand('');
-                        }}
-                        className="bg-indigo-650 hover:bg-indigo-700 text-white font-extrabold px-3 py-1.5 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
-                      >
-                        Agregar
-                      </button>
+                    {/* Add Custom / New Equipment to contract */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2 space-y-1.5">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Nombre Equipo"
+                          value={tempEquipName}
+                          onChange={(e) => setTempEquipName(e.target.value)}
+                          className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Marca"
+                          value={tempEquipBrand}
+                          onChange={(e) => setTempEquipBrand(e.target.value)}
+                          className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!tempEquipName.trim()) return;
+                            setContractFormEquipmentItems([
+                              ...contractFormEquipmentItems, 
+                              { name: tempEquipName.trim(), brand: tempEquipBrand.trim() || 'N/D' }
+                            ]);
+                            setTempEquipName('');
+                            setTempEquipBrand('');
+                          }}
+                          className="bg-indigo-650 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
+                        >
+                          Agregar
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* List of currently covered equipments */}
-                  <div className="space-y-1.5">
-                    <span className="font-bold text-[10px] text-slate-500 uppercase tracking-wider block">Equipos en este Contrato ({contractFormEquipmentItems.length})</span>
-                    <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-[160px] overflow-y-auto bg-white">
+                    {/* List of currently covered equipments */}
+                    <div className="border border-slate-205 rounded-xl divide-y divide-slate-100 max-h-[100px] overflow-y-auto bg-white">
                       {contractFormEquipmentItems.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 hover:bg-slate-50/50 transition-colors">
+                        <div key={index} className="flex items-center justify-between p-1.5 hover:bg-slate-50/50 transition-colors">
                           <div className="truncate">
-                            <p className="font-bold text-slate-800 text-[11px] leading-tight">{item.name}</p>
-                            <p className="text-[9px] text-slate-400 font-semibold leading-none mt-0.5">Marca: {item.brand}</p>
+                            <p className="font-bold text-slate-800 text-[10px] leading-tight">{item.name}</p>
+                            <p className="text-[8px] text-slate-400 font-semibold leading-none mt-0.5">Marca: {item.brand}</p>
                           </div>
                           <button
                             type="button"
                             onClick={() => {
                               setContractFormEquipmentItems(contractFormEquipmentItems.filter((_, i) => i !== index));
                             }}
-                            className="text-red-500 hover:text-red-750 font-black text-2xs p-1 cursor-pointer"
+                            className="text-red-500 hover:text-red-755 font-black text-2xs p-1 cursor-pointer"
                           >
                             ✕
                           </button>
                         </div>
                       ))}
                       {contractFormEquipmentItems.length === 0 && (
-                        <div className="p-4 text-center text-slate-400 italic text-[10px]">
-                          Ningún equipo asignado a la cobertura del contrato.
+                        <div className="p-3 text-center text-slate-400 italic text-[9px]">
+                          Ningún equipo asignado a la cobertura.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Maintenance Scheduling Panel */}
+                  <div className="space-y-2 pt-3 border-t border-slate-150">
+                    <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider">Mantenimientos Programados</h4>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase">Frecuencia</label>
+                        <select
+                          value={contractFormFrequency}
+                          onChange={(e) => {
+                            const freq = e.target.value as any;
+                            setContractFormFrequency(freq);
+                            if (freq !== 'Ninguno' && freq !== 'Personalizado') {
+                              const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, freq);
+                              setContractFormMaintenanceDates(generated);
+                            }
+                          }}
+                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-705 cursor-pointer outline-hidden focus:bg-white"
+                        >
+                          <option value="Ninguno">Ninguno</option>
+                          <option value="Mensual">Mensual</option>
+                          <option value="Bimestral">Bimestral</option>
+                          <option value="Trimestral">Trimestral</option>
+                          <option value="Semestral">Semestral</option>
+                          <option value="Anual">Anual</option>
+                          <option value="Personalizado">Personalizado (Fechas manuales)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase">Frecuencia Acciones</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado') {
+                              alert("Seleccione una frecuencia periódica para autogenerar visitas.");
+                              return;
+                            }
+                            const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency);
+                            setContractFormMaintenanceDates(generated);
+                          }}
+                          className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-1 rounded-lg text-3xs font-extrabold transition-all cursor-pointer"
+                        >
+                          Recalcular Fechas
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Add Specific Custom Date */}
+                    <div className="bg-slate-50 border border-slate-205 rounded-xl p-2 space-y-1.5">
+                      <span className="font-bold text-[9px] text-slate-650 block">Agregar Fecha Manual</span>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={tempMaintenanceDate}
+                          onChange={(e) => setTempMaintenanceDate(e.target.value)}
+                          className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-3xs text-slate-700 outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!tempMaintenanceDate) return;
+                            if (contractFormMaintenanceDates.includes(tempMaintenanceDate)) {
+                              alert("Esta fecha ya está registrada.");
+                              return;
+                            }
+                            const updated = [...contractFormMaintenanceDates, tempMaintenanceDate].sort();
+                            setContractFormMaintenanceDates(updated);
+                            setTempMaintenanceDate('');
+                          }}
+                          className="bg-indigo-650 hover:bg-indigo-700 text-white font-extrabold px-3 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
+                        >
+                          Agregar
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* List of maintenance dates */}
+                    <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-[100px] overflow-y-auto bg-white">
+                      {contractFormMaintenanceDates.map((date, index) => {
+                        const fmtDate = (d: string) => {
+                          if (!d) return '—';
+                          const [y, m, day] = d.split('-');
+                          const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+                          return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+                        };
+
+                        return (
+                          <div key={index} className="flex items-center justify-between px-2.5 py-1 hover:bg-slate-50/50 transition-colors">
+                            <span className="font-mono text-slate-700 text-[10px] font-bold">{fmtDate(date)}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setContractFormMaintenanceDates(contractFormMaintenanceDates.filter((_, i) => i !== index));
+                              }}
+                              className="text-red-500 hover:text-red-750 font-black text-2xs p-0.5 cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        );
+                      })}
+                      {contractFormMaintenanceDates.length === 0 && (
+                        <div className="p-3 text-center text-slate-400 italic text-[9px]">
+                          Ninguna visita de mantenimiento programada.
                         </div>
                       )}
                     </div>
