@@ -94,6 +94,7 @@ const generateMaintenanceDates = (startDateStr: string, endDateStr: string, freq
   if (frequency === 'Mensual') incrementMonths = 1;
   else if (frequency === 'Bimestral') incrementMonths = 2;
   else if (frequency === 'Trimestral') incrementMonths = 3;
+  else if (frequency === 'Cuatrimestral') incrementMonths = 4;
   else if (frequency === 'Semestral') incrementMonths = 6;
   else if (frequency === 'Anual') incrementMonths = 12;
 
@@ -585,7 +586,7 @@ export default function AdminPortal({
   const [tempEquipBrand, setTempEquipBrand] = useState('');
 
   // Maintenance scheduling states
-  const [contractFormFrequency, setContractFormFrequency] = useState<'Mensual' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno'>('Ninguno');
+  const [contractFormFrequency, setContractFormFrequency] = useState<'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno'>('Ninguno');
   const [contractFormMaintenanceDates, setContractFormMaintenanceDates] = useState<string[]>([]);
   const [tempMaintenanceDate, setTempMaintenanceDate] = useState('');
 
@@ -9934,6 +9935,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <option value="Mensual">Mensual</option>
                           <option value="Bimestral">Bimestral</option>
                           <option value="Trimestral">Trimestral</option>
+                          <option value="Cuatrimestral">Cuatrimestral</option>
                           <option value="Semestral">Semestral</option>
                           <option value="Anual">Anual</option>
                           <option value="Personalizado">Personalizado (Fechas manuales)</option>

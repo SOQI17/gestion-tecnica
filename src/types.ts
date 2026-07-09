@@ -132,7 +132,7 @@ export interface Contract {
   status: 'Activo' | 'Vencido' | 'Pendiente';
   coverage?: string;
   equipmentItems?: ContractEquipmentItem[]; // List of equipment covered
-  maintenanceFrequency?: 'Mensual' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno';
+  maintenanceFrequency?: 'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno';
   maintenanceDates?: string[]; // Scheduled dates for maintenance
   createdAt?: string;
 }
