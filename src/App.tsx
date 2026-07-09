@@ -666,54 +666,38 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    if (isDemoMode) {
-      setIsDemoMode(false);
-      setCurrentUser(null);
-      return;
-    }
     try {
       await signOut(auth);
       setCurrentUser(null);
-    } catch (e) {
-      console.error("Error signing out:", e);
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
     }
   };
 
-  const handleLoginSuccess = (user: AppUser, isDemo: boolean) => {
-    setIsDemoMode(isDemo);
-    setCurrentUser(user);
-    if (user.role === 'engineer') {
-      setActiveTab('engineer');
-    } else {
-      setActiveTab('admin');
-    }
-  };
-
-  const handleSendPasswordReset = async (email: string) => {
-    const { sendPasswordResetEmail } = await import('firebase/auth');
-    try {
-      await sendPasswordResetEmail(auth, email);
-      showNotification(`Se envió un correo de restablecimiento de contraseña a: ${email}`, 'success');
-    } catch (error: any) {
-      console.error("Error al enviar restablecimiento de contraseña:", error);
-      alert("No se pudo enviar el correo de restablecimiento: " + (error.message || error));
-    }
-  };
-
+  // Guard: mostrando spinner de autenticación
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-center space-y-4">
-        <div className="w-10 h-10 border-4 border-indigo-650 border-t-transparent rounded-full animate-spin"></div>
-        <div>
-          <p className="font-extrabold text-xs text-white tracking-tight">Cargando perfil de usuario...</p>
-          <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">Verificando sesión segura en Gestión Técnica</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-bold text-slate-500">Verificando sesión...</p>
         </div>
       </div>
     );
   }
 
+  // Guard: usuario no autenticado → mostrar Login
   if (!currentUser) {
-    return <Login engineers={engineers.length > 0 ? engineers : masterEngineers} onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <Login
+        engineers={engineers}
+        onLoginSuccess={(user, isDemo) => {
+          setCurrentUser(user);
+          setIsDemoMode(isDemo);
+          setActiveTab(user.role === 'admin' ? 'admin' : 'engineer');
+        }}
+      />
+    );
   }
 
   return (
@@ -883,7 +867,6 @@ export default function App() {
                 permissions={permissions}
                 onAddPermission={handleAddPermission}
                 onDeletePermission={handleDeletePermission}
-                onSendPasswordReset={handleSendPasswordReset}
               />
             )}
             {activeTab === 'engineer' && (

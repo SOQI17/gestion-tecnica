@@ -113,6 +113,15 @@ export default function EngineerPortal({
     return `${diffYears.toFixed(1)} años`;
   };
 
+  const getYearsInCompanyNum = (entryDate?: string): number => {
+    if (!entryDate) return 0;
+    const entry = new Date(entryDate + 'T00:00:00');
+    const now = new Date();
+    const diffTime = now.getTime() - entry.getTime();
+    if (diffTime < 0) return 0;
+    return diffTime / (1000 * 60 * 60 * 24 * 365.25);
+  };
+
   // Profile Drawer States
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [editEngName, setEditEngName] = useState('');
@@ -2916,7 +2925,10 @@ IMSS CENTRO MEDICO,REP-404,MR355,2026-03-12,Marzo,Semana 11,SI,Aislantes térmic
                           const quota = activeEngineer.annualVacationDays ?? 15;
                           const pending = activeEngineer.pendingVacationsLastYear ?? 0;
                           const standby = activeEngineer.standbyVacationsLastYear ?? 0;
-                          const initialHours = (quota + pending + standby) * 8;
+                          const seniorityBonus = Math.min(Math.max(Math.floor(getYearsInCompanyNum(activeEngineer.entryDate)) - 5, 0), 15);
+                          const birthdayDay = activeEngineer.birthdayVacationDay !== undefined ? activeEngineer.birthdayVacationDay : 1;
+                          
+                          const initialHours = (quota + pending + standby + seniorityBonus + birthdayDay) * 8;
                           const vacationTakenHours = taken * 8;
                           
                           const engPermissions = (permissions || []).filter(p => p.engineerId === activeEngineer.id);
@@ -2930,15 +2942,26 @@ IMSS CENTRO MEDICO,REP-404,MR355,2026-03-12,Marzo,Semana 11,SI,Aislantes térmic
                           return (
                             <div className="space-y-2">
                               {/* Detalles de contratación / antigüedad */}
-                              <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-150 text-[9px]">
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-155 text-[9px]">
                                 <div>
                                   <span className="block font-bold text-slate-400 uppercase text-[7px]">Antigüedad</span>
                                   <span className="font-extrabold text-slate-700 font-mono">{calculateYearsInCompany(activeEngineer.entryDate)}</span>
                                   <span className="block text-[7px] text-slate-400 font-mono mt-0.5">Ingreso: {activeEngineer.entryDate || '—'}</span>
                                 </div>
                                 <div>
-                                  <span className="block font-bold text-slate-400 uppercase text-[7px]">Pendientes Año Pasado</span>
-                                  <span className="font-extrabold text-slate-700 font-mono">{pending}d (Standby: {standby}d)</span>
+                                  <span className="block font-bold text-slate-400 uppercase text-[7px]">Adic. Antigüedad</span>
+                                  <span className="font-extrabold text-slate-700 font-mono">{seniorityBonus} días</span>
+                                  <span className="block text-[7px] text-slate-400 font-mono mt-0.5">(+5 años)</span>
+                                </div>
+                                <div>
+                                  <span className="block font-bold text-slate-400 uppercase text-[7px]">Día Cumpleaños</span>
+                                  <span className="font-extrabold text-slate-700 font-mono">{birthdayDay} día</span>
+                                  <span className="block text-[7px] text-slate-400 font-mono mt-0.5">(Extra anual)</span>
+                                </div>
+                                <div>
+                                  <span className="block font-bold text-slate-400 uppercase text-[7px]">Historial anterior</span>
+                                  <span className="font-extrabold text-slate-700 font-mono">{pending}d Pend.</span>
+                                  <span className="block text-[7px] text-slate-400 font-mono mt-0.5">({standby}d Standby)</span>
                                 </div>
                               </div>
 
@@ -2946,7 +2969,7 @@ IMSS CENTRO MEDICO,REP-404,MR355,2026-03-12,Marzo,Semana 11,SI,Aislantes térmic
                                 <div className="bg-slate-50 border border-slate-150 p-2 rounded-xl">
                                   <span className="text-[8px] font-bold text-slate-400 uppercase leading-none block">Cupo</span>
                                   <span className="text-sm font-black text-slate-800 font-mono mt-1 block">{quota}</span>
-                                  <span className="text-[7px] font-semibold text-slate-500 leading-none block mt-0.5">días/año</span>
+                                  <span className="text-[7px] font-semibold text-slate-505 leading-none block mt-0.5">días/año</span>
                                 </div>
                                 <div className="bg-teal-50/45 border border-teal-100 p-2 rounded-xl">
                                   <span className="text-[8px] font-bold text-teal-600 uppercase leading-none block">Tomados</span>
@@ -2962,7 +2985,7 @@ IMSS CENTRO MEDICO,REP-404,MR355,2026-03-12,Marzo,Semana 11,SI,Aislantes térmic
                                 </div>
                                 <div className="bg-indigo-50/45 border border-indigo-100 p-2 rounded-xl">
                                   <span className="text-[8px] font-bold text-indigo-600 uppercase leading-none block">Saldo Neto</span>
-                                  <span className={`text-sm font-black font-mono mt-1 block ${netAvailableHours < 0 ? 'text-rose-650 animate-pulse' : 'text-indigo-750'}`}>
+                                  <span className={`text-sm font-black font-mono mt-1 block ${netAvailableHours < 0 ? 'text-rose-650 animate-pulse' : 'text-indigo-755'}`}>
                                     {netDays}d {netRemHours}h
                                   </span>
                                   <span className="text-[7px] font-semibold text-indigo-500 leading-none block mt-0.5">disponible final</span>

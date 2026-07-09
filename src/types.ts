@@ -18,6 +18,7 @@ export interface Engineer {
   entryDate?: string; // YYYY-MM-DD
   pendingVacationsLastYear?: number;
   standbyVacationsLastYear?: number;
+  birthdayVacationDay?: number; // 0 or 1, default 1
 }
 
 export interface Client {
@@ -117,6 +118,11 @@ export interface Equipment {
   createdAt?: string;
 }
 
+export interface ContractEquipmentItem {
+  name: string;
+  brand: string;
+}
+
 export interface Contract {
   id: string; // Contract Number
   clientId: string; // references Client.id
@@ -125,6 +131,7 @@ export interface Contract {
   endDate: string; // YYYY-MM-DD
   status: 'Activo' | 'Vencido' | 'Pendiente';
   coverage?: string;
+  equipmentItems?: ContractEquipmentItem[]; // List of equipment covered
   createdAt?: string;
 }
 
