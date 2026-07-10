@@ -98,7 +98,7 @@ const generateMaintenanceDates = (startDateStr: string, endDateStr: string, freq
   else if (frequency === 'Semestral') incrementMonths = 6;
   else if (frequency === 'Anual') incrementMonths = 12;
 
-  while (current <= end) {
+  while (current < end) {
     const yyyy = current.getFullYear();
     const mm = String(current.getMonth() + 1).padStart(2, '0');
     const dd = String(current.getDate()).padStart(2, '0');
