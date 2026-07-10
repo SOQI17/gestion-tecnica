@@ -182,7 +182,7 @@ const EditableNumberInput = ({ value, onSave }: EditableNumberInputProps) => {
       <button
         type="button"
         onClick={() => setIsEditing(true)}
-        className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-indigo-650 p-0.5 rounded hover:bg-slate-100 cursor-pointer transition-all"
+        className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-indigo-600 p-0.5 rounded hover:bg-slate-100 cursor-pointer transition-all"
         title="Editar valor"
       >
         ✏️
@@ -2760,7 +2760,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               <button
                 type="button"
                 onClick={handlePrintReport}
-                className="bg-indigo-650 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-3xs flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-3xs flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
               >
                 Imprimir / PDF
               </button>
@@ -3575,7 +3575,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
           <div>
             <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-              <Users className="w-4 h-4 text-indigo-650" />
+              <Users className="w-4 h-4 text-indigo-600" />
               Gestión de Terceros y Clientes
             </h4>
             <p className="text-3xs text-slate-500 mt-0.5 font-medium">Administra la información de clientes, RUC/cédula, sucursales y datos de contacto.</p>
@@ -3714,7 +3714,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           setClientFormPhone(cli.contactPhone || '');
                           setIsClientModalOpen(true);
                         }}
-                        className="text-indigo-650 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
+                        className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
                       >
                         Editar
                       </button>
@@ -4003,7 +4003,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setEquipFormStatus(eq.status);
                             setIsEquipModalOpen(true);
                           }}
-                          className="text-indigo-655 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
+                          className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
                         >
                           Editar
                         </button>
@@ -4064,7 +4064,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
           <div>
             <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-indigo-650" />
+              <Briefcase className="w-4 h-4 text-indigo-600" />
               Gestión de Contratos y Garantías
             </h4>
             <p className="text-3xs text-slate-500 mt-0.5 font-medium">Administra los contratos de servicio, garantías comerciales y coberturas de mantenimiento.</p>
@@ -4261,7 +4261,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             
                             setIsContractModalOpen(true);
                           }}
-                          className="text-indigo-655 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
+                          className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
                         >
                           Editar
                         </button>
@@ -4763,10 +4763,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   <div className="space-y-1">
                                     <div className="space-y-0.5">
                                       <p className="text-xs font-black text-slate-900 leading-tight">
-                                        Desde: <span className="text-indigo-650">{fmtDate(vac.startDate)}</span>
+                                        Desde: <span className="text-indigo-600">{fmtDate(vac.startDate)}</span>
                                       </p>
                                       <p className="text-xs font-black text-slate-900 leading-tight">
-                                        Hasta: <span className="text-indigo-650">{fmtDate(vac.endDate)}</span>
+                                        Hasta: <span className="text-indigo-600">{fmtDate(vac.endDate)}</span>
                                       </p>
                                     </div>
                                     <span className="inline-block bg-slate-100 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded-full border border-slate-200">
@@ -4886,7 +4886,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     {/* Balance Cards */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-indigo-50/50 border border-indigo-150 p-3 rounded-xl">
-                        <span className="text-[9px] font-bold text-indigo-650 uppercase tracking-wider block">Saldo Vacaciones</span>
+                        <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-wider block">Saldo Vacaciones</span>
                         <span className="text-sm font-black font-mono mt-1 block text-slate-800">
                           {formatHoursToDays(netAvailableHours)}
                         </span>
@@ -5099,7 +5099,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <h3 className="text-2xl font-bold text-indigo-700 mt-1">{pendingRequestsCount}</h3>
                   <p className="text-3xs text-slate-500 mt-1">Esperando revisión y aprobación</p>
                 </div>
-                <div className={`p-3 rounded-lg ${pendingRequestsCount > 0 ? 'bg-indigo-50 text-indigo-650' : 'bg-slate-50 text-slate-500'}`}>
+                <div className={`p-3 rounded-lg ${pendingRequestsCount > 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-500'}`}>
                   <ClipboardList className="w-5 h-5" />
                 </div>
               </div>
@@ -5261,7 +5261,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               <div className="flex items-center gap-1.5">
                                 <span className="text-sm shrink-0 group-hover/row:scale-110 transition-transform">{getEngineerEmoji(eng.id)}</span>
                                 <div>
-                                  <p className="font-extrabold text-[11px] text-slate-900 group-hover/row:text-indigo-650 transition-colors flex items-center gap-1">
+                                  <p className="font-extrabold text-[11px] text-slate-900 group-hover/row:text-indigo-600 transition-colors flex items-center gap-1">
                                     <span>{eng.name}</span>
                                     <span className="text-[7px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1 rounded opacity-0 group-hover/row:opacity-100 transition-opacity">🌴</span>
                                   </p>
@@ -5467,7 +5467,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     id="vacFormIncludeWeekends"
                     checked={vacFormIncludeWeekends}
                     onChange={e => setVacFormIncludeWeekends(e.target.checked)}
-                    className="w-4 h-4 text-indigo-650 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
+                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
                   />
                   <label htmlFor="vacFormIncludeWeekends" className="text-3xs font-bold text-slate-655 uppercase tracking-wide cursor-pointer select-none">
                     ¿Incluir fines de semana en el conteo de días?
@@ -5577,10 +5577,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="space-y-0.5">
                                     <p className="text-3xs font-black text-slate-900 leading-tight">
-                                      Desde: <span className="text-indigo-650">{fmtDate(vac.startDate)}</span>
+                                      Desde: <span className="text-indigo-600">{fmtDate(vac.startDate)}</span>
                                     </p>
                                     <p className="text-3xs font-black text-slate-900 leading-tight">
-                                      Hasta: <span className="text-indigo-650">{fmtDate(vac.endDate)}</span>
+                                      Hasta: <span className="text-indigo-600">{fmtDate(vac.endDate)}</span>
                                     </p>
                                     <span className="inline-block bg-slate-100 text-slate-600 text-[8px] font-black px-1.5 py-0.2 rounded-full mt-1 border border-slate-200">
                                       {duration} {duration === 1 ? 'día' : 'días'}{vac.includeWeekends === false ? ' (hab.)' : ''}
@@ -5790,7 +5790,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             id="modal-vac-weekends"
                             checked={modalVacIncludeWeekends}
                             onChange={e => setModalVacIncludeWeekends(e.target.checked)}
-                            className="w-3.5 h-3.5 text-indigo-650 border-slate-355 rounded focus:ring-indigo-500 cursor-pointer"
+                            className="w-3.5 h-3.5 text-indigo-600 border-slate-355 rounded focus:ring-indigo-500 cursor-pointer"
                           />
                           <label htmlFor="modal-vac-weekends" className="text-4xs font-bold text-slate-655 uppercase tracking-wide cursor-pointer select-none">
                             ¿Incluir fines de semana en el conteo de días?
@@ -6139,7 +6139,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-650' : tab.color}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : tab.color}`} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -6917,7 +6917,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
               <div>
                 <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-                  <ClipboardList className="w-4 h-4 text-indigo-650" />
+                  <ClipboardList className="w-4 h-4 text-indigo-600" />
                   Módulo de Conciliación y Auditoría Cruzada
                 </h4>
                 <p className="text-3xs text-slate-500 mt-0.5">Concilia los reportes e informes técnicos cargados desde campo con las asignaciones planificadas del sistema.</p>
@@ -7246,7 +7246,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                 {/* Help tip card */}
                 <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 flex gap-3 text-3xs text-slate-700">
-                  <span className="text-indigo-650 font-bold text-xs shrink-0 font-mono">📢 GUÍA DE CONCILIACIÓN DE REPORTES:</span>
+                  <span className="text-indigo-600 font-bold text-xs shrink-0 font-mono">📢 GUÍA DE CONCILIACIÓN DE REPORTES:</span>
                   <div className="leading-relaxed">
                     <p className="font-bold">¿Cómo conciliar reportes técnicos en el sistema?</p>
                     <p className="mt-0.5">En la tabla superior, cada fila representa una orden de mantenimiento planificada para el mes seleccionado. Cuando un técnico de soporte carga su informe digital desde campo, la orden pasa al estado <strong>PND AUDITORÍA</strong>. Al verificar los datos y pulsar el interruptor <strong>SI</strong> (Conciliado), la orden se marcará como validada y cerrada definitivamente en el sistema cloud.</p>
@@ -7746,7 +7746,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <h3 className="text-2xl font-bold text-indigo-750 mt-1">{dashboardKPIs.totalOrders}</h3>
                     <p className="text-3xs text-slate-500 mt-1">Órdenes del periodo</p>
                   </div>
-                  <div className="p-3 bg-indigo-50 text-indigo-655 rounded-lg">
+                  <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
                     <CalendarRange className="w-5 h-5" />
                   </div>
                 </div>
@@ -8174,7 +8174,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   setNewWOSupportEngineers(newWOSupportEngineers.filter(id => id !== e.id));
                                 }
                               }}
-                              className="rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 w-3 h-3"
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3"
                             />
                             <span>{getEngineerEmoji(e.id)} {e.name.replace('Ing. ', '')}</span>
                           </label>
@@ -8538,7 +8538,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       });
                                     }
                                   }}
-                                  className="rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 w-3 h-3"
+                                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3"
                                 />
                                 <span>{getEngineerEmoji(e.id)} {e.name.replace('Ing. ', '')}</span>
                               </label>
@@ -9088,7 +9088,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                             }}
                             type="button"
-                            className="text-[9px] font-bold text-indigo-650 hover:text-indigo-850 hover:underline flex items-center gap-1 cursor-pointer"
+                            className="text-[9px] font-bold text-indigo-600 hover:text-indigo-850 hover:underline flex items-center gap-1 cursor-pointer"
                           >
                             🔑 Enviar correo para restablecer contraseña
                           </button>
@@ -9139,7 +9139,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <div className="text-[10px] text-slate-400 font-semibold mt-0.5 uppercase tracking-wide text-left">
                             {eng.specialty}
                           </div>
-                          <div className="text-[10px] text-indigo-650 font-extrabold mt-0.5">
+                          <div className="text-[10px] text-indigo-600 font-extrabold mt-0.5">
                             📅 {engActiveOrders} asignaciones este mes
                           </div>
                           {eng.email && (
@@ -9179,7 +9179,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setEditEngSpecialty(eng.specialty || 'Ingeniería');
                           }}
                           title="Editar detalles de este técnico"
-                          className="p-1.5 rounded-lg border bg-white border-slate-200 text-slate-400 hover:text-indigo-650 hover:border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer text-xs"
+                          className="p-1.5 rounded-lg border bg-white border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer text-xs"
                         >
                           ✏️
                         </button>
@@ -9433,7 +9433,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Users className="w-5 h-5 text-indigo-650" />
+                <Users className="w-5 h-5 text-indigo-600" />
                 <span>{editingClient ? 'Editar Cliente' : 'Nuevo Cliente'}</span>
               </h3>
               <button
@@ -9532,7 +9532,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </button>
                 <button
                   type="submit"
-                  className="bg-indigo-650 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
                 >
                   {editingClient ? 'Guardar Cambios' : 'Crear Registro'}
                 </button>
@@ -9694,7 +9694,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </button>
                 <button
                   type="submit"
-                  className="bg-indigo-650 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
                 >
                   {editingEquip ? 'Guardar Cambios' : 'Crear Registro'}
                 </button>
@@ -10024,7 +10024,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setTempEquipName('');
                               setTempEquipBrand('');
                             }}
-                            className="bg-indigo-650 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
                           >
                             Agregar
                           </button>
@@ -10142,7 +10142,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormQcDate(updated[updated.length - 1]);
                               }
                             }}
-                            className="bg-indigo-650 hover:bg-indigo-700 text-white font-extrabold px-3 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
                           >
                             Agregar
                           </button>
@@ -10218,7 +10218,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </button>
                 <button
                   type="submit"
-                  className="bg-indigo-650 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
                 >
                   {editingContract ? 'Guardar Cambios' : 'Crear Registro'}
                 </button>
@@ -10234,7 +10234,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-xl p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Briefcase className="w-5 h-5 text-indigo-650" />
+                <Briefcase className="w-5 h-5 text-indigo-600" />
                 <span>Detalle de Contrato: {selectedContractForDetails.id}</span>
               </h3>
               <button
