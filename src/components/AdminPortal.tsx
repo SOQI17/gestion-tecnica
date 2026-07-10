@@ -3518,6 +3518,35 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       }
     }
 
+    // Auto-schedule work orders for each of the maintenance dates
+    if (onAddWorkOrder && con.maintenanceDates && con.maintenanceDates.length > 0) {
+      for (const date of con.maintenanceDates) {
+        const alreadyScheduled = workOrders.some(
+          wo => wo.clientId === targetClientId && wo.plannedDate === date
+        );
+        if (!alreadyScheduled) {
+          const isQc = con.qcDate === date || 
+            (!con.qcDate && date === con.maintenanceDates[con.maintenanceDates.length - 1]);
+          
+          const newWO: WorkOrder = {
+            id: `WO-MTO-${con.id}-${date}`,
+            clientId: targetClientId,
+            engineerId: engineers[0]?.id || 'ENG-001',
+            plannedDate: date,
+            plannedTime: '09:00',
+            type: isQc ? 'Inspección' : 'Preventivo',
+            status: 'Pendiente',
+            equipmentName: con.equipmentItems && con.equipmentItems.length > 0
+              ? con.equipmentItems.map(eq => `${eq.name} (${eq.brand})`).join(', ')
+              : 'Equipos según contrato',
+            notes: `Mantenimiento preventivo autogenerado bajo Contrato: ${con.id}${isQc ? ' (Visita de Control de Calidad)' : ''}`
+          };
+          
+          await onAddWorkOrder(newWO);
+        }
+      }
+    }
+
     if (editingContract) {
       if (onUpdateContract) onUpdateContract(con);
     } else {
