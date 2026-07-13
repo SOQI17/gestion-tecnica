@@ -4510,7 +4510,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                 const shouldBreakAfter = false; // No forzar saltos de página entre semanas
                 return (
-                  <div key={wIndex} className={`calendar-week-container bg-white rounded-xl border border-slate-200 mb-4 overflow-hidden shadow-2xs print:mb-6 print:border-slate-200 ${shouldBreakAfter ? 'print-break-after' : ''}`}>
+                  <div key={wIndex} style={{ display: 'flex', flexDirection: 'column' }} className={`calendar-week-container bg-white rounded-xl border border-slate-200 mb-4 overflow-hidden shadow-2xs print:mb-6 print:border-slate-200 ${shouldBreakAfter ? 'print-break-after' : ''}`}>
                     <div className="hidden print:flex justify-between items-center p-2.5 pb-1 border-b border-slate-200 bg-indigo-50/20">
                       <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">
                         Cronograma Mensual - {calendarMonthName} {calendarYear}
@@ -4529,7 +4529,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
 
                     {tracks.length > 0 && (
-                      <div className="bg-slate-50/40 py-2 border-b border-slate-200 space-y-1">
+                      <div className="bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
                         {tracks.map((track, tIdx) => (
                           <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
                             {track.map(wo => {
@@ -6765,7 +6765,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       const shouldBreakAfter = wIndex % 2 === 1 && wIndex < weeks.length - 1;
                       return (
-                        <div key={wIndex} className={`calendar-week-container bg-white rounded-xl border border-slate-200 mb-4 overflow-hidden shadow-2xs print:mb-6 print:border-slate-200 ${shouldBreakAfter ? 'print-break-after' : ''}`}>
+                        <div key={wIndex} style={{ display: 'flex', flexDirection: 'column' }} className={`calendar-week-container bg-white rounded-xl border border-slate-200 mb-4 overflow-hidden shadow-2xs print:mb-6 print:border-slate-200 ${shouldBreakAfter ? 'print-break-after' : ''}`}>
                           {/* Print-only week header metadata */}
                           <div className="hidden print:flex justify-between items-center p-2.5 pb-1 border-b border-slate-200">
                             <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">
@@ -6787,7 +6787,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Multi-day events tracks (if any) */}
                           {tracks.length > 0 && (
-                            <div className="bg-slate-50/40 py-2 border-b border-slate-200 space-y-1">
+                            <div className="bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
                               {tracks.map((track, tIdx) => (
                                 <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
                                   {track.map(wo => {
@@ -10422,3 +10422,4 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     </div>
   );
 }
+
