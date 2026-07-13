@@ -106,3 +106,9 @@
   -ms-overflow-style: none;  /* IE y Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Fix calendar multi-day tracks overlapping the day cells grid on screen */
+.calendar-week-container {
+  display: flex !important;
+  flex-direction: column !important;
+}

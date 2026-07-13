@@ -1993,10 +1993,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               {/* Contract commitments for prev overflow day */}
               {getContractCommitmentsForDate(prevDateStr).map((commitment, index) => {
                 const badgeBg = commitment.isDone 
-                  ? 'bg-emerald-50/70 border-emerald-250 text-emerald-950 border-l-4 border-l-emerald-600'
+                  ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950 border-l-4 border-l-emerald-600'
                   : commitment.isQc
-                  ? 'bg-violet-50/70 border-violet-250 text-violet-955 border-l-4 border-l-violet-600'
-                  : 'bg-indigo-50/70 border-indigo-250 text-indigo-950 border-l-4 border-l-indigo-600';
+                  ? 'bg-violet-50/70 border-violet-200 text-violet-955 border-l-4 border-l-violet-600'
+                  : 'bg-indigo-50/70 border-indigo-200 text-indigo-950 border-l-4 border-l-indigo-600';
                 return (
                   <div
                     key={`pv-con-maint-${commitment.contract.id}-${index}`}
@@ -2166,10 +2166,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             {/* Contract commitments for current day */}
             {getContractCommitmentsForDate(dateStr).map((commitment, index) => {
               const badgeBg = commitment.isDone 
-                ? 'bg-emerald-50/70 border-emerald-250 text-emerald-955 border-l-4 border-l-emerald-600'
+                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-955 border-l-4 border-l-emerald-600'
                 : commitment.isQc
-                ? 'bg-violet-50/70 border-violet-250 text-violet-955 border-l-4 border-l-violet-600'
-                : 'bg-indigo-50/70 border-indigo-250 text-indigo-950 border-l-4 border-l-indigo-600';
+                ? 'bg-violet-50/70 border-violet-200 text-violet-955 border-l-4 border-l-violet-600'
+                : 'bg-indigo-50/70 border-indigo-200 text-indigo-950 border-l-4 border-l-indigo-600';
               return (
                 <div
                   key={`con-maint-${commitment.contract.id}-${index}`}
@@ -2374,10 +2374,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               {/* Contract commitments for next overflow day */}
               {getContractCommitmentsForDate(nextDateStr).map((commitment, index) => {
                 const badgeBg = commitment.isDone 
-                  ? 'bg-emerald-50/70 border-emerald-250 text-emerald-955 border-l-4 border-l-emerald-600'
+                  ? 'bg-emerald-50/70 border-emerald-200 text-emerald-955 border-l-4 border-l-emerald-600'
                   : commitment.isQc
-                  ? 'bg-violet-50/70 border-violet-250 text-violet-955 border-l-4 border-l-violet-600'
-                  : 'bg-indigo-50/70 border-indigo-250 text-indigo-950 border-l-4 border-l-indigo-600';
+                  ? 'bg-violet-50/70 border-violet-200 text-violet-955 border-l-4 border-l-violet-600'
+                  : 'bg-indigo-50/70 border-indigo-200 text-indigo-950 border-l-4 border-l-indigo-600';
                 return (
                   <div
                     key={`nv-con-maint-${commitment.contract.id}-${index}`}
@@ -4328,7 +4328,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <select
                     value={calendarMonth}
                     onChange={(e) => setCalendarMonth(Number(e.target.value))}
-                    className="bg-white border border-indigo-255 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
+                    className="bg-white border border-indigo-200 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
                   >
                     {[
                       { val: 1, name: 'Enero' },
@@ -4350,7 +4350,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <select
                     value={calendarYear}
                     onChange={(e) => setCalendarYear(Number(e.target.value))}
-                    className="bg-white border border-indigo-255 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
+                    className="bg-white border border-indigo-200 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
                   >
                     {[2025, 2026, 2027, 2028].map(y => (
                       <option key={y} value={y}>{y}</option>
@@ -4529,7 +4529,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
 
                     {tracks.length > 0 && (
-                      <div className="bg-slate-50/40 py-2 border-b border-slate-250 space-y-1">
+                      <div className="bg-slate-50/40 py-2 border-b border-slate-200 space-y-1">
                         {tracks.map((track, tIdx) => (
                           <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
                             {track.map(wo => {
@@ -4605,12 +4605,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     </span>
                                   </div>
                                   <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${
-                                    wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-255' :
-                                    wo.status === 'Conciliado' ? 'bg-emerald-100/60 text-emerald-800 border-emerald-250' :
-                                    wo.status === 'Reportado' ? 'bg-indigo-100/60 text-indigo-800 border-indigo-255' :
-                                    wo.status === 'Realizado' ? 'bg-blue-100/60 text-blue-800 border-blue-250' :
-                                    wo.status === 'En Proceso' ? 'bg-sky-100/60 text-sky-800 border-sky-250' :
-                                    'bg-yellow-100/60 text-yellow-800 border-yellow-250'
+                                    wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200' :
+                                    wo.status === 'Conciliado' ? 'bg-emerald-100/60 text-emerald-800 border-emerald-200' :
+                                    wo.status === 'Reportado' ? 'bg-indigo-100/60 text-indigo-800 border-indigo-200' :
+                                    wo.status === 'Realizado' ? 'bg-blue-100/60 text-blue-800 border-blue-200' :
+                                    wo.status === 'En Proceso' ? 'bg-sky-100/60 text-sky-800 border-sky-200' :
+                                    'bg-yellow-100/60 text-yellow-800 border-yellow-200'
                                   }`}>
                                     {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
                                   </span>
@@ -4783,7 +4783,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   <div className="flex flex-col items-end gap-1.5">
                                     <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border shrink-0 ${
                                       vac.status === 'Aprobado'
-                                        ? (taken ? 'bg-amber-50 text-amber-805 border-amber-250' : 'bg-emerald-50 text-emerald-705 border-emerald-200')
+                                        ? (taken ? 'bg-amber-50 text-amber-805 border-amber-200' : 'bg-emerald-50 text-emerald-705 border-emerald-200')
                                         : vac.status === 'Rechazado'
                                         ? 'bg-red-50 text-red-700 border-red-200'
                                         : 'bg-amber-50 text-amber-805 border-amber-200'
@@ -4856,7 +4856,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               <select
                 value={auditEngId}
                 onChange={e => setAuditEngId(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer font-bold"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer font-bold"
               >
                 <option value="">-- Seleccionar Técnico --</option>
                 {engineers.map(e => (
@@ -4917,7 +4917,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <select
                             value={permFormType}
                             onChange={e => setPermFormType(e.target.value as any)}
-                            className="w-full p-1.5 rounded border border-slate-250 bg-white text-[10px] font-bold"
+                            className="w-full p-1.5 rounded border border-slate-200 bg-white text-[10px] font-bold"
                           >
                             <option value="Permiso">🔴 Permiso (Descuenta)</option>
                             <option value="Compensación">🟢 Compensación (Suma)</option>
@@ -5008,8 +5008,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <div className="flex items-center gap-2">
                                   <span className={`font-mono font-bold px-1.5 py-0.2 rounded text-[9px] ${
                                     p.type === 'Compensación' 
-                                      ? 'bg-emerald-50 text-emerald-805 border-emerald-250' 
-                                      : 'bg-rose-50 text-rose-800 border border-rose-250'
+                                      ? 'bg-emerald-50 text-emerald-805 border-emerald-200' 
+                                      : 'bg-rose-50 text-rose-800 border border-rose-200'
                                   }`}>
                                     {p.type === 'Compensación' 
                                       ? (p.hours === 8 ? '+1 día lab.' : `+${p.hours}h`) 
@@ -5596,7 +5596,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   <div className="flex flex-col items-end gap-1.5 shrink-0">
                                     <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border shrink-0 ${
                                       vac.status === 'Aprobado'
-                                        ? (taken ? 'bg-amber-50 text-amber-805 border-amber-250' : 'bg-emerald-50 text-emerald-705 border-emerald-200')
+                                        ? (taken ? 'bg-amber-50 text-amber-805 border-amber-200' : 'bg-emerald-50 text-emerald-705 border-emerald-200')
                                         : vac.status === 'Rechazado'
                                         ? 'bg-red-50 text-red-700 border-red-200'
                                         : 'bg-amber-50 text-amber-805 border-amber-200'
@@ -5796,7 +5796,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             id="modal-vac-weekends"
                             checked={modalVacIncludeWeekends}
                             onChange={e => setModalVacIncludeWeekends(e.target.checked)}
-                            className="w-3.5 h-3.5 text-indigo-600 border-slate-355 rounded focus:ring-indigo-500 cursor-pointer"
+                            className="w-3.5 h-3.5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
                           />
                           <label htmlFor="modal-vac-weekends" className="text-4xs font-bold text-slate-655 uppercase tracking-wide cursor-pointer select-none">
                             ¿Incluir fines de semana en el conteo de días?
@@ -5968,8 +5968,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     <div className="flex items-center gap-2">
                                       <span className={`font-mono font-bold px-1.5 py-0.2 rounded text-[9px] ${
                                         p.type === 'Compensación' 
-                                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-250' 
-                                          : 'bg-rose-50 text-rose-800 border border-rose-250'
+                                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                                          : 'bg-rose-50 text-rose-800 border border-rose-200'
                                       }`}>
                                         {p.type === 'Compensación' ? `+${p.hours}h` : `-${p.hours}h`}
                                       </span>
@@ -6371,7 +6371,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       type="button"
                       id="btn-demo-reportes"
                       onClick={handleLoadSampleReportes}
-                      className="bg-emerald-50 hover:bg-emerald-150 text-emerald-700 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-emerald-250 transition-colors cursor-pointer"
+                      className="bg-emerald-50 hover:bg-emerald-150 text-emerald-700 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-emerald-200 transition-colors cursor-pointer"
                     >
                       🧪 Demo Reportes
                     </button>
@@ -6435,7 +6435,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <select
                                   value={importYear}
                                   onChange={(e) => handleImportYearChange(e.target.value)}
-                                  className="bg-white border border-slate-250 rounded px-2 py-0.5 text-3xs font-extrabold text-slate-700 outline-hidden"
+                                  className="bg-white border border-slate-200 rounded px-2 py-0.5 text-3xs font-extrabold text-slate-700 outline-hidden"
                                 >
                                   {['2025', '2026', '2027', '2028'].map(y => (
                                     <option key={y} value={y}>{y} Año</option>
@@ -6447,7 +6447,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <select
                                   value={importMonth}
                                   onChange={(e) => handleImportMonthChange(e.target.value)}
-                                  className="bg-white border border-slate-250 rounded px-2 py-0.5 text-3xs font-extrabold text-slate-700 outline-hidden"
+                                  className="bg-white border border-slate-200 rounded px-2 py-0.5 text-3xs font-extrabold text-slate-700 outline-hidden"
                                 >
                                   {[
                                     { val: '01', name: 'Enero' },
@@ -6473,7 +6473,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               <p className="mt-1.5 font-semibold">
                                 Esquema Identificado: {' '}
                                 <span className={`px-2 py-0.5 rounded font-extrabold text-[9px] uppercase ${
-                                  detectedFormatType === 'reportes' ? 'bg-emerald-100 text-emerald-800 border border-emerald-250' : 'bg-indigo-100 text-indigo-800 border border-indigo-250'
+                                  detectedFormatType === 'reportes' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
                                 }`}>
                                   {detectedFormatType === 'reportes' ? 'Reportes Históricos por Ingeniero' : 'Planificación Mensual (Calendario)'}
                                 </span>
@@ -6575,7 +6575,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <select
                           value={calendarMonth}
                           onChange={(e) => setCalendarMonth(Number(e.target.value))}
-                          className="bg-white border border-indigo-255 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
+                          className="bg-white border border-indigo-200 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
                         >
                           {[
                             { val: 1, name: 'Enero' },
@@ -6597,7 +6597,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <select
                           value={calendarYear}
                           onChange={(e) => setCalendarYear(Number(e.target.value))}
-                          className="bg-white border border-indigo-255 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
+                          className="bg-white border border-indigo-200 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
                         >
                           {[2025, 2026, 2027, 2028].map(y => (
                             <option key={y} value={y}>{y}</option>
@@ -6787,7 +6787,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Multi-day events tracks (if any) */}
                           {tracks.length > 0 && (
-                            <div className="bg-slate-50/40 py-2 border-b border-slate-250 space-y-1">
+                            <div className="bg-slate-50/40 py-2 border-b border-slate-200 space-y-1">
                               {tracks.map((track, tIdx) => (
                                 <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
                                   {track.map(wo => {
@@ -6884,12 +6884,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         </div>
                                         
                                         <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${
-                                          wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-250' :
-                                          wo.status === 'Conciliado' ? 'bg-emerald-100/60 text-emerald-800 border-emerald-250' :
-                                          wo.status === 'Reportado' ? 'bg-indigo-100/60 text-indigo-800 border-indigo-250' :
-                                          wo.status === 'Realizado' ? 'bg-blue-100/60 text-blue-800 border-blue-250' :
-                                          wo.status === 'En Proceso' ? 'bg-sky-100/60 text-sky-800 border-sky-250' :
-                                          'bg-yellow-100/60 text-yellow-800 border-yellow-250'
+                                          wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200' :
+                                          wo.status === 'Conciliado' ? 'bg-emerald-100/60 text-emerald-800 border-emerald-200' :
+                                          wo.status === 'Reportado' ? 'bg-indigo-100/60 text-indigo-800 border-indigo-200' :
+                                          wo.status === 'Realizado' ? 'bg-blue-100/60 text-blue-800 border-blue-200' :
+                                          wo.status === 'En Proceso' ? 'bg-sky-100/60 text-sky-800 border-sky-200' :
+                                          'bg-yellow-100/60 text-yellow-800 border-yellow-200'
                                         }`}>
                                           {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
                                         </span>
@@ -8864,7 +8864,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     {/* Footer buttons */}
                     <div className="mt-6 border-t border-slate-100 pt-4 flex justify-end gap-3">
                       {isConfirmingDelete ? (
-                        <div className="flex items-center gap-1.5 border border-rose-250 bg-rose-50/70 p-1 rounded-lg mr-auto">
+                        <div className="flex items-center gap-1.5 border border-rose-200 bg-rose-50/70 p-1 rounded-lg mr-auto">
                           <span className="text-3xs font-extrabold text-rose-800 px-1">¿Eliminar orden?</span>
                           <button
                             type="button"
@@ -9166,7 +9166,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               eng.availability === 'En Campo'
                                 ? 'bg-sky-50 text-sky-850 border-sky-200 font-black'
                                 : eng.availability === 'Disponible'
-                                ? 'bg-emerald-50 text-emerald-805 border-emerald-250'
+                                ? 'bg-emerald-50 text-emerald-805 border-emerald-200'
                                 : 'bg-slate-50 text-slate-500 border-slate-200'
                             }`}
                           >
@@ -9275,7 +9275,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <select
                       value={mergeTargetId}
                       onChange={(e) => setMergeTargetId(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                     >
                       <option value="">Seleccionar técnico...</option>
                       {engineers
@@ -9341,7 +9341,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 value={resetConfirmText}
                 onChange={(e) => setResetConfirmText(e.target.value)}
                 placeholder={`REINICIAR ${calendarMonthName.toUpperCase()}`}
-                className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all uppercase"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all uppercase"
               />
             </div>
 
@@ -9395,7 +9395,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 value={reportMonthConfirmText}
                 onChange={(e) => setReportMonthConfirmText(e.target.value)}
                 placeholder={`REPORTAR ${calendarMonthName.toUpperCase()}`}
-                className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all uppercase"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all uppercase"
               />
             </div>
 
@@ -9463,7 +9463,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   value={clientFormId}
                   onChange={(e) => setClientFormId(e.target.value)}
                   placeholder="Ej. 1792040001001"
-                  className="w-full bg-slate-50 disabled:bg-slate-100/80 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                  className="w-full bg-slate-50 disabled:bg-slate-100/80 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                 />
               </div>
 
@@ -9475,7 +9475,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   value={clientFormName}
                   onChange={(e) => setClientFormName(e.target.value)}
                   placeholder="Ej. Hospital Metropolitano"
-                  className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                 />
               </div>
 
@@ -9487,7 +9487,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   value={clientFormAddress}
                   onChange={(e) => setClientFormAddress(e.target.value)}
                   placeholder="Ej. Av. Mariana de Jesús s/n"
-                  className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                 />
               </div>
 
@@ -9498,7 +9498,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   value={clientFormCity}
                   onChange={(e) => setClientFormCity(e.target.value)}
                   placeholder="Ej. Quito / Matriz"
-                  className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                 />
               </div>
 
@@ -9510,7 +9510,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     value={clientFormContact}
                     onChange={(e) => setClientFormContact(e.target.value)}
                     placeholder="Ej. Dra. María Elena"
-                    className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
                 <div className="space-y-1">
@@ -9520,7 +9520,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     value={clientFormPhone}
                     onChange={(e) => setClientFormPhone(e.target.value)}
                     placeholder="Ej. 099123456"
-                    className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                   />
                 </div>
               </div>
@@ -9579,7 +9579,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     value={equipFormId}
                     onChange={(e) => setEquipFormId(e.target.value)}
                     placeholder="Ej. EQ-1002"
-                    className="w-full bg-slate-50 disabled:bg-slate-100/80 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                    className="w-full bg-slate-50 disabled:bg-slate-100/80 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                   />
                 </div>
 
@@ -9589,7 +9589,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     required
                     value={equipFormClientId}
                     onChange={(e) => setEquipFormClientId(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
                   >
                     <option value="">Seleccione cliente...</option>
                     {clients.map(c => (
@@ -9607,7 +9607,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   value={equipFormName}
                   onChange={(e) => setEquipFormName(e.target.value)}
                   placeholder="Ej. Ecógrafo Voluson E10"
-                  className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                 />
               </div>
 
@@ -9620,7 +9620,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     value={equipFormBrand}
                     onChange={(e) => setEquipFormBrand(e.target.value)}
                     placeholder="Ej. GENERAL ELECTRIC"
-                    className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
                   />
                 </div>
 
@@ -9632,7 +9632,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     value={equipFormModel}
                     onChange={(e) => setEquipFormModel(e.target.value)}
                     placeholder="Ej. Voluson E10"
-                    className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
               </div>
@@ -9646,7 +9646,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     value={equipFormSerial}
                     onChange={(e) => setEquipFormSerial(e.target.value)}
                     placeholder="Ej. SN89283712"
-                    className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                   />
                 </div>
 
@@ -9657,7 +9657,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     value={equipFormSW}
                     onChange={(e) => setEquipFormSW(e.target.value)}
                     placeholder="Ej. v6.2.1 (Opcional)"
-                    className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                   />
                 </div>
               </div>
@@ -9670,7 +9670,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     value={equipFormSucursal}
                     onChange={(e) => setEquipFormSucursal(e.target.value)}
                     placeholder="Ej. Ginecología - Piso 3"
-                    className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
 
@@ -9679,7 +9679,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <select
                     value={equipFormStatus}
                     onChange={(e) => setEquipFormStatus(e.target.value as any)}
-                    className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
                   >
                     <option value="Operativo">🟢 Operativo</option>
                     <option value="No Operativo">🔴 No Operativo</option>
@@ -9729,7 +9729,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           value={contractFormId}
                           onChange={(e) => setContractFormId(e.target.value)}
                           placeholder="Ej. CONTRATO-2026-004"
-                          className="w-full bg-slate-55 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                          className="w-full bg-slate-55 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                         />
                       </div>
 
@@ -9748,7 +9748,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                             }
                           }}
-                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
                         >
                           <option value="Garantía extendida/Contrato">Garantía extendida / Contrato</option>
                           <option value="Garantía de compra">Garantía de compra</option>
@@ -9780,7 +9780,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   }
                                 }}
                                 onFocus={() => setIsContractClientDropdownOpen(true)}
-                                className="w-full bg-slate-50 border border-slate-250 rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                               />
                               {contractClientSearchQuery && (
                                 <button
@@ -9902,7 +9902,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <select
                           value={contractFormStatus}
                           onChange={(e) => setContractFormStatus(e.target.value as any)}
-                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
                         >
                           <option value="Activo">🟢 Activo</option>
                           <option value="Pendiente">🟡 Pendiente</option>
@@ -9926,7 +9926,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                             }
                           }}
-                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                         />
                       </div>
                     </div>
@@ -9948,7 +9948,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                             }
                           }}
-                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                         />
                       </div>
 
@@ -9959,7 +9959,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           onChange={(e) => setContractFormCoverage(e.target.value)}
                           rows={1}
                           placeholder="Límites de repuestos o coberturas..."
-                          className="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs font-semibold text-slate-705 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                         />
                       </div>
                     </div>
@@ -10096,7 +10096,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 }
                               }
                             }}
-                            className="w-full bg-slate-50 border border-slate-250 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-705 cursor-pointer outline-hidden focus:bg-white"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-700 cursor-pointer outline-hidden focus:bg-white"
                           >
                             <option value="Ninguno">Ninguno</option>
                             <option value="Mensual">Mensual</option>
