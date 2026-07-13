@@ -109,6 +109,14 @@
 
 /* Fix calendar multi-day tracks overlapping the day cells grid on screen */
 .calendar-week-container {
-  display: flex !important;
-  flex-direction: column !important;
+  display: grid !important;
+  grid-template-rows: auto auto !important;
+}
+
+.calendar-week-container > div:not(.calendar-days-grid):not(.hidden) {
+  grid-row: 1 !important;
+}
+
+.calendar-week-container > .calendar-days-grid {
+  grid-row: 2 !important;
 }
