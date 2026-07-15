@@ -91,6 +91,7 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
   const [pdfParsedEngineerName, setPdfParsedEngineerName] = useState<string>('');
   const [pdfParsedEngineerSede, setPdfParsedEngineerSede] = useState<'Quito' | 'Guayaquil' | 'Cuenca'>('Quito');
   const [pdfParsedCourses, setPdfParsedCourses] = useState<{ codigo: string; titulo: string; fecha: string }[]>([]);
+  const [rawPdfText, setRawPdfText] = useState<string>('');
   const [editingHistRecord, setEditingHistRecord] = useState<HistorialEntrenamiento | null>(null);
   const [editHistFecha, setEditHistFecha] = useState<string>('');
   const [selectedCourseForCompletions, setSelectedCourseForCompletions] = useState<Curso | null>(null);
@@ -389,14 +390,15 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
     try {
       if (file.name.toLowerCase().endsWith('.pdf')) {
         const text = await extractTextFromPdf(file);
+        setRawPdfText(text);
         
         // 1. Detect Engineer Name
         let detectedName = '';
-        const nameMatch = text.match(/(?:TRAINING\s+TRANSCRIPT\s+FOR|EXPEDIENTE\s+DE\s+FORMACI[ÓO]N\s+PARA)\s+([A-Z\sÁÉÍÓÚÑ]+)/i);
+        const nameMatch = text.match(/(?:TRAINING\s+TRANSCRIPT\s+FOR|EXPEDIENTE\s+DE\s+FORMACI[ÓO]N\s+PARA|LISTA\s+DE\s+CURSOS?\s+DE?|LISTA\s+DE\s+CURSO\s+PARA?|LISTA\s+DE\s+CURSOS?\s+PARA?|LISTA\s+DE\s+CURSO)\s+([A-Z\sÁÉÍÓÚÑa-záéíóúñ]+)/i);
         if (nameMatch) {
           detectedName = nameMatch[1].replace(/[\r\n]/g, '').trim().toUpperCase();
         } else {
-          const fallbackMatch = text.match(/(?:completed\s+activities\s+for|actividades\s+completadas\s+para)\s+(.+)/i);
+          const fallbackMatch = text.match(/(?:completed\s+activities\s+for|actividades\s+completadas\s+para|lista\s+de\s+cursos?\s+de?|lista\s+de\s+curso\s+de?|lista\s+de\s+curso\s+para?)\s+(.+)/i);
           if (fallbackMatch) {
             detectedName = fallbackMatch[1].replace(/[\r\n]/g, '').trim().toUpperCase();
           }
@@ -480,6 +482,20 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
               i++;
             }
           }
+          
+          // Merge continuation codes (e.g. "GEHC" followed by "-GSTD-")
+          if (currentLine.match(/^(?:GEHC|GE)$/i) && i < rawLines.length - 1) {
+            const nextLine = rawLines[i + 1];
+            if (nextLine.match(/^[-_a-z0-9\/]+$/i) && !nextLine.match(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/)) {
+              if (nextLine.startsWith('-')) {
+                currentLine = currentLine + nextLine;
+              } else {
+                currentLine = currentLine + '-' + nextLine;
+              }
+              i++;
+            }
+          }
+          
           if (currentLine.length > 0) {
             lines.push(currentLine);
           }
@@ -579,10 +595,10 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
           // Fallback parsing for custom list/tables (like Jose Quinde's PDF table)
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            // Match any token containing GE or GEHC code
-            const codeMatch = line.match(/\b((?:GEHC|GE)[-\s][A-Z0-9_\-\/]+)\b/i);
+            // Match any token containing GE or GEHC code, allowing internal spaces or dashes
+            const codeMatch = line.match(/\b(?:GEHC|GE)(?:[-\s][A-Z0-9_]+)+\b/i);
             if (codeMatch) {
-              const codigo = codeMatch[1].trim().toUpperCase();
+              const codigo = codeMatch[0].trim().toUpperCase();
               
               let foundDate = '';
               let title = '';
@@ -602,7 +618,7 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
               // 3. Title from previous line if same line title is missing
               if (!title && i > 0) {
                 const prevLine = lines[i - 1];
-                if (!prevLine.match(/\b(?:GEHC|GE)[-\s]/i) && !prevLine.match(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/)) {
+                if (!prevLine.match(/\b(?:GEHC|GE)\b/i) && !prevLine.match(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/)) {
                   title = prevLine;
                 }
               }
@@ -643,6 +659,65 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
                 codigo,
                 titulo: title,
                 fecha: foundDate
+              });
+            }
+          }
+        }
+
+        if (coursesMap.size < 3) {
+          // Secondary fallback: Column-by-column or Garbled Table parsing (align by index)
+          const allCodes: string[] = [];
+          const allDates: string[] = [];
+          const allTitles: string[] = [];
+          
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            
+            // 1. Detect date
+            const dateMatch = line.match(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/);
+            if (dateMatch) {
+              allDates.push(dateMatch[0]);
+              continue;
+            }
+            
+            // Check for wrapped date (e.g. "11/21/202" followed by "2")
+            const wrappedMatch = line.match(/\b\d{1,2}\/\d{1,2}\/20\d\b/);
+            if (wrappedMatch && i < lines.length - 1 && lines[i + 1].match(/^\d$/)) {
+              allDates.push(wrappedMatch[0] + lines[i + 1]);
+              i++; // skip next line
+              continue;
+            }
+            
+            // 2. Detect code
+            const codeMatch = line.match(/\b(?:GEHC|GE)(?:[-\s][A-Z0-9_]+)+\b/i);
+            if (codeMatch) {
+              allCodes.push(codeMatch[0].trim().toUpperCase());
+              continue;
+            }
+            
+            // 3. Otherwise, it's a title (if it's not a header/date)
+            const cleanLine = line.trim();
+            if (
+              cleanLine.length > 3 && 
+              !cleanLine.match(/^(?:Curso|C[óo]digo|Fecha|Cursos?\s*GE|Actividades|Puntuaci[óo]n|Estado|Asistencia|Completo|Acreditaciones|Matriz)/i)
+            ) {
+              allTitles.push(cleanLine);
+            }
+          }
+          
+          // Align by index
+          const count = Math.max(allCodes.length, allDates.length);
+          if (count > 0) {
+            coursesMap.clear(); // Clear any partial single matched course
+            for (let k = 0; k < count; k++) {
+              const codigo = allCodes[k] || `CURSO-TEMP-${k + 1}`;
+              const title = allTitles[k] || `Curso Especializado ${k + 1}`;
+              const fecha = allDates[k] || new Date().toLocaleDateString('en-US');
+              
+              coursesMap.set(codigo, {
+                codigo,
+                titulo: title.replace(/^[–—\-|]\s*/, '').trim(),
+                fecha
               });
             }
           }
@@ -2196,6 +2271,19 @@ service cloud.firestore {
                               : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                           }`}>
                             {importStatusMsg}
+                          </div>
+                        )}
+
+                        {rawPdfText && (
+                          <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200 text-left">
+                            <details className="cursor-pointer">
+                              <summary className="text-[10px] font-bold text-slate-500 hover:text-slate-700 select-none">
+                                Ver texto extraído del PDF (Debug)
+                              </summary>
+                              <pre className="mt-2 p-2 bg-slate-900 text-slate-200 text-[9px] rounded overflow-auto max-h-40 font-mono whitespace-pre-wrap text-left">
+                                {rawPdfText}
+                              </pre>
+                            </details>
                           </div>
                         )}
                       </div>
