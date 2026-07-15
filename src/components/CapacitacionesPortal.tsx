@@ -469,7 +469,21 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
         }
         
         // 2. Parse Courses
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        const rawLines = text.split('\n').map(l => l.trim());
+        const lines: string[] = [];
+        for (let i = 0; i < rawLines.length; i++) {
+          let currentLine = rawLines[i];
+          if (currentLine.endsWith('-') && i < rawLines.length - 1) {
+            const nextLine = rawLines[i + 1];
+            if (nextLine.length < 15 && nextLine.match(/^[a-z0-9_]+$/i)) {
+              currentLine = currentLine + nextLine;
+              i++;
+            }
+          }
+          if (currentLine.length > 0) {
+            lines.push(currentLine);
+          }
+        }
         const coursesMap = new Map<string, { codigo: string; titulo: string; fecha: string }>();
         
         const parseDateToMs = (dStr: string): number => {
@@ -557,6 +571,79 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
               }
             } else {
               coursesMap.set(codigo, newCourse);
+            }
+          }
+        }
+
+        if (coursesMap.size === 0) {
+          // Fallback parsing for custom list/tables (like Jose Quinde's PDF table)
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            // Match any token containing GE or GEHC code
+            const codeMatch = line.match(/\b((?:GEHC|GE)[-\s][A-Z0-9_\-\/]+)\b/i);
+            if (codeMatch) {
+              const codigo = codeMatch[1].trim().toUpperCase();
+              
+              let foundDate = '';
+              let title = '';
+              
+              // 1. Same line date match
+              const sameLineDateMatch = line.match(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/);
+              if (sameLineDateMatch) {
+                foundDate = sameLineDateMatch[0];
+              }
+              
+              // 2. Title from same line (before the code)
+              const codeIdx = line.indexOf(codeMatch[0]);
+              if (codeIdx > 5) {
+                title = line.substring(0, codeIdx).trim();
+              }
+              
+              // 3. Title from previous line if same line title is missing
+              if (!title && i > 0) {
+                const prevLine = lines[i - 1];
+                if (!prevLine.match(/\b(?:GEHC|GE)[-\s]/i) && !prevLine.match(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/)) {
+                  title = prevLine;
+                }
+              }
+              
+              // 4. Date from next line or wrapped next lines
+              if (!foundDate && i < lines.length - 1) {
+                const nextLine = lines[i + 1];
+                const dateMatch = nextLine.match(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/);
+                if (dateMatch) {
+                  foundDate = dateMatch[0];
+                } else {
+                  // Check for wrapped dates (e.g. "11/10/202" followed by "3")
+                  const wrappedDateMatch = nextLine.match(/\b\d{1,2}\/\d{1,2}\/20\d\b/);
+                  if (wrappedDateMatch && i < lines.length - 2) {
+                    const nextNextLine = lines[i + 2];
+                    if (nextNextLine.match(/^\d$/)) {
+                      foundDate = wrappedDateMatch[0] + nextNextLine;
+                    }
+                  }
+                }
+              }
+              
+              if (title) {
+                title = title
+                  .replace(/^[–—\-|]\s*/, '')
+                  .replace(/\s+/g, ' ')
+                  .trim();
+              } else {
+                title = 'Curso sin título';
+              }
+              
+              if (!foundDate) {
+                const today = new Date();
+                foundDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+              }
+              
+              coursesMap.set(codigo, {
+                codigo,
+                titulo: title,
+                fecha: foundDate
+              });
             }
           }
         }
