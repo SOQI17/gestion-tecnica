@@ -410,6 +410,7 @@ export function obtenerProximoCursoIngeniero(
  */
 export function getSimilarity(str1: string, str2: string): number {
   const clean = (s: string) => {
+    if (!s) return '';
     return s
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -450,6 +451,7 @@ export function getSimilarity(str1: string, str2: string): number {
  */
 export function resolveEngineerId(parsedName: string, engineersList: Engineer[]): string {
   const cleanString = (s: string) => {
+    if (!s) return '';
     return s
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -460,14 +462,16 @@ export function resolveEngineerId(parsedName: string, engineersList: Engineer[])
   };
 
   const cleanParsed = cleanString(parsedName);
-  if (!cleanParsed) return sanitizeId(parsedName);
+  if (!cleanParsed) return sanitizeId(parsedName || '');
   
   // 1. Exact or substring match in sanitized names
   let bestMatch: Engineer | null = null;
   let longestMatchLength = 0;
   
-  for (const ing of engineersList) {
-    const cleanIng = cleanString(ing.name);
+  const list = engineersList || [];
+  for (const ing of list) {
+    const ingName = ing.name || (ing as any).nombre;
+    const cleanIng = cleanString(ingName);
     if (!cleanIng) continue;
     
     // Check if one contains the other (e.g. "sixtocalderon" in "sixtocalderonrodriguez...")
@@ -486,8 +490,9 @@ export function resolveEngineerId(parsedName: string, engineersList: Engineer[])
   // 2. Similarity fallback using Dice coefficient
   let bestSim = 0;
   let bestSimIng: Engineer | null = null;
-  for (const ing of engineersList) {
-    const sim = getSimilarity(parsedName, ing.name);
+  for (const ing of list) {
+    const ingName = ing.name || (ing as any).nombre;
+    const sim = getSimilarity(parsedName || '', ingName || '');
     if (sim > bestSim && sim > 0.4) {
       bestSim = sim;
       bestSimIng = ing;
@@ -499,5 +504,5 @@ export function resolveEngineerId(parsedName: string, engineersList: Engineer[])
   }
   
   // Fallback to default sanitization
-  return sanitizeId(parsedName);
+  return sanitizeId(parsedName || '');
 }
