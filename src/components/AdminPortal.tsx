@@ -793,6 +793,18 @@ export default function AdminPortal({
   const [reportHours, setReportHours] = useState(3.5);
   const [reportClientSignee, setReportClientSignee] = useState('');
 
+  React.useEffect(() => {
+    const isAnyModalOpen = isCreatingWO || isReportingWO || isContractDetailsModalOpen;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isCreatingWO, isReportingWO, isContractDetailsModalOpen]);
+
   // Dynamic helper matching logic for engineers
   const matchEngineer = (nameStr: string): string => {
     if (!nameStr) return 'ENG-001';
