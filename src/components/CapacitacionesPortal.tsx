@@ -392,11 +392,11 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
         
         // 1. Detect Engineer Name
         let detectedName = '';
-        const nameMatch = text.match(/TRAINING\s+TRANSCRIPT\s+FOR\s+([A-Z\s]+)/i);
+        const nameMatch = text.match(/(?:TRAINING\s+TRANSCRIPT\s+FOR|EXPEDIENTE\s+DE\s+FORMACI[ÓO]N\s+PARA)\s+([A-Z\sÁÉÍÓÚÑ]+)/i);
         if (nameMatch) {
           detectedName = nameMatch[1].replace(/[\r\n]/g, '').trim().toUpperCase();
         } else {
-          const fallbackMatch = text.match(/completed\s+activities\s+for\s+(.+)/i);
+          const fallbackMatch = text.match(/(?:completed\s+activities\s+for|actividades\s+completadas\s+para)\s+(.+)/i);
           if (fallbackMatch) {
             detectedName = fallbackMatch[1].replace(/[\r\n]/g, '').trim().toUpperCase();
           }
@@ -412,6 +412,9 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
             .replace(/\bLIST\s+OF.*$/i, '')
             .replace(/\bCOMPLETED\s+ACTIVITIES.*$/i, '')
             .replace(/\bACTIVITIES\s+FROM.*$/i, '')
+            .replace(/\bLISTA\s+DE\s+ACTIVIDADES.*$/i, '')
+            .replace(/\bACTIVIDADES\s+COMPLETADAS.*$/i, '')
+            .replace(/\bACTIVIDADES\s+DESDE.*$/i, '')
             .trim();
         }
 
@@ -484,7 +487,7 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
         
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
-          const codeMatch = line.match(/Code\s*:\s*(\S+)/i);
+          const codeMatch = line.match(/(?:Code|C[óo]digo)\s*:\s*(\S+)/i);
           if (codeMatch) {
             const codigo = codeMatch[1].trim().toUpperCase();
             
@@ -496,7 +499,7 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
               if (prevIdx < 0) continue;
               const prevLine = lines[prevIdx];
               
-              if (prevLine.match(/Code\s*:/i)) {
+              if (prevLine.match(/(?:Code|C[óo]digo)\s*:/i)) {
                 titleParts = [];
                 foundDate = '';
                 continue;
