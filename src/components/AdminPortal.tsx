@@ -611,6 +611,7 @@ export default function AdminPortal({
   const [newWOSupportEngineers, setNewWOSupportEngineers] = useState<string[]>([]);
   const [newWOType, setNewWOType] = useState<MaintenanceType>('Preventivo');
   const [newWOEquipment, setNewWOEquipment] = useState('');
+  const [showEquipSuggestions, setShowEquipSuggestions] = useState(false);
   const [newWONotes, setNewWONotes] = useState('');
   const [newWODate, setNewWODate] = useState(currentDateStr);
   const [newWOTimeStart, setNewWOTimeStart] = useState('09:00');
@@ -8300,9 +8301,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       type="text"
                       required
                       value={newWOEquipment}
-                      onChange={e => setNewWOEquipment(e.target.value)}
+                      onChange={e => {
+                        setNewWOEquipment(e.target.value);
+                        setShowEquipSuggestions(true);
+                      }}
+                      onFocus={() => setShowEquipSuggestions(true)}
                       placeholder="Ej: Instalación, capacitación o detalle del equipo..."
-                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500 text-xs"
+                      autoComplete="off"
                     />
                     {(() => {
                       const clientEquips = equipments.filter(eq => eq.clientId === newWOClient);
@@ -8315,7 +8321,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         const serial = (eq.serialNumber || '').trim().toLowerCase();
                         const brand = (eq.brand || '').trim().toLowerCase();
                         const model = (eq.model || '').trim().toLowerCase();
-                        // If serial is present, group/deduplicate by serial. Otherwise, don't filter (fallback to unique ID)
                         const key = serial ? serial : `${brand}|${model}|${eq.id}`;
                         
                         if (!seen.has(key)) {
@@ -8324,31 +8329,73 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         }
                       }
                       
-                      // Sort alphabetically by name
                       uniqueEquips.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
+                      const query = (newWOEquipment || '').toLowerCase().trim();
+                      const filteredEquips = uniqueEquips.filter(eq => {
+                        if (!query) return true;
+                        // If query matches selected equipment string exactly, show all options on focus rather than narrowing down to 0/1
+                        const exactMatchVal = `${eq.brand} ${eq.model} (S/N: ${eq.serialNumber})`.toLowerCase();
+                        if (query === exactMatchVal) return true;
+                        
+                        return (
+                          (eq.name || '').toLowerCase().includes(query) ||
+                          (eq.brand || '').toLowerCase().includes(query) ||
+                          (eq.model || '').toLowerCase().includes(query) ||
+                          (eq.serialNumber || '').toLowerCase().includes(query)
+                        );
+                      });
+
                       return (
-                        <div className="mt-1.5 space-y-1">
-                          <span className="text-[9px] font-bold text-slate-400 uppercase block">Selección Rápida:</span>
-                          <select
-                            onChange={e => {
-                              if (e.target.value) {
-                                setNewWOEquipment(e.target.value);
-                              }
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-700 focus:ring-1 focus:ring-indigo-500 cursor-pointer font-sans"
-                            value={uniqueEquips.some(eq => `${eq.brand} ${eq.model} (S/N: ${eq.serialNumber})` === newWOEquipment) ? newWOEquipment : ''}
-                          >
-                            <option value="">-- Seleccionar un equipo registrado --</option>
-                            {uniqueEquips.map(eq => {
-                              const val = `${eq.brand} ${eq.model} (S/N: ${eq.serialNumber})`;
-                              return (
-                                <option key={eq.id} value={val}>
-                                  {eq.name} ({eq.model}) {eq.serialNumber ? ` - S/N: ${eq.serialNumber}` : ''}
-                                </option>
-                              );
-                            })}
-                          </select>
+                        <div className="relative">
+                          {showEquipSuggestions && filteredEquips.length > 0 && (
+                            <>
+                              {/* Overlay to handle click outside */}
+                              <div 
+                                className="fixed inset-0 z-40 cursor-default" 
+                                onClick={() => setShowEquipSuggestions(false)}
+                              />
+                              <div className="absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-250 rounded-lg shadow-lg py-1 divide-y divide-slate-100 text-left">
+                                <div className="px-3 py-1.5 text-[9px] font-bold text-slate-400 uppercase bg-slate-50/50">
+                                  Equipos sugeridos para este cliente ({filteredEquips.length})
+                                </div>
+                                {filteredEquips.map(eq => {
+                                  // Clean up the diamond symbol encoding issue (often stands for a non-ASCII like á or similar)
+                                  const nameClean = (eq.name || '').replace(/[\uFFFD]/g, 'Á').replace(/cÁpsula/gi, 'Cápsula');
+                                  const modelClean = (eq.model || '').replace(/[\uFFFD]/g, 'Á').replace(/cÁpsula/gi, 'Cápsula');
+                                  const brandClean = (eq.brand || '').replace(/[\uFFFD]/g, 'Á');
+                                  
+                                  const val = `${brandClean} ${modelClean} (S/N: ${eq.serialNumber})`;
+                                  
+                                  return (
+                                    <button
+                                      key={eq.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setNewWOEquipment(val);
+                                        setShowEquipSuggestions(false);
+                                      }}
+                                      className="w-full text-left px-3 py-2.5 hover:bg-indigo-50/70 flex justify-between items-center gap-3 transition-colors cursor-pointer text-xs"
+                                    >
+                                      <div className="space-y-0.5">
+                                        <div className="font-bold text-slate-800 text-xs">
+                                          {brandClean} {modelClean}
+                                        </div>
+                                        <div className="text-[10px] text-slate-500 font-medium">
+                                          {nameClean}
+                                        </div>
+                                      </div>
+                                      {eq.serialNumber && (
+                                        <span className="font-mono text-[9.5px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200/60 shrink-0">
+                                          S/N: {eq.serialNumber}
+                                        </span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
                         </div>
                       );
                     })()}
