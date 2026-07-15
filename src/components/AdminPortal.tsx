@@ -8304,21 +8304,42 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       placeholder="Ej: Instalación, capacitación o detalle del equipo..."
                       className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500"
                     />
-                    {equipments.filter(eq => eq.clientId === newWOClient).length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        <span className="text-[9px] font-bold text-slate-400 self-center uppercase mr-1">Rápido:</span>
-                        {equipments.filter(eq => eq.clientId === newWOClient).map(eq => (
-                          <button
-                            key={eq.id}
-                            type="button"
-                            onClick={() => setNewWOEquipment(`${eq.brand} ${eq.model} (S/N: ${eq.serialNumber})`)}
-                            className="bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded border border-slate-200 transition-all cursor-pointer"
-                          >
-                            {eq.name} ({eq.model})
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    {(() => {
+                      const clientEquips = equipments.filter(eq => eq.clientId === newWOClient);
+                      if (clientEquips.length === 0) return null;
+                      
+                      const uniqueEquips: typeof equipments = [];
+                      const seen = new Set<string>();
+                      
+                      for (const eq of clientEquips) {
+                        const serial = (eq.serialNumber || '').trim().toLowerCase();
+                        const brand = (eq.brand || '').trim().toLowerCase();
+                        const model = (eq.model || '').trim().toLowerCase();
+                        // If serial is present, group/deduplicate by serial. Otherwise, don't filter (fallback to unique ID)
+                        const key = serial ? serial : `${brand}|${model}|${eq.id}`;
+                        
+                        if (!seen.has(key)) {
+                          seen.add(key);
+                          uniqueEquips.push(eq);
+                        }
+                      }
+                      
+                      return (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <span className="text-[9px] font-bold text-slate-400 self-center uppercase mr-1">Rápido:</span>
+                          {uniqueEquips.map(eq => (
+                            <button
+                              key={eq.id}
+                              type="button"
+                              onClick={() => setNewWOEquipment(`${eq.brand} ${eq.model} (S/N: ${eq.serialNumber})`)}
+                              className="bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded border border-slate-200 transition-all cursor-pointer"
+                            >
+                              {eq.name} ({eq.model})
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Duration Days */}
