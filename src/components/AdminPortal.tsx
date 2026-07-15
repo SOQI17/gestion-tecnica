@@ -1617,7 +1617,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
   const handleCreateWO = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newWOEquipment) return;
+    if (!newWOEquipment && selectedWOTags.length === 0) return;
 
     let finalClientId = '';
     const matchedClient = clients.find(c => c.name.trim().toLowerCase() === newWOClientSearch.trim().toLowerCase());
@@ -1634,7 +1634,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         industry: 'Industrial',
         contactName: 'Contacto por registrar',
         contactPhone: '',
-        installedEquipments: [newWOEquipment]
+        installedEquipments: selectedWOTags.length > 0 ? selectedWOTags : [newWOEquipment]
       };
       if (onAddClient) {
         onAddClient(newClientObj);
