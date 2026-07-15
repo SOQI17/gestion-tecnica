@@ -612,6 +612,7 @@ export default function AdminPortal({
   const [newWOType, setNewWOType] = useState<MaintenanceType>('Preventivo');
   const [newWOEquipment, setNewWOEquipment] = useState('');
   const [showEquipSuggestions, setShowEquipSuggestions] = useState(false);
+  const [selectedWOTags, setSelectedWOTags] = useState<string[]>([]);
   const [newWONotes, setNewWONotes] = useState('');
   const [newWODate, setNewWODate] = useState(currentDateStr);
   const [newWOTimeStart, setNewWOTimeStart] = useState('09:00');
@@ -1653,7 +1654,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       plannedTime: `${formatTime12h(newWOTimeStart)} - ${formatTime12h(newWOTimeEnd)}`,
       type: newWOType,
       status: 'Pendiente',
-      equipmentName: newWOEquipment,
+      equipmentName: selectedWOTags.length > 0 ? selectedWOTags.join(', ') : newWOEquipment,
       notes: newWONotes,
       durationDays: newWODurationDays
     };
@@ -1662,6 +1663,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setIsCreatingWO(false);
     // Reset form
     setNewWOEquipment('');
+    setSelectedWOTags([]);
     setNewWONotes('');
     setNewWOTimeStart('09:00');
     setNewWOTimeEnd('11:00');
@@ -8308,20 +8310,56 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   {/* Equipment Name */}
                   <div className="space-y-1.5">
                     <label className="block text-2xs font-bold text-slate-500 uppercase">5. Equipo, Activo o Descripción del Trabajo</label>
-                    <input
-                      id="wo-equipment-input"
-                      type="text"
-                      required
-                      value={newWOEquipment}
-                      onChange={e => {
-                        setNewWOEquipment(e.target.value);
-                        setShowEquipSuggestions(true);
-                      }}
-                      onFocus={() => setShowEquipSuggestions(true)}
-                      placeholder="Ej: Instalación, capacitación o detalle del equipo..."
-                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500 text-xs"
-                      autoComplete="off"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        id="wo-equipment-input"
+                        type="text"
+                        required={selectedWOTags.length === 0}
+                        value={newWOEquipment}
+                        onChange={e => {
+                          setNewWOEquipment(e.target.value);
+                          setShowEquipSuggestions(true);
+                        }}
+                        onFocus={() => setShowEquipSuggestions(true)}
+                        placeholder="Ej: Buscar o escribir equipo a añadir..."
+                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500 text-xs"
+                        autoComplete="off"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newWOEquipment.trim()) {
+                            if (!selectedWOTags.includes(newWOEquipment.trim())) {
+                              setSelectedWOTags(prev => [...prev, newWOEquipment.trim()]);
+                            }
+                            setNewWOEquipment('');
+                            setShowEquipSuggestions(false);
+                          }
+                        }}
+                        className="px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors shrink-0"
+                      >
+                        + Añadir
+                      </button>
+                    </div>
+
+                    {/* Selected tags list */}
+                    {selectedWOTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {selectedWOTags.map((tag, idx) => (
+                          <span key={idx} className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5">
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedWOTags(prev => prev.filter((_, i) => i !== idx))}
+                              className="text-indigo-400 hover:text-indigo-600 font-bold focus:outline-none cursor-pointer text-xs"
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     {(() => {
                       const clientEquips = equipments.filter(eq => eq.clientId === newWOClient);
                       if (clientEquips.length === 0) return null;
@@ -8346,7 +8384,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       const query = (newWOEquipment || '').toLowerCase().trim();
                       const filteredEquips = uniqueEquips.filter(eq => {
                         if (!query) return true;
-                        // If query matches selected equipment string exactly, show all options on focus rather than narrowing down to 0/1
+                        
                         const exactMatchVal = `${eq.brand} ${eq.model} (S/N: ${eq.serialNumber})`.toLowerCase();
                         if (query === exactMatchVal) return true;
                         
@@ -8372,7 +8410,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   Equipos sugeridos para este cliente ({filteredEquips.length})
                                 </div>
                                 {filteredEquips.map(eq => {
-                                  // Clean up the diamond symbol encoding issue (often stands for a non-ASCII like á or similar)
                                   const nameClean = (eq.name || '').replace(/[\uFFFD]/g, 'Á').replace(/cÁpsula/gi, 'Cápsula');
                                   const modelClean = (eq.model || '').replace(/[\uFFFD]/g, 'Á').replace(/cÁpsula/gi, 'Cápsula');
                                   const brandClean = (eq.brand || '').replace(/[\uFFFD]/g, 'Á');
@@ -8384,7 +8421,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       key={eq.id}
                                       type="button"
                                       onClick={() => {
-                                        setNewWOEquipment(val);
+                                        if (!selectedWOTags.includes(val)) {
+                                          setSelectedWOTags(prev => [...prev, val]);
+                                        }
+                                        setNewWOEquipment('');
                                         setShowEquipSuggestions(false);
                                       }}
                                       className="w-full text-left px-3 py-2.5 hover:bg-indigo-50/70 flex justify-between items-center gap-3 transition-colors cursor-pointer text-xs"
