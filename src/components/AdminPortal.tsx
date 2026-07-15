@@ -8324,19 +8324,31 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         }
                       }
                       
+                      // Sort alphabetically by name
+                      uniqueEquips.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
                       return (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          <span className="text-[9px] font-bold text-slate-400 self-center uppercase mr-1">Rápido:</span>
-                          {uniqueEquips.map(eq => (
-                            <button
-                              key={eq.id}
-                              type="button"
-                              onClick={() => setNewWOEquipment(`${eq.brand} ${eq.model} (S/N: ${eq.serialNumber})`)}
-                              className="bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded border border-slate-200 transition-all cursor-pointer"
-                            >
-                              {eq.name} ({eq.model})
-                            </button>
-                          ))}
+                        <div className="mt-1.5 space-y-1">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase block">Selección Rápida:</span>
+                          <select
+                            onChange={e => {
+                              if (e.target.value) {
+                                setNewWOEquipment(e.target.value);
+                              }
+                            }}
+                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-700 focus:ring-1 focus:ring-indigo-500 cursor-pointer font-sans"
+                            value={uniqueEquips.some(eq => `${eq.brand} ${eq.model} (S/N: ${eq.serialNumber})` === newWOEquipment) ? newWOEquipment : ''}
+                          >
+                            <option value="">-- Seleccionar un equipo registrado --</option>
+                            {uniqueEquips.map(eq => {
+                              const val = `${eq.brand} ${eq.model} (S/N: ${eq.serialNumber})`;
+                              return (
+                                <option key={eq.id} value={val}>
+                                  {eq.name} ({eq.model}) {eq.serialNumber ? ` - S/N: ${eq.serialNumber}` : ''}
+                                </option>
+                              );
+                            })}
+                          </select>
                         </div>
                       );
                     })()}
