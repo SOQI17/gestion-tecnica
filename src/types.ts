@@ -19,6 +19,7 @@ export interface Engineer {
   pendingVacationsLastYear?: number;
   standbyVacationsLastYear?: number;
   birthdayVacationDay?: number; // 0 or 1, default 1
+  sede?: 'Quito' | 'Guayaquil' | 'Cuenca' | 'Sede Central';
 }
 
 export interface Client {
@@ -164,4 +165,19 @@ export interface AppUser {
   email: string;
   role: 'admin' | 'engineer';
   engineerId?: string; // Solo presente si el rol es 'engineer'
+}
+
+export interface Curso {
+  id: string;       // e.g. "GE-01"
+  codigo: string;   // e.g. "GE-01"
+  titulo: string;   // e.g. "Fibra Óptica Avanzada"
+  modalidad: string; // e.g. "GE", "FE", "MR", "CT"
+  costo: number;    // costo en USD, ej. 150
+}
+
+export interface HistorialEntrenamiento {
+  id: string; // auto or composite: id_ingeniero + "_" + codigo_curso
+  id_ingeniero: string;
+  codigo_curso: string;
+  fecha_completado: string; // ej. "11/14/2011"
 }

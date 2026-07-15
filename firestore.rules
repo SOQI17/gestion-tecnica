@@ -8,7 +8,7 @@ service cloud.firestore {
 
     // 2. Reglas para Colección de Ingenieros
     match /engineers/{engineerId} {
-      allow read, write: if true; // Permitir lectura y escritura pública en desarrollo
+      allow read, write: if true;
     }
 
     // 3. Reglas para Colección de Clientes
@@ -46,8 +46,13 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // 10. Reglas para Colección de Usuarios
-    match /users/{userId} {
+    // 10. Reglas para Cursos (Capacitaciones)
+    match /cursos/{cursoId} {
+      allow read, write: if true;
+    }
+
+    // 11. Reglas para Historial de Entrenamiento (Capacitaciones)
+    match /historial_entrenamiento/{historialId} {
       allow read, write: if true;
     }
   }

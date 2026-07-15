@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen } from 'lucide-react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import CapacitacionesPortal from './CapacitacionesPortal';
 
 interface AdminPortalProps {
   engineers: Engineer[];
@@ -440,7 +441,7 @@ export default function AdminPortal({
   const [highlightedEngineerId, setHighlightedEngineerId] = useState<string | null>(null);
 
   // Main Admin Tab state
-  const [activeAdminTab, setActiveAdminTab] = useState<'agendamiento' | 'clientes' | 'equipos' | 'contratos' | 'cronograma' | 'vacaciones'>('agendamiento');
+  const [activeAdminTab, setActiveAdminTab] = useState<'agendamiento' | 'clientes' | 'equipos' | 'contratos' | 'cronograma' | 'vacaciones' | 'capacitaciones'>('agendamiento');
 
   // Vacaciones Tab states
   const [vacFormEngId, setVacFormEngId] = useState('');
@@ -6130,7 +6131,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             { id: 'equipos', label: 'Equipos (Activos)', icon: Cpu, color: 'text-emerald-400' },
             { id: 'contratos', label: 'Contratos', icon: Briefcase, color: 'text-amber-400' },
             { id: 'cronograma', label: 'Cronograma', icon: CalendarIcon, color: 'text-rose-400' },
-            { id: 'vacaciones', label: 'Vacaciones', icon: Palmtree, color: 'text-teal-400' }
+            { id: 'vacaciones', label: 'Vacaciones', icon: Palmtree, color: 'text-teal-400' },
+            { id: 'capacitaciones', label: 'Capacitaciones', icon: BookOpen, color: 'text-purple-400' }
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeAdminTab === tab.id;
@@ -8008,6 +8010,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {activeAdminTab === 'contratos' && renderContratosTab()}
       {activeAdminTab === 'cronograma' && renderCronogramaTab()}
       {activeAdminTab === 'vacaciones' && renderVacacionesTab()}
+      {activeAdminTab === 'capacitaciones' && <CapacitacionesPortal engineers={engineers} />}
 
       {/* Slide-over Overlay for creating / assigning new workorder */}
       <AnimatePresence>
