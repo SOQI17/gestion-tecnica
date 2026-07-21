@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink } from 'lucide-react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
@@ -599,6 +599,8 @@ export default function AdminPortal({
   const [contractFormQcDate, setContractFormQcDate] = useState('');
   const [selectedContractForDetails, setSelectedContractForDetails] = useState<Contract | null>(null);
   const [isContractDetailsModalOpen, setIsContractDetailsModalOpen] = useState(false);
+  const [selectedEngForMetrics, setSelectedEngForMetrics] = useState<Engineer | null>(null);
+  const [isEngMetricsModalOpen, setIsEngMetricsModalOpen] = useState(false);
 
   // Create New WO States
   const [isCreatingWO, setIsCreatingWO] = useState(false);
@@ -795,7 +797,7 @@ export default function AdminPortal({
   const [reportClientSignee, setReportClientSignee] = useState('');
 
   React.useEffect(() => {
-    const isAnyModalOpen = isCreatingWO || isReportingWO || isContractDetailsModalOpen;
+    const isAnyModalOpen = isCreatingWO || isReportingWO || isContractDetailsModalOpen || isEngMetricsModalOpen;
     if (isAnyModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -804,7 +806,7 @@ export default function AdminPortal({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isCreatingWO, isReportingWO, isContractDetailsModalOpen]);
+  }, [isCreatingWO, isReportingWO, isContractDetailsModalOpen, isEngMetricsModalOpen]);
 
   // Dynamic helper matching logic for engineers
   const matchEngineer = (nameStr: string): string => {
@@ -2609,6 +2611,116 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       complianceRate
     };
   }, [filteredDashOrders, engineerStats, engineers]);
+
+  const handleExportDashboardCSV = () => {
+    const headers = [
+      'Nombre',
+      'Especialidad',
+      'Sede',
+      'Mantenimientos Totales',
+      'Como Principal',
+      'Como Apoyo',
+      'Conciliados',
+      'Realizados',
+      'Reportados',
+      'En Proceso',
+      'Pendientes'
+    ];
+
+    const rows = engineerStats.map(st => [
+      st.engineer.name,
+      st.engineer.specialty,
+      st.engineer.sede || 'N/D',
+      st.total,
+      st.asPrimary,
+      st.asSupport,
+      st.statusCounts.Conciliado,
+      st.statusCounts.Realizado,
+      st.statusCounts.Reportado,
+      st.statusCounts['En Proceso'],
+      st.statusCounts.Pendiente
+    ]);
+
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map(r => r.map(val => `"${String(val).replace(/"/g, '""')}"`).join(';'))
+    ].join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    const periodName = dashPeriod === 'month' 
+      ? monthsList[dashMonth - 1] 
+      : dashPeriod === 'semester' 
+      ? `Semestre_${dashSemester}` 
+      : 'Anual';
+      
+    link.setAttribute('download', `Metricas_Ingenieros_${periodName}_${dashYear}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportSingleEngineerCSV = (eng: Engineer) => {
+    const engOrders = filteredDashOrders.filter(wo => 
+      wo.engineerId === eng.id || 
+      (wo.supportEngineerIds && wo.supportEngineerIds.includes(eng.id)) ||
+      wo.supportEngineerId === eng.id
+    );
+
+    const headers = [
+      'ID Orden',
+      'Cliente',
+      'Fecha Programada',
+      'Horario',
+      'Tipo de Servicio',
+      'Estado',
+      'Equipo(s)',
+      'Rol del Ingeniero',
+      'Instrucciones/Notas'
+    ];
+
+    const rows = engOrders.map(wo => {
+      const client = clients.find(c => c.id === wo.clientId);
+      const isPrimary = wo.engineerId === eng.id;
+      const role = isPrimary ? 'Principal' : 'Apoyo';
+      return [
+        wo.id,
+        client ? client.name : 'Cliente Desconocido',
+        wo.plannedDate,
+        wo.plannedTime || 'N/D',
+        wo.type,
+        wo.status,
+        wo.equipmentName,
+        role,
+        wo.notes || ''
+      ];
+    });
+
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map(r => r.map(val => `"${String(val).replace(/"/g, '""')}"`).join(';'))
+    ].join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    const periodName = dashPeriod === 'month' 
+      ? monthsList[dashMonth - 1] 
+      : dashPeriod === 'semester' 
+      ? `Semestre_${dashSemester}` 
+      : 'Anual';
+      
+    const cleanEngName = eng.name.replace(/[^a-zA-Z0-9]/g, '_');
+    link.setAttribute('download', `Ordenes_${cleanEngName}_${periodName}_${dashYear}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Helper handlers for managing engineers list and status
   const handleCreateNewEngineer = () => {
@@ -7761,6 +7873,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </select>
                   </div>
                 )}
+
+                <button
+                  type="button"
+                  onClick={handleExportDashboardCSV}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-2xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md ml-1"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>Exportar Excel</span>
+                </button>
               </div>
             </div>
 
@@ -7941,12 +8062,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           const pendientePct = total > 0 ? (st.statusCounts.Pendiente / total) * 100 : 0;
 
                           return (
-                            <tr key={st.engineer.id} className="hover:bg-slate-50/50">
+                            <tr 
+                              key={st.engineer.id} 
+                              onClick={() => {
+                                setSelectedEngForMetrics(st.engineer);
+                                setIsEngMetricsModalOpen(true);
+                              }}
+                              className="hover:bg-indigo-50/40 cursor-pointer transition-colors group"
+                            >
                               <td className="p-2.5">
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs shrink-0">{getEngineerEmoji(st.engineer.id)}</span>
                                   <div>
-                                    <p className="font-bold text-slate-800 text-2xs leading-tight">{st.engineer.name}</p>
+                                    <p className="font-bold text-slate-800 text-2xs leading-tight flex items-center gap-1.5">
+                                      {st.engineer.name}
+                                      <ExternalLink className="w-2.5 h-2.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </p>
                                     <p className="text-[8px] text-slate-450 leading-none mt-0.5">{st.engineer.specialty}</p>
                                   </div>
                                 </div>
@@ -9056,6 +9187,233 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
                   </>
                 )}
+              </motion.div>
+            </div>
+          );
+        })()}
+      </AnimatePresence>
+
+      {/* Modal / Slide-over for detailed Engineer Metrics */}
+      <AnimatePresence>
+        {isEngMetricsModalOpen && selectedEngForMetrics && (() => {
+          const eng = selectedEngForMetrics;
+          const stats = engineerStats.find(s => s.engineer.id === eng.id);
+          
+          const engOrders = filteredDashOrders.filter(wo => 
+            wo.engineerId === eng.id || 
+            (wo.supportEngineerIds && wo.supportEngineerIds.includes(eng.id)) ||
+            wo.supportEngineerId === eng.id
+          );
+          
+          const totalHours = reports
+            .filter(rep => {
+              const wo = workOrders.find(w => w.id === rep.workOrderId);
+              if (!wo) return false;
+              const isPeriodMatch = filteredDashOrders.some(f => f.id === wo.id);
+              const isEngMatch = wo.engineerId === eng.id || wo.supportEngineerId === eng.id || wo.supportEngineerIds?.includes(eng.id);
+              return isPeriodMatch && isEngMatch;
+            })
+            .reduce((acc, rep) => acc + (rep.hoursSpent || 0), 0);
+
+          const typeBreakdown: Record<MaintenanceType, number> = {
+            Preventivo: 0,
+            Correctivo: 0,
+            Instalación: 0,
+            Calibración: 0,
+            Soporte: 0,
+            FMI: 0,
+            Capacitación: 0,
+            Inspección: 0
+          };
+          engOrders.forEach(wo => {
+            if (typeBreakdown[wo.type] !== undefined) {
+              typeBreakdown[wo.type]++;
+            }
+          });
+
+          const complianceRate = stats && stats.total > 0 
+            ? Math.round(((stats.statusCounts.Conciliado + stats.statusCounts.Realizado + stats.statusCounts.Reportado) / stats.total) * 100) 
+            : 0;
+
+          return (
+            <div className="fixed inset-0 bg-slate-900/60 h-full w-full z-50 flex items-center justify-center p-4 no-print" id="eng-metrics-modal-overlay">
+              <div className="absolute inset-0 cursor-default" onClick={() => setIsEngMetricsModalOpen(false)} />
+              
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[90vh] z-50 flex flex-col justify-between"
+              >
+                {/* Header Section */}
+                <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-6">
+                  <div className="flex gap-4 items-center">
+                    <div className="w-14 h-14 rounded-full bg-slate-100 text-3xl flex items-center justify-center border border-slate-200 shrink-0">
+                      {getEngineerEmoji(eng.id)}
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-base text-slate-900 leading-tight">{eng.name}</h3>
+                      <p className="text-2xs text-slate-500 font-bold mt-1 uppercase tracking-wide">
+                        {eng.specialty} • <span className="text-indigo-650 font-black">{eng.sede || 'Quito'}</span>
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">{eng.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsEngMetricsModalOpen(false)}
+                    className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-650 cursor-pointer transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Content Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs mb-6">
+                  {/* Left Column: Job & Productivity Metrics */}
+                  <div className="space-y-5">
+                    <h4 className="font-bold text-slate-850 text-xs border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+                      <BarChart3 className="w-4 h-4 text-indigo-550" />
+                      <span>Productividad del Periodo</span>
+                    </h4>
+
+                    {/* KPI summaries */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl text-center">
+                        <span className="text-[9px] font-bold text-slate-450 uppercase block">Total Asignaciones</span>
+                        <span className="text-xl font-extrabold text-slate-855 mt-1 block">{stats?.total || 0}</span>
+                        <span className="text-[8px] text-slate-400 font-medium">
+                          {stats?.asPrimary || 0} Principal / {stats?.asSupport || 0} Apoyo
+                        </span>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl text-center">
+                        <span className="text-[9px] font-bold text-slate-455 uppercase block">Horas en Campo</span>
+                        <span className="text-xl font-extrabold text-indigo-700 mt-1 block">{totalHours} hrs</span>
+                        <span className="text-[8px] text-slate-400 font-medium">De reportes técnicos</span>
+                      </div>
+                    </div>
+
+                    {/* Completion rate bar */}
+                    <div className="space-y-1.5 bg-slate-50/50 border border-slate-200/45 p-3.5 rounded-xl">
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="font-bold text-slate-600">Tasa de Cierre del Periodo</span>
+                        <span className="font-black text-emerald-700">{complianceRate}%</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                        <div 
+                          className="h-full bg-emerald-500 rounded-full transition-all duration-550" 
+                          style={{ width: `${complianceRate}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Status counters breakdown list */}
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase block">Estados de Tarea</span>
+                      <div className="grid grid-cols-2 gap-2 text-[10px]">
+                        <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
+                          <span className="font-semibold text-emerald-750">Conciliadas</span>
+                          <span className="font-black text-slate-900">{stats?.statusCounts.Conciliado || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
+                          <span className="font-semibold text-blue-750">Realizadas</span>
+                          <span className="font-black text-slate-900">{stats?.statusCounts.Realizado || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
+                          <span className="font-semibold text-indigo-750">Reportadas</span>
+                          <span className="font-black text-slate-900">{stats?.statusCounts.Reportado || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
+                          <span className="font-semibold text-sky-750">En Proceso</span>
+                          <span className="font-black text-slate-900">{stats?.statusCounts['En Proceso'] || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg col-span-2">
+                          <span className="font-semibold text-yellow-750">Pendientes</span>
+                          <span className="font-black text-slate-900">{stats?.statusCounts.Pendiente || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Maintenance types & Vacation Status */}
+                  <div className="space-y-5">
+                    <h4 className="font-bold text-slate-800 text-xs border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+                      <Briefcase className="w-4 h-4 text-emerald-600" />
+                      <span>Distribución de Trabajos y Ausencias</span>
+                    </h4>
+
+                    {/* Maintenance types distribution */}
+                    <div className="space-y-2 bg-slate-50/50 border border-slate-200/40 p-3.5 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-550 uppercase block mb-1">Tipos de Servicio Ejecutados</span>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
+                        {Object.entries(typeBreakdown).map(([type, count]) => {
+                          if (count === 0) return null;
+                          return (
+                            <div key={type} className="flex justify-between items-center py-0.5 border-b border-slate-100 last:border-b-0">
+                              <span className="font-medium text-slate-600">{type}</span>
+                              <span className="font-bold text-slate-900 bg-slate-200/60 px-1.5 py-0.2 rounded-md">{count}</span>
+                            </div>
+                          );
+                        })}
+                        {Object.values(typeBreakdown).every(c => c === 0) && (
+                          <div className="col-span-2 text-center text-slate-400 py-4 font-bold">
+                            Sin servicios registrados en este periodo
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Vacations details */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-bold text-slate-555 uppercase block flex items-center gap-1">
+                        <Palmtree className="w-3.5 h-3.5 text-teal-650" />
+                        <span>Resumen de Vacaciones Anuales</span>
+                      </span>
+                      <div className="bg-white border border-slate-200 rounded-xl p-3.5 divide-y divide-slate-100 text-[10px] space-y-1.5">
+                        <div className="flex justify-between items-center pb-1.5">
+                          <span className="font-medium text-slate-600">Días Anuales Permitidos</span>
+                          <span className="font-black text-slate-800">{eng.annualVacationDays || 15} días</span>
+                        </div>
+                        <div className="flex justify-between items-center py-1.5">
+                          <span className="font-medium text-slate-600">Vacaciones Pendientes</span>
+                          <span className="font-black text-amber-600">{eng.pendingVacationsLastYear || 0} días</span>
+                        </div>
+                        <div className="flex justify-between items-center py-1.5">
+                          <span className="font-medium text-slate-600">Vacaciones en Reserva (Standby)</span>
+                          <span className="font-black text-slate-700">{eng.standbyVacationsLastYear || 0} días</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-1.5 border-t border-slate-100">
+                          <span className="font-medium text-slate-600">Día de Cumpleaños Libre</span>
+                          <span className={`font-bold px-1.5 py-0.5 rounded-full text-[8.5px] ${
+                            eng.birthdayVacationDay === 0 
+                              ? 'bg-red-50 text-red-700 border border-red-100' 
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                          }`}>
+                            {eng.birthdayVacationDay === 0 ? '❌ Ya Usado' : '✅ Disponible'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer buttons: Export Excel or close */}
+                <div className="flex justify-between items-center border-t border-slate-100 pt-4 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => handleExportSingleEngineerCSV(eng)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>Descargar Reporte Excel</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEngMetricsModalOpen(false)}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-4 py-2 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cerrar
+                  </button>
+                </div>
               </motion.div>
             </div>
           );
