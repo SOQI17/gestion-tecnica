@@ -1644,8 +1644,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       finalClientId = clients[0]?.id || '';
     }
 
+    let nextNum = workOrders.length + 100;
+    while (workOrders.some(wo => wo.id === `WO-2026-0${nextNum}`)) {
+      nextNum++;
+    }
+    const newWOId = `WO-2026-0${nextNum}`;
+
     const newWO: WorkOrder = {
-      id: `WO-2026-0${workOrders.length + 100}`,
+      id: newWOId,
       clientId: finalClientId,
       engineerId: newWOEngineer,
       supportEngineerId: newWOSupportEngineers[0] || undefined,
