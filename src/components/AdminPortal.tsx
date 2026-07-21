@@ -8011,7 +8011,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   return (
                     <div className="flex-1 flex flex-col items-center gap-6 mt-4 w-full">
                       {/* Donut circle - Large */}
-                      <div className="relative w-48 h-48 shrink-0 animate-fade-in">
+                      <div className="relative w-64 h-64 sm:w-72 sm:h-72 shrink-0 animate-fade-in">
                         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                           {/* Background base circle */}
                           <circle cx="50" cy="50" r="30" fill="transparent" stroke="#f1f5f9" strokeWidth="12" />
@@ -8039,9 +8039,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         
                         {/* Center text inside the Donut hole */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                          <span className="text-2xl font-black text-slate-800 leading-none">{totalWorkload}</span>
-                          <span className="text-[8px] font-bold text-slate-450 uppercase tracking-widest mt-1.5">Total</span>
-                          <span className="text-[7.5px] font-bold text-slate-400 uppercase tracking-wider leading-none">Órdenes</span>
+                          <span className="text-3xl sm:text-4xl font-black text-slate-800 leading-none">{totalWorkload}</span>
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-450 uppercase tracking-widest mt-2">Total</span>
+                          <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">Órdenes</span>
                         </div>
                       </div>
 
