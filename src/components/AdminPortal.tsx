@@ -323,6 +323,23 @@ const getEngineerColorClasses = (engineerId: string) => {
   return colors[engineerId] || { bg: 'bg-slate-500', text: 'text-slate-955', border: 'border-slate-200', borderL: 'border-l-slate-500', ring: 'ring-slate-500', lightBg: 'bg-slate-50/95' };
 };
 
+const getEngineerHexColor = (engineerId: string): string => {
+  const colors: Record<string, string> = {
+    'ENG-001': '#f43f5e', // rose-500
+    'ENG-002': '#14b8a6', // teal-500
+    'ENG-003': '#6366f1', // indigo-500
+    'ENG-004': '#f59e0b', // amber-500
+    'ENG-005': '#a855f7', // purple-500
+    'ENG-006': '#10b981', // emerald-500
+    'ENG-007': '#0ea5e9', // sky-500
+    'ENG-008': '#f97316', // orange-500
+    'ENG-009': '#ec4899', // pink-500
+    'ENG-010': '#84cc16', // lime-500
+    'ENG-011': '#06b6d4', // cyan-500
+  };
+  return colors[engineerId] || '#64748b'; // slate-500
+};
+
 export default function AdminPortal({
   engineers,
   clients,
@@ -7941,7 +7958,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <h3 className="text-2xl font-bold text-emerald-700 mt-1">{dashboardKPIs.complianceRate}%</h3>
                     <p className="text-3xs text-slate-500 mt-1">Órdenes cerradas/ejecutadas</p>
                   </div>
-                  <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <div className="p-3 bg-emerald-50 text-emerald-605 rounded-lg">
                     <TrendingUp className="w-5 h-5" />
                   </div>
                 </div>
@@ -7950,86 +7967,113 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
             {/* Chart and Table grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* SVG Bar Chart (Col-5) */}
+              {/* SVG Donut Chart (Col-5) */}
               <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
                 <div>
                   <h5 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <PieChart className="w-4 h-4 text-indigo-505" />
-                    <span>Carga Comparativa por Técnico</span>
+                    <PieChart className="w-4 h-4 text-indigo-650" />
+                    <span>Distribución de Carga por Técnico</span>
                   </h5>
-                  <p className="text-3xs text-slate-500 mt-0.5">Distribución del número total de órdenes (incluye apoyo).</p>
+                  <p className="text-3xs text-slate-500 mt-0.5">Distribución porcentual del número total de órdenes (incluye apoyo).</p>
                 </div>
 
-                <div className="h-64 mt-6 relative border-b border-slate-100 pb-6">
-                  {/* Grid Lines (fixed in background) */}
-                  <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[8px] font-mono text-slate-350 select-none pb-6">
-                    <div className="border-b border-dashed border-slate-100 w-full text-right pr-1 pt-1">Max</div>
-                    <div className="border-b border-dashed border-slate-100 w-full text-right pr-1 pt-1">50%</div>
-                    <div className="w-full text-right pr-1 pt-1">0</div>
-                  </div>
-
-                  {/* Scrollable Bars Container */}
-                  <div className="absolute inset-0 overflow-x-auto no-scrollbar flex items-end px-2 pb-6">
-                    {engineerStats.length === 0 ? (
-                      <div className="w-full h-full flex items-center justify-center text-3xs text-slate-400 font-bold">
-                        Sin datos en este periodo
+                {(() => {
+                  const totalWorkload = engineerStats.reduce((acc, st) => acc + st.total, 0);
+                  
+                  if (totalWorkload === 0) {
+                    return (
+                      <div className="h-64 mt-6 flex flex-col items-center justify-center text-3xs text-slate-400 font-bold gap-2">
+                        <div className="w-24 h-24 rounded-full border-4 border-dashed border-slate-200 flex items-center justify-center text-[10px] text-slate-350">
+                          0%
+                        </div>
+                        <span>Sin datos de asignaciones en este periodo</span>
                       </div>
-                    ) : (
-                      <div 
-                        className="flex items-end justify-between w-full"
-                        style={{ minWidth: `${Math.max(engineerStats.length * 42, 320)}px` }}
-                      >
-                        {engineerStats.map(st => {
-                          const maxTotal = Math.max(...engineerStats.map(s => s.total), 1);
-                          const heightPercent = Math.max((st.total / maxTotal) * 100, 4); // minimum height to show a bar
-                          const engColor = getEngineerColorClasses(st.engineer.id);
-                          const barColor = engColor.bg;
+                    );
+                  }
+
+                  let accumulatedPercentage = 0;
+                  const slices = engineerStats
+                    .filter(st => st.total > 0)
+                    .map(st => {
+                      const pct = st.total / totalWorkload;
+                      const strokeDasharray = `${pct * 188.5} 188.5`;
+                      const strokeDashoffset = 188.5 - (accumulatedPercentage * 188.5);
+                      accumulatedPercentage += pct;
+                      return {
+                        ...st,
+                        percentage: pct,
+                        strokeDasharray,
+                        strokeDashoffset,
+                        hexColor: getEngineerHexColor(st.engineer.id)
+                      };
+                    });
+
+                  return (
+                    <div className="mt-6 flex flex-col sm:flex-row items-center gap-6 justify-center">
+                      {/* Donut circle */}
+                      <div className="relative w-40 h-40 shrink-0">
+                        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                          {/* Background base circle */}
+                          <circle cx="50" cy="50" r="30" fill="transparent" stroke="#f1f5f9" strokeWidth="12" />
                           
-                          return (
-                            <div 
-                              key={st.engineer.id} 
-                              className="flex flex-col items-center flex-1 mx-1 group relative z-10 animate-fade-in"
-                            >
-                              {/* Tooltip */}
-                              <div className="absolute bottom-full mb-2 bg-slate-900/95 text-white p-2.5 rounded-lg text-[8.5px] leading-normal shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 w-36 z-50 text-left border border-slate-750">
-                                <p className="font-bold text-[9.5px] border-b border-slate-700 pb-0.5 mb-1 text-indigo-300">
-                                  {st.engineer.name}
-                                </p>
-                                <p className="flex justify-between"><span>Total Agendadas:</span> <span className="font-bold text-white">{st.total}</span></p>
-                                <p className="flex justify-between text-slate-300"><span>Principal:</span> <span>{st.asPrimary}</span></p>
-                                <p className="flex justify-between text-slate-300"><span>De Apoyo:</span> <span>{st.asSupport}</span></p>
-                                <div className="border-t border-slate-700/60 mt-1 pt-1 space-y-0.5 text-[8px] text-slate-400">
-                                  <p className="flex justify-between"><span>Conciliado:</span> <span>{st.statusCounts.Conciliado}</span></p>
-                                  <p className="flex justify-between"><span>Realizado:</span> <span>{st.statusCounts.Realizado}</span></p>
-                                  <p className="flex justify-between"><span>Reportado:</span> <span>{st.statusCounts.Reportado}</span></p>
-                                  <p className="flex justify-between"><span>En Proceso:</span> <span>{st.statusCounts['En Proceso']}</span></p>
-                                  <p className="flex justify-between"><span>Pendiente:</span> <span>{st.statusCounts.Pendiente}</span></p>
-                                </div>
-                              </div>
+                          {slices.map((slice) => (
+                            <circle
+                              key={slice.engineer.id}
+                              cx="50"
+                              cy="50"
+                              r="30"
+                              fill="transparent"
+                              stroke={slice.hexColor}
+                              strokeWidth="12"
+                              strokeDasharray={slice.strokeDasharray}
+                              strokeDashoffset={slice.strokeDashoffset}
+                              className="transition-all hover:stroke-[14] cursor-pointer"
+                              title={`${slice.engineer.name}: ${slice.total} (${Math.round(slice.percentage * 100)}%)`}
+                              onClick={() => {
+                                setSelectedEngForMetrics(slice.engineer);
+                                setIsEngMetricsModalOpen(true);
+                              }}
+                            />
+                          ))}
+                        </svg>
+                        
+                        {/* Center text inside the Donut hole */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                          <span className="text-lg font-black text-slate-800 leading-none">{totalWorkload}</span>
+                          <span className="text-[7.5px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total</span>
+                          <span className="text-[6.5px] font-bold text-slate-400 uppercase tracking-wider leading-none">Órdenes</span>
+                        </div>
+                      </div>
 
-                              {/* Bar block */}
-                              <div 
-                                style={{ height: `${heightPercent}%` }}
-                                className={`w-full max-w-[20px] rounded-t-md transition-all duration-300 ${barColor} group-hover:brightness-95 shadow-sm group-hover:shadow-md flex flex-col justify-end`}
-                              >
-                                {st.total > 0 && (
-                                  <span className="text-[8px] font-black text-white text-center pb-0.5 select-none drop-shadow-xs">
-                                    {st.total}
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* X Label */}
-                              <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-tighter mt-1.5 truncate max-w-[36px] select-none" title={st.engineer.name}>
-                                {getEngineerEmoji(st.engineer.id)} {st.engineer.name.replace('Ing. ', '').split(' ')[0]}
+                      {/* Donut Legend */}
+                      <div className="flex-1 space-y-1.5 w-full max-h-[170px] overflow-y-auto no-scrollbar">
+                        {slices.map(slice => (
+                          <div 
+                            key={slice.engineer.id}
+                            onClick={() => {
+                              setSelectedEngForMetrics(slice.engineer);
+                              setIsEngMetricsModalOpen(true);
+                            }}
+                            className="flex items-center justify-between text-3xs font-semibold hover:bg-slate-50 p-1.5 rounded-lg cursor-pointer transition-colors"
+                          >
+                            <div className="flex items-center gap-1.5 truncate max-w-[130px]">
+                              <span 
+                                className="w-2.5 h-2.5 rounded-full shrink-0" 
+                                style={{ backgroundColor: slice.hexColor }} 
+                              />
+                              <span className="text-[10px] text-slate-700 truncate leading-tight">
+                                {getEngineerEmoji(slice.engineer.id)} {slice.engineer.name.replace('Ing. ', '')}
                               </span>
                             </div>
-                          );
-                        })}
+                            <span className="text-[10px] font-black text-slate-800">
+                              {slice.total} ({Math.round(slice.percentage * 100)}%)
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Breakdown Table (Col-7) */}
