@@ -7968,7 +7968,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             {/* Chart and Table grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* SVG Donut Chart (Col-5) */}
-              <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+              <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col">
                 <div>
                   <h5 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <PieChart className="w-4 h-4 text-indigo-650" />
@@ -7982,7 +7982,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   
                   if (totalWorkload === 0) {
                     return (
-                      <div className="h-64 mt-6 flex flex-col items-center justify-center text-3xs text-slate-400 font-bold gap-2">
+                      <div className="flex-1 flex flex-col items-center justify-center text-3xs text-slate-400 font-bold gap-2 py-8 mt-6">
                         <div className="w-24 h-24 rounded-full border-4 border-dashed border-slate-200 flex items-center justify-center text-[10px] text-slate-350">
                           0%
                         </div>
@@ -8009,7 +8009,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     });
 
                   return (
-                    <div className="mt-6 flex flex-col sm:flex-row items-center gap-6 justify-center">
+                    <div className="flex-1 flex flex-col sm:flex-row items-center gap-6 justify-center mt-6 w-full">
                       {/* Donut circle */}
                       <div className="relative w-40 h-40 shrink-0">
                         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
