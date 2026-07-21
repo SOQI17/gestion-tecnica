@@ -126,7 +126,7 @@ export default function App() {
     });
 
     return () => unsubAuth();
-  }, [isDemoMode, engineers]);
+  }, [isDemoMode]);
 
   // Sincronizar Firestore en tiempo real directamente
   useEffect(() => {

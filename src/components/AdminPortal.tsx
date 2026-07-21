@@ -7960,68 +7960,75 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <p className="text-3xs text-slate-500 mt-0.5">Distribución del número total de órdenes (incluye apoyo).</p>
                 </div>
 
-                <div className="h-64 mt-6 flex items-end justify-between px-2 pb-6 border-b border-slate-100 relative">
-                  {/* Grid Lines */}
+                <div className="h-64 mt-6 relative border-b border-slate-100 pb-6">
+                  {/* Grid Lines (fixed in background) */}
                   <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[8px] font-mono text-slate-350 select-none pb-6">
                     <div className="border-b border-dashed border-slate-100 w-full text-right pr-1 pt-1">Max</div>
                     <div className="border-b border-dashed border-slate-100 w-full text-right pr-1 pt-1">50%</div>
                     <div className="w-full text-right pr-1 pt-1">0</div>
                   </div>
 
-                  {/* SVG/HTML Bars */}
-                  {engineerStats.length === 0 ? (
-                    <div className="w-full h-full flex items-center justify-center text-3xs text-slate-400 font-bold">
-                      Sin datos en este periodo
-                    </div>
-                  ) : (
-                    engineerStats.map(st => {
-                      const maxTotal = Math.max(...engineerStats.map(s => s.total), 1);
-                      const heightPercent = Math.max((st.total / maxTotal) * 100, 4); // minimum height to show a bar
-                      const engColor = getEngineerColorClasses(st.engineer.id);
-                      const barColor = engColor.bg;
-                      
-                      return (
-                        <div 
-                          key={st.engineer.id} 
-                          className="flex flex-col items-center flex-1 mx-1 group relative z-10 animate-fade-in"
-                        >
-                          {/* Tooltip */}
-                          <div className="absolute bottom-full mb-2 bg-slate-900/95 text-white p-2.5 rounded-lg text-[8.5px] leading-normal shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 w-36 z-50 text-left border border-slate-750">
-                            <p className="font-bold text-[9.5px] border-b border-slate-700 pb-0.5 mb-1 text-indigo-300">
-                              {st.engineer.name}
-                            </p>
-                            <p className="flex justify-between"><span>Total Agendadas:</span> <span className="font-bold text-white">{st.total}</span></p>
-                            <p className="flex justify-between text-slate-300"><span>Principal:</span> <span>{st.asPrimary}</span></p>
-                            <p className="flex justify-between text-slate-300"><span>De Apoyo:</span> <span>{st.asSupport}</span></p>
-                            <div className="border-t border-slate-700/60 mt-1 pt-1 space-y-0.5 text-[8px] text-slate-400">
-                              <p className="flex justify-between"><span>Conciliado:</span> <span>{st.statusCounts.Conciliado}</span></p>
-                              <p className="flex justify-between"><span>Realizado:</span> <span>{st.statusCounts.Realizado}</span></p>
-                              <p className="flex justify-between"><span>Reportado:</span> <span>{st.statusCounts.Reportado}</span></p>
-                              <p className="flex justify-between"><span>En Proceso:</span> <span>{st.statusCounts['En Proceso']}</span></p>
-                              <p className="flex justify-between"><span>Pendiente:</span> <span>{st.statusCounts.Pendiente}</span></p>
-                            </div>
-                          </div>
+                  {/* Scrollable Bars Container */}
+                  <div className="absolute inset-0 overflow-x-auto no-scrollbar flex items-end px-2 pb-6">
+                    {engineerStats.length === 0 ? (
+                      <div className="w-full h-full flex items-center justify-center text-3xs text-slate-400 font-bold">
+                        Sin datos en este periodo
+                      </div>
+                    ) : (
+                      <div 
+                        className="flex items-end justify-between w-full"
+                        style={{ minWidth: `${Math.max(engineerStats.length * 42, 320)}px` }}
+                      >
+                        {engineerStats.map(st => {
+                          const maxTotal = Math.max(...engineerStats.map(s => s.total), 1);
+                          const heightPercent = Math.max((st.total / maxTotal) * 100, 4); // minimum height to show a bar
+                          const engColor = getEngineerColorClasses(st.engineer.id);
+                          const barColor = engColor.bg;
+                          
+                          return (
+                            <div 
+                              key={st.engineer.id} 
+                              className="flex flex-col items-center flex-1 mx-1 group relative z-10 animate-fade-in"
+                            >
+                              {/* Tooltip */}
+                              <div className="absolute bottom-full mb-2 bg-slate-900/95 text-white p-2.5 rounded-lg text-[8.5px] leading-normal shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 w-36 z-50 text-left border border-slate-750">
+                                <p className="font-bold text-[9.5px] border-b border-slate-700 pb-0.5 mb-1 text-indigo-300">
+                                  {st.engineer.name}
+                                </p>
+                                <p className="flex justify-between"><span>Total Agendadas:</span> <span className="font-bold text-white">{st.total}</span></p>
+                                <p className="flex justify-between text-slate-300"><span>Principal:</span> <span>{st.asPrimary}</span></p>
+                                <p className="flex justify-between text-slate-300"><span>De Apoyo:</span> <span>{st.asSupport}</span></p>
+                                <div className="border-t border-slate-700/60 mt-1 pt-1 space-y-0.5 text-[8px] text-slate-400">
+                                  <p className="flex justify-between"><span>Conciliado:</span> <span>{st.statusCounts.Conciliado}</span></p>
+                                  <p className="flex justify-between"><span>Realizado:</span> <span>{st.statusCounts.Realizado}</span></p>
+                                  <p className="flex justify-between"><span>Reportado:</span> <span>{st.statusCounts.Reportado}</span></p>
+                                  <p className="flex justify-between"><span>En Proceso:</span> <span>{st.statusCounts['En Proceso']}</span></p>
+                                  <p className="flex justify-between"><span>Pendiente:</span> <span>{st.statusCounts.Pendiente}</span></p>
+                                </div>
+                              </div>
 
-                          {/* Bar block */}
-                          <div 
-                            style={{ height: `${heightPercent}%` }}
-                            className={`w-full max-w-[20px] rounded-t-md transition-all duration-300 ${barColor} group-hover:brightness-95 shadow-sm group-hover:shadow-md flex flex-col justify-end`}
-                          >
-                            {st.total > 0 && (
-                              <span className="text-[8px] font-black text-white text-center pb-0.5 select-none drop-shadow-xs">
-                                {st.total}
+                              {/* Bar block */}
+                              <div 
+                                style={{ height: `${heightPercent}%` }}
+                                className={`w-full max-w-[20px] rounded-t-md transition-all duration-300 ${barColor} group-hover:brightness-95 shadow-sm group-hover:shadow-md flex flex-col justify-end`}
+                              >
+                                {st.total > 0 && (
+                                  <span className="text-[8px] font-black text-white text-center pb-0.5 select-none drop-shadow-xs">
+                                    {st.total}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* X Label */}
+                              <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-tighter mt-1.5 truncate max-w-[36px] select-none" title={st.engineer.name}>
+                                {getEngineerEmoji(st.engineer.id)} {st.engineer.name.replace('Ing. ', '').split(' ')[0]}
                               </span>
-                            )}
-                          </div>
-
-                          {/* X Label */}
-                          <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-tighter mt-1.5 truncate max-w-[30px] select-none" title={st.engineer.name}>
-                            {getEngineerEmoji(st.engineer.id)} {st.engineer.name.replace('Ing. ', '').split(' ')[0]}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
