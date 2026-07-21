@@ -1,4 +1,4 @@
-export type Specialty = 'Ingeniería' | 'Aplicaciones' | 'Ventas' | 'Aire Acondicionado / HVAC' | 'Electricidad Potencia' | 'Redes y Telecomunicaciones' | 'Sistemas Hidráulicos' | 'Equipos de Elevación' | 'Seguridad y Control de Acceso';
+export type Specialty = 'Ingeniería' | 'Aplicaciones' | 'Ventas' | 'IT';
 
 export type MaintenanceType = 'Preventivo' | 'Correctivo' | 'Instalación' | 'Calibración' | 'Soporte' | 'FMI' | 'Capacitación' | 'Inspección';
 

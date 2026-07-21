@@ -9500,6 +9500,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <option value="Ingeniería">Ingeniería</option>
                       <option value="Aplicaciones">Aplicaciones</option>
                       <option value="Ventas">Ventas</option>
+                      <option value="IT">IT</option>
                     </select>
                   </div>
                 </div>
@@ -9568,12 +9569,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               <option value="Ingeniería">Ingeniería</option>
                               <option value="Aplicaciones">Aplicaciones</option>
                               <option value="Ventas">Ventas</option>
-                              <option value="Aire Acondicionado / HVAC">Aire Acondicionado / HVAC</option>
-                              <option value="Electricidad Potencia">Electricidad Potencia</option>
-                              <option value="Redes y Telecomunicaciones">Redes y Telecomunicaciones</option>
-                              <option value="Sistemas Hidráulicos">Sistemas Hidráulicos</option>
-                              <option value="Equipos de Elevación">Equipos de Elevación</option>
-                              <option value="Seguridad y Control de Acceso">Seguridad y Control de Acceso</option>
+                              <option value="IT">IT</option>
                             </select>
                           </div>
 
