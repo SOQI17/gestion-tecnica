@@ -8009,9 +8009,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     });
 
                   return (
-                    <div className="flex-1 flex flex-col sm:flex-row items-center gap-6 justify-center mt-6 w-full">
-                      {/* Donut circle */}
-                      <div className="relative w-40 h-40 shrink-0">
+                    <div className="flex-1 flex flex-col items-center gap-6 mt-4 w-full">
+                      {/* Donut circle - Large */}
+                      <div className="relative w-48 h-48 shrink-0 animate-fade-in">
                         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                           {/* Background base circle */}
                           <circle cx="50" cy="50" r="30" fill="transparent" stroke="#f1f5f9" strokeWidth="12" />
@@ -8039,14 +8039,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         
                         {/* Center text inside the Donut hole */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                          <span className="text-lg font-black text-slate-800 leading-none">{totalWorkload}</span>
-                          <span className="text-[7.5px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total</span>
-                          <span className="text-[6.5px] font-bold text-slate-400 uppercase tracking-wider leading-none">Órdenes</span>
+                          <span className="text-2xl font-black text-slate-800 leading-none">{totalWorkload}</span>
+                          <span className="text-[8px] font-bold text-slate-450 uppercase tracking-widest mt-1.5">Total</span>
+                          <span className="text-[7.5px] font-bold text-slate-400 uppercase tracking-wider leading-none">Órdenes</span>
                         </div>
                       </div>
 
-                      {/* Donut Legend */}
-                      <div className="flex-1 space-y-1.5 w-full max-h-[170px] overflow-y-auto no-scrollbar">
+                      {/* Donut Legend - Grid format below the chart */}
+                      <div className="w-full grid grid-cols-2 gap-x-3 gap-y-1.5 mt-2 max-h-[180px] overflow-y-auto no-scrollbar border-t border-slate-100 pt-4">
                         {slices.map(slice => (
                           <div 
                             key={slice.engineer.id}
@@ -8054,18 +8054,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setSelectedEngForMetrics(slice.engineer);
                               setIsEngMetricsModalOpen(true);
                             }}
-                            className="flex items-center justify-between text-3xs font-semibold hover:bg-slate-50 p-1.5 rounded-lg cursor-pointer transition-colors"
+                            className="flex items-center justify-between text-3xs font-semibold hover:bg-slate-50 p-1.5 rounded-lg cursor-pointer transition-colors border border-slate-100 bg-slate-50/30"
                           >
-                            <div className="flex items-center gap-1.5 truncate max-w-[130px]">
+                            <div className="flex items-center gap-1.5 truncate max-w-[120px]">
                               <span 
-                                className="w-2.5 h-2.5 rounded-full shrink-0" 
+                                className="w-2 h-2 rounded-full shrink-0" 
                                 style={{ backgroundColor: slice.hexColor }} 
                               />
-                              <span className="text-[10px] text-slate-700 truncate leading-tight">
-                                {getEngineerEmoji(slice.engineer.id)} {slice.engineer.name.replace('Ing. ', '')}
+                              <span className="text-[9.5px] text-slate-700 truncate leading-tight">
+                                {getEngineerEmoji(slice.engineer.id)} {slice.engineer.name.replace('Ing. ', '').split(' ')[0]}
                               </span>
                             </div>
-                            <span className="text-[10px] font-black text-slate-800">
+                            <span className="text-[9.5px] font-black text-slate-800 shrink-0 ml-1">
                               {slice.total} ({Math.round(slice.percentage * 100)}%)
                             </span>
                           </div>
