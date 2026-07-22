@@ -2128,10 +2128,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     key={`pv-st-${st.id}`}
                     onClick={(e) => { e.stopPropagation(); setInfoScheduledTraining(st); }}
                     className="text-[8.5px] leading-tight p-1 rounded bg-purple-50 hover:bg-purple-100 border border-purple-200 border-l-4 border-l-purple-600 text-purple-950 font-bold truncate flex items-center gap-1 select-none cursor-pointer"
-                    title={`Capacitación: ${st.title} (${st.location})`}
+                    title={`Capacitación: ${st.title} (${st.location}) - ${eng?.name || 'Técnico'}`}
                   >
                     <span>🎓</span>
-                    <span className="truncate">{st.title} ({eng?.name.replace('Ing. ', '').split(' ')[0]})</span>
+                    <span className="truncate">Cap: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
                   </div>
                 );
               })}
@@ -2315,35 +2315,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               return (
                 <div
                   key={`st-${st.id}`}
-                  className="text-[8.5px] leading-tight p-1.5 rounded mb-1 text-left bg-purple-50 hover:bg-purple-100/90 border border-purple-200 border-l-4 border-l-purple-600 text-purple-950 font-medium cursor-pointer transition-all hover:shadow-xs select-none"
-                  title={`🎓 Capacitación: ${st.title} (${st.location}) - ${eng?.name || ''}`}
+                  className="text-[8.5px] leading-tight p-1 rounded bg-purple-50 hover:bg-purple-100 border border-purple-200 border-l-4 border-l-purple-600 text-purple-950 font-bold truncate flex items-center gap-1 select-none cursor-pointer transition-colors"
+                  title={`Capacitación: ${st.title} (${st.location}) - ${eng?.name || 'Técnico'}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setInfoScheduledTraining(st);
                   }}
                 >
-                  <div className="flex items-center justify-between font-black text-purple-900 leading-none mb-0.5">
-                    <span className="truncate flex items-center gap-1">
-                      <span>🎓</span>
-                      <span className="truncate">{st.title}</span>
-                    </span>
-                  </div>
-                  <p className="truncate text-purple-800 text-[8px] font-bold mt-0.5">
-                    📍 {st.location} {st.cost ? <span className="font-mono text-purple-700 ml-1">(${st.cost.toLocaleString('en-US')})</span> : null}
-                  </p>
-                  <p className="truncate text-purple-900 text-[7.5px] font-extrabold mt-0.5 flex items-center gap-0.5">
-                    <span>{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
-                    <span>{eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
-                  </p>
-                  <div className="flex items-center justify-between mt-1 pt-0.5 border-t border-purple-200/50">
-                    <span className="text-[7px] text-purple-600 font-extrabold uppercase">Capacitación</span>
-                    <span className={`text-[7px] font-extrabold px-1 py-0.2 rounded ${
-                      st.status === 'Completado' ? 'bg-emerald-100 text-emerald-800' :
-                      st.status === 'En Curso' ? 'bg-amber-100 text-amber-800' :
-                      st.status === 'Cancelado' ? 'bg-red-100 text-red-800' :
-                      'bg-purple-100 text-purple-800'
-                    }`}>{st.status}</span>
-                  </div>
+                  <span>🎓</span>
+                  <span className="truncate">Cap: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
                 </div>
               );
             })}
