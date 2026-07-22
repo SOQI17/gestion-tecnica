@@ -36,7 +36,14 @@ export default function App() {
   const [vacations, setVacations] = useState<Vacation[]>([]);
   const [permissions, setPermissions] = useState<EngineerPermission[]>([]);
   const [maintenanceRegistries, setMaintenanceRegistries] = useState<MaintenanceRegistry[]>([]);
-  const [scheduledTrainings, setScheduledTrainings] = useState<ScheduledTraining[]>([]);
+  const [scheduledTrainings, setScheduledTrainings] = useState<ScheduledTraining[]>(() => {
+    try {
+      const saved = localStorage.getItem('fsm_scheduled_trainings');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const [dbLoading, setDbLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -278,13 +285,28 @@ export default function App() {
 
     // 10. Suscribirse a la Colección de Capacitaciones Programadas
     const unsubScheduledTrainings = onSnapshot(collection(db, 'scheduledTrainings'), (snapshot) => {
-      const list: ScheduledTraining[] = [];
+      const firestoreList: ScheduledTraining[] = [];
       snapshot.forEach(docSnap => {
         if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as ScheduledTraining);
+          firestoreList.push(docSnap.data() as ScheduledTraining);
         }
       });
-      setScheduledTrainings(list);
+
+      let cachedList: ScheduledTraining[] = [];
+      try {
+        const saved = localStorage.getItem('fsm_scheduled_trainings');
+        if (saved) cachedList = JSON.parse(saved);
+      } catch (e) {}
+
+      const mergedMap = new Map<string, ScheduledTraining>();
+      cachedList.forEach(item => mergedMap.set(item.id, item));
+      firestoreList.forEach(item => mergedMap.set(item.id, item));
+      const mergedList = Array.from(mergedMap.values());
+
+      setScheduledTrainings(mergedList);
+      try {
+        localStorage.setItem('fsm_scheduled_trainings', JSON.stringify(mergedList));
+      } catch (e) {}
     }, (error) => {
       console.warn("Error leyendo capacitaciones programadas de Firestore:", error);
     });
@@ -584,18 +606,26 @@ export default function App() {
   };
 
   const handleAddScheduledTraining = async (st: ScheduledTraining) => {
-    setScheduledTrainings(prev => [...prev.filter(x => x.id !== st.id), st]);
+    setScheduledTrainings(prev => {
+      const next = [...prev.filter(x => x.id !== st.id), st];
+      try { localStorage.setItem('fsm_scheduled_trainings', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
     try {
       await setDoc(doc(db, 'scheduledTrainings', st.id), cleanUndefined(st));
       showNotification(`Capacitación programada guardada correctamente.`, 'success');
     } catch (error: any) {
-      console.error("Error al guardar capacitación programada:", error);
+      console.error("Error al guardar capacitación programada en Firestore:", error);
       handleFirestoreError(error, OperationType.WRITE, `scheduledTrainings/${st.id}`);
     }
   };
 
   const handleUpdateScheduledTraining = async (st: ScheduledTraining) => {
-    setScheduledTrainings(prev => prev.map(x => x.id === st.id ? st : x));
+    setScheduledTrainings(prev => {
+      const next = prev.map(x => x.id === st.id ? st : x);
+      try { localStorage.setItem('fsm_scheduled_trainings', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
     try {
       await setDoc(doc(db, 'scheduledTrainings', st.id), cleanUndefined(st));
       showNotification(`Capacitación programada actualizada.`, 'success');
@@ -606,7 +636,11 @@ export default function App() {
   };
 
   const handleDeleteScheduledTraining = async (stId: string) => {
-    setScheduledTrainings(prev => prev.filter(x => x.id !== stId));
+    setScheduledTrainings(prev => {
+      const next = prev.filter(x => x.id !== stId);
+      try { localStorage.setItem('fsm_scheduled_trainings', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
     try {
       await deleteDoc(doc(db, 'scheduledTrainings', stId));
       showNotification(`Capacitación programada eliminada.`, 'success');

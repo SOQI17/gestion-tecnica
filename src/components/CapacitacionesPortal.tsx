@@ -2332,6 +2332,13 @@ service cloud.firestore {
                         console.error("Error al guardar capacitación en Firestore:", err);
                       }
 
+                      try {
+                        const saved = localStorage.getItem('fsm_scheduled_trainings');
+                        const current: ScheduledTraining[] = saved ? JSON.parse(saved) : [];
+                        const updated = [...current.filter(x => x.id !== stId), stData];
+                        localStorage.setItem('fsm_scheduled_trainings', JSON.stringify(updated));
+                      } catch (e) {}
+
                       if (editingProg && onUpdateScheduledTraining) {
                         onUpdateScheduledTraining(stData);
                       } else if (onAddScheduledTraining) {
