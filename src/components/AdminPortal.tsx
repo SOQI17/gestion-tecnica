@@ -9401,19 +9401,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   /* Form Content when editing */
                   <div className="space-y-4 text-xs">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Cliente Select */}
-                      <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">1. Cliente / Sede</label>
-                        <select
-                          value={editedWO?.clientId || ''}
-                          onChange={e => setEditedWO(prev => prev ? { ...prev, clientId: e.target.value } : null)}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs"
-                        >
-                          {clients.map(c => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                          ))}
-                        </select>
-                      </div>
+                      {/* Cliente Select / Edit Input */}
+                      {(() => {
+                        const matchedClient = clients.find(c => c.id === editedWO?.clientId || c.name.trim().toLowerCase() === (editedWO?.clientId || '').trim().toLowerCase());
+                        const displayClientName = matchedClient ? matchedClient.name : (editedWO?.clientId || '');
+                        return (
+                          <div className="space-y-1 col-span-1">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase">1. Cliente / Sede</label>
+                            <input
+                              type="text"
+                              list="edit-wo-clients-datalist"
+                              value={displayClientName}
+                              onChange={e => {
+                                const val = e.target.value;
+                                const found = clients.find(c => c.name.trim().toLowerCase() === val.trim().toLowerCase() || c.id === val);
+                                const nextClientId = found ? found.id : val;
+                                setEditedWO(prev => prev ? { ...prev, clientId: nextClientId } : null);
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-800 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                              placeholder="Escriba el nombre del cliente o selecciónalo..."
+                            />
+                            <datalist id="edit-wo-clients-datalist">
+                              {clients.map(c => (
+                                <option key={c.id} value={c.name} />
+                              ))}
+                            </datalist>
+                          </div>
+                        );
+                      })()}
 
                       {/* Servicio Type */}
                       <div className="space-y-1 col-span-1">
