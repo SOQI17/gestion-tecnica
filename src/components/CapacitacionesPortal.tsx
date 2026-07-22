@@ -2249,7 +2249,14 @@ service cloud.firestore {
                                         type="button"
                                         onClick={async () => {
                                           if (window.confirm(`¿Eliminar la capacitación "${st.title}"?`)) {
-                                            await onDeleteScheduledTraining(st.id);
+                                            try {
+                                              await deleteDoc(doc(db, 'scheduledTrainings', st.id));
+                                            } catch (e) {
+                                              console.error("Error al eliminar de Firestore:", e);
+                                            }
+                                            if (onDeleteScheduledTraining) {
+                                              await onDeleteScheduledTraining(st.id);
+                                            }
                                           }
                                         }}
                                         className="p-1 text-slate-400 hover:text-red-600 transition cursor-pointer"
@@ -2289,24 +2296,38 @@ service cloud.firestore {
                   </div>
 
                   <form
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                       e.preventDefault();
-                      if (!onAddScheduledTraining && !onUpdateScheduledTraining) return;
+                      const engIdToUse = progFormEngId || (engineers[0]?.id || '');
+                      if (!engIdToUse) {
+                        alert("Por favor seleccione un ingeniero.");
+                        return;
+                      }
 
                       const stId = editingProg ? editingProg.id : `ST-${Date.now()}`;
                       const stData: ScheduledTraining = {
                         id: stId,
-                        engineerId: progFormEngId,
-                        title: progFormTitle.trim(),
+                        engineerId: engIdToUse,
+                        title: progFormTitle.trim() || 'Capacitación Especializada',
                         courseCode: progFormCourseCode.trim() || undefined,
-                        startDate: progFormStartDate,
-                        endDate: progFormEndDate,
+                        startDate: progFormStartDate || new Date().toISOString().split('T')[0],
+                        endDate: progFormEndDate || progFormStartDate || new Date().toISOString().split('T')[0],
                         location: progFormLocation.trim() || 'Sede Central',
                         cost: progFormCost || 0,
-                        status: progFormStatus,
+                        status: progFormStatus || 'Programado',
                         notes: progFormNotes.trim() || undefined,
                         createdAt: editingProg?.createdAt || new Date().toISOString()
                       };
+
+                      try {
+                        const cleanData: any = {};
+                        Object.entries(stData).forEach(([k, v]) => {
+                          if (v !== undefined) cleanData[k] = v;
+                        });
+                        await setDoc(doc(db, 'scheduledTrainings', stId), cleanData);
+                      } catch (err) {
+                        console.error("Error al guardar capacitación en Firestore:", err);
+                      }
 
                       if (editingProg && onUpdateScheduledTraining) {
                         onUpdateScheduledTraining(stData);

@@ -584,6 +584,7 @@ export default function App() {
   };
 
   const handleAddScheduledTraining = async (st: ScheduledTraining) => {
+    setScheduledTrainings(prev => [...prev.filter(x => x.id !== st.id), st]);
     try {
       await setDoc(doc(db, 'scheduledTrainings', st.id), cleanUndefined(st));
       showNotification(`Capacitación programada guardada correctamente.`, 'success');
@@ -594,6 +595,7 @@ export default function App() {
   };
 
   const handleUpdateScheduledTraining = async (st: ScheduledTraining) => {
+    setScheduledTrainings(prev => prev.map(x => x.id === st.id ? st : x));
     try {
       await setDoc(doc(db, 'scheduledTrainings', st.id), cleanUndefined(st));
       showNotification(`Capacitación programada actualizada.`, 'success');
@@ -604,6 +606,7 @@ export default function App() {
   };
 
   const handleDeleteScheduledTraining = async (stId: string) => {
+    setScheduledTrainings(prev => prev.filter(x => x.id !== stId));
     try {
       await deleteDoc(doc(db, 'scheduledTrainings', stId));
       showNotification(`Capacitación programada eliminada.`, 'success');
