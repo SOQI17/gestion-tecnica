@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles } from 'lucide-react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
@@ -3581,6 +3581,106 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       }
     };
     reader.readAsText(file);
+  };
+
+  const cleanStr = (s: string) => (s || '')
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const findBestEquipmentMatch = (
+    instNameInput: string,
+    eqNameInput: string
+  ) => {
+    const normInst = cleanStr(instNameInput);
+    const normEq = cleanStr(eqNameInput);
+
+    if (!normInst && !normEq) return null;
+
+    const instTokens = normInst.split(' ').filter(t => t.length > 2 && t !== 'hosp' && t !== 'hospital' && t !== 'clinica' && t !== 'centro');
+
+    // 1. Buscar en registros existentes de mantenimiento
+    const matchedRegistries = (maintenanceRegistries || []).filter(reg => {
+      const regInst = cleanStr(reg.institutionName);
+      if (!regInst) return false;
+      if (regInst === normInst || normInst.includes(regInst) || regInst.includes(normInst)) return true;
+      if (instTokens.length > 0) {
+        const matches = instTokens.filter(tok => regInst.includes(tok));
+        if (matches.length >= Math.min(instTokens.length, 1)) return true;
+      }
+      return false;
+    });
+
+    if (matchedRegistries.length > 0) {
+      const eqTokens = normEq.split(' ').filter(t => t.length > 1);
+
+      let bestReg = matchedRegistries.find(reg => {
+        const combined = cleanStr(`${reg.eqBrand} ${reg.eqModel} ${reg.eqSerial}`);
+        if (normEq && combined.includes(normEq)) return true;
+        if (eqTokens.length > 0) {
+          const matches = eqTokens.filter(tok => combined.includes(tok));
+          if (matches.length >= Math.min(eqTokens.length, 1)) return true;
+        }
+        return false;
+      });
+
+      if (!bestReg && matchedRegistries.length > 0) {
+        bestReg = matchedRegistries[0];
+      }
+
+      if (bestReg) {
+        return {
+          institutionName: bestReg.institutionName,
+          eqBrand: bestReg.eqBrand,
+          eqModel: bestReg.eqModel,
+          eqSerial: bestReg.eqSerial,
+          tuboBrand: bestReg.tuboBrand || '-',
+          tuboModel: bestReg.tuboModel || '-',
+          tuboSerial: bestReg.tuboSerial || '-',
+          source: 'registro'
+        };
+      }
+    }
+
+    // 2. Buscar en colecciones de clientes / equipos del sistema
+    const matchedClient = (clients || []).find(c => {
+      const cName = cleanStr(c.name);
+      return cName === normInst || normInst.includes(cName) || cName.includes(normInst);
+    });
+
+    if (matchedClient) {
+      const clientEquips = (equipments || []).filter(e => e.clientId === matchedClient.id);
+      if (clientEquips.length > 0) {
+        const eqTokens = normEq.split(' ').filter(t => t.length > 1);
+        const bestEq = clientEquips.find(e => {
+          const combined = cleanStr(`${e.brand} ${e.model} ${e.name} ${e.serialNumber}`);
+          if (normEq && combined.includes(normEq)) return true;
+          if (eqTokens.length > 0) {
+            const matches = eqTokens.filter(tok => combined.includes(tok));
+            if (matches.length >= Math.min(eqTokens.length, 1)) return true;
+          }
+          return false;
+        }) || clientEquips[0];
+
+        if (bestEq) {
+          return {
+            institutionName: matchedClient.name,
+            eqBrand: bestEq.brand || '-',
+            eqModel: bestEq.model || bestEq.name || '-',
+            eqSerial: bestEq.serialNumber || '-',
+            tuboBrand: '-',
+            tuboModel: '-',
+            tuboSerial: '-',
+            source: 'equipo'
+          };
+        }
+      }
+    }
+
+    return null;
   };
 
   const handleRegistryCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -9643,24 +9743,37 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     // 2. Crear registro de mantenimiento automáticamente
                                     if (onAddMaintenanceRegistry) {
                                       const regId = `REG-WO-${infoWO.id}-${Date.now()}`;
-                                      // Parsear nombre de equipo: "MARCA MODELO (SERIE)" o simplemente el nombre
-                                      const eqName   = infoWO.equipmentName || '';
-                                      // Intentar extraer marca y modelo del nombre del equipo
-                                      const eqParts  = eqName.split(' ');
-                                      const eqBrand  = eqParts[0] || '-';
-                                      const eqModel  = eqParts.slice(1).join(' ').split('(')[0].trim() || eqName || '-';
-                                      const serialMatch = eqName.match(/\(([^)]+)\)/);
-                                      const eqSerial = serialMatch ? serialMatch[1] : '-';
+                                      const clientInstName = client?.name || 'S/N Institución';
+                                      const eqName = infoWO.equipmentName || '';
+
+                                      // Buscar coincidencia inteligente en registros/equipos previos
+                                      const matchedEq = findBestEquipmentMatch(clientInstName, eqName);
+
+                                      let instName = matchedEq?.institutionName || clientInstName;
+                                      let brand    = matchedEq?.eqBrand;
+                                      let model    = matchedEq?.eqModel;
+                                      let serial   = matchedEq?.eqSerial;
+                                      let tBrand   = matchedEq?.tuboBrand || '-';
+                                      let tModel   = matchedEq?.tuboModel || '-';
+                                      let tSerial  = matchedEq?.tuboSerial || '-';
+
+                                      if (!brand || !model || !serial) {
+                                        const eqParts = eqName.split(' ');
+                                        brand  = brand || eqParts[0] || '-';
+                                        model  = model || eqParts.slice(1).join(' ').split('(')[0].trim() || eqName || '-';
+                                        const serialMatch = eqName.match(/\(([^)]+)\)/);
+                                        serial = serial || (serialMatch ? serialMatch[1] : '-');
+                                      }
 
                                       onAddMaintenanceRegistry({
                                         id: regId,
-                                        institutionName: client?.name || 'S/N Institución',
-                                        eqBrand,
-                                        eqModel,
-                                        eqSerial,
-                                        tuboBrand:   '-',
-                                        tuboModel:   '-',
-                                        tuboSerial:  '-',
+                                        institutionName: instName,
+                                        eqBrand: brand,
+                                        eqModel: model,
+                                        eqSerial: serial,
+                                        tuboBrand: tBrand,
+                                        tuboModel: tModel,
+                                        tuboSerial: tSerial,
                                         fecha: infoWO.plannedDate || new Date().toISOString().split('T')[0],
                                         responsable: eng?.name || 'S/N Responsable',
                                         createdAt: new Date().toISOString(),
@@ -10649,6 +10762,80 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   placeholder="Ej. HOSP. ENRIQUE GARCÉS"
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
                 />
+                {(() => {
+                  const normInput = cleanStr(regFormInstitutionName);
+                  if (!normInput || normInput.length < 2) return null;
+
+                  const tokens = normInput.split(' ').filter(t => t.length > 2 && t !== 'hosp' && t !== 'hospital' && t !== 'clinica' && t !== 'centro');
+
+                  const uniqueEquips: {
+                    institutionName: string;
+                    eqBrand: string;
+                    eqModel: string;
+                    eqSerial: string;
+                    tuboBrand: string;
+                    tuboModel: string;
+                    tuboSerial: string;
+                  }[] = [];
+
+                  const seenKeys = new Set<string>();
+
+                  (maintenanceRegistries || []).forEach(reg => {
+                    const regInst = cleanStr(reg.institutionName);
+                    const matches = regInst === normInput || normInput.includes(regInst) || regInst.includes(normInput) || (tokens.length > 0 && tokens.some(t => regInst.includes(t)));
+                    if (matches && reg.eqBrand && reg.eqBrand !== '-') {
+                      const k = `${reg.institutionName.trim()}|${reg.eqBrand.trim()}|${reg.eqModel.trim()}|${reg.eqSerial.trim()}`;
+                      if (!seenKeys.has(k)) {
+                        seenKeys.add(k);
+                        uniqueEquips.push({
+                          institutionName: reg.institutionName,
+                          eqBrand: reg.eqBrand,
+                          eqModel: reg.eqModel,
+                          eqSerial: reg.eqSerial,
+                          tuboBrand: reg.tuboBrand || '-',
+                          tuboModel: reg.tuboModel || '-',
+                          tuboSerial: reg.tuboSerial || '-'
+                        });
+                      }
+                    }
+                  });
+
+                  if (uniqueEquips.length === 0) return null;
+
+                  return (
+                    <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 space-y-1.5 mt-1.5 animate-in fade-in duration-150">
+                      <p className="text-[10px] font-extrabold text-amber-900 uppercase tracking-wider flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Equipos registrados anteriormente para este cliente (Clic para autorrellenar):</span>
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        {uniqueEquips.slice(0, 6).map((sug, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setRegFormInstitutionName(sug.institutionName);
+                              setRegFormEqBrand(sug.eqBrand);
+                              setRegFormEqModel(sug.eqModel);
+                              setRegFormEqSerial(sug.eqSerial);
+                              setRegFormTuboBrand(sug.tuboBrand);
+                              setRegFormTuboModel(sug.tuboModel);
+                              setRegFormTuboSerial(sug.tuboSerial);
+                            }}
+                            className="text-[10px] bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-950 px-2.5 py-1 rounded-lg font-bold transition-all text-left shadow-2xs cursor-pointer flex items-center gap-1.5 group"
+                            title="Usar estos datos de marca, modelo y serie"
+                          >
+                            <span className="font-mono text-amber-700 bg-amber-100 group-hover:bg-amber-200 px-1 py-0.2 rounded text-[9px]">{sug.eqBrand}</span>
+                            <span>{sug.eqModel}</span>
+                            {sug.eqSerial && sug.eqSerial !== '-' && (
+                              <span className="text-slate-500 font-mono text-[9px]">({sug.eqSerial})</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Equipo section */}
