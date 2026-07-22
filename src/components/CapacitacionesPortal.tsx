@@ -78,6 +78,9 @@ export default function CapacitacionesPortal({
   const [progFormCost, setProgFormCost] = useState<number>(0);
   const [progFormStatus, setProgFormStatus] = useState<'Programado' | 'En Curso' | 'Completado' | 'Cancelado'>('Programado');
   const [progFormNotes, setProgFormNotes] = useState('');
+  const [isEngDropdownOpen, setIsEngDropdownOpen] = useState(false);
+  const [engSearchQuery, setEngSearchQuery] = useState('');
+  const [engSpecialtyFilter, setEngSpecialtyFilter] = useState('TODOS');
 
   // Firestore & Application State
   const ingenieros = useMemo(() => {
@@ -2338,18 +2341,155 @@ service cloud.firestore {
                     }}
                     className="space-y-3.5"
                   >
-                    {/* Ingeniero Asignado */}
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Ingeniero Asignado</label>
-                      <select
-                        value={progFormEngId}
-                        onChange={(e) => setProgFormEngId(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 outline-hidden focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
-                      >
-                        {engineers.map(eng => (
-                          <option key={eng.id} value={eng.id}>{eng.name} ({eng.specialty})</option>
-                        ))}
-                      </select>
+                    {/* Ingeniero Asignado (Custom Premium Dropdown Selector) */}
+                    <div className="space-y-1 relative" id="eng-selector-container">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                        <span>Ingeniero Asignado</span>
+                        <span className="text-[9px] text-purple-600 font-semibold lowercase font-mono">
+                          {engineers.length} ingenieros disponibles
+                        </span>
+                      </label>
+
+                      {/* Custom Trigger Card */}
+                      {(() => {
+                        const selectedEng = engineers.find(e => e.id === (progFormEngId || engineers[0]?.id));
+                        return (
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setIsEngDropdownOpen(!isEngDropdownOpen)}
+                              className="w-full bg-slate-50 hover:bg-slate-100/80 border border-slate-200 focus:border-purple-500 rounded-xl p-2.5 flex items-center justify-between text-left transition-all cursor-pointer shadow-2xs group"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-extrabold flex items-center justify-center text-xs shrink-0 border border-purple-200 shadow-2xs">
+                                  {selectedEng ? selectedEng.name.replace('Ing. ', '').substring(0, 2).toUpperCase() : '👨‍🔧'}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-extrabold text-slate-900 text-xs truncate group-hover:text-purple-900 transition-colors">
+                                    {selectedEng?.name || 'Seleccione un ingeniero...'}
+                                  </p>
+                                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                    <span className="inline-block text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200">
+                                      {selectedEng?.specialty || 'General'}
+                                    </span>
+                                    <span className="text-[9px] text-slate-400 font-semibold flex items-center gap-0.5">
+                                      📍 {selectedEng?.sede || 'Quito'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <ChevronRight className={`w-4 h-4 text-slate-400 group-hover:text-purple-600 transition-transform duration-200 shrink-0 ${isEngDropdownOpen ? 'rotate-90 text-purple-600' : ''}`} />
+                            </button>
+
+                            {/* Dropdown Menu Popover */}
+                            {isEngDropdownOpen && (
+                              <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 font-sans">
+                                {/* Search Input Bar */}
+                                <div className="p-2.5 bg-slate-50 border-b border-slate-100 space-y-2">
+                                  <div className="relative">
+                                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                                    <input
+                                      type="text"
+                                      autoFocus
+                                      value={engSearchQuery}
+                                      onChange={(e) => setEngSearchQuery(e.target.value)}
+                                      placeholder="Buscar por nombre o especialidad..."
+                                      className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 font-medium outline-hidden focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                                    />
+                                    {engSearchQuery && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setEngSearchQuery('')}
+                                        className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 p-0.5"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {/* Specialty Chips Filter */}
+                                  <div className="flex gap-1 overflow-x-auto no-scrollbar pb-0.5">
+                                    {['TODOS', 'Ingeniería', 'Aplicaciones', 'IT', 'Ventas'].map(spec => (
+                                      <button
+                                        key={spec}
+                                        type="button"
+                                        onClick={() => setEngSpecialtyFilter(spec)}
+                                        className={`px-2 py-0.5 text-[9px] font-extrabold rounded-md whitespace-nowrap transition cursor-pointer ${
+                                          engSpecialtyFilter === spec
+                                            ? 'bg-purple-600 text-white shadow-3xs'
+                                            : 'bg-white text-slate-600 hover:bg-slate-200/60 border border-slate-200'
+                                        }`}
+                                      >
+                                        {spec}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Engineer List */}
+                                <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 p-1">
+                                  {(() => {
+                                    const filtered = engineers.filter(eng => {
+                                      const matchSearch = eng.name.toLowerCase().includes(engSearchQuery.toLowerCase()) ||
+                                        eng.specialty.toLowerCase().includes(engSearchQuery.toLowerCase()) ||
+                                        (eng.sede || '').toLowerCase().includes(engSearchQuery.toLowerCase());
+                                      const matchSpec = engSpecialtyFilter === 'TODOS' || eng.specialty.toLowerCase().includes(engSpecialtyFilter.toLowerCase());
+                                      return matchSearch && matchSpec;
+                                    });
+
+                                    if (filtered.length === 0) {
+                                      return (
+                                        <div className="p-4 text-center text-slate-400 text-xs italic">
+                                          No se encontraron ingenieros con esa búsqueda.
+                                        </div>
+                                      );
+                                    }
+
+                                    return filtered.map(eng => {
+                                      const isSelected = (progFormEngId || selectedEng?.id) === eng.id;
+                                      return (
+                                        <button
+                                          key={eng.id}
+                                          type="button"
+                                          onClick={() => {
+                                            setProgFormEngId(eng.id);
+                                            setIsEngDropdownOpen(false);
+                                          }}
+                                          className={`w-full p-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
+                                            isSelected
+                                              ? 'bg-purple-50 text-purple-900 border border-purple-200/80 font-bold'
+                                              : 'hover:bg-slate-50 text-slate-700'
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-2xs font-extrabold shrink-0 ${
+                                              isSelected ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                            }`}>
+                                              {eng.name.replace('Ing. ', '').substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div className="min-w-0">
+                                              <p className="text-xs font-bold truncate leading-snug">{eng.name}</p>
+                                              <p className="text-[9px] text-slate-400 font-semibold flex items-center gap-1">
+                                                <span>{eng.specialty}</span>
+                                                <span>•</span>
+                                                <span>📍 {eng.sede || 'Quito'}</span>
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          {isSelected && (
+                                            <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0 ml-2" />
+                                          )}
+                                        </button>
+                                      );
+                                    });
+                                  })()}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Título de Capacitación */}
