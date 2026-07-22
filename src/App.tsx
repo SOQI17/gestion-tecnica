@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2 } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
-import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission } from './types';
+import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry } from './types';
 import AdminPortal from './components/AdminPortal';
 import EngineerPortal from './components/EngineerPortal';
 import Login from './components/Login';
@@ -35,6 +35,7 @@ export default function App() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [vacations, setVacations] = useState<Vacation[]>([]);
   const [permissions, setPermissions] = useState<EngineerPermission[]>([]);
+  const [maintenanceRegistries, setMaintenanceRegistries] = useState<MaintenanceRegistry[]>([]);
 
   const [dbLoading, setDbLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -261,6 +262,19 @@ export default function App() {
       console.warn("Error leyendo permisos de Firestore:", error);
     });
 
+    // 9. Suscribirse a la Colección de Registros de Mantenimiento
+    const unsubRegistries = onSnapshot(collection(db, 'maintenanceRegistries'), (snapshot) => {
+      const list: MaintenanceRegistry[] = [];
+      snapshot.forEach(docSnap => {
+        if (docSnap.id !== 'fsm_placeholder') {
+          list.push(docSnap.data() as MaintenanceRegistry);
+        }
+      });
+      setMaintenanceRegistries(list);
+    }, (error) => {
+      console.warn("Error leyendo registros de mantenimiento de Firestore:", error);
+    });
+
     return () => {
       unsubEngineers();
       unsubClients();
@@ -270,6 +284,7 @@ export default function App() {
       unsubContracts();
       unsubVacations();
       unsubPermissions();
+      unsubRegistries();
     };
   }, []);
 
@@ -457,6 +472,65 @@ export default function App() {
       showNotification(`¡Carga masiva exitosa! Se importaron ${newEquips.length} equipos.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'bulk-equipments');
+    }
+  };
+
+  const handleBulkUploadMaintenanceRegistries = async (registries: MaintenanceRegistry[]) => {
+    try {
+      const BATCH_SIZE = 400;
+      const totalBatches = Math.ceil(registries.length / BATCH_SIZE);
+      showNotification(`Cargando ${registries.length} registros en ${totalBatches} lote(s)...`, 'info');
+
+      for (let b = 0; b < totalBatches; b++) {
+        const slice = registries.slice(b * BATCH_SIZE, (b + 1) * BATCH_SIZE);
+        const batch = writeBatch(db);
+        slice.forEach(reg => {
+          batch.set(doc(db, 'maintenanceRegistries', reg.id), cleanUndefined(reg));
+        });
+        await batch.commit();
+        if (totalBatches > 1) {
+          showNotification(`Lote ${b + 1}/${totalBatches} guardado...`, 'info');
+        }
+      }
+
+      // ── Actualizar el estado local INMEDIATAMENTE (no esperar al onSnapshot) ──
+      setMaintenanceRegistries(prev => {
+        // Merge: keep existing records that don't clash, then add all new ones
+        const newIds = new Set(registries.map(r => r.id));
+        const kept = prev.filter(r => !newIds.has(r.id));
+        return [...kept, ...registries];
+      });
+
+      showNotification(`¡Carga masiva exitosa! Se importaron ${registries.length} registros.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'bulk-maintenance-registries');
+    }
+  };
+
+  const handleClearMaintenanceRegistries = async () => {
+    try {
+      showNotification("Eliminando registros de la base de datos...", 'info');
+      const qSnap = await getDocs(collection(db, 'maintenanceRegistries'));
+      const BATCH_SIZE = 400;
+      const docs = qSnap.docs;
+      for (let b = 0; b < Math.ceil(docs.length / BATCH_SIZE); b++) {
+        const slice = docs.slice(b * BATCH_SIZE, (b + 1) * BATCH_SIZE);
+        const batch = writeBatch(db);
+        slice.forEach(d => batch.delete(doc(db, 'maintenanceRegistries', d.id)));
+        await batch.commit();
+      }
+      showNotification("Se eliminaron todos los registros correctamente.", 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, 'clear-maintenance-registries');
+    }
+  };
+
+  const handleAddMaintenanceRegistry = async (reg: MaintenanceRegistry) => {
+    try {
+      await setDoc(doc(db, 'maintenanceRegistries', reg.id), cleanUndefined(reg));
+      showNotification(`Registro de ${reg.institutionName} guardado con éxito.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `maintenanceRegistries/${reg.id}`);
     }
   };
 
@@ -867,6 +941,10 @@ export default function App() {
                 permissions={permissions}
                 onAddPermission={handleAddPermission}
                 onDeletePermission={handleDeletePermission}
+                maintenanceRegistries={maintenanceRegistries}
+                onAddMaintenanceRegistry={handleAddMaintenanceRegistry}
+                onBulkUploadMaintenanceRegistries={handleBulkUploadMaintenanceRegistries}
+                onClearMaintenanceRegistries={handleClearMaintenanceRegistries}
               />
             )}
             {activeTab === 'engineer' && (

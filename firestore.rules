@@ -55,5 +55,9 @@ service cloud.firestore {
     match /historial_entrenamiento/{historialId} {
       allow read, write: if true;
     }
+    // 12. Reglas para Registros de Mantenimiento (Maintenance Registries)
+    match /maintenanceRegistries/{registryId} {
+      allow read, write: if true;
+    }
   }
 }

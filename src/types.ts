@@ -181,3 +181,18 @@ export interface HistorialEntrenamiento {
   codigo_curso: string;
   fecha_completado: string; // ej. "11/14/2011"
 }
+
+export interface MaintenanceRegistry {
+  id: string;
+  institutionName: string;
+  eqBrand: string;
+  eqModel: string;
+  eqSerial: string;
+  tuboBrand: string;
+  tuboModel: string;
+  tuboSerial: string;
+  fecha: string;
+  responsable: string;
+  createdAt?: string;
+  workOrderId?: string; // Referencia a la orden de trabajo que originó este registro
+}

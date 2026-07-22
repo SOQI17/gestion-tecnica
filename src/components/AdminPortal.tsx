@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink } from 'lucide-react';
-import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission } from '../types';
+import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
 
@@ -39,6 +39,10 @@ interface AdminPortalProps {
   onAddPermission?: (perm: EngineerPermission) => void;
   onDeletePermission?: (permId: string) => void;
   onSendPasswordReset?: (email: string) => void;
+  maintenanceRegistries?: MaintenanceRegistry[];
+  onAddMaintenanceRegistry?: (reg: MaintenanceRegistry) => void;
+  onBulkUploadMaintenanceRegistries?: (registries: MaintenanceRegistry[]) => Promise<void>;
+  onClearMaintenanceRegistries?: () => void;
 }
 
 const getEndDateStr = (startDateStr: string, duration: number): string => {
@@ -374,7 +378,11 @@ export default function AdminPortal({
   permissions = [],
   onAddPermission,
   onDeletePermission,
-  onSendPasswordReset
+  onSendPasswordReset,
+  maintenanceRegistries = [],
+  onAddMaintenanceRegistry,
+  onBulkUploadMaintenanceRegistries,
+  onClearMaintenanceRegistries
 }: AdminPortalProps) {
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -458,7 +466,7 @@ export default function AdminPortal({
   const [highlightedEngineerId, setHighlightedEngineerId] = useState<string | null>(null);
 
   // Main Admin Tab state
-  const [activeAdminTab, setActiveAdminTab] = useState<'agendamiento' | 'clientes' | 'equipos' | 'contratos' | 'cronograma' | 'vacaciones' | 'capacitaciones'>('agendamiento');
+  const [activeAdminTab, setActiveAdminTab] = useState<'agendamiento' | 'clientes' | 'equipos' | 'contratos' | 'cronograma' | 'vacaciones' | 'capacitaciones' | 'registro'>('agendamiento');
 
   // Vacaciones Tab states
   const [vacFormEngId, setVacFormEngId] = useState('');
@@ -485,6 +493,23 @@ export default function AdminPortal({
   const [permFormReason, setPermFormReason] = useState('');
   const [permFormType, setPermFormType] = useState<'Permiso' | 'Compensación'>('Permiso');
   const [vacEngSearchQuery, setVacEngSearchQuery] = useState('');
+
+  // Registry Tab states
+  const [isRegistryImporterOpen, setIsRegistryImporterOpen] = useState(false);
+  const [registrySearch, setRegistrySearch] = useState('');
+  const [registryPage, setRegistryPage] = useState(1);
+  const [isRegistryModalOpen, setIsRegistryModalOpen] = useState(false);
+  const [regFormInstitutionName, setRegFormInstitutionName] = useState('');
+  const [regFormEqBrand, setRegFormEqBrand] = useState('FUJIFILM');
+  const [regFormEqModel, setRegFormEqModel] = useState('');
+  const [regFormEqSerial, setRegFormEqSerial] = useState('');
+  const [regFormTuboBrand, setRegFormTuboBrand] = useState('FUJIFILM');
+  const [regFormTuboModel, setRegFormTuboModel] = useState('');
+  const [regFormTuboSerial, setRegFormTuboSerial] = useState('');
+  const [regFormFecha, setRegFormFecha] = useState('');
+  const [regFormResponsable, setRegFormResponsable] = useState('');
+  const [registryCsvSuccess, setRegistryCsvSuccess] = useState<string | null>(null);
+  const [registryCsvError, setRegistryCsvError] = useState<string | null>(null);
 
   const getEngineerVacationConflict = (engId: string, startDate: string, duration: number) => {
     if (!engId || !startDate || !duration) return null;
@@ -824,6 +849,62 @@ export default function AdminPortal({
       document.body.style.overflow = '';
     };
   }, [isCreatingWO, isReportingWO, isContractDetailsModalOpen, isEngMetricsModalOpen]);
+
+  // ── Auto-scroll while dragging agenda cards ──────────────────────────────────
+  React.useEffect(() => {
+    const ZONE = 120;   // px from the edge to trigger scroll
+    const SPEED = 14;   // max px per animation frame
+    let rafId: number | null = null;
+    let clientY = 0;
+    let dragging = false;
+
+    const scroll = () => {
+      if (!dragging) return;
+      const vh = window.innerHeight;
+      const distFromTop    = clientY;
+      const distFromBottom = vh - clientY;
+
+      let delta = 0;
+      if (distFromTop < ZONE) {
+        // stronger the closer you are to the edge
+        delta = -Math.round(SPEED * (1 - distFromTop / ZONE));
+      } else if (distFromBottom < ZONE) {
+        delta = Math.round(SPEED * (1 - distFromBottom / ZONE));
+      }
+
+      if (delta !== 0) {
+        window.scrollBy({ top: delta, behavior: 'instant' as ScrollBehavior });
+      }
+      rafId = requestAnimationFrame(scroll);
+    };
+
+    const onDragOver = (e: DragEvent) => {
+      clientY = e.clientY;
+      if (!dragging) {
+        dragging = true;
+        rafId = requestAnimationFrame(scroll);
+      }
+    };
+
+    const onDragEnd = () => {
+      dragging = false;
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    };
+
+    document.addEventListener('dragover', onDragOver);
+    document.addEventListener('dragend',  onDragEnd);
+    document.addEventListener('drop',     onDragEnd);
+
+    return () => {
+      document.removeEventListener('dragover', onDragOver);
+      document.removeEventListener('dragend',  onDragEnd);
+      document.removeEventListener('drop',     onDragEnd);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   // Dynamic helper matching logic for engineers
   const matchEngineer = (nameStr: string): string => {
@@ -3502,6 +3583,106 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     reader.readAsText(file);
   };
 
+  const handleRegistryCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setRegistryCsvError(null);
+    setRegistryCsvSuccess(null);
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const raw = (event.target?.result as string || '').replace(/^\uFEFF/, '');
+        const allLines = raw.split(/\r?\n/);
+
+        // ── Detect delimiter ──────────────────────────────────────────────────
+        const firstLine = allLines[0] || '';
+        const commaCount = (firstLine.match(/,/g)  || []).length;
+        const semiCount  = (firstLine.match(/;/g)  || []).length;
+        const tabCount   = (firstLine.match(/\t/g) || []).length;
+        const delim = tabCount > semiCount && tabCount > commaCount ? '\t'
+                    : commaCount > semiCount                        ? ','
+                    : ';';
+
+        // ── Split a line respecting quoted fields ────────────────────────────
+        const splitLine = (line: string): string[] => {
+          const cols: string[] = [];
+          let cur = '';
+          let inQ = false;
+          for (const ch of line) {
+            if (ch === '"') { inQ = !inQ; }
+            else if (ch === delim && !inQ) { cols.push(cur.trim()); cur = ''; }
+            else { cur += ch; }
+          }
+          cols.push(cur.trim());
+          return cols;
+        };
+
+        // ── The format has TWO header rows, skip both ─────────────────────────
+        // Row 0: "Nombre de Persona o Institución" | "Equipo"(merged) | "Tubo de Rayos X"(merged) | "Fecha" | "Responsable"
+        // Row 1: "" | "Marca" | "Modelo" | "Serie" | "Marca" | "Modelo" | "Serie" | "" | ""
+        // Row 2+: actual data
+        //
+        // Column positions (0-indexed):
+        //  0 = Nombre de Persona o Institución
+        //  1 = Equipo - Marca
+        //  2 = Equipo - Modelo
+        //  3 = Equipo - Serie
+        //  4 = Tubo de Rayos X - Marca
+        //  5 = Tubo de Rayos X - Modelo
+        //  6 = Tubo de Rayos X - Serie
+        //  7 = Fecha
+        //  8 = Responsable
+
+        const dataLines = allLines.slice(2).filter(l => l.trim() !== '');
+
+        if (dataLines.length === 0) {
+          setRegistryCsvError("El archivo no tiene datos después de las 2 filas de encabezados.");
+          return;
+        }
+
+        const base = Date.now();
+        const formatted: MaintenanceRegistry[] = dataLines.map((line, idx) => {
+          const cols = splitLine(line);
+          const col = (i: number) => (cols[i] || '').trim().replace(/^["']|["']$/g, '');
+
+          return {
+            id: `REG-${base}-${idx}`,
+            institutionName: col(0) || '-',
+            eqBrand:         col(1) || '-',
+            eqModel:         col(2) || '-',
+            eqSerial:        col(3) || '-',
+            tuboBrand:       col(4) || '-',
+            tuboModel:       col(5) || '-',
+            tuboSerial:      col(6) || '-',
+            fecha:           col(7) || '-',
+            responsable:     col(8) || '-',
+            createdAt: new Date().toISOString()
+          };
+        });
+
+        console.log(`[Registry CSV] ${formatted.length} filas de datos. Delimitador: "${delim}". Primera fila:`, formatted[0]);
+
+        if (onBulkUploadMaintenanceRegistries) {
+          setRegistryCsvSuccess(`Subiendo ${formatted.length} registros a Firestore en ${Math.ceil(formatted.length / 400)} lote(s)… por favor espere.`);
+          try {
+            await onBulkUploadMaintenanceRegistries(formatted);
+            setRegistryCsvSuccess(`✅ ¡Éxito! Se cargaron ${formatted.length} registros de mantenimiento correctamente.`);
+          } catch (uploadErr: any) {
+            setRegistryCsvError(`Error al subir a Firestore: ${uploadErr?.message || String(uploadErr)}`);
+          }
+        } else {
+          setRegistryCsvError("No hay un handler configurado para subir los registros.");
+        }
+        e.target.value = '';
+      } catch (err: any) {
+        console.error("[Registry CSV] Error:", err);
+        setRegistryCsvError(`Error al procesar CSV: ${err.message || String(err)}`);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+
   const handleContractCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -3584,6 +3765,28 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       setIsClientModalOpen(false);
       setEditingClient(null);
     }
+  };
+
+  const handleSaveRegistry = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onAddMaintenanceRegistry) return;
+
+    const newReg: MaintenanceRegistry = {
+      id: `REG-${Date.now()}`,
+      institutionName: regFormInstitutionName.trim() || 'S/N Institución',
+      eqBrand: regFormEqBrand.trim(),
+      eqModel: regFormEqModel.trim(),
+      eqSerial: regFormEqSerial.trim(),
+      tuboBrand: regFormTuboBrand.trim(),
+      tuboModel: regFormTuboModel.trim(),
+      tuboSerial: regFormTuboSerial.trim(),
+      fecha: regFormFecha.trim() || new Date().toLocaleDateString('es-ES'),
+      responsable: regFormResponsable.trim() || 'S/N Responsable',
+      createdAt: new Date().toISOString()
+    };
+
+    onAddMaintenanceRegistry(newReg);
+    setIsRegistryModalOpen(false);
   };
 
   const handleSaveEquipment = (e: React.FormEvent) => {
@@ -3897,6 +4100,269 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <button
                   onClick={() => setClientPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={clientPage === totalPages}
+                  className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderRegistroTab = () => {
+    const query = registrySearch.toLowerCase().trim();
+    const filtered = (maintenanceRegistries || []).filter(reg => {
+      return (
+        reg.institutionName.toLowerCase().includes(query) ||
+        reg.eqBrand.toLowerCase().includes(query) ||
+        reg.eqModel.toLowerCase().includes(query) ||
+        reg.eqSerial.toLowerCase().includes(query) ||
+        reg.tuboBrand.toLowerCase().includes(query) ||
+        reg.tuboModel.toLowerCase().includes(query) ||
+        reg.tuboSerial.toLowerCase().includes(query) ||
+        reg.fecha.toLowerCase().includes(query) ||
+        reg.responsable.toLowerCase().includes(query)
+      );
+    });
+
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+    const paginated = filtered.slice((registryPage - 1) * itemsPerPage, registryPage * itemsPerPage);
+
+    return (
+      <div className="space-y-6 font-sans">
+        {/* Header Block */}
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+          <div>
+            <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+              <FileSpreadsheet className="w-4 h-4 text-pink-500" />
+              Registro de Equipos de Mantenimiento
+            </h4>
+            <p className="text-3xs text-slate-500 mt-0.5 font-medium">Administra y registra las instituciones, marcas, modelos y tubos de rayos X a los que se realiza soporte.</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-center">
+            <button
+              onClick={() => setIsRegistryImporterOpen(!isRegistryImporterOpen)}
+              className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
+                isRegistryImporterOpen 
+                  ? 'bg-amber-600 border-amber-600 text-white' 
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>{isRegistryImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
+            </button>
+            <button
+              onClick={() => {
+                setRegFormInstitutionName('');
+                setRegFormEqBrand('FUJIFILM');
+                setRegFormEqModel('');
+                setRegFormEqSerial('');
+                setRegFormTuboBrand('FUJIFILM');
+                setRegFormTuboModel('');
+                setRegFormTuboSerial('');
+                setRegFormFecha('');
+                setRegFormResponsable('');
+                setIsRegistryModalOpen(true);
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-indigo-600 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Nuevo Registro</span>
+            </button>
+          </div>
+        </div>
+
+        {/* CSV Importer Panel */}
+        {isRegistryImporterOpen && (
+          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+            <div className="border-b border-slate-100 pb-2 flex flex-wrap justify-between items-center gap-2">
+              <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <Database className="w-4 h-4 text-indigo-500" />
+                <span>Ingestor de Registros de Mantenimiento (CSV)</span>
+              </h5>
+              <div className="flex gap-3 text-[10px] font-bold">
+                <button 
+                  onClick={() => {
+                    const headers = [
+                      'Nombre de Persona o Institucion',
+                      'Equipo Marca',
+                      'Equipo Modelo',
+                      'Equipo Serie',
+                      'Tubo de Rayos X Marca',
+                      'Tubo de Rayos X Modelo',
+                      'Tubo de Rayos X Serie',
+                      'Fecha',
+                      'Responsable'
+                    ];
+                    const sample = [
+                      'HOSP. ENRIQUE GARCES',
+                      'FUJIFILM',
+                      'FCR GO',
+                      '26830304',
+                      'FUJIFILM',
+                      'M-5CE-31',
+                      'KC 11834201',
+                      '2/Apr/2014',
+                      'SIXTO CALDERON'
+                    ];
+                    const csv = "\uFEFF" + [headers.join(';'), sample.join(';')].join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'plantilla_registro_mantenimiento.csv';
+                    a.click();
+                  }}
+                  className="text-indigo-600 hover:underline cursor-pointer flex items-center gap-1"
+                >
+                  📥 Descargar Plantilla CSV
+                </button>
+              </div>
+            </div>
+            <div className="text-3xs text-slate-500 font-medium leading-relaxed">
+              <p>El archivo debe ser un CSV separado por comas o punto y coma. Se detectarán automáticamente los encabezados correspondientes.</p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleRegistryCsvUpload}
+                  className="block text-3xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all"
+                />
+                {onClearMaintenanceRegistries && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("¿Está seguro de que desea eliminar todos los registros de mantenimiento? Esta acción es irreversible.")) {
+                        onClearMaintenanceRegistries();
+                        setRegistryCsvSuccess(null);
+                        setRegistryCsvError(null);
+                      }
+                    }}
+                    className="text-[10px] font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer transition-all active:scale-[0.98]"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Eliminar todos los Registros</span>
+                  </button>
+                )}
+              </div>
+
+              {registryCsvSuccess && (
+                <div className="text-3xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-150 p-2.5 rounded-lg">
+                  {registryCsvSuccess}
+                </div>
+              )}
+              {registryCsvError && (
+                <div className="text-3xs font-bold text-rose-700 bg-rose-50 border border-rose-150 p-2.5 rounded-lg">
+                  {registryCsvError}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Search & Grid Stats */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <input
+              type="text"
+              placeholder="Buscar por institución, marca, modelo, serie o responsable..."
+              value={registrySearch}
+              onChange={(e) => {
+                setRegistrySearch(e.target.value);
+                setRegistryPage(1);
+              }}
+              className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400"
+            />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          </div>
+          <span className="text-3xs text-slate-400 font-bold uppercase tracking-wider">{filtered.length} registros encontrados</span>
+        </div>
+
+        {/* Registries Table Card */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs overflow-hidden">
+          <div className="overflow-x-auto rounded-xl border border-slate-100">
+            <table className="w-full text-left border-collapse text-[10.5px] font-semibold text-slate-650">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-3xs font-bold uppercase text-slate-400 tracking-wider">
+                  <th className="p-3">Nombre de Persona o Institución</th>
+                  <th className="p-3">Equipo (Marca / Modelo / Serie)</th>
+                  <th className="p-3">Tubo de Rayos X (Marca / Modelo / Serie)</th>
+                  <th className="p-3 text-center">Fecha</th>
+                  <th className="p-3">Responsable</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium">
+                {paginated.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-slate-400 text-3xs font-bold">
+                      No se encontraron registros de mantenimiento.
+                    </td>
+                  </tr>
+                ) : (
+                  paginated.map(reg => (
+                    <tr key={reg.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="p-3 text-slate-900 font-bold text-[11.5px] max-w-[200px]" title={reg.institutionName}>
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className="truncate">{reg.institutionName}</span>
+                          {reg.workOrderId && (
+                            <span className="shrink-0 text-[8px] font-extrabold bg-sky-100 text-sky-700 border border-sky-200 px-1.5 py-0.5 rounded-full uppercase tracking-wide" title={`Origen: Orden de trabajo ${reg.workOrderId}`}>
+                              📅 OT
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-slate-800 font-bold">{reg.eqBrand}</span>
+                          <span className="text-slate-500 text-3xs">{reg.eqModel} <span className="text-slate-400 font-mono">({reg.eqSerial})</span></span>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        {reg.tuboBrand !== '-' ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-slate-800 font-bold">{reg.tuboBrand}</span>
+                            <span className="text-slate-500 text-3xs">{reg.tuboModel} <span className="text-slate-400 font-mono">({reg.tuboSerial})</span></span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 font-mono">-</span>
+                        )}
+                      </td>
+                      <td className="p-3 text-center text-slate-700 font-mono">
+                        {reg.fecha}
+                      </td>
+                      <td className="p-3 text-indigo-700 font-bold">
+                        {reg.responsable}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 mt-2 border-t border-slate-100">
+              <span className="text-3xs font-bold text-slate-400 uppercase">Página {registryPage} de {totalPages}</span>
+              <div className="flex gap-2">
+                <button
+                  disabled={registryPage === 1}
+                  onClick={() => setRegistryPage(p => Math.max(p - 1, 1))}
+                  className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Anterior
+                </button>
+                <button
+                  disabled={registryPage === totalPages}
+                  onClick={() => setRegistryPage(p => Math.min(p + 1, totalPages))}
                   className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Siguiente
@@ -5754,6 +6220,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     }`}>
                                       {vac.status === 'Aprobado' && taken ? 'Tomada' : vac.status}
                                     </span>
+                                    {onDeleteVacation && (
+                                      <button
+                                        type="button"
+                                        onClick={async () => {
+                                          if (window.confirm(`¿Eliminar la vacación del ${fmtDate(vac.startDate)} al ${fmtDate(vac.endDate)}?`)) {
+                                            await onDeleteVacation(vac.id);
+                                          }
+                                        }}
+                                        className="text-red-500 hover:text-red-700 font-bold text-[9px] cursor-pointer flex items-center gap-0.5 hover:underline"
+                                        title="Eliminar este registro de vacaciones"
+                                      >
+                                        🗑 Eliminar
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
 
@@ -6241,6 +6721,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                           </button>
                                         </div>
                                       )}
+
+                                      {onDeleteVacation && (
+                                        <button
+                                          type="button"
+                                          onClick={async () => {
+                                            if (window.confirm(`¿Eliminar el registro del ${fmtDate(vac.startDate)} al ${fmtDate(vac.endDate)}?`)) {
+                                              await onDeleteVacation(vac.id);
+                                            }
+                                          }}
+                                          className="text-red-400 hover:text-red-700 font-bold text-[9px] cursor-pointer flex items-center gap-0.5 hover:underline"
+                                          title="Eliminar este registro de vacaciones"
+                                        >
+                                          🗑 Eliminar
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 );
@@ -6279,6 +6774,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             { id: 'agendamiento', label: 'Agendamiento', icon: CalendarRange, color: 'text-indigo-400' },
             { id: 'clientes', label: 'Clientes (Terceros)', icon: Users, color: 'text-sky-400' },
             { id: 'equipos', label: 'Equipos (Activos)', icon: Cpu, color: 'text-emerald-400' },
+            { id: 'registro', label: 'Registro MTO', icon: FileSpreadsheet, color: 'text-pink-400' },
             { id: 'contratos', label: 'Contratos', icon: Briefcase, color: 'text-amber-400' },
             { id: 'cronograma', label: 'Cronograma', icon: CalendarIcon, color: 'text-rose-400' },
             { id: 'vacaciones', label: 'Vacaciones', icon: Palmtree, color: 'text-teal-400' },
@@ -8210,6 +8706,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
       {activeAdminTab === 'clientes' && renderClientesTab()}
       {activeAdminTab === 'equipos' && renderEquiposTab()}
+      {activeAdminTab === 'registro' && renderRegistroTab()}
       {activeAdminTab === 'contratos' && renderContratosTab()}
       {activeAdminTab === 'cronograma' && renderCronogramaTab()}
       {activeAdminTab === 'vacaciones' && renderVacacionesTab()}
@@ -9139,11 +9636,40 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <button
                                   type="button"
                                   onClick={() => {
+                                    // 1. Actualizar estado de la orden
                                     onUpdateWorkOrderStatus(infoWO.id, 'Realizado');
                                     setInfoWO({ ...infoWO, status: 'Realizado' });
+
+                                    // 2. Crear registro de mantenimiento automáticamente
+                                    if (onAddMaintenanceRegistry) {
+                                      const regId = `REG-WO-${infoWO.id}-${Date.now()}`;
+                                      // Parsear nombre de equipo: "MARCA MODELO (SERIE)" o simplemente el nombre
+                                      const eqName   = infoWO.equipmentName || '';
+                                      // Intentar extraer marca y modelo del nombre del equipo
+                                      const eqParts  = eqName.split(' ');
+                                      const eqBrand  = eqParts[0] || '-';
+                                      const eqModel  = eqParts.slice(1).join(' ').split('(')[0].trim() || eqName || '-';
+                                      const serialMatch = eqName.match(/\(([^)]+)\)/);
+                                      const eqSerial = serialMatch ? serialMatch[1] : '-';
+
+                                      onAddMaintenanceRegistry({
+                                        id: regId,
+                                        institutionName: client?.name || 'S/N Institución',
+                                        eqBrand,
+                                        eqModel,
+                                        eqSerial,
+                                        tuboBrand:   '-',
+                                        tuboModel:   '-',
+                                        tuboSerial:  '-',
+                                        fecha: infoWO.plannedDate || new Date().toISOString().split('T')[0],
+                                        responsable: eng?.name || 'S/N Responsable',
+                                        createdAt: new Date().toISOString(),
+                                        workOrderId: infoWO.id,
+                                      });
+                                    }
                                   }}
                                   className="bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-[10px] px-3.5 py-1.5 rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-xs"
-                                  title="Marcar orden como Realizada en campo"
+                                  title="Marcar orden como Realizada en campo y guardar en Registro MTO"
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                   <span>Marcar Realizado</span>
@@ -10087,6 +10613,162 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
                 >
                   {editingClient ? 'Guardar Cambios' : 'Crear Registro'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Creación de Registro de Mantenimiento */}
+      {isRegistryModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="registry-form-modal">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <FileSpreadsheet className="w-5 h-5 text-pink-500" />
+                <span>Nuevo Registro de Mantenimiento</span>
+              </h3>
+              <button
+                onClick={() => setIsRegistryModalOpen(false)}
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveRegistry} className="space-y-3.5 text-xs">
+              {/* Institución */}
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase">Nombre de Persona o Institución</label>
+                <input
+                  type="text"
+                  required
+                  value={regFormInstitutionName}
+                  onChange={(e) => setRegFormInstitutionName(e.target.value)}
+                  placeholder="Ej. HOSP. ENRIQUE GARCÉS"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
+                />
+              </div>
+
+              {/* Equipo section */}
+              <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5 space-y-3">
+                <p className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Cpu className="w-3.5 h-3.5" />
+                  Equipo
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Marca</label>
+                    <input
+                      type="text"
+                      value={regFormEqBrand}
+                      onChange={(e) => setRegFormEqBrand(e.target.value)}
+                      placeholder="FUJIFILM"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Modelo</label>
+                    <input
+                      type="text"
+                      value={regFormEqModel}
+                      onChange={(e) => setRegFormEqModel(e.target.value)}
+                      placeholder="FCR GO"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Nº Serie</label>
+                    <input
+                      type="text"
+                      value={regFormEqSerial}
+                      onChange={(e) => setRegFormEqSerial(e.target.value)}
+                      placeholder="26830304"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold font-mono text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tubo Rayos X section */}
+              <div className="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3.5 space-y-3">
+                <p className="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  Tubo de Rayos X
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Marca</label>
+                    <input
+                      type="text"
+                      value={regFormTuboBrand}
+                      onChange={(e) => setRegFormTuboBrand(e.target.value)}
+                      placeholder="FUJIFILM"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Modelo</label>
+                    <input
+                      type="text"
+                      value={regFormTuboModel}
+                      onChange={(e) => setRegFormTuboModel(e.target.value)}
+                      placeholder="M-5CE-31"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Nº Serie</label>
+                    <input
+                      type="text"
+                      value={regFormTuboSerial}
+                      onChange={(e) => setRegFormTuboSerial(e.target.value)}
+                      placeholder="KC 11834201"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold font-mono text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Fecha & Responsable */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Fecha de Mantenimiento</label>
+                  <input
+                    type="date"
+                    value={regFormFecha}
+                    onChange={(e) => setRegFormFecha(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Responsable</label>
+                  <input
+                    type="text"
+                    required
+                    value={regFormResponsable}
+                    onChange={(e) => setRegFormResponsable(e.target.value)}
+                    placeholder="SIXTO CALDERON"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
+                  />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2 pt-1 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsRegistryModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-150 rounded-lg cursor-pointer transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg cursor-pointer shadow-xs transition-colors"
+                >
+                  Guardar Registro
                 </button>
               </div>
             </form>
