@@ -2149,13 +2149,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 const borderLClass = wo.isEquipmentDown
                   ? 'border-l-4 border-l-red-500'
                   : (engColor ? `border-l-4 ${engColor.borderL}` : '');
-                let badgeBg = 'bg-amber-50 text-amber-955 border border-amber-150';
+                let badgeBg = wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150';
                 if (wo.isEquipmentDown) badgeBg = 'bg-red-50 text-red-955 border border-red-150';
                 else if (wo.status === 'Conciliado') badgeBg = 'bg-emerald-50 text-emerald-955 border border-emerald-150';
                 else if (wo.status === 'Reportado') badgeBg = 'bg-indigo-50 text-indigo-955 border border-indigo-150';
                 else if (wo.status === 'Realizado') badgeBg = 'bg-blue-50 text-blue-955 border border-blue-150';
                 else if (wo.status === 'En Proceso') badgeBg = 'bg-sky-50 text-sky-955 border border-sky-150';
-                else if (wo.status === 'Pendiente') badgeBg = 'bg-yellow-50 text-yellow-955 border border-yellow-150';
+                else if (wo.status === 'Pendiente') badgeBg = wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150';
                 return (
                   <div
                     key={`pv-wo-${wo.id}`}
@@ -2189,6 +2189,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         : wo.status === 'Reportado' ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
                         : wo.status === 'Realizado' ? 'bg-blue-100/50 text-blue-805 border-blue-200'
                         : wo.status === 'En Proceso' ? 'bg-sky-100/50 text-sky-850 border-sky-200'
+                        : wo.type === 'Preventivo' ? 'bg-orange-200/70 text-orange-900 border-orange-300'
                         : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
                       }`}>{wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}</span>
                     </div>
@@ -2316,7 +2317,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               const eng = engineers.find(e => e.id === wo.engineerId);
               const supportEng = wo.supportEngineerId ? engineers.find(e => e.id === wo.supportEngineerId) : null;
               const client = clients.find(c => c.id === wo.clientId);
-              let badgeBg = 'bg-amber-50 hover:bg-amber-100 text-amber-955 border border-amber-150';
+              let badgeBg = wo.type === 'Preventivo'
+                ? 'bg-orange-100/80 hover:bg-orange-100 text-orange-955 border border-orange-200'
+                : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150';
               if (wo.isEquipmentDown) {
                 badgeBg = 'bg-red-50 hover:bg-red-100 text-red-955 border border-red-150';
               } else if (wo.status === 'Conciliado') {
@@ -2328,7 +2331,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               } else if (wo.status === 'En Proceso') {
                 badgeBg = 'bg-sky-50 hover:bg-sky-100 text-sky-955 border border-sky-150';
               } else if (wo.status === 'Pendiente') {
-                badgeBg = 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150';
+                badgeBg = wo.type === 'Preventivo'
+                  ? 'bg-orange-100/80 hover:bg-orange-100 text-orange-955 border border-orange-200'
+                  : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150';
               }
 
               const matchesQuery = searchQuery ? matchesSearch(wo) : true;
@@ -2423,6 +2428,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         ? 'bg-blue-100/50 text-blue-805 border-blue-200'
                         : wo.status === 'En Proceso'
                         ? 'bg-sky-100/50 text-sky-850 border-sky-200'
+                        : wo.type === 'Preventivo'
+                        ? 'bg-orange-200/70 text-orange-900 border-orange-300'
                         : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
                     }`}>
                       {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
@@ -2530,13 +2537,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 const borderLClass = wo.isEquipmentDown
                   ? 'border-l-4 border-l-red-500'
                   : (engColor ? `border-l-4 ${engColor.borderL}` : '');
-                let badgeBg = 'bg-amber-50 text-amber-955 border border-amber-150';
+                let badgeBg = wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150';
                 if (wo.isEquipmentDown) badgeBg = 'bg-red-50 text-red-955 border border-red-150';
                 else if (wo.status === 'Conciliado') badgeBg = 'bg-emerald-50 text-emerald-955 border border-emerald-150';
                 else if (wo.status === 'Reportado') badgeBg = 'bg-indigo-50 text-indigo-955 border border-indigo-150';
                 else if (wo.status === 'Realizado') badgeBg = 'bg-blue-50 text-blue-955 border border-blue-150';
                 else if (wo.status === 'En Proceso') badgeBg = 'bg-sky-50 text-sky-955 border border-sky-150';
-                else if (wo.status === 'Pendiente') badgeBg = 'bg-yellow-50 text-yellow-955 border border-yellow-150';
+                else if (wo.status === 'Pendiente') badgeBg = wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150';
                 return (
                   <div
                     key={`nv-wo-${wo.id}`}
@@ -2570,6 +2577,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         : wo.status === 'Reportado' ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
                         : wo.status === 'Realizado' ? 'bg-blue-100/50 text-blue-805 border-blue-200'
                         : wo.status === 'En Proceso' ? 'bg-sky-100/50 text-sky-850 border-sky-200'
+                        : wo.type === 'Preventivo' ? 'bg-orange-200/70 text-orange-900 border-orange-300'
                         : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
                       }`}>{wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}</span>
                     </div>
