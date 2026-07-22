@@ -28,9 +28,10 @@ import {
   Sparkles,
   Database,
   FileText,
-  Upload
+  Upload,
+  X
 } from 'lucide-react';
-import { Engineer, Curso, HistorialEntrenamiento } from '../types';
+import { Engineer, Curso, HistorialEntrenamiento, ScheduledTraining } from '../types';
 import { 
   MOCK_CURSOS_GE_FE_CSV, 
   INGENIEROS_NORM_SEMILLA, 
@@ -49,11 +50,34 @@ import {
 } from '../utils/capacitacionUtils';
 interface CapacitacionesPortalProps {
   engineers: Engineer[];
+  scheduledTrainings?: ScheduledTraining[];
+  onAddScheduledTraining?: (st: ScheduledTraining) => void;
+  onUpdateScheduledTraining?: (st: ScheduledTraining) => void;
+  onDeleteScheduledTraining?: (stId: string) => void;
 }
 
-export default function CapacitacionesPortal({ engineers }: CapacitacionesPortalProps) {
+export default function CapacitacionesPortal({
+  engineers,
+  scheduledTrainings = [],
+  onAddScheduledTraining,
+  onUpdateScheduledTraining,
+  onDeleteScheduledTraining
+}: CapacitacionesPortalProps) {
   // Navigation
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'importer' | 'rutas' | 'ingenieros' | 'cursos' | 'historial'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'importer' | 'rutas' | 'ingenieros' | 'cursos' | 'historial' | 'programacion'>('dashboard');
+
+  // Programación Form States
+  const [isProgModalOpen, setIsProgModalOpen] = useState(false);
+  const [editingProg, setEditingProg] = useState<ScheduledTraining | null>(null);
+  const [progFormEngId, setProgFormEngId] = useState('');
+  const [progFormTitle, setProgFormTitle] = useState('');
+  const [progFormCourseCode, setProgFormCourseCode] = useState('');
+  const [progFormStartDate, setProgFormStartDate] = useState('');
+  const [progFormEndDate, setProgFormEndDate] = useState('');
+  const [progFormLocation, setProgFormLocation] = useState('');
+  const [progFormCost, setProgFormCost] = useState<number>(0);
+  const [progFormStatus, setProgFormStatus] = useState<'Programado' | 'En Curso' | 'Completado' | 'Cancelado'>('Programado');
+  const [progFormNotes, setProgFormNotes] = useState('');
 
   // Firestore & Application State
   const ingenieros = useMemo(() => {
@@ -1632,6 +1656,19 @@ export default function CapacitacionesPortal({ engineers }: CapacitacionesPortal
             </button>
 
             <button
+              id="tab-programacion"
+              onClick={() => setActiveTab('programacion')}
+              className={`px-4 py-3 text-xs font-semibold tracking-tight transition whitespace-nowrap rounded-md flex items-center gap-1.5 ${
+                activeTab === 'programacion'
+                  ? 'bg-slate-100 text-[#001f3f]'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Calendar className="w-4 h-4 text-purple-600" />
+              Programación & Agenda
+            </button>
+
+            <button
               id="tab-importer"
               onClick={() => setActiveTab('importer')}
               className={`px-4 py-3 text-xs font-semibold tracking-tight transition whitespace-nowrap rounded-md flex items-center gap-1.5 ${
@@ -2006,6 +2043,415 @@ service cloud.firestore {
 
                 </div>
 
+              </div>
+            )}
+
+            {/* VIEW: PROGRAMACIÓN & AGENDA DE CAPACITACIONES */}
+            {activeTab === 'programacion' && (
+              <div className="space-y-6 animate-fadeIn" id="view-programacion">
+                {/* Top Header Card */}
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-6 h-6 text-purple-600" />
+                      <h2 className="text-xl font-bold text-slate-900 font-display">Programación & Agenda de Capacitaciones</h2>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Planifique los días previstos para las capacitaciones de los ingenieros, establezca el lugar, duración y precio, y visualice su impacto directamente en la agenda.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingProg(null);
+                      setProgFormEngId(engineers[0]?.id || '');
+                      setProgFormTitle('');
+                      setProgFormCourseCode('');
+                      setProgFormStartDate(new Date().toISOString().split('T')[0]);
+                      setProgFormEndDate(new Date().toISOString().split('T')[0]);
+                      setProgFormLocation('Quito - Sede Central');
+                      setProgFormCost(0);
+                      setProgFormStatus('Programado');
+                      setProgFormNotes('');
+                      setIsProgModalOpen(true);
+                    }}
+                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer shadow-sm transition flex items-center gap-2 shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Programar Capacitación</span>
+                  </button>
+                </div>
+
+                {/* Metrics Summary Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4 shadow-3xs">
+                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                      <Calendar className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Programadas</span>
+                      <span className="text-xl font-black text-slate-900 font-mono">{(scheduledTrainings || []).length}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4 shadow-3xs">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                      <PiggyBank className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Inversión Estimada (USD)</span>
+                      <span className="text-xl font-black text-emerald-700 font-mono">
+                        ${(scheduledTrainings || []).reduce((sum, st) => sum + (st.cost || 0), 0).toLocaleString('en-US')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4 shadow-3xs">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Días de Capacitación</span>
+                      <span className="text-xl font-black text-indigo-700 font-mono">
+                        {(scheduledTrainings || []).reduce((sum, st) => {
+                          if (!st.startDate || !st.endDate) return sum + 1;
+                          const s = new Date(st.startDate + 'T00:00:00');
+                          const e = new Date(st.endDate + 'T00:00:00');
+                          const diff = Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                          return sum + diff;
+                        }, 0)} días
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4 shadow-3xs">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Técnicos Programados</span>
+                      <span className="text-xl font-black text-amber-700 font-mono">
+                        {new Set((scheduledTrainings || []).map(st => st.engineerId)).size}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Scheduled Trainings Table & Cards */}
+                <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <h3 className="font-extrabold text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-purple-600" />
+                      <span>Listado de Capacitaciones Programadas</span>
+                    </h3>
+                  </div>
+
+                  {(scheduledTrainings || []).length === 0 ? (
+                    <div className="text-center py-12 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                      <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                      <h4 className="font-extrabold text-sm text-slate-700">Sin capacitaciones programadas</h4>
+                      <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                        Haga clic en "+ Programar Capacitación" para agendar las fechas, lugar y costo del entrenamiento de un ingeniero.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                            <th className="p-3">Ingeniero</th>
+                            <th className="p-3">Capacitación / Curso</th>
+                            <th className="p-3">Lugar de Realización</th>
+                            <th className="p-3">Fechas & Duración</th>
+                            <th className="p-3 text-right">Precio (USD)</th>
+                            <th className="p-3 text-center">Estado</th>
+                            <th className="p-3 text-center">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {(scheduledTrainings || []).map(st => {
+                            const eng = engineers.find(e => e.id === st.engineerId);
+                            const days = st.startDate && st.endDate
+                              ? Math.max(1, Math.round((new Date(st.endDate + 'T00:00:00').getTime() - new Date(st.startDate + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24)) + 1)
+                              : 1;
+
+                            return (
+                              <tr key={st.id} className="hover:bg-purple-50/20 transition-colors">
+                                <td className="p-3">
+                                  <div className="flex items-center gap-2">
+                                    <div>
+                                      <p className="font-extrabold text-slate-900 text-xs">{eng?.name || 'Técnico'}</p>
+                                      <span className="text-[9px] text-slate-400 font-semibold">{eng?.specialty}</span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="p-3">
+                                  <p className="font-bold text-slate-800">{st.title}</p>
+                                  {st.courseCode && (
+                                    <span className="inline-block bg-purple-100 text-purple-700 font-mono text-[9px] font-extrabold px-1.5 py-0.2 rounded mt-0.5 border border-purple-200">
+                                      {st.courseCode}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="p-3">
+                                  <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-1 rounded-lg text-2xs font-bold border border-slate-200">
+                                    📍 {st.location}
+                                  </span>
+                                </td>
+                                <td className="p-3">
+                                  <div className="space-y-0.5 font-mono text-2xs">
+                                    <span className="font-bold text-purple-800">{st.startDate}</span>
+                                    <span className="text-slate-400 mx-1">→</span>
+                                    <span className="font-bold text-purple-800">{st.endDate}</span>
+                                  </div>
+                                  <span className="text-[9px] font-bold text-slate-500 block mt-0.5">
+                                    {days} {days === 1 ? 'día' : 'días'} {days >= 5 ? `(~${Math.round(days / 5)} sem.)` : ''}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-right font-mono font-extrabold text-emerald-700 text-xs">
+                                  {st.cost ? `$ ${st.cost.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '—'}
+                                </td>
+                                <td className="p-3 text-center">
+                                  <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${
+                                    st.status === 'Completado' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                    st.status === 'En Curso' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                    st.status === 'Cancelado' ? 'bg-red-50 text-red-700 border-red-200' :
+                                    'bg-purple-50 text-purple-700 border-purple-200'
+                                  }`}>
+                                    {st.status}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-center">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingProg(st);
+                                        setProgFormEngId(st.engineerId);
+                                        setProgFormTitle(st.title);
+                                        setProgFormCourseCode(st.courseCode || '');
+                                        setProgFormStartDate(st.startDate);
+                                        setProgFormEndDate(st.endDate);
+                                        setProgFormLocation(st.location);
+                                        setProgFormCost(st.cost || 0);
+                                        setProgFormStatus(st.status);
+                                        setProgFormNotes(st.notes || '');
+                                        setIsProgModalOpen(true);
+                                      }}
+                                      className="p-1 text-slate-400 hover:text-indigo-600 transition cursor-pointer"
+                                      title="Editar capacitación"
+                                    >
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    {onDeleteScheduledTraining && (
+                                      <button
+                                        type="button"
+                                        onClick={async () => {
+                                          if (window.confirm(`¿Eliminar la capacitación "${st.title}"?`)) {
+                                            await onDeleteScheduledTraining(st.id);
+                                          }
+                                        }}
+                                        className="p-1 text-slate-400 hover:text-red-600 transition cursor-pointer"
+                                        title="Eliminar capacitación"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Modal Crear/Editar Capacitación Programada */}
+            {isProgModalOpen && (
+              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print">
+                <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans text-xs">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-purple-600" />
+                      <span>{editingProg ? 'Editar Capacitación Programada' : 'Programar Nueva Capacitación'}</span>
+                    </h3>
+                    <button
+                      onClick={() => setIsProgModalOpen(false)}
+                      className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!onAddScheduledTraining && !onUpdateScheduledTraining) return;
+
+                      const stId = editingProg ? editingProg.id : `ST-${Date.now()}`;
+                      const stData: ScheduledTraining = {
+                        id: stId,
+                        engineerId: progFormEngId,
+                        title: progFormTitle.trim(),
+                        courseCode: progFormCourseCode.trim() || undefined,
+                        startDate: progFormStartDate,
+                        endDate: progFormEndDate,
+                        location: progFormLocation.trim() || 'Sede Central',
+                        cost: progFormCost || 0,
+                        status: progFormStatus,
+                        notes: progFormNotes.trim() || undefined,
+                        createdAt: editingProg?.createdAt || new Date().toISOString()
+                      };
+
+                      if (editingProg && onUpdateScheduledTraining) {
+                        onUpdateScheduledTraining(stData);
+                      } else if (onAddScheduledTraining) {
+                        onAddScheduledTraining(stData);
+                      }
+                      setIsProgModalOpen(false);
+                    }}
+                    className="space-y-3.5"
+                  >
+                    {/* Ingeniero Asignado */}
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Ingeniero Asignado</label>
+                      <select
+                        value={progFormEngId}
+                        onChange={(e) => setProgFormEngId(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 outline-hidden focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                      >
+                        {engineers.map(eng => (
+                          <option key={eng.id} value={eng.id}>{eng.name} ({eng.specialty})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Título de Capacitación */}
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Nombre / Título de la Capacitación</label>
+                      <input
+                        type="text"
+                        required
+                        value={progFormTitle}
+                        onChange={(e) => setProgFormTitle(e.target.value)}
+                        placeholder="Ej. Entrenamiento Avanzado Tomografía GE"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                      />
+                    </div>
+
+                    {/* Código de Curso (Opcional) y Lugar */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Código del Curso (Opcional)</label>
+                        <input
+                          type="text"
+                          value={progFormCourseCode}
+                          onChange={(e) => setProgFormCourseCode(e.target.value)}
+                          placeholder="Ej. GE-01"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold font-mono text-slate-700 outline-hidden focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all uppercase"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Lugar de Realización</label>
+                        <input
+                          type="text"
+                          required
+                          value={progFormLocation}
+                          onChange={(e) => setProgFormLocation(e.target.value)}
+                          placeholder="Ej. Alemania / Milwaukee"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Fechas Inicio / Fin */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Fecha de Inicio</label>
+                        <input
+                          type="date"
+                          required
+                          value={progFormStartDate}
+                          onChange={(e) => setProgFormStartDate(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-hidden focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Fecha de Fin (Duración)</label>
+                        <input
+                          type="date"
+                          required
+                          value={progFormEndDate}
+                          onChange={(e) => setProgFormEndDate(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-hidden focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Precio / Costo USD & Estado */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Precio / Costo (USD)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={progFormCost}
+                          onChange={(e) => setProgFormCost(parseFloat(e.target.value) || 0)}
+                          placeholder="1500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono font-bold text-slate-700 outline-hidden focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Estado</label>
+                        <select
+                          value={progFormStatus}
+                          onChange={(e) => setProgFormStatus(e.target.value as any)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 outline-hidden focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                        >
+                          <option value="Programado">Programado</option>
+                          <option value="En Curso">En Curso</option>
+                          <option value="Completado">Completado</option>
+                          <option value="Cancelado">Cancelado</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Observaciones */}
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Notas / Observaciones</label>
+                      <textarea
+                        value={progFormNotes}
+                        onChange={(e) => setProgFormNotes(e.target.value)}
+                        rows={2}
+                        placeholder="Ej. Vuelos y viáticos cubiertos por la empresa."
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 outline-hidden focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none"
+                      />
+                    </div>
+
+                    {/* Footer buttons */}
+                    <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setIsProgModalOpen(false)}
+                        className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-lg cursor-pointer shadow-xs transition-colors"
+                      >
+                        {editingProg ? 'Guardar Cambios' : 'Programar Capacitación'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
 

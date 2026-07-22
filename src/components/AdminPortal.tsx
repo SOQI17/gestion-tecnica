@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles } from 'lucide-react';
-import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry } from '../types';
+import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
 
@@ -43,6 +43,10 @@ interface AdminPortalProps {
   onAddMaintenanceRegistry?: (reg: MaintenanceRegistry) => void;
   onBulkUploadMaintenanceRegistries?: (registries: MaintenanceRegistry[]) => Promise<void>;
   onClearMaintenanceRegistries?: () => void;
+  scheduledTrainings?: ScheduledTraining[];
+  onAddScheduledTraining?: (st: ScheduledTraining) => void;
+  onUpdateScheduledTraining?: (st: ScheduledTraining) => void;
+  onDeleteScheduledTraining?: (stId: string) => void;
 }
 
 const getEndDateStr = (startDateStr: string, duration: number): string => {
@@ -382,7 +386,11 @@ export default function AdminPortal({
   maintenanceRegistries = [],
   onAddMaintenanceRegistry,
   onBulkUploadMaintenanceRegistries,
-  onClearMaintenanceRegistries
+  onClearMaintenanceRegistries,
+  scheduledTrainings = [],
+  onAddScheduledTraining,
+  onUpdateScheduledTraining,
+  onDeleteScheduledTraining
 }: AdminPortalProps) {
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -510,6 +518,7 @@ export default function AdminPortal({
   const [regFormResponsable, setRegFormResponsable] = useState('');
   const [registryCsvSuccess, setRegistryCsvSuccess] = useState<string | null>(null);
   const [registryCsvError, setRegistryCsvError] = useState<string | null>(null);
+  const [infoScheduledTraining, setInfoScheduledTraining] = useState<ScheduledTraining | null>(null);
 
   const getEngineerVacationConflict = (engId: string, startDate: string, duration: number) => {
     if (!engId || !startDate || !duration) return null;
@@ -2112,6 +2121,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 );
               })}
 
+              {(scheduledTrainings || []).filter(st => prevDateStr >= st.startDate && prevDateStr <= st.endDate).map(st => {
+                const eng = engineers.find(e => e.id === st.engineerId);
+                return (
+                  <div
+                    key={`pv-st-${st.id}`}
+                    onClick={(e) => { e.stopPropagation(); setInfoScheduledTraining(st); }}
+                    className="text-[8.5px] leading-tight p-1 rounded bg-purple-50 hover:bg-purple-100 border border-purple-200 border-l-4 border-l-purple-600 text-purple-950 font-bold truncate flex items-center gap-1 select-none cursor-pointer"
+                    title={`Capacitación: ${st.title} (${st.location})`}
+                  >
+                    <span>🎓</span>
+                    <span className="truncate">{st.title} ({eng?.name.replace('Ing. ', '').split(' ')[0]})</span>
+                  </div>
+                );
+              })}
+
               {/* Contract commitments for prev overflow day */}
               {getContractCommitmentsForDate(prevDateStr).map((commitment, index) => {
                 const badgeBg = commitment.isDone 
@@ -2282,6 +2306,44 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 >
                   <span>🌴</span>
                   <span className="truncate">Vac: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
+                </div>
+              );
+            })}
+
+            {(scheduledTrainings || []).filter(st => dateStr >= st.startDate && dateStr <= st.endDate).map(st => {
+              const eng = engineers.find(e => e.id === st.engineerId);
+              return (
+                <div
+                  key={`st-${st.id}`}
+                  className="text-[8.5px] leading-tight p-1.5 rounded mb-1 text-left bg-purple-50 hover:bg-purple-100/90 border border-purple-200 border-l-4 border-l-purple-600 text-purple-950 font-medium cursor-pointer transition-all hover:shadow-xs select-none"
+                  title={`🎓 Capacitación: ${st.title} (${st.location}) - ${eng?.name || ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInfoScheduledTraining(st);
+                  }}
+                >
+                  <div className="flex items-center justify-between font-black text-purple-900 leading-none mb-0.5">
+                    <span className="truncate flex items-center gap-1">
+                      <span>🎓</span>
+                      <span className="truncate">{st.title}</span>
+                    </span>
+                  </div>
+                  <p className="truncate text-purple-800 text-[8px] font-bold mt-0.5">
+                    📍 {st.location} {st.cost ? <span className="font-mono text-purple-700 ml-1">(${st.cost.toLocaleString('en-US')})</span> : null}
+                  </p>
+                  <p className="truncate text-purple-900 text-[7.5px] font-extrabold mt-0.5 flex items-center gap-0.5">
+                    <span>{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
+                    <span>{eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
+                  </p>
+                  <div className="flex items-center justify-between mt-1 pt-0.5 border-t border-purple-200/50">
+                    <span className="text-[7px] text-purple-600 font-extrabold uppercase">Capacitación</span>
+                    <span className={`text-[7px] font-extrabold px-1 py-0.2 rounded ${
+                      st.status === 'Completado' ? 'bg-emerald-100 text-emerald-800' :
+                      st.status === 'En Curso' ? 'bg-amber-100 text-amber-800' :
+                      st.status === 'Cancelado' ? 'bg-red-100 text-red-800' :
+                      'bg-purple-100 text-purple-800'
+                    }`}>{st.status}</span>
+                  </div>
                 </div>
               );
             })}
@@ -8818,7 +8880,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {activeAdminTab === 'contratos' && renderContratosTab()}
       {activeAdminTab === 'cronograma' && renderCronogramaTab()}
       {activeAdminTab === 'vacaciones' && renderVacacionesTab()}
-      {activeAdminTab === 'capacitaciones' && <CapacitacionesPortal engineers={engineers} />}
+      {activeAdminTab === 'capacitaciones' && (
+        <CapacitacionesPortal
+          engineers={engineers}
+          scheduledTrainings={scheduledTrainings}
+          onAddScheduledTraining={onAddScheduledTraining}
+          onUpdateScheduledTraining={onUpdateScheduledTraining}
+          onDeleteScheduledTraining={onDeleteScheduledTraining}
+        />
+      )}
 
       {/* Slide-over Overlay for creating / assigning new workorder */}
       <AnimatePresence>
@@ -11835,6 +11905,119 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setSelectedContractForDetails(null);
                 }}
                 className="px-4 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors text-slate-700"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Detalle de Capacitación Programada en Agenda */}
+      {infoScheduledTraining && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs h-full w-full z-50 flex items-center justify-center p-4">
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-5 overflow-y-auto max-h-[90vh] z-50 border border-slate-150 font-sans space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🎓</span>
+                <div>
+                  <h3 className="font-extrabold text-sm text-slate-900 leading-tight">
+                    {infoScheduledTraining.title}
+                  </h3>
+                  {infoScheduledTraining.courseCode && (
+                    <span className="inline-block bg-purple-100 text-purple-700 text-[9px] font-mono font-bold px-1.5 py-0.2 rounded mt-0.5 border border-purple-200">
+                      {infoScheduledTraining.courseCode}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setInfoScheduledTraining(null)}
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              {/* Ingeniero Asignado */}
+              {(() => {
+                const eng = engineers.find(e => e.id === infoScheduledTraining.engineerId);
+                return (
+                  <div className="bg-purple-50/60 border border-purple-100 p-3 rounded-xl flex items-center gap-3">
+                    <span className="text-2xl">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
+                    <div>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Ingeniero en Capacitación</span>
+                      <p className="font-extrabold text-slate-900 text-xs">{eng?.name || 'Técnico'}</p>
+                      <p className="text-[10px] text-slate-500 font-semibold">{eng?.specialty} • {eng?.sede || 'Quito'}</p>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Detalle de Fechas, Lugar y Precio */}
+              <div className="grid grid-cols-2 gap-2.5 text-2xs">
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-150 space-y-0.5">
+                  <span className="block font-bold text-slate-400 uppercase text-[8px]">Fechas & Duración</span>
+                  <p className="font-mono font-bold text-slate-800 text-[10.5px]">
+                    {infoScheduledTraining.startDate} → {infoScheduledTraining.endDate}
+                  </p>
+                  <p className="text-[9px] font-semibold text-purple-700">
+                    {Math.max(1, Math.round((new Date(infoScheduledTraining.endDate + 'T00:00:00').getTime() - new Date(infoScheduledTraining.startDate + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24)) + 1)} días
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-150 space-y-0.5">
+                  <span className="block font-bold text-slate-400 uppercase text-[8px]">Lugar & Inversión</span>
+                  <p className="font-bold text-slate-800 text-[10.5px] truncate">
+                    📍 {infoScheduledTraining.location}
+                  </p>
+                  <p className="text-[9.5px] font-mono font-extrabold text-emerald-700">
+                    {infoScheduledTraining.cost ? `$ ${infoScheduledTraining.cost.toLocaleString('en-US')}` : 'Sin costo registrado'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Estado */}
+              <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-150">
+                <span className="font-bold text-slate-500 text-[10px] uppercase">Estado de la Capacitación</span>
+                <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full border ${
+                  infoScheduledTraining.status === 'Completado' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                  infoScheduledTraining.status === 'En Curso' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                  infoScheduledTraining.status === 'Cancelado' ? 'bg-red-50 text-red-700 border-red-200' :
+                  'bg-purple-50 text-purple-700 border-purple-200'
+                }`}>
+                  {infoScheduledTraining.status}
+                </span>
+              </div>
+
+              {infoScheduledTraining.notes && (
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-150">
+                  <span className="block font-bold text-slate-400 uppercase text-[8px] mb-0.5">Observaciones</span>
+                  <p className="text-3xs text-slate-600 italic font-medium">"{infoScheduledTraining.notes}"</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+              {onDeleteScheduledTraining && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm(`¿Eliminar la capacitación "${infoScheduledTraining.title}"?`)) {
+                      await onDeleteScheduledTraining(infoScheduledTraining.id);
+                      setInfoScheduledTraining(null);
+                    }
+                  }}
+                  className="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Eliminar</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setInfoScheduledTraining(null)}
+                className="ml-auto bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold px-4 py-2 rounded-xl transition cursor-pointer"
               >
                 Cerrar
               </button>

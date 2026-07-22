@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2 } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
-import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry } from './types';
+import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining } from './types';
 import AdminPortal from './components/AdminPortal';
 import EngineerPortal from './components/EngineerPortal';
 import Login from './components/Login';
@@ -36,6 +36,7 @@ export default function App() {
   const [vacations, setVacations] = useState<Vacation[]>([]);
   const [permissions, setPermissions] = useState<EngineerPermission[]>([]);
   const [maintenanceRegistries, setMaintenanceRegistries] = useState<MaintenanceRegistry[]>([]);
+  const [scheduledTrainings, setScheduledTrainings] = useState<ScheduledTraining[]>([]);
 
   const [dbLoading, setDbLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -275,6 +276,19 @@ export default function App() {
       console.warn("Error leyendo registros de mantenimiento de Firestore:", error);
     });
 
+    // 10. Suscribirse a la Colección de Capacitaciones Programadas
+    const unsubScheduledTrainings = onSnapshot(collection(db, 'scheduledTrainings'), (snapshot) => {
+      const list: ScheduledTraining[] = [];
+      snapshot.forEach(docSnap => {
+        if (docSnap.id !== 'fsm_placeholder') {
+          list.push(docSnap.data() as ScheduledTraining);
+        }
+      });
+      setScheduledTrainings(list);
+    }, (error) => {
+      console.warn("Error leyendo capacitaciones programadas de Firestore:", error);
+    });
+
     return () => {
       unsubEngineers();
       unsubClients();
@@ -285,6 +299,7 @@ export default function App() {
       unsubVacations();
       unsubPermissions();
       unsubRegistries();
+      unsubScheduledTrainings();
     };
   }, []);
 
@@ -565,6 +580,36 @@ export default function App() {
       showNotification(`Vacaciones registradas correctamente.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `vacations/${vac.id}`);
+    }
+  };
+
+  const handleAddScheduledTraining = async (st: ScheduledTraining) => {
+    try {
+      await setDoc(doc(db, 'scheduledTrainings', st.id), cleanUndefined(st));
+      showNotification(`Capacitación programada guardada correctamente.`, 'success');
+    } catch (error: any) {
+      console.error("Error al guardar capacitación programada:", error);
+      handleFirestoreError(error, OperationType.WRITE, `scheduledTrainings/${st.id}`);
+    }
+  };
+
+  const handleUpdateScheduledTraining = async (st: ScheduledTraining) => {
+    try {
+      await setDoc(doc(db, 'scheduledTrainings', st.id), cleanUndefined(st));
+      showNotification(`Capacitación programada actualizada.`, 'success');
+    } catch (error: any) {
+      console.error("Error al actualizar capacitación programada:", error);
+      handleFirestoreError(error, OperationType.UPDATE, `scheduledTrainings/${st.id}`);
+    }
+  };
+
+  const handleDeleteScheduledTraining = async (stId: string) => {
+    try {
+      await deleteDoc(doc(db, 'scheduledTrainings', stId));
+      showNotification(`Capacitación programada eliminada.`, 'success');
+    } catch (error: any) {
+      console.error("Error al eliminar capacitación programada:", error);
+      handleFirestoreError(error, OperationType.DELETE, `scheduledTrainings/${stId}`);
     }
   };
 
@@ -945,6 +990,10 @@ export default function App() {
                 onAddMaintenanceRegistry={handleAddMaintenanceRegistry}
                 onBulkUploadMaintenanceRegistries={handleBulkUploadMaintenanceRegistries}
                 onClearMaintenanceRegistries={handleClearMaintenanceRegistries}
+                scheduledTrainings={scheduledTrainings}
+                onAddScheduledTraining={handleAddScheduledTraining}
+                onUpdateScheduledTraining={handleUpdateScheduledTraining}
+                onDeleteScheduledTraining={handleDeleteScheduledTraining}
               />
             )}
             {activeTab === 'engineer' && (

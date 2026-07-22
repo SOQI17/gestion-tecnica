@@ -196,3 +196,18 @@ export interface MaintenanceRegistry {
   createdAt?: string;
   workOrderId?: string; // Referencia a la orden de trabajo que originó este registro
 }
+
+export interface ScheduledTraining {
+  id: string;
+  title: string;          // Título de la capacitación
+  courseCode?: string;     // Código del curso (ej: GE-01)
+  engineerId: string;      // ID del ingeniero asignado
+  supportEngineerIds?: string[]; // Ingenieros acompañantes / apoyo
+  startDate: string;       // YYYY-MM-DD
+  endDate: string;         // YYYY-MM-DD
+  location: string;        // Lugar donde se realizará (ej: Quito, Alemania, En línea)
+  cost?: number;           // Precio / Costo en USD
+  status: 'Programado' | 'En Curso' | 'Completado' | 'Cancelado';
+  notes?: string;          // Observaciones o notas adicionales
+  createdAt?: string;
+}
