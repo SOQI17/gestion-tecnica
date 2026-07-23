@@ -5197,38 +5197,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               {weeks.map((weekDays, wIndex) => {
                 const weekDaysData = weekDays.map((cell) => {
-                  const keyStr = cell.key ? cell.key.toString() : '';
-                  // Blank placeholder (old style)
-                  if (keyStr.startsWith('blank-')) {
+                  const keyStr = cell && cell.key ? cell.key.toString() : '';
+                  if (!keyStr || keyStr.includes('blank')) {
                     return { type: 'placeholder' as const };
                   }
-                  // Previous month overflow: key = 'prev-DD'
-                  if (keyStr.startsWith('prev-')) {
-                    const prevDay = parseInt(keyStr.replace('prev-', ''), 10);
-                    const prevMonthYear = calendarMonth === 1 ? calendarYear - 1 : calendarYear;
-                    const prevMonth = calendarMonth === 1 ? 12 : calendarMonth - 1;
-                    const dateStr = `${prevMonthYear}-${prevMonth.toString().padStart(2, '0')}-${prevDay.toString().padStart(2, '0')}`;
-                    return { type: 'day' as const, dayNum: prevDay, dateStr };
+                  if (keyStr.includes('prev-')) {
+                    const prevDay = parseInt(keyStr.split('prev-')[1], 10);
+                    if (!isNaN(prevDay)) {
+                      const prevMonthYear = calendarMonth === 1 ? calendarYear - 1 : calendarYear;
+                      const prevMonth = calendarMonth === 1 ? 12 : calendarMonth - 1;
+                      const dateStr = `${prevMonthYear}-${prevMonth.toString().padStart(2, '0')}-${prevDay.toString().padStart(2, '0')}`;
+                      return { type: 'day' as const, dayNum: prevDay, dateStr };
+                    }
                   }
-                  // Next month overflow: key = 'next-N'
-                  if (keyStr.startsWith('next-')) {
-                    const nextDay = parseInt(keyStr.replace('next-', ''), 10);
-                    const nextMonthYear = calendarMonth === 12 ? calendarYear + 1 : calendarYear;
-                    const nextMonth = calendarMonth === 12 ? 1 : calendarMonth + 1;
-                    const dateStr = `${nextMonthYear}-${nextMonth.toString().padStart(2, '0')}-${nextDay.toString().padStart(2, '0')}`;
-                    return { type: 'day' as const, dayNum: nextDay, dateStr };
+                  if (keyStr.includes('next-')) {
+                    const nextDay = parseInt(keyStr.split('next-')[1], 10);
+                    if (!isNaN(nextDay)) {
+                      const nextMonthYear = calendarMonth === 12 ? calendarYear + 1 : calendarYear;
+                      const nextMonth = calendarMonth === 12 ? 1 : calendarMonth + 1;
+                      const dateStr = `${nextMonthYear}-${nextMonth.toString().padStart(2, '0')}-${nextDay.toString().padStart(2, '0')}`;
+                      return { type: 'day' as const, dayNum: nextDay, dateStr };
+                    }
                   }
-                  // Current month day: key = day number as string
-                  const dayNum = parseInt(keyStr, 10);
-                  if (isNaN(dayNum)) {
-                    return { type: 'placeholder' as const };
+                  const dayNum = parseInt(keyStr.replace(/[^0-9]/g, ''), 10);
+                  if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31) {
+                    const dateStr = `${calendarYear}-${calendarMonth.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
+                    return { type: 'day' as const, dayNum, dateStr };
                   }
-                  const dateStr = `${calendarYear}-${calendarMonth.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
-                  return {
-                    type: 'day' as const,
-                    dayNum,
-                    dateStr
-                  };
+                  return { type: 'placeholder' as const };
                 });
 
                 const isWorkOrderActiveOnDate = (wo: WorkOrder, dateStr: string) => {
@@ -5240,10 +5236,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   return target >= start && target <= end;
                 };
 
-                const weekMultiDayWOs = workOrders.filter(wo => {
-                  if (!wo.durationDays || wo.durationDays <= 1) return false;
-                  return weekDaysData.some(day => day.type === 'day' && isWorkOrderActiveOnDate(wo, day.dateStr));
-                });
+                const weekMultiDayWOs = workOrders
+                  .filter(wo => {
+                    if (!wo.durationDays || wo.durationDays <= 1) return false;
+                    return weekDaysData.some(day => day.type === 'day' && isWorkOrderActiveOnDate(wo, day.dateStr));
+                  })
+                  .sort((a, b) => {
+                    if (a.plannedDate !== b.plannedDate) return a.plannedDate.localeCompare(b.plannedDate);
+                    return (b.durationDays || 1) - (a.durationDays || 1);
+                  });
 
                 const tracks: WorkOrder[][] = [];
                 weekMultiDayWOs.forEach(wo => {
@@ -5271,7 +5272,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           eSpan++;
                         }
                       }
-                      return eStart < colStart + colSpan && colStart < eStart + eSpan;
+                      return eStart !== -1 && eStart < colStart + colSpan && colStart < eStart + eSpan;
                     });
 
                     if (!overlaps) break;
@@ -7501,20 +7502,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     {/* Weeks */}
                     {weeks.map((weekDays, wIndex) => {
                       const weekDaysData = weekDays.map((cell) => {
-                        const keyStr = cell.key ? cell.key.toString() : '';
-                        if (keyStr.startsWith('blank-') || keyStr.startsWith('blank-end-')) {
+                        const keyStr = cell && cell.key ? cell.key.toString() : '';
+                        if (!keyStr || keyStr.includes('blank')) {
                           return { type: 'placeholder' as const };
                         }
-                        const dayNum = parseInt(keyStr, 10);
-                        if (isNaN(dayNum)) {
-                          return { type: 'placeholder' as const };
+                        if (keyStr.includes('prev-')) {
+                          const prevDay = parseInt(keyStr.split('prev-')[1], 10);
+                          if (!isNaN(prevDay)) {
+                            const prevMonthYear = calendarMonth === 1 ? calendarYear - 1 : calendarYear;
+                            const prevMonth = calendarMonth === 1 ? 12 : calendarMonth - 1;
+                            const dateStr = `${prevMonthYear}-${prevMonth.toString().padStart(2, '0')}-${prevDay.toString().padStart(2, '0')}`;
+                            return { type: 'day' as const, dayNum: prevDay, dateStr };
+                          }
                         }
-                        const dateStr = `${calendarYear}-${calendarMonth.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
-                        return {
-                          type: 'day' as const,
-                          dayNum,
-                          dateStr
-                        };
+                        if (keyStr.includes('next-')) {
+                          const nextDay = parseInt(keyStr.split('next-')[1], 10);
+                          if (!isNaN(nextDay)) {
+                            const nextMonthYear = calendarMonth === 12 ? calendarYear + 1 : calendarYear;
+                            const nextMonth = calendarMonth === 12 ? 1 : calendarMonth + 1;
+                            const dateStr = `${nextMonthYear}-${nextMonth.toString().padStart(2, '0')}-${nextDay.toString().padStart(2, '0')}`;
+                            return { type: 'day' as const, dayNum: nextDay, dateStr };
+                          }
+                        }
+                        const dayNum = parseInt(keyStr.replace(/[^0-9]/g, ''), 10);
+                        if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31) {
+                          const dateStr = `${calendarYear}-${calendarMonth.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
+                          return { type: 'day' as const, dayNum, dateStr };
+                        }
+                        return { type: 'placeholder' as const };
                       });
 
                       const isWorkOrderActiveOnDate = (wo: WorkOrder, dateStr: string) => {
@@ -7526,10 +7541,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         return target >= start && target <= end;
                       };
 
-                      const weekMultiDayWOs = workOrders.filter(wo => {
-                        if (!wo.durationDays || wo.durationDays <= 1) return false;
-                        return weekDaysData.some(day => day.type === 'day' && isWorkOrderActiveOnDate(wo, day.dateStr));
-                      });
+                      const weekMultiDayWOs = workOrders
+                        .filter(wo => {
+                          if (!wo.durationDays || wo.durationDays <= 1) return false;
+                          return weekDaysData.some(day => day.type === 'day' && isWorkOrderActiveOnDate(wo, day.dateStr));
+                        })
+                        .sort((a, b) => {
+                          if (a.plannedDate !== b.plannedDate) return a.plannedDate.localeCompare(b.plannedDate);
+                          return (b.durationDays || 1) - (a.durationDays || 1);
+                        });
 
                       const tracks: WorkOrder[][] = [];
                       weekMultiDayWOs.forEach(wo => {
@@ -7557,7 +7577,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 eSpan++;
                               }
                             }
-                            return eStart < colStart + colSpan && colStart < eStart + eSpan;
+                            return eStart !== -1 && eStart < colStart + colSpan && colStart < eStart + eSpan;
                           });
 
                           if (!overlaps) break;
