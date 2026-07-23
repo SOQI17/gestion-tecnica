@@ -4340,29 +4340,44 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     };
 
     const parseRegistryDateMs = (dateStr: string): number => {
-      if (!dateStr || dateStr === '-') return 0;
+      if (!dateStr || dateStr === '-' || dateStr.trim() === '') return 0;
       const str = dateStr.trim();
+
+      // Standard ISO / YYYY-MM-DD
       if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
-        const time = new Date(str).getTime();
+        const time = new Date(str + (str.length === 10 ? 'T00:00:00' : '')).getTime();
         if (!isNaN(time)) return time;
       }
+
       const monthMap: Record<string, number> = {
         jan: 0, ene: 0, feb: 1, mar: 2, apr: 3, abr: 3, may: 4, jun: 5,
         jul: 6, aug: 7, ago: 7, sep: 8, sept: 8, oct: 9, nov: 10, dec: 11, dic: 11
       };
+
       const parts = str.split(/[/.\s-]+/);
       if (parts.length >= 3) {
         const p0 = parseInt(parts[0], 10);
         const p2 = parseInt(parts[2], 10);
         if (!isNaN(p0) && !isNaN(p2)) {
-          const mStr = parts[1].toLowerCase().slice(0, 3);
-          const monthIdx = monthMap[mStr] !== undefined ? monthMap[mStr] : (parseInt(parts[1], 10) - 1);
-          const year = p2 < 100 ? 2000 + p2 : p2;
-          const day = p0;
-          const d = new Date(year, monthIdx, day);
-          if (!isNaN(d.getTime())) return d.getTime();
+          const mStr = parts[1].toLowerCase().slice(0, 4);
+          let monthIdx = -1;
+
+          if (monthMap[mStr] !== undefined) {
+            monthIdx = monthMap[mStr];
+          } else {
+            const p1 = parseInt(parts[1], 10);
+            if (!isNaN(p1) && p1 >= 1 && p1 <= 12) monthIdx = p1 - 1;
+          }
+
+          if (monthIdx >= 0) {
+            const year = p2 < 100 ? (p2 > 50 ? 1900 + p2 : 2000 + p2) : p2;
+            const day = p0;
+            const d = new Date(year, monthIdx, day);
+            if (!isNaN(d.getTime())) return d.getTime();
+          }
         }
       }
+
       const fallback = new Date(str).getTime();
       return isNaN(fallback) ? 0 : fallback;
     };
@@ -4417,6 +4432,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     const effectiveRegistries = (maintenanceRegistries || []).map(getEffectiveRegistryFields);
 
     const filtered = effectiveRegistries.filter(reg => {
+      if (!query) return true;
       return (
         reg.institutionName.toLowerCase().includes(query) ||
         reg.eqBrand.toLowerCase().includes(query) ||
@@ -4429,21 +4445,52 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         reg.responsable.toLowerCase().includes(query)
       );
     }).sort((a, b) => {
-      let cmp = 0;
       if (registrySortField === 'fecha') {
         const timeA = parseRegistryDateMs(a.fecha);
         const timeB = parseRegistryDateMs(b.fecha);
-        cmp = timeA - timeB;
-      } else if (registrySortField === 'institution') {
-        cmp = a.institutionName.localeCompare(b.institutionName, 'es', { sensitivity: 'base', numeric: true });
-      } else if (registrySortField === 'responsable') {
-        cmp = a.responsable.localeCompare(b.responsable, 'es', { sensitivity: 'base', numeric: true });
-      } else if (registrySortField === 'equipment') {
-        const eqA = `${a.eqBrand} ${a.eqModel}`.trim();
-        const eqB = `${b.eqBrand} ${b.eqModel}`.trim();
-        cmp = eqA.localeCompare(eqB, 'es', { sensitivity: 'base', numeric: true });
+        if (timeA === 0 && timeB === 0) return 0;
+        if (timeA === 0) return 1;
+        if (timeB === 0) return -1;
+        return registrySortDir === 'asc' ? timeA - timeB : timeB - timeA;
       }
-      return registrySortDir === 'asc' ? cmp : -cmp;
+
+      if (registrySortField === 'institution') {
+        const valA = a.institutionName.trim();
+        const valB = b.institutionName.trim();
+        const isDashA = !valA || valA === '-';
+        const isDashB = !valB || valB === '-';
+        if (isDashA && isDashB) return 0;
+        if (isDashA) return 1;
+        if (isDashB) return -1;
+        const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base', numeric: true });
+        return registrySortDir === 'asc' ? cmp : -cmp;
+      }
+
+      if (registrySortField === 'responsable') {
+        const valA = a.responsable.trim();
+        const valB = b.responsable.trim();
+        const isDashA = !valA || valA === '-';
+        const isDashB = !valB || valB === '-';
+        if (isDashA && isDashB) return 0;
+        if (isDashA) return 1;
+        if (isDashB) return -1;
+        const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base', numeric: true });
+        return registrySortDir === 'asc' ? cmp : -cmp;
+      }
+
+      if (registrySortField === 'equipment') {
+        const eqA = `${a.eqBrand !== '-' ? a.eqBrand : ''} ${a.eqModel !== '-' ? a.eqModel : ''} ${a.eqSerial !== '-' ? a.eqSerial : ''}`.trim();
+        const eqB = `${b.eqBrand !== '-' ? b.eqBrand : ''} ${b.eqModel !== '-' ? b.eqModel : ''} ${b.eqSerial !== '-' ? b.eqSerial : ''}`.trim();
+        const isDashA = !eqA;
+        const isDashB = !eqB;
+        if (isDashA && isDashB) return 0;
+        if (isDashA) return 1;
+        if (isDashB) return -1;
+        const cmp = eqA.localeCompare(eqB, 'es', { sensitivity: 'base', numeric: true });
+        return registrySortDir === 'asc' ? cmp : -cmp;
+      }
+
+      return 0;
     });
 
     const itemsPerPage = 10;
