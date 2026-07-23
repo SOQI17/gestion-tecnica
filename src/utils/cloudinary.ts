@@ -6,11 +6,19 @@
 
 export const getCleanCloudinaryUrl = (rawUrl: string): string => {
   if (!rawUrl) return '';
-  // Convert /image/upload/ to /raw/upload/ for PDF files to bypass Cloudinary PDF image security restrictions
-  if (rawUrl.includes('/image/upload/') && rawUrl.toLowerCase().endsWith('.pdf')) {
-    return rawUrl.replace('/image/upload/', '/raw/upload/');
+  let url = rawUrl.trim();
+
+  // Undo any invalid /raw/upload/ conversion if it was uploaded as an image asset
+  if (url.includes('/raw/upload/') && url.toLowerCase().endsWith('.pdf')) {
+    url = url.replace('/raw/upload/', '/image/upload/');
   }
-  return rawUrl;
+
+  // Insert fl_attachment flag into /image/upload/ URLs for PDFs to bypass Cloudinary PDF security restriction
+  if (url.includes('/image/upload/') && !url.includes('/fl_attachment/')) {
+    return url.replace('/image/upload/', '/image/upload/fl_attachment/');
+  }
+
+  return url;
 };
 
 export const uploadFileToCloudinary = async (
@@ -20,13 +28,9 @@ export const uploadFileToCloudinary = async (
   const CLOUD_NAME = 'eztjzc2k';
   const UPLOAD_PRESET = 'preset_mto_archivos';
 
-  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-  // For PDFs, use 'raw' resource type so Cloudinary delivers it as an authentic document
-  const resourceType = isPdf ? 'raw' : 'auto';
-
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
+    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
 
     xhr.open('POST', url);
 
