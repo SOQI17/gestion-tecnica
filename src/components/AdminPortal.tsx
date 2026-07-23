@@ -304,13 +304,17 @@ const getEngineerFullNameNoTitle = (name?: string): string => {
 };
 
 const checkTimeOverlap = (timeStr1: string, timeStr2: string): boolean => {
-  if (!timeStr1 || !timeStr2) return true;
+  if (!timeStr1 || !timeStr2) return false;
+  const clean1 = timeStr1.trim();
+  const clean2 = timeStr2.trim();
+  if (clean1 === clean2) return true;
+
   const timeToMinutes = (t24: string): number => {
     const [h, m] = t24.split(':').map(Number);
     return (h || 0) * 60 + (m || 0);
   };
-  const range1 = parseTimeRange(timeStr1);
-  const range2 = parseTimeRange(timeStr2);
+  const range1 = parseTimeRange(clean1);
+  const range2 = parseTimeRange(clean2);
   const start1 = timeToMinutes(range1.start);
   const end1 = timeToMinutes(range1.end);
   const start2 = timeToMinutes(range2.start);
@@ -7670,6 +7674,35 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Descargar Excel</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={handleSmartReorganize}
+                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                  title="Reorganizar agenda inteligentemente según carga horaria e ingenieros por ciudad"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Reorganizar Agenda</span>
+                </button>
+
+                {conflictingWOIds.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setFilterOnlyConflicting(!filterOnlyConflicting)}
+                    className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
+                      filterOnlyConflicting
+                        ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 font-bold'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
+                    title="Filtrar u ocultar mantenimientos con cruce de horario"
+                  >
+                    <AlertTriangle className={`w-3.5 h-3.5 ${filterOnlyConflicting ? 'text-amber-600' : 'text-amber-500'}`} />
+                    <span>{filterOnlyConflicting ? 'Ver Todos' : 'Filtrar Cruzados'}</span>
+                    <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.2 rounded-full border border-amber-200">
+                      {conflictingWOIds.size}
+                    </span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsReportMonthModalOpen(true)}
@@ -8002,17 +8035,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </button>
                     )}
                   </div>
-
-                  {/* Smart Reorganize Button */}
-                  <button
-                    type="button"
-                    onClick={handleSmartReorganize}
-                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0 border border-indigo-500"
-                    title="Reorganizar agenda inteligentemente según carga horaria e ingenieros por ciudad"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                    <span>⚡ Reorganizar Agenda</span>
-                  </button>
 
                 </div>
               </div>
