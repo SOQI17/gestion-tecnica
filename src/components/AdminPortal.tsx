@@ -10171,12 +10171,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    // 1. Actualizar estado de la orden
+                                    // 1. Actualizar estado de la orden (registra que se entregó)
                                     onUpdateWorkOrderStatus(infoWO.id, 'Realizado');
                                     setInfoWO({ ...infoWO, status: 'Realizado' });
 
-                                    // 2. Crear registro de mantenimiento automáticamente
-                                    if (onAddMaintenanceRegistry) {
+                                    // 2. Crear registro de mantenimiento automáticamente SOLO si la orden es de tipo Preventivo
+                                    if (onAddMaintenanceRegistry && infoWO.type === 'Preventivo') {
                                       const regId = `REG-WO-${infoWO.id}-${Date.now()}`;
                                       const clientInstName = client?.name || 'S/N Institución';
                                       const eqName = infoWO.equipmentName || '';
@@ -10217,7 +10217,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     }
                                   }}
                                   className="bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-[10px] px-3.5 py-1.5 rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-xs"
-                                  title="Marcar orden como Realizada en campo y guardar en Registro MTO"
+                                  title={infoWO.type === 'Preventivo' ? "Marcar orden como Realizada y guardar en Registro MTO" : "Marcar orden como Realizada / Entregada"}
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                   <span>Marcar Realizado</span>
