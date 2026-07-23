@@ -298,6 +298,27 @@ const parseTimeRange = (timeStr: string): { start: string; end: string } => {
   }
 };
 
+const getEngineerFullNameNoTitle = (name?: string): string => {
+  if (!name) return '';
+  return name.replace(/^Ing\.\s*/i, '').trim();
+};
+
+const checkTimeOverlap = (timeStr1: string, timeStr2: string): boolean => {
+  if (!timeStr1 || !timeStr2) return true;
+  const timeToMinutes = (t24: string): number => {
+    const [h, m] = t24.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+  const range1 = parseTimeRange(timeStr1);
+  const range2 = parseTimeRange(timeStr2);
+  const start1 = timeToMinutes(range1.start);
+  const end1 = timeToMinutes(range1.end);
+  const start2 = timeToMinutes(range2.start);
+  const end2 = timeToMinutes(range2.end);
+
+  return start1 < end2 && start2 < end1;
+};
+
 const getEngineerEmoji = (engineerId: string): string => {
   const emojis: Record<string, string> = {
     'ENG-001': '🔴',
@@ -763,6 +784,12 @@ export default function AdminPortal({
   const monthsList = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   const calendarMonthName = monthsList[calendarMonth - 1] || 'Marzo';
 
+  // Reorganization & Schedule Conflict States
+  const [isReorganizePreviewMode, setIsReorganizePreviewMode] = useState(false);
+  const [previewWorkOrders, setPreviewWorkOrders] = useState<WorkOrder[] | null>(null);
+  const [reassignedWOIds, setReassignedWOIds] = useState<Set<string>>(new Set());
+  const [filterOnlyConflicting, setFilterOnlyConflicting] = useState(false);
+
   // Get all unique engineers active in the selected calendar month
   const monthEngineers = React.useMemo(() => {
     const activeIds = new Set<string>();
@@ -815,6 +842,151 @@ export default function AdminPortal({
       return false;
     });
   }, [workOrders, engineers, calendarMonth, calendarYear]);
+
+  // Active work orders list (switches dynamically during reorganization preview mode)
+  const activeWorkOrdersList = React.useMemo(() => {
+    return isReorganizePreviewMode && previewWorkOrders ? previewWorkOrders : workOrders;
+  }, [isReorganizePreviewMode, previewWorkOrders, workOrders]);
+
+  // Schedule Conflict Detection
+  const { conflictingWOIds, conflictingDates } = React.useMemo(() => {
+    const confWOs = new Set<string>();
+    const confDates = new Set<string>();
+
+    // Group active WOs by date
+    const mapByDate = new Map<string, WorkOrder[]>();
+    activeWorkOrdersList.forEach(wo => {
+      if (wo.status === 'Conciliado') return;
+      const d = wo.plannedDate;
+      if (!d) return;
+      if (!mapByDate.has(d)) mapByDate.set(d, []);
+      mapByDate.get(d)!.push(wo);
+    });
+
+    mapByDate.forEach((dayWOs, date) => {
+      const mapEng = new Map<string, WorkOrder[]>();
+      dayWOs.forEach(wo => {
+        const engs = [wo.engineerId, ...(wo.supportEngineerIds || (wo.supportEngineerId ? [wo.supportEngineerId] : []))];
+        engs.forEach(eId => {
+          if (!eId) return;
+          if (!mapEng.has(eId)) mapEng.set(eId, []);
+          mapEng.get(eId)!.push(wo);
+        });
+      });
+
+      mapEng.forEach(engWOs => {
+        if (engWOs.length < 2) return;
+        for (let i = 0; i < engWOs.length; i++) {
+          for (let j = i + 1; j < engWOs.length; j++) {
+            if (checkTimeOverlap(engWOs[i].plannedTime || '', engWOs[j].plannedTime || '')) {
+              confWOs.add(engWOs[i].id);
+              confWOs.add(engWOs[j].id);
+              confDates.add(date);
+            }
+          }
+        }
+      });
+    });
+
+    return { conflictingWOIds: confWOs, conflictingDates: confDates };
+  }, [activeWorkOrdersList, engineers]);
+
+  // Smart Reorganize Agenda Handler
+  const handleSmartReorganize = () => {
+    const currentMonthPrefix = `${calendarYear}-${calendarMonth.toString().padStart(2, '0')}`;
+    const clonedList = workOrders.map(wo => ({ ...wo }));
+    const pendingMonthWOs = clonedList.filter(wo => 
+      wo.plannedDate?.startsWith(currentMonthPrefix) && wo.status !== 'Conciliado'
+    );
+
+    if (pendingMonthWOs.length === 0) {
+      alert(`No hay órdenes de trabajo pendientes en ${calendarMonthName} de ${calendarYear} para reorganizar.`);
+      return;
+    }
+
+    const engWorkload = new Map<string, number>();
+    engineers.forEach(e => engWorkload.set(e.id, 0));
+    pendingMonthWOs.forEach(wo => {
+      if (wo.engineerId) engWorkload.set(wo.engineerId, (engWorkload.get(wo.engineerId) || 0) + 1);
+    });
+
+    const getCity = (clientId: string): string => {
+      const c = clients.find(cl => cl.id === clientId || cl.name.toLowerCase() === clientId.toLowerCase());
+      if (!c) return 'Quito';
+      const txt = `${c.name} ${c.address} ${c.industry}`.toLowerCase();
+      if (txt.includes('guayaquil') || txt.includes('samborondon') || txt.includes('daule') || txt.includes('durán') || txt.includes('duran')) return 'Guayaquil';
+      if (txt.includes('cuenca') || txt.includes('azuay')) return 'Cuenca';
+      return 'Quito';
+    };
+
+    const newReassigned = new Set<string>();
+    let reCount = 0;
+
+    pendingMonthWOs.forEach(wo => {
+      const clientCity = getCity(wo.clientId);
+      let bestEngId = wo.engineerId;
+      let bestScore = Infinity;
+
+      engineers.forEach(eng => {
+        if (eng.availability === 'Inactivo') return;
+        const isOnVac = (vacations || []).some(v => 
+          v.engineerId === eng.id && v.status === 'Aprobado' && wo.plannedDate >= v.startDate && wo.plannedDate <= v.endDate
+        );
+        if (isOnVac) return;
+
+        const currentLoad = engWorkload.get(eng.id) || 0;
+        const matchesSede = eng.sede && eng.sede.toLowerCase() === clientCity.toLowerCase();
+        const score = currentLoad - (matchesSede ? 2 : 0);
+
+        if (score < bestScore) {
+          bestScore = score;
+          bestEngId = eng.id;
+        }
+      });
+
+      if (bestEngId && bestEngId !== wo.engineerId) {
+        engWorkload.set(wo.engineerId, Math.max(0, (engWorkload.get(wo.engineerId) || 0) - 1));
+        engWorkload.set(bestEngId, (engWorkload.get(bestEngId) || 0) + 1);
+        wo.engineerId = bestEngId;
+        newReassigned.add(wo.id);
+        reCount++;
+      }
+    });
+
+    if (reCount === 0) {
+      alert("La agenda actual ya se encuentra perfectamente equilibrada por carga horaria y ciudad.");
+      return;
+    }
+
+    setReassignedWOIds(newReassigned);
+    setPreviewWorkOrders(clonedList);
+    setIsReorganizePreviewMode(true);
+  };
+
+  const handleApplyReorganization = async () => {
+    if (!previewWorkOrders) return;
+    const changedWOs = previewWorkOrders.filter(pWo => {
+      const orig = workOrders.find(w => w.id === pWo.id);
+      return orig && orig.engineerId !== pWo.engineerId;
+    });
+
+    for (const wo of changedWOs) {
+      if (onUpdateWorkOrder) {
+        await onUpdateWorkOrder(wo);
+      }
+    }
+
+    setIsReorganizePreviewMode(false);
+    setPreviewWorkOrders(null);
+    setReassignedWOIds(new Set());
+    alert(`¡Éxito! Se han aplicado los cambios de reorganización en ${changedWOs.length} órdenes de trabajo.`);
+  };
+
+  const handleCancelReorganizationPreview = () => {
+    setIsReorganizePreviewMode(false);
+    setPreviewWorkOrders(null);
+    setReassignedWOIds(new Set());
+  };
 
   const handleImportYearChange = (newYear: string) => {
     setImportYear(newYear);
@@ -2134,7 +2306,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 return (
                   <div key={`pv-vac-${v.id}`} className="text-[8.5px] leading-tight p-1 rounded bg-teal-50 border border-teal-150 border-l-4 border-l-teal-500 text-teal-900 font-bold truncate flex items-center gap-1 select-none">
                     <span>🌴</span>
-                    <span className="truncate">Vac: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
+                    <span className="truncate">Vac: {getEngineerFullNameNoTitle(eng?.name)}</span>
                   </div>
                 );
               })}
@@ -2149,7 +2321,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     title={`Capacitación: ${st.title} (${st.location}) - ${eng?.name || 'Técnico'}`}
                   >
                     <span>🎓</span>
-                    <span className="truncate">Cap: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
+                    <span className="truncate">Cap: {getEngineerFullNameNoTitle(eng?.name)}</span>
                   </div>
                 );
               })}
@@ -2305,11 +2477,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         >
           <div className="flex justify-between items-center w-full">
             <span className="font-mono text-xs font-black">{day}</span>
-            {dayOrders.length > 0 && (
-              <span className="bg-indigo-100 text-indigo-805 font-bold text-[8px] px-1 rounded-full">
-                {dayOrders.length}
-              </span>
-            )}
+            <div className="flex items-center gap-1">
+              {conflictingDates.has(dateStr) && (
+                <span className="bg-amber-500 text-white font-extrabold text-[7.5px] px-1 rounded animate-pulse" title="¡Conflicto de horario cruzado en este día!">
+                  ⚠️ Cruzado
+                </span>
+              )}
+              {dayOrders.length > 0 && (
+                <span className="bg-indigo-100 text-indigo-805 font-bold text-[8px] px-1 rounded-full">
+                  {dayOrders.length}
+                </span>
+              )}
+            </div>
           </div>
           <div className="space-y-1 w-full mt-1.5 flex-1 overflow-y-auto">
             {dayVacations.map(v => {
@@ -2324,7 +2503,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   }}
                 >
                   <span>🌴</span>
-                  <span className="truncate">Vac: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
+                  <span className="truncate">Vac: {getEngineerFullNameNoTitle(eng?.name)}</span>
                 </div>
               );
             })}
@@ -2342,7 +2521,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   }}
                 >
                   <span>🎓</span>
-                  <span className="truncate">Cap: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
+                  <span className="truncate">Cap: {getEngineerFullNameNoTitle(eng?.name)}</span>
                 </div>
               );
             })}
@@ -2405,12 +2584,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               const isHighlighted = matchesQuery && matchesEng;
               const hasHighlightActive = !!highlightedEngineerId || !!searchQuery;
 
+              const isConflicting = conflictingWOIds.has(wo.id);
+              const isReassigned = reassignedWOIds.has(wo.id);
+
               const engColor = eng ? getEngineerColorClasses(eng.id) : null;
               const borderLClass = wo.isEquipmentDown
                 ? 'border-l-4 border-l-red-500'
                 : (engColor ? `border-l-4 ${engColor.borderL}` : '');
               let cardStyle = `${badgeBg} ${borderLClass}`;
               let ringStyle = '';
+
+              if (isConflicting) {
+                cardStyle += ' border-2 border-amber-500 bg-amber-50/95';
+                ringStyle += ' ring-2 ring-amber-500 shadow-md animate-pulse z-10';
+              }
 
               if (hasHighlightActive) {
                 if (isHighlighted) {
@@ -2448,9 +2635,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     setInfoWO(wo);
                   }}
                 >
-                  <p className="font-black truncate text-slate-900 leading-none mb-0.5">
-                    {clientDisplayName}
-                  </p>
+                  <div className="flex items-center justify-between font-black truncate text-slate-900 leading-none mb-0.5">
+                    <span className="truncate">{clientDisplayName}</span>
+                    {isConflicting && (
+                      <span className="bg-amber-500 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded animate-pulse shrink-0 ml-1">
+                        ⚠️ CRUZADO
+                      </span>
+                    )}
+                    {isReassigned && !isConflicting && (
+                      <span className="bg-purple-600 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1">
+                        ✨ REASIGNADO
+                      </span>
+                    )}
+                  </div>
                   {wo.plannedTime && (
                     <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">
                       ⏰ {wo.plannedTime}
@@ -2459,7 +2656,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <p className="truncate text-slate-700 text-[8.5px] font-normal mt-0.5">{wo.equipmentName}</p>
                   <p className="truncate text-indigo-900 text-[7.5px] font-bold mt-0.5 flex items-center gap-0.5">
                     <span className="mr-0.5">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
-                    {eng?.name.replace('Ing. ', '').split(' ')[0]}
+                    <span>{getEngineerFullNameNoTitle(eng?.name) || 'Sin Asignar'}</span>
                     {supportIds.length > 0 && (
                       <span className="flex items-center gap-1 ml-1 flex-wrap">
                         {supportIds.map(id => {
@@ -2468,7 +2665,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           return (
                             <span key={id} className="flex items-center gap-0.5">
                               <span>+ {getEngineerEmoji(sEng.id)}</span>
-                              <span>{sEng.name.replace('Ing. ', '').split(' ')[0]}</span>
+                              <span>{getEngineerFullNameNoTitle(sEng.name)}</span>
                             </span>
                           );
                         })}
@@ -7789,7 +7986,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       placeholder="Buscar cliente, técnico, equipo..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-white border border-indigo-200 rounded-lg pl-8 pr-7 py-1 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 w-48 md:w-64 transition-all"
+                      className="bg-white border border-indigo-200 rounded-lg pl-8 pr-7 py-1 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 w-44 md:w-56 transition-all"
                     />
                     <Search className="w-3.5 h-3.5 text-indigo-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                     {searchQuery && (
@@ -7803,11 +8000,75 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     )}
                   </div>
 
-                  <p className="text-xs font-mono font-bold text-indigo-700 bg-white border border-indigo-200 px-3 py-1 rounded-lg">
-                    Día seleccionado: {calendarMonthName} {selectedDay}, {calendarYear}
-                  </p>
+                  {/* Smart Reorganize Button */}
+                  <button
+                    type="button"
+                    onClick={handleSmartReorganize}
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0 border border-indigo-500"
+                    title="Reorganizar agenda inteligentemente según carga horaria e ingenieros por ciudad"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>⚡ Reorganizar Agenda</span>
+                  </button>
+
                 </div>
               </div>
+
+              {/* Top Banners for Reorganization Preview & Schedule Conflicts */}
+              {isReorganizePreviewMode && (
+                <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-amber-600 text-white p-3.5 rounded-xl shadow-md flex flex-col md:flex-row items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-6 h-6 text-amber-300 shrink-0 animate-pulse" />
+                    <div>
+                      <h5 className="font-extrabold text-xs uppercase tracking-wider text-amber-200">Vista Previa: Agenda Reorganizada por Carga Horaria y Ciudad</h5>
+                      <p className="text-[11px] text-slate-100 font-medium mt-0.5">Se redistribuyeron {reassignedWOIds.size} órdenes para equilibrar la carga de trabajo entre técnicos y optimizar sedes. Confirma para guardar o cancela para regresar al estado original.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
+                    <button
+                      type="button"
+                      onClick={handleApplyReorganization}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs px-3.5 py-1.5 rounded-lg shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Aplicar Cambios</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelReorganizationPreview}
+                      className="bg-white/20 hover:bg-white/30 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 border border-white/30"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Volver al Original</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {conflictingWOIds.size > 0 && (
+                <div className="bg-amber-50 border border-amber-300 text-amber-900 p-3 rounded-xl flex items-center justify-between gap-3 text-xs font-semibold shadow-xs animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2.5">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 animate-bounce" />
+                    <div>
+                      <span className="font-black text-amber-900 uppercase tracking-wide">⚠️ ALERTA DE HORARIOS CRUZADOS:</span>
+                      <span className="ml-1.5 text-amber-800 font-medium">
+                        Se han detectado <strong>{conflictingWOIds.size}</strong> órdenes de trabajo asignadas a la misma hora para el mismo técnico en este mes.
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFilterOnlyConflicting(!filterOnlyConflicting)}
+                    className={`px-3 py-1.5 rounded-lg text-3xs font-extrabold transition-all shrink-0 cursor-pointer ${
+                      filterOnlyConflicting 
+                        ? 'bg-amber-700 text-white hover:bg-amber-800 shadow-xs' 
+                        : 'bg-amber-200 text-amber-900 hover:bg-amber-300 border border-amber-350'
+                    }`}
+                  >
+                    {filterOnlyConflicting ? '✓ Mostrando Cruzados' : '🔍 Filtrar Cruzados'}
+                  </button>
+                </div>
+              )}
 
               {/* Calendar grid split by weeks to allow horizontal 1-page-per-week print layout */}
               {(() => {
@@ -8040,7 +8301,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         <div className="flex items-center gap-1.5 truncate flex-1 mr-1">
                                           <span className="shrink-0">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
                                           <span className="truncate text-slate-800 uppercase tracking-wide">
-                                            {client?.name || 'Cliente'} - {wo.equipmentName}
+                                            {client?.name || 'Cliente'} - {wo.equipmentName} {eng ? `(${getEngineerFullNameNoTitle(eng.name)})` : ''}
                                           </span>
                                           {supportIds.length > 0 && (
                                             <span className="text-[7.5px] font-medium text-slate-500 shrink-0 flex items-center gap-1">
@@ -8049,7 +8310,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                                 if (!sEng) return null;
                                                 return (
                                                   <span key={id} className="flex items-center gap-0.5">
-                                                    + {getEngineerEmoji(sEng.id)} {sEng.name.replace('Ing. ', '').split(' ')[0]}
+                                                    + {getEngineerEmoji(sEng.id)} {getEngineerFullNameNoTitle(sEng.name)}
                                                   </span>
                                                 );
                                               })}
