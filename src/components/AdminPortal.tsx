@@ -521,6 +521,7 @@ export default function AdminPortal({
   const [editEngName, setEditEngName] = useState('');
   const [editEngEmail, setEditEngEmail] = useState('');
   const [editEngSpecialty, setEditEngSpecialty] = useState<Specialty>('Ingeniería');
+  const [editEngSkills, setEditEngSkills] = useState<string[]>([]);
   const [vacFormSearchQuery, setVacFormSearchQuery] = useState('');
   const [vacFormIncludeWeekends, setVacFormIncludeWeekends] = useState(true);
   const [modalVacIncludeWeekends, setModalVacIncludeWeekends] = useState(true);
@@ -896,7 +897,7 @@ export default function AdminPortal({
     return { conflictingWOIds: confWOs, conflictingDates: confDates };
   }, [activeWorkOrdersList, engineers]);
 
-  // Smart Reorganize Agenda Handler
+  // Professional Reorganize Agenda Handler (by Specialization, accredited Modalities & Sede)
   const handleSmartReorganize = () => {
     const currentMonthPrefix = `${calendarYear}-${calendarMonth.toString().padStart(2, '0')}`;
     const clonedList = workOrders.map(wo => ({ ...wo }));
@@ -924,13 +925,41 @@ export default function AdminPortal({
       return 'Quito';
     };
 
+    // Helper to determine required modality/skills for a work order
+    const getRequiredModalities = (wo: WorkOrder): string[] => {
+      const txt = `${wo.equipmentName} ${wo.notes || ''} ${wo.clientId || ''}`.toLowerCase();
+      const mods: string[] = [];
+      if (txt.includes('ge') || txt.includes('general electric') || txt.includes('brivo') || txt.includes('optima') || txt.includes('revolution') || txt.includes('oec') || txt.includes('arco en c') || txt.includes('logiq') || txt.includes('discovery')) {
+        mods.push('GE');
+      }
+      if (txt.includes('fuji') || txt.includes('fujifilm') || txt.includes('fdr') || txt.includes('amulet') || txt.includes('primus') || txt.includes('drypix')) {
+        mods.push('FE');
+      }
+      if (txt.includes('tomografo') || txt.includes('tomografía') || txt.includes('tomografia') || txt.includes('ct') || txt.includes('somatom')) {
+        mods.push('CT');
+      }
+      if (txt.includes('resonancia') || txt.includes('rm') || txt.includes('mr') || txt.includes('signa')) {
+        mods.push('MR');
+      }
+      if (txt.includes('mamografia') || txt.includes('mamógrafo') || txt.includes('mamografo')) {
+        mods.push('MAMO');
+      }
+      if (txt.includes('ecografo') || txt.includes('ultrasonido') || txt.includes('eco')) {
+        mods.push('US');
+      }
+      if (mods.length === 0) mods.push('GE', 'FE');
+      return mods;
+    };
+
     const newReassigned = new Set<string>();
     let reCount = 0;
 
     pendingMonthWOs.forEach(wo => {
       const clientCity = getCity(wo.clientId);
+      const reqMods = getRequiredModalities(wo);
+
       let bestEngId = wo.engineerId;
-      let bestScore = Infinity;
+      let bestScore = -999;
 
       engineers.forEach(eng => {
         if (eng.availability === 'Inactivo') return;
@@ -939,11 +968,28 @@ export default function AdminPortal({
         );
         if (isOnVac) return;
 
-        const currentLoad = engWorkload.get(eng.id) || 0;
-        const matchesSede = eng.sede && eng.sede.toLowerCase() === clientCity.toLowerCase();
-        const score = currentLoad - (matchesSede ? 2 : 0);
+        // Check engineer accredited skills/modalities
+        const engSkills = eng.skills && eng.skills.length > 0 ? eng.skills : ['GE', 'FE', 'CT', 'MR'];
+        const hasMatchingModality = reqMods.some(m => engSkills.includes(m) || engSkills.some(s => s.toLowerCase().includes(m.toLowerCase())));
+        const hasScheduledTraining = (scheduledTrainings || []).some(st => 
+          (st.engineerId === eng.id || st.supportEngineerIds?.includes(eng.id)) &&
+          reqMods.some(m => st.title.toLowerCase().includes(m.toLowerCase()) || (st.courseCode && st.courseCode.toLowerCase().includes(m.toLowerCase())))
+        );
 
-        if (score < bestScore) {
+        // Scoring algorithm:
+        // +100 for matching modality/training
+        // +30 for matching city/sede
+        // -15 per current work order load to balance workload
+        let score = 0;
+        if (hasMatchingModality || hasScheduledTraining) score += 100;
+        else score += 10;
+
+        if (eng.sede && eng.sede.toLowerCase() === clientCity.toLowerCase()) score += 30;
+
+        const currentLoad = engWorkload.get(eng.id) || 0;
+        score -= (currentLoad * 15);
+
+        if (score > bestScore) {
           bestScore = score;
           bestEngId = eng.id;
         }
@@ -959,7 +1005,7 @@ export default function AdminPortal({
     });
 
     if (reCount === 0) {
-      alert("La agenda actual ya se encuentra perfectamente equilibrada por carga horaria y ciudad.");
+      alert("La agenda actual ya se encuentra perfectamente optimizada por especialización, capacitaciones y sedes de ingenieros.");
       return;
     }
 
@@ -8033,14 +8079,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
               </div>
 
-              {/* Top Banners for Reorganization Preview & Schedule Conflicts */}
+              {/* Top Banners for Reorganization Preview */}
               {isReorganizePreviewMode && (
                 <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-amber-600 text-white p-3.5 rounded-xl shadow-md flex flex-col md:flex-row items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-200">
                   <div className="flex items-center gap-3">
                     <Sparkles className="w-6 h-6 text-amber-300 shrink-0 animate-pulse" />
                     <div>
-                      <h5 className="font-extrabold text-xs uppercase tracking-wider text-amber-200">Vista Previa: Agenda Reorganizada por Carga Horaria y Ciudad</h5>
-                      <p className="text-[11px] text-slate-100 font-medium mt-0.5">Se redistribuyeron {reassignedWOIds.size} órdenes para equilibrar la carga de trabajo entre técnicos y optimizar sedes. Confirma para guardar o cancela para regresar al estado original.</p>
+                      <h5 className="font-extrabold text-xs uppercase tracking-wider text-amber-200">Vista Previa: Agenda Reorganizada por Especialización y Capacitaciones</h5>
+                      <p className="text-[11px] text-slate-100 font-medium mt-0.5">Se redistribuyeron {reassignedWOIds.size} órdenes emparejando la especialidad y modalidades acreditadas de cada técnico (GE, FE, CT, MR, RX, US, MAMO) con la carga horaria y sedes.</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
@@ -11352,6 +11398,38 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               className="w-full text-3xs p-2 rounded-lg border border-slate-200 bg-white font-semibold"
                             />
                           </div>
+
+                          {/* Modalidades y Capacitaciones Acreditadas */}
+                          <div className="space-y-1 sm:col-span-3">
+                            <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                              🎓 Modalidades y Capacitaciones Acreditadas
+                            </label>
+                            <div className="flex flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-lg">
+                              {['GE', 'FE', 'CT', 'MR', 'RX', 'US', 'MAMO', 'Aplicaciones', 'IT'].map(mod => {
+                                const isSelected = editEngSkills.includes(mod);
+                                return (
+                                  <button
+                                    key={mod}
+                                    type="button"
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setEditEngSkills(editEngSkills.filter(s => s !== mod));
+                                      } else {
+                                        setEditEngSkills([...editEngSkills, mod]);
+                                      }
+                                    }}
+                                    className={`px-2 py-0.5 rounded text-3xs font-extrabold transition-all cursor-pointer border ${
+                                      isSelected
+                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                    }`}
+                                  >
+                                    {isSelected ? '✓ ' : '+ '}{mod}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
                         </div>
 
                         <div className="flex flex-wrap items-center justify-between gap-3 mt-1.5 pt-2 border-t border-slate-200/60">
@@ -11384,7 +11462,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     ...eng,
                                     name: editEngName,
                                     specialty: editEngSpecialty,
-                                    email: editEngEmail
+                                    email: editEngEmail,
+                                    skills: editEngSkills
                                   });
                                 }
                                 setEditingEngId(null);
@@ -11418,6 +11497,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
                           <div className="text-[10px] text-indigo-600 font-extrabold mt-0.5">
                             📅 {engActiveOrders} asignaciones este mes
+                          </div>
+                          {/* Modalidades y Capacitaciones Acreditadas */}
+                          <div className="flex flex-wrap items-center gap-1 mt-1 font-sans">
+                            <span className="text-[8.5px] font-bold text-slate-400 uppercase">🎓 Capacitaciones:</span>
+                            {(eng.skills && eng.skills.length > 0 ? eng.skills : ['GE', 'FE']).map(s => (
+                              <span key={s} className="bg-indigo-50 text-indigo-700 border border-indigo-150 text-[8.5px] font-extrabold px-1.5 py-0.2 rounded">
+                                {s}
+                              </span>
+                            ))}
+                            {((scheduledTrainings || []).filter(st => st.engineerId === eng.id || st.supportEngineerIds?.includes(eng.id)).length > 0) && (
+                              <span className="bg-purple-50 text-purple-700 border border-purple-150 text-[8.5px] font-extrabold px-1.5 py-0.2 rounded">
+                                📜 {(scheduledTrainings || []).filter(st => st.engineerId === eng.id || st.supportEngineerIds?.includes(eng.id)).length} Registradas
+                              </span>
+                            )}
                           </div>
                           {eng.email && (
                             <div className="text-[8px] text-slate-400 font-semibold font-mono mt-0.5 text-left">
@@ -11454,8 +11547,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setEditEngName(eng.name);
                             setEditEngEmail(eng.email || '');
                             setEditEngSpecialty(eng.specialty || 'Ingeniería');
+                            setEditEngSkills(eng.skills || ['GE', 'FE']);
                           }}
-                          title="Editar detalles de este técnico"
+                          title="Editar detalles y capacitaciones de este técnico"
                           className="p-1.5 rounded-lg border bg-white border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer text-xs"
                         >
                           ✏️
