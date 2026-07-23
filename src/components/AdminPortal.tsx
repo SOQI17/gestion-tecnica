@@ -3,7 +3,7 @@ import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserC
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
-import { uploadFileToCloudinary } from '../utils/cloudinary';
+import { uploadFileToCloudinary, getCleanCloudinaryUrl } from '../utils/cloudinary';
 
 interface AdminPortalProps {
   engineers: Engineer[];
@@ -5328,7 +5328,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <div className="flex flex-wrap gap-1">
                             {con.contractPdfUrl && (
                               <a
-                                href={con.contractPdfUrl}
+                                href={getCleanCloudinaryUrl(con.contractPdfUrl)}
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
@@ -5341,7 +5341,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             )}
                             {con.schedulePdfUrl && (
                               <a
-                                href={con.schedulePdfUrl}
+                                href={getCleanCloudinaryUrl(con.schedulePdfUrl)}
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
@@ -12221,7 +12221,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             
                             {contractFormPdfUrl ? (
                               <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-[10px]">
-                                <a href={contractFormPdfUrl} target="_blank" rel="noreferrer" className="text-emerald-800 font-extrabold hover:underline truncate flex items-center gap-1">
+                                <a href={getCleanCloudinaryUrl(contractFormPdfUrl)} target="_blank" rel="noreferrer" className="text-emerald-800 font-extrabold hover:underline truncate flex items-center gap-1">
                                   <span>📄 Ver Documento</span>
                                   <ExternalLink className="w-3 h-3 text-emerald-600 shrink-0" />
                                 </a>
@@ -12278,7 +12278,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             
                             {contractFormSchedulePdfUrl ? (
                               <div className="flex items-center justify-between bg-purple-50 border border-purple-200 p-2 rounded-lg text-[10px]">
-                                <a href={contractFormSchedulePdfUrl} target="_blank" rel="noreferrer" className="text-purple-900 font-extrabold hover:underline truncate flex items-center gap-1">
+                                <a href={getCleanCloudinaryUrl(contractFormSchedulePdfUrl)} target="_blank" rel="noreferrer" className="text-purple-900 font-extrabold hover:underline truncate flex items-center gap-1">
                                   <span>📅 Ver Cronograma</span>
                                   <ExternalLink className="w-3 h-3 text-purple-600 shrink-0" />
                                 </a>
@@ -12666,7 +12666,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <div className="flex flex-wrap gap-2">
                     {selectedContractForDetails.contractPdfUrl && (
                       <a
-                        href={selectedContractForDetails.contractPdfUrl}
+                        href={getCleanCloudinaryUrl(selectedContractForDetails.contractPdfUrl)}
                         target="_blank"
                         rel="noreferrer"
                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-colors"
@@ -12677,7 +12677,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     )}
                     {selectedContractForDetails.schedulePdfUrl && (
                       <a
-                        href={selectedContractForDetails.schedulePdfUrl}
+                        href={getCleanCloudinaryUrl(selectedContractForDetails.schedulePdfUrl)}
                         target="_blank"
                         rel="noreferrer"
                         className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-colors"
