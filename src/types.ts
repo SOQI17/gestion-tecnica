@@ -137,6 +137,8 @@ export interface Contract {
   maintenanceDates?: string[]; // Scheduled dates for maintenance
   qcDate?: string; // Quality control date
   createdAt?: string;
+  contractPdfUrl?: string; // Documento del Contrato (PDF o Imagen en Cloudinary)
+  schedulePdfUrl?: string; // Cronograma Firmado (PDF o Imagen en Cloudinary)
 }
 
 export interface Vacation {
@@ -195,6 +197,7 @@ export interface MaintenanceRegistry {
   responsable: string;
   createdAt?: string;
   workOrderId?: string; // Referencia a la orden de trabajo que originó este registro
+  documentUrl?: string; // Documento o Acta de entrega adjunta (PDF/Imagen en Cloudinary)
 }
 
 export interface ScheduledTraining {
@@ -210,4 +213,5 @@ export interface ScheduledTraining {
   status: 'Programado' | 'En Curso' | 'Completado' | 'Cancelado';
   notes?: string;          // Observaciones o notas adicionales
   createdAt?: string;
+  certificateUrl?: string; // Diploma / Certificado de capacitación (PDF/Imagen en Cloudinary)
 }

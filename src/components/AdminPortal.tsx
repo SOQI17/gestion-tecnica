@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload } from 'lucide-react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
+import { uploadFileToCloudinary } from '../utils/cloudinary';
 
 interface AdminPortalProps {
   engineers: Engineer[];
@@ -650,6 +651,15 @@ export default function AdminPortal({
   const [contractFormMaintenanceDates, setContractFormMaintenanceDates] = useState<string[]>([]);
   const [tempMaintenanceDate, setTempMaintenanceDate] = useState('');
   const [contractFormQcDate, setContractFormQcDate] = useState('');
+
+  // Cloudinary Contract Attachments States
+  const [contractFormPdfUrl, setContractFormPdfUrl] = useState('');
+  const [contractFormSchedulePdfUrl, setContractFormSchedulePdfUrl] = useState('');
+  const [isUploadingContractPdf, setIsUploadingContractPdf] = useState(false);
+  const [uploadContractPdfProgress, setUploadContractPdfProgress] = useState(0);
+  const [isUploadingSchedulePdf, setIsUploadingSchedulePdf] = useState(false);
+  const [uploadSchedulePdfProgress, setUploadSchedulePdfProgress] = useState(0);
+
   const [selectedContractForDetails, setSelectedContractForDetails] = useState<Contract | null>(null);
   const [isContractDetailsModalOpen, setIsContractDetailsModalOpen] = useState(false);
   const [selectedEngForMetrics, setSelectedEngForMetrics] = useState<Engineer | null>(null);
@@ -4039,7 +4049,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       equipmentItems: contractFormEquipmentItems,
       maintenanceFrequency: contractFormFrequency,
       maintenanceDates: contractFormMaintenanceDates,
-      qcDate: contractFormQcDate || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : '')
+      qcDate: contractFormQcDate || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : ''),
+      contractPdfUrl: contractFormPdfUrl.trim() || undefined,
+      schedulePdfUrl: contractFormSchedulePdfUrl.trim() || undefined
     };
 
     // Auto-register new custom equipments under the selected client
@@ -5188,6 +5200,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 setContractFormMaintenanceDates([]);
                 setTempMaintenanceDate('');
                 setContractFormQcDate('');
+                setContractFormPdfUrl('');
+                setContractFormSchedulePdfUrl('');
                 setIsContractModalOpen(true);
               }}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-indigo-600 transition-colors"
@@ -5308,7 +5322,39 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           {con.status}
                         </span>
                       </td>
-                      <td className="p-3.5 max-w-[200px] truncate" title={con.coverage}>{con.coverage || '-'}</td>
+                      <td className="p-3.5 max-w-[200px]" title={con.coverage}>
+                        <div className="space-y-1">
+                          <span className="truncate block font-medium">{con.coverage || '-'}</span>
+                          <div className="flex flex-wrap gap-1">
+                            {con.contractPdfUrl && (
+                              <a
+                                href={con.contractPdfUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[8px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded hover:bg-emerald-100 transition-colors"
+                                title="Ver Contrato PDF / Imagen"
+                              >
+                                📄 Contrato
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                            {con.schedulePdfUrl && (
+                              <a
+                                href={con.schedulePdfUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[8px] font-extrabold bg-purple-50 text-purple-800 border border-purple-200 px-1.5 py-0.5 rounded hover:bg-purple-100 transition-colors"
+                                title="Ver Cronograma PDF / Imagen"
+                              >
+                                📅 Cronograma
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </td>
                       <td className="p-3.5 text-right no-print">
                         <button
                           onClick={(e) => {
@@ -5339,6 +5385,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setContractFormMaintenanceDates(con.maintenanceDates || []);
                             setTempMaintenanceDate('');
                             setContractFormQcDate(con.qcDate || '');
+                            setContractFormPdfUrl(con.contractPdfUrl || '');
+                            setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
                             
                             setIsContractModalOpen(true);
                           }}
@@ -12158,6 +12206,130 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                         />
                       </div>
+
+                      {/* Cloudinary PDF / Image Attachments Section */}
+                      <div className="space-y-3 border-t border-slate-100 pt-3">
+                        <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Adjuntos de Contrato y Cronograma (PDF / Imagen)</span>
+                        </h4>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* Contrato PDF Upload */}
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
+                            <span className="block text-[9px] font-bold text-slate-700 uppercase">📄 Documento del Contrato</span>
+                            
+                            {contractFormPdfUrl ? (
+                              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-[10px]">
+                                <a href={contractFormPdfUrl} target="_blank" rel="noreferrer" className="text-emerald-800 font-extrabold hover:underline truncate flex items-center gap-1">
+                                  <span>📄 Ver Documento</span>
+                                  <ExternalLink className="w-3 h-3 text-emerald-600 shrink-0" />
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => setContractFormPdfUrl('')}
+                                  className="text-rose-600 hover:text-rose-800 font-extrabold text-3xs ml-1 shrink-0 cursor-pointer"
+                                >
+                                  Eliminar
+                                </button>
+                              </div>
+                            ) : (
+                              <div>
+                                <input
+                                  type="file"
+                                  id="contract-pdf-input"
+                                  accept="application/pdf,image/*"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    try {
+                                      setIsUploadingContractPdf(true);
+                                      setUploadContractPdfProgress(0);
+                                      const url = await uploadFileToCloudinary(file, (p) => setUploadContractPdfProgress(p));
+                                      setContractFormPdfUrl(url);
+                                    } catch (err: any) {
+                                      alert(err.message || 'Error al subir el archivo del contrato a Cloudinary');
+                                    } finally {
+                                      setIsUploadingContractPdf(false);
+                                    }
+                                  }}
+                                  className="hidden"
+                                />
+                                <label
+                                  htmlFor="contract-pdf-input"
+                                  className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold text-3xs py-2 px-2.5 rounded-lg border border-slate-250 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                                >
+                                  {isUploadingContractPdf ? (
+                                    <span className="text-amber-600 font-bold">Subiendo... ({uploadContractPdfProgress}%)</span>
+                                  ) : (
+                                    <>
+                                      <Upload className="w-3.5 h-3.5 text-indigo-600" />
+                                      <span>Adjuntar Contrato PDF</span>
+                                    </>
+                                  )}
+                                </label>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Cronograma Firmado Upload */}
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
+                            <span className="block text-[9px] font-bold text-slate-700 uppercase">📅 Cronograma Firmado</span>
+                            
+                            {contractFormSchedulePdfUrl ? (
+                              <div className="flex items-center justify-between bg-purple-50 border border-purple-200 p-2 rounded-lg text-[10px]">
+                                <a href={contractFormSchedulePdfUrl} target="_blank" rel="noreferrer" className="text-purple-900 font-extrabold hover:underline truncate flex items-center gap-1">
+                                  <span>📅 Ver Cronograma</span>
+                                  <ExternalLink className="w-3 h-3 text-purple-600 shrink-0" />
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => setContractFormSchedulePdfUrl('')}
+                                  className="text-rose-600 hover:text-rose-800 font-extrabold text-3xs ml-1 shrink-0 cursor-pointer"
+                                >
+                                  Eliminar
+                                </button>
+                              </div>
+                            ) : (
+                              <div>
+                                <input
+                                  type="file"
+                                  id="schedule-pdf-input"
+                                  accept="application/pdf,image/*"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    try {
+                                      setIsUploadingSchedulePdf(true);
+                                      setUploadSchedulePdfProgress(0);
+                                      const url = await uploadFileToCloudinary(file, (p) => setUploadSchedulePdfProgress(p));
+                                      setContractFormSchedulePdfUrl(url);
+                                    } catch (err: any) {
+                                      alert(err.message || 'Error al subir el cronograma a Cloudinary');
+                                    } finally {
+                                      setIsUploadingSchedulePdf(false);
+                                    }
+                                  }}
+                                  className="hidden"
+                                />
+                                <label
+                                  htmlFor="schedule-pdf-input"
+                                  className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold text-3xs py-2 px-2.5 rounded-lg border border-slate-250 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                                >
+                                  {isUploadingSchedulePdf ? (
+                                    <span className="text-amber-600 font-bold">Subiendo... ({uploadSchedulePdfProgress}%)</span>
+                                  ) : (
+                                    <>
+                                      <Upload className="w-3.5 h-3.5 text-purple-600" />
+                                      <span>Adjuntar Cronograma PDF</span>
+                                    </>
+                                  )}
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -12486,6 +12658,37 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   </span>
                 </div>
               </div>
+
+              {/* Cloudinary Document Badges in Contract Details Modal */}
+              {(selectedContractForDetails.contractPdfUrl || selectedContractForDetails.schedulePdfUrl) && (
+                <div className="bg-indigo-50/60 border border-indigo-150 rounded-xl p-3 space-y-2">
+                  <span className="font-extrabold text-[9px] text-indigo-900 uppercase tracking-wider block">Documentos Adjuntos en la Nube (Cloudinary)</span>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedContractForDetails.contractPdfUrl && (
+                      <a
+                        href={selectedContractForDetails.contractPdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-colors"
+                      >
+                        📄 Abrir Documento de Contrato (PDF)
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                    {selectedContractForDetails.schedulePdfUrl && (
+                      <a
+                        href={selectedContractForDetails.schedulePdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-colors"
+                      >
+                        📅 Abrir Cronograma Firmado (PDF)
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Covered Equipments */}
               {selectedContractForDetails.equipmentItems && selectedContractForDetails.equipmentItems.length > 0 && (
