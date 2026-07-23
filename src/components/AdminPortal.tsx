@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download } from 'lucide-react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
@@ -506,6 +506,8 @@ export default function AdminPortal({
   const [isRegistryImporterOpen, setIsRegistryImporterOpen] = useState(false);
   const [registrySearch, setRegistrySearch] = useState('');
   const [registryPage, setRegistryPage] = useState(1);
+  const [registrySortField, setRegistrySortField] = useState<'fecha' | 'institution' | 'responsable' | 'equipment'>('fecha');
+  const [registrySortDir, setRegistrySortDir] = useState<'asc' | 'desc'>('desc');
   const [isRegistryModalOpen, setIsRegistryModalOpen] = useState(false);
   const [regFormInstitutionName, setRegFormInstitutionName] = useState('');
   const [regFormEqBrand, setRegFormEqBrand] = useState('FUJIFILM');
@@ -4272,6 +4274,80 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
   };
 
   const renderRegistroTab = () => {
+    const parseRegistryDateMs = (dateStr: string): number => {
+      if (!dateStr || dateStr === '-') return 0;
+      const str = dateStr.trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+        const time = new Date(str).getTime();
+        if (!isNaN(time)) return time;
+      }
+      const monthMap: Record<string, number> = {
+        jan: 0, ene: 0, feb: 1, mar: 2, apr: 3, abr: 3, may: 4, jun: 5,
+        jul: 6, aug: 7, ago: 7, sep: 8, sept: 8, oct: 9, nov: 10, dec: 11, dic: 11
+      };
+      const parts = str.split(/[/.\s-]+/);
+      if (parts.length >= 3) {
+        const p0 = parseInt(parts[0], 10);
+        const p2 = parseInt(parts[2], 10);
+        if (!isNaN(p0) && !isNaN(p2)) {
+          const mStr = parts[1].toLowerCase().slice(0, 3);
+          const monthIdx = monthMap[mStr] !== undefined ? monthMap[mStr] : (parseInt(parts[1], 10) - 1);
+          const year = p2 < 100 ? 2000 + p2 : p2;
+          const day = p0;
+          const d = new Date(year, monthIdx, day);
+          if (!isNaN(d.getTime())) return d.getTime();
+        }
+      }
+      const fallback = new Date(str).getTime();
+      return isNaN(fallback) ? 0 : fallback;
+    };
+
+    const handleExportRegistryExcel = (itemsToExport: MaintenanceRegistry[]) => {
+      if (!itemsToExport || itemsToExport.length === 0) {
+        alert("No hay registros para exportar.");
+        return;
+      }
+      const headers = [
+        'ID Registro',
+        'Nombre de Persona o Institucion',
+        'Equipo Marca',
+        'Equipo Modelo',
+        'Equipo Serie',
+        'Tubo de Rayos X Marca',
+        'Tubo de Rayos X Modelo',
+        'Tubo de Rayos X Serie',
+        'Fecha',
+        'Responsable',
+        'ID Orden Trabajo'
+      ];
+
+      const rows = itemsToExport.map(r => [
+        `"${(r.id || '').replace(/"/g, '""')}"`,
+        `"${(r.institutionName || '').replace(/"/g, '""')}"`,
+        `"${(r.eqBrand || '').replace(/"/g, '""')}"`,
+        `"${(r.eqModel || '').replace(/"/g, '""')}"`,
+        `"${(r.eqSerial || '').replace(/"/g, '""')}"`,
+        `"${(r.tuboBrand || '').replace(/"/g, '""')}"`,
+        `"${(r.tuboModel || '').replace(/"/g, '""')}"`,
+        `"${(r.tuboSerial || '').replace(/"/g, '""')}"`,
+        `"${(r.fecha || '').replace(/"/g, '""')}"`,
+        `"${(r.responsable || '').replace(/"/g, '""')}"`,
+        `"${(r.workOrderId || '').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = "\uFEFF" + [headers.join(';'), ...rows.map(row => row.join(';'))].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const dateTag = new Date().toISOString().split('T')[0];
+      a.download = `Registro_Equipos_MTO_${dateTag}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
     const query = registrySearch.toLowerCase().trim();
     const filtered = (maintenanceRegistries || []).filter(reg => {
       return (
@@ -4285,6 +4361,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         reg.fecha.toLowerCase().includes(query) ||
         reg.responsable.toLowerCase().includes(query)
       );
+    }).sort((a, b) => {
+      let cmp = 0;
+      if (registrySortField === 'fecha') {
+        const timeA = parseRegistryDateMs(a.fecha);
+        const timeB = parseRegistryDateMs(b.fecha);
+        cmp = timeA - timeB;
+      } else if (registrySortField === 'institution') {
+        cmp = a.institutionName.localeCompare(b.institutionName, 'es', { sensitivity: 'base' });
+      } else if (registrySortField === 'responsable') {
+        cmp = a.responsable.localeCompare(b.responsable, 'es', { sensitivity: 'base' });
+      } else if (registrySortField === 'equipment') {
+        const eqA = `${a.eqBrand} ${a.eqModel}`.trim();
+        const eqB = `${b.eqBrand} ${b.eqModel}`.trim();
+        cmp = eqA.localeCompare(eqB, 'es', { sensitivity: 'base' });
+      }
+      return registrySortDir === 'asc' ? cmp : -cmp;
     });
 
     const itemsPerPage = 10;
@@ -4304,6 +4396,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
 
           <div className="flex flex-wrap gap-2 items-center">
+            <button
+              onClick={() => handleExportRegistryExcel(filtered)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-3xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-emerald-600 transition-colors"
+              title="Exportar todos los registros filtrados a formato Excel"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>📊 Exportar Excel</span>
+            </button>
             <button
               onClick={() => setIsRegistryImporterOpen(!isRegistryImporterOpen)}
               className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
@@ -4427,7 +4527,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
         )}
 
-        {/* Search & Grid Stats */}
+        {/* Search & Grid Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">
             <input
@@ -4442,7 +4542,36 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
           </div>
-          <span className="text-3xs text-slate-400 font-bold uppercase tracking-wider">{filtered.length} registros encontrados</span>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Sorting controls */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs">
+              <span className="text-3xs text-slate-400 font-bold uppercase shrink-0">Ordenar por:</span>
+              <select
+                value={registrySortField}
+                onChange={e => {
+                  setRegistrySortField(e.target.value as any);
+                  setRegistryPage(1);
+                }}
+                className="bg-transparent text-xs font-bold text-slate-800 outline-hidden cursor-pointer"
+              >
+                <option value="fecha">📅 Fecha</option>
+                <option value="institution">🏢 Institución / Cliente (A-Z)</option>
+                <option value="responsable">👤 Responsable (A-Z)</option>
+                <option value="equipment">⚙️ Equipo (A-Z)</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => setRegistrySortDir(prev => prev === 'asc' ? 'desc' : 'asc')}
+                className="ml-1 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-indigo-700 font-extrabold text-3xs rounded cursor-pointer transition-colors border border-slate-200 flex items-center gap-1"
+                title={registrySortDir === 'asc' ? "Orden Ascendente (A-Z / Antiguos primero)" : "Orden Descendente (Z-A / Recientes primero)"}
+              >
+                <span>{registrySortDir === 'asc' ? '⬆️ Asc (A-Z)' : '⬇️ Desc (Z-A)'}</span>
+              </button>
+            </div>
+
+            <span className="text-3xs text-slate-400 font-bold uppercase tracking-wider">{filtered.length} registros encontrados</span>
+          </div>
         </div>
 
         {/* Registries Table Card */}
@@ -4450,12 +4579,68 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           <div className="overflow-x-auto rounded-xl border border-slate-100">
             <table className="w-full text-left border-collapse text-[10.5px] font-semibold text-slate-650">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-3xs font-bold uppercase text-slate-400 tracking-wider">
-                  <th className="p-3">Nombre de Persona o Institución</th>
-                  <th className="p-3">Equipo (Marca / Modelo / Serie)</th>
+                <tr className="bg-slate-50 border-b border-slate-200 text-3xs font-bold uppercase text-slate-400 tracking-wider select-none">
+                  <th
+                    onClick={() => {
+                      if (registrySortField === 'institution') setRegistrySortDir(d => d === 'asc' ? 'desc' : 'asc');
+                      else { setRegistrySortField('institution'); setRegistrySortDir('asc'); }
+                    }}
+                    className="p-3 cursor-pointer hover:bg-slate-100/80 transition-colors"
+                    title="Haga clic para ordenar por Nombre de Institución"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>Nombre de Persona o Institución</span>
+                      {registrySortField === 'institution' && (
+                        <span className="text-indigo-600 font-black">{registrySortDir === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => {
+                      if (registrySortField === 'equipment') setRegistrySortDir(d => d === 'asc' ? 'desc' : 'asc');
+                      else { setRegistrySortField('equipment'); setRegistrySortDir('asc'); }
+                    }}
+                    className="p-3 cursor-pointer hover:bg-slate-100/80 transition-colors"
+                    title="Haga clic para ordenar por Equipo"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>Equipo (Marca / Modelo / Serie)</span>
+                      {registrySortField === 'equipment' && (
+                        <span className="text-indigo-600 font-black">{registrySortDir === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
                   <th className="p-3">Tubo de Rayos X (Marca / Modelo / Serie)</th>
-                  <th className="p-3 text-center">Fecha</th>
-                  <th className="p-3">Responsable</th>
+                  <th
+                    onClick={() => {
+                      if (registrySortField === 'fecha') setRegistrySortDir(d => d === 'asc' ? 'desc' : 'asc');
+                      else { setRegistrySortField('fecha'); setRegistrySortDir('desc'); }
+                    }}
+                    className="p-3 text-center cursor-pointer hover:bg-slate-100/80 transition-colors"
+                    title="Haga clic para ordenar por Fecha"
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <span>Fecha</span>
+                      {registrySortField === 'fecha' && (
+                        <span className="text-indigo-600 font-black">{registrySortDir === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => {
+                      if (registrySortField === 'responsable') setRegistrySortDir(d => d === 'asc' ? 'desc' : 'asc');
+                      else { setRegistrySortField('responsable'); setRegistrySortDir('asc'); }
+                    }}
+                    className="p-3 cursor-pointer hover:bg-slate-100/80 transition-colors"
+                    title="Haga clic para ordenar por Responsable"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>Responsable</span>
+                      {registrySortField === 'responsable' && (
+                        <span className="text-indigo-600 font-black">{registrySortDir === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
