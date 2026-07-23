@@ -305,6 +305,26 @@ const getEngineerFullNameNoTitle = (name?: string): string => {
 
 
 
+const checkTimeOverlap = (timeStr1: string, timeStr2: string): boolean => {
+  if (!timeStr1 || !timeStr2) return false;
+  const clean1 = timeStr1.trim();
+  const clean2 = timeStr2.trim();
+  if (clean1 === clean2) return true;
+
+  const timeToMinutes = (t24: string): number => {
+    const [h, m] = t24.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+  const range1 = parseTimeRange(clean1);
+  const range2 = parseTimeRange(clean2);
+  const start1 = timeToMinutes(range1.start);
+  const end1 = timeToMinutes(range1.end);
+  const start2 = timeToMinutes(range2.start);
+  const end2 = timeToMinutes(range2.end);
+
+  return start1 < end2 && start2 < end1;
+};
+
 const getEngineerEmoji = (engineerId: string): string => {
   const emojis: Record<string, string> = {
     'ENG-001': '🔴',
@@ -770,10 +790,11 @@ export default function AdminPortal({
   const monthsList = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   const calendarMonthName = monthsList[calendarMonth - 1] || 'Marzo';
 
-  // Reorganization States
+  // Reorganization & Schedule Conflict States
   const [isReorganizePreviewMode, setIsReorganizePreviewMode] = useState(false);
   const [previewWorkOrders, setPreviewWorkOrders] = useState<WorkOrder[] | null>(null);
   const [reassignedWOIds, setReassignedWOIds] = useState<Set<string>>(new Set());
+  const [filterOnlyConflicting, setFilterOnlyConflicting] = useState(false);
 
   // Get all unique engineers active in the selected calendar month
   const monthEngineers = React.useMemo(() => {
@@ -832,6 +853,48 @@ export default function AdminPortal({
   const activeWorkOrdersList = React.useMemo(() => {
     return isReorganizePreviewMode && previewWorkOrders ? previewWorkOrders : workOrders;
   }, [isReorganizePreviewMode, previewWorkOrders, workOrders]);
+
+  // Schedule Conflict Detection
+  const { conflictingWOIds, conflictingDates } = React.useMemo(() => {
+    const confWOs = new Set<string>();
+    const confDates = new Set<string>();
+
+    const mapByDate = new Map<string, WorkOrder[]>();
+    activeWorkOrdersList.forEach(wo => {
+      if (wo.status === 'Conciliado') return;
+      const d = wo.plannedDate;
+      if (!d) return;
+      if (!mapByDate.has(d)) mapByDate.set(d, []);
+      mapByDate.get(d)!.push(wo);
+    });
+
+    mapByDate.forEach((dayWOs, date) => {
+      const mapEng = new Map<string, WorkOrder[]>();
+      dayWOs.forEach(wo => {
+        const engs = [wo.engineerId, ...(wo.supportEngineerIds || (wo.supportEngineerId ? [wo.supportEngineerId] : []))];
+        engs.forEach(eId => {
+          if (!eId) return;
+          if (!mapEng.has(eId)) mapEng.set(eId, []);
+          mapEng.get(eId)!.push(wo);
+        });
+      });
+
+      mapEng.forEach(engWOs => {
+        if (engWOs.length < 2) return;
+        for (let i = 0; i < engWOs.length; i++) {
+          for (let j = i + 1; j < engWOs.length; j++) {
+            if (checkTimeOverlap(engWOs[i].plannedTime || '', engWOs[j].plannedTime || '')) {
+              confWOs.add(engWOs[i].id);
+              confWOs.add(engWOs[j].id);
+              confDates.add(date);
+            }
+          }
+        }
+      });
+    });
+
+    return { conflictingWOIds: confWOs, conflictingDates: confDates };
+  }, [activeWorkOrdersList, engineers]);
 
   // Smart Reorganize Agenda Handler
   const handleSmartReorganize = () => {
@@ -2363,6 +2426,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${calendarYear}-${calendarMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
       const dayOrders = activeWorkOrdersList.filter(wo => {
+        if (filterOnlyConflicting && !conflictingWOIds.has(wo.id)) return false;
         return (!wo.durationDays || wo.durationDays <= 1) && wo.plannedDate === dateStr;
       });
       const dayVacations = (vacations || []).filter(v => {
@@ -2516,10 +2580,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               const matchesEng = highlightedEngineerId
                 ? (wo.engineerId === highlightedEngineerId || wo.supportEngineerId === highlightedEngineerId || wo.supportEngineerIds?.includes(highlightedEngineerId))
                 : true;
+              const matchesConflict = filterOnlyConflicting ? conflictingWOIds.has(wo.id) : true;
 
-              const isHighlighted = matchesQuery && matchesEng;
-              const hasHighlightActive = !!highlightedEngineerId || !!searchQuery;
+              const isHighlighted = matchesQuery && matchesEng && matchesConflict;
+              const hasHighlightActive = !!highlightedEngineerId || !!searchQuery || filterOnlyConflicting;
 
+              const isConflicting = conflictingWOIds.has(wo.id);
               const isReassigned = reassignedWOIds.has(wo.id);
 
               const engColor = eng ? getEngineerColorClasses(eng.id) : null;
@@ -2528,6 +2594,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 : (engColor ? `border-l-4 ${engColor.borderL}` : '');
               let cardStyle = `${badgeBg} ${borderLClass}`;
               let ringStyle = '';
+
+              if (isConflicting) {
+                cardStyle += ' border-2 border-amber-500 bg-amber-50/95';
+                ringStyle += ' ring-2 ring-amber-500 shadow-md animate-pulse z-10';
+              }
 
               if (hasHighlightActive) {
                 if (isHighlighted) {
@@ -2567,7 +2638,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 >
                   <div className="flex items-center justify-between font-black truncate text-slate-900 leading-none mb-0.5">
                     <span className="truncate">{clientDisplayName}</span>
-                    {isReassigned && (
+                    {isConflicting && (
+                      <span className="bg-amber-500 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded animate-pulse shrink-0 ml-1">
+                        ⚠️ CRUZADO
+                      </span>
+                    )}
+                    {isReassigned && !isConflicting && (
                       <span className="bg-purple-600 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1">
                         ✨ REASIGNADO
                       </span>
@@ -7601,6 +7677,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 >
                   <Sparkles className="w-3.5 h-3.5 text-purple-600" />
                   <span>Reorganizar Agenda</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFilterOnlyConflicting(!filterOnlyConflicting)}
+                  className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
+                    filterOnlyConflicting
+                      ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 font-bold'
+                      : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                  }`}
+                  title="Filtrar u ocultar mantenimientos con cruce de horario"
+                >
+                  <AlertTriangle className={`w-3.5 h-3.5 ${filterOnlyConflicting ? 'text-amber-600' : 'text-amber-500'}`} />
+                  <span>{filterOnlyConflicting ? 'Ver Todos' : 'Horarios Cruzados'}</span>
+                  {conflictingWOIds.size > 0 && (
+                    <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.2 rounded-full border border-amber-200">
+                      {conflictingWOIds.size}
+                    </span>
+                  )}
                 </button>
                 <button
                   type="button"
