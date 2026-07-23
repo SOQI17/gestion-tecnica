@@ -2171,7 +2171,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               })}
               {prevDayOrders.map(wo => {
                 const eng = engineers.find(e => e.id === wo.engineerId);
-                const client = clients.find(c => c.id === wo.clientId);
+                const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
+                const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
                 const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
                   ? wo.supportEngineerIds
                   : (wo.supportEngineerId ? [wo.supportEngineerId] : []);
@@ -2191,9 +2192,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     key={`pv-wo-${wo.id}`}
                     className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium cursor-pointer hover:shadow-sm select-none ${badgeBg} ${borderLClass}`}
                     onClick={e => { e.stopPropagation(); setInfoWO(wo); }}
-                    title={`${client?.name || ''} - ${wo.equipmentName}`}
+                    title={`${clientDisplayName} - ${wo.equipmentName}`}
                   >
-                    <p className="font-black truncate text-slate-900 leading-none mb-0.5">{client?.name || 'Cliente'}</p>
+                    <p className="font-black truncate text-slate-900 leading-none mb-0.5">{clientDisplayName}</p>
                     {wo.plannedTime && (
                       <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">⏰ {wo.plannedTime}</p>
                     )}
@@ -2364,7 +2365,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             {dayOrders.map(wo => {
               const eng = engineers.find(e => e.id === wo.engineerId);
               const supportEng = wo.supportEngineerId ? engineers.find(e => e.id === wo.supportEngineerId) : null;
-              const client = clients.find(c => c.id === wo.clientId);
+              const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
+              const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
               let badgeBg = wo.type === 'Preventivo'
                 ? 'bg-orange-100/80 hover:bg-orange-100 text-orange-955 border border-orange-200'
                 : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150';
@@ -2428,14 +2430,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     e.dataTransfer.effectAllowed = "move";
                   }}
                   className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium leading-normal cursor-pointer hover:shadow-sm select-none ${cardStyle} ${ringStyle}`}
-                  title={`${client?.name || ''} - ${wo.equipmentName} ${wo.plannedTime ? `(${wo.plannedTime})` : ''} (${eng?.name || ''}${supportNamesStr ? ` [Apoyo: ${supportNamesStr}]` : ''})`}
+                  title={`${clientDisplayName} - ${wo.equipmentName} ${wo.plannedTime ? `(${wo.plannedTime})` : ''} (${eng?.name || ''}${supportNamesStr ? ` [Apoyo: ${supportNamesStr}]` : ''})`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setInfoWO(wo);
                   }}
                 >
                   <p className="font-black truncate text-slate-900 leading-none mb-0.5">
-                    {client?.name || 'Cliente'}
+                    {clientDisplayName}
                   </p>
                   {wo.plannedTime && (
                     <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">
@@ -2577,7 +2579,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               })}
               {nextDayOrders.map(wo => {
                 const eng = engineers.find(e => e.id === wo.engineerId);
-                const client = clients.find(c => c.id === wo.clientId);
+                const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
+                const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
                 const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
                   ? wo.supportEngineerIds
                   : (wo.supportEngineerId ? [wo.supportEngineerId] : []);
@@ -2597,9 +2600,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     key={`nv-wo-${wo.id}`}
                     className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium cursor-pointer hover:shadow-sm select-none ${badgeBg} ${borderLClass}`}
                     onClick={e => { e.stopPropagation(); setInfoWO(wo); }}
-                    title={`${client?.name || ''} - ${wo.equipmentName}`}
+                    title={`${clientDisplayName} - ${wo.equipmentName}`}
                   >
-                    <p className="font-black truncate text-slate-900 leading-none mb-0.5">{client?.name || 'Cliente'}</p>
+                    <p className="font-black truncate text-slate-900 leading-none mb-0.5">{clientDisplayName}</p>
                     {wo.plannedTime && (
                       <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">⏰ {wo.plannedTime}</p>
                     )}
@@ -8404,7 +8407,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </tr>
                   ) : (
                     filteredOrders.map(wo => {
-                      const client = clients.find(c => c.id === wo.clientId);
+                      const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
+                      const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
                       const eng = engineers.find(e => e.id === wo.engineerId);
                       const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
                         ? wo.supportEngineerIds
@@ -8421,7 +8425,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <tr key={wo.id} className="hover:bg-slate-50/50">
                           <td className="p-3 font-mono font-bold text-slate-800">{wo.id}</td>
                           <td className="p-3">
-                            <p className="font-bold text-slate-800">{client?.name}</p>
+                            <p className="font-bold text-slate-800">{clientDisplayName}</p>
                             <p className="text-[10px] text-slate-400 font-mono mt-0.5">{client?.industry}</p>
                           </td>
                           <td className="p-3 text-slate-600">
@@ -9491,7 +9495,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Detail view Modal for workorder info */}
       <AnimatePresence>
         {infoWO && (() => {
-          const client = clients.find(c => c.id === infoWO.clientId);
+          const client = clients.find(c => c.id === infoWO.clientId || c.name.trim().toLowerCase() === (infoWO.clientId || '').trim().toLowerCase());
+          const clientDisplayName = client ? client.name : (infoWO.clientId && infoWO.clientId !== 'fsm_placeholder' ? infoWO.clientId : 'Cliente Desconocido');
           const eng = engineers.find(e => e.id === infoWO.engineerId);
           const supportEng = infoWO.supportEngineerId ? engineers.find(e => e.id === infoWO.supportEngineerId) : null;
           const matchedReport = reports.find(r => r.workOrderId === infoWO.id);
@@ -10012,8 +10017,30 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         type="button"
                         onClick={() => {
                           if (editedWO) {
-                            onUpdateWorkOrder(editedWO);
-                            setInfoWO(editedWO);
+                            let finalWO = { ...editedWO };
+                            const rawClientVal = (editedWO.clientId || '').trim();
+                            if (rawClientVal) {
+                              const matched = clients.find(c => c.id === rawClientVal || c.name.trim().toLowerCase() === rawClientVal.toLowerCase());
+                              if (matched) {
+                                finalWO.clientId = matched.id;
+                              } else {
+                                const newClientObj: Client = {
+                                  id: `CLI-${Date.now()}`,
+                                  name: rawClientVal,
+                                  address: 'Registrado desde Edición de Orden',
+                                  industry: 'Hospital / Clínica',
+                                  contactName: 'Administración',
+                                  contactPhone: '',
+                                  installedEquipments: editedWO.equipmentName ? [editedWO.equipmentName] : []
+                                };
+                                if (onAddClient) {
+                                  onAddClient(newClientObj);
+                                }
+                                finalWO.clientId = newClientObj.id;
+                              }
+                            }
+                            onUpdateWorkOrder(finalWO);
+                            setInfoWO(finalWO);
                             setIsEditingWOState(false);
                             setEditedWO(null);
                           }
@@ -10033,7 +10060,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <div className="space-y-4">
                         <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cliente / Ubicación</p>
-                          <h4 className="font-extrabold text-slate-800 mt-0.5">{client?.name || 'Cliente Desconocido'}</h4>
+                          <h4 className="font-extrabold text-slate-800 mt-0.5">{clientDisplayName}</h4>
                           <p className="text-3xs text-slate-500 font-medium mt-0.5">{client?.address}</p>
                         </div>
 
