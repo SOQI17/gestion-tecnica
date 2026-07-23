@@ -660,6 +660,12 @@ export default function AdminPortal({
   const [newWOEngineer, setNewWOEngineer] = useState(engineers[0]?.id || '');
   const [woEngDropdownOpen, setWoEngDropdownOpen] = useState(false);
   const [woEngSearchQuery, setWoEngSearchQuery] = useState('');
+  const [woSupportEngDropdownOpen, setWoSupportEngDropdownOpen] = useState(false);
+  const [woSupportEngSearchQuery, setWoSupportEngSearchQuery] = useState('');
+  const [editWoEngDropdownOpen, setEditWoEngDropdownOpen] = useState(false);
+  const [editWoEngSearchQuery, setEditWoEngSearchQuery] = useState('');
+  const [editWoSupportEngDropdownOpen, setEditWoSupportEngDropdownOpen] = useState(false);
+  const [editWoSupportEngSearchQuery, setEditWoSupportEngSearchQuery] = useState('');
   const [newWOSupportEngineer, setNewWOSupportEngineer] = useState('');
   const [newWOSupportEngineers, setNewWOSupportEngineers] = useState<string[]>([]);
   const [newWOType, setNewWOType] = useState<MaintenanceType>('Preventivo');
@@ -9023,30 +9029,165 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
                   </div>
 
-                  {/* Support Engineer Checkboxes */}
+                  {/* Support Engineer Select — Professional searchable multi-select dropdown */}
                   <div className="space-y-1.5">
                     <label className="block text-2xs font-bold text-slate-500 uppercase">2.1. Técnico(s) de Apoyo (Opcional)</label>
-                    <div className="flex flex-wrap gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg max-h-36 overflow-y-auto">
-                      {engineers.filter(e => e.id !== newWOEngineer).map(e => {
-                        const isChecked = newWOSupportEngineers.includes(e.id);
-                        return (
-                          <label key={e.id} className="flex items-center gap-1.5 px-2 py-1 bg-white hover:bg-slate-100 rounded-md border border-slate-200 cursor-pointer text-3xs font-medium">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(evt) => {
-                                if (evt.target.checked) {
-                                  setNewWOSupportEngineers([...newWOSupportEngineers, e.id]);
-                                } else {
-                                  setNewWOSupportEngineers(newWOSupportEngineers.filter(id => id !== e.id));
+
+                    <div className="relative">
+                      {/* Trigger button */}
+                      <button
+                        type="button"
+                        onClick={() => setWoSupportEngDropdownOpen(!woSupportEngDropdownOpen)}
+                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold flex items-center justify-between text-slate-800 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left min-h-[42px] transition-all hover:border-indigo-300"
+                      >
+                        {newWOSupportEngineers.length === 0 ? (
+                          <span className="text-slate-400 font-normal flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span>— Seleccionar Técnico(s) de Apoyo —</span>
+                          </span>
+                        ) : (
+                          <div className="flex flex-wrap items-center gap-1.5 py-0.5">
+                            {newWOSupportEngineers.map(id => {
+                              const eng = engineers.find(e => e.id === id);
+                              if (!eng) return null;
+                              return (
+                                <span
+                                  key={id}
+                                  className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-3xs px-2 py-0.5 rounded-md transition-colors"
+                                >
+                                  <span>{getEngineerEmoji(eng.id)}</span>
+                                  <span>{eng.name.replace('Ing. ', '')}</span>
+                                  <span
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setNewWOSupportEngineers(newWOSupportEngineers.filter(x => x !== id));
+                                    }}
+                                    className="ml-0.5 text-indigo-400 hover:text-indigo-700 font-black cursor-pointer"
+                                    title="Quitar"
+                                  >
+                                    ×
+                                  </span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                          {newWOSupportEngineers.length > 0 && (
+                            <span className="bg-indigo-600 text-white font-extrabold text-[9px] px-1.5 py-0.2 rounded-full">
+                              {newWOSupportEngineers.length}
+                            </span>
+                          )}
+                          <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${woSupportEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                      </button>
+
+                      {/* Dropdown panel */}
+                      {woSupportEngDropdownOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => { setWoSupportEngDropdownOpen(false); setWoSupportEngSearchQuery(''); }}
+                          />
+
+                          <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150">
+                            {/* Search input */}
+                            <div className="p-2.5 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
+                              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <input
+                                type="text"
+                                placeholder="Buscar técnico por nombre o especialidad..."
+                                value={woSupportEngSearchQuery}
+                                onChange={e => setWoSupportEngSearchQuery(e.target.value)}
+                                className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 font-semibold"
+                                autoFocus
+                              />
+                              {woSupportEngSearchQuery && (
+                                <button
+                                  type="button"
+                                  onClick={() => setWoSupportEngSearchQuery('')}
+                                  className="text-slate-400 hover:text-slate-600 p-0.5"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Options list */}
+                            <div className="overflow-y-auto divide-y divide-slate-50 p-1">
+                              {(() => {
+                                const filtered = engineers.filter(e =>
+                                  e.id !== newWOEngineer &&
+                                  (e.name.toLowerCase().includes(woSupportEngSearchQuery.toLowerCase()) ||
+                                   e.specialty.toLowerCase().includes(woSupportEngSearchQuery.toLowerCase()))
+                                );
+                                if (filtered.length === 0) {
+                                  return (
+                                    <div className="p-4 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                      No se encontraron ingenieros
+                                    </div>
+                                  );
                                 }
-                              }}
-                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3"
-                            />
-                            <span>{getEngineerEmoji(e.id)} {e.name.replace('Ing. ', '')}</span>
-                          </label>
-                        );
-                      })}
+                                return filtered.map(e => {
+                                  const isChecked = newWOSupportEngineers.includes(e.id);
+                                  return (
+                                    <button
+                                      key={e.id}
+                                      type="button"
+                                      onClick={() => {
+                                        if (isChecked) {
+                                          setNewWOSupportEngineers(newWOSupportEngineers.filter(id => id !== e.id));
+                                        } else {
+                                          setNewWOSupportEngineers([...newWOSupportEngineers, e.id]);
+                                        }
+                                      }}
+                                      className={`w-full p-2.5 rounded-lg text-left text-xs font-semibold transition-colors flex items-center justify-between cursor-pointer ${
+                                        isChecked ? 'bg-indigo-50/80 text-indigo-900 font-bold' : 'hover:bg-slate-50 text-slate-800'
+                                      }`}
+                                    >
+                                      <span className="flex items-center gap-2.5 min-w-0">
+                                        <span className="text-base leading-none shrink-0">{getEngineerEmoji(e.id)}</span>
+                                        <span className="truncate">
+                                          <span className="font-bold text-slate-900 block truncate">{e.name}</span>
+                                          <span className="text-[9px] text-slate-400 font-medium block leading-tight">{e.specialty} {e.sede ? `• 📍 ${e.sede}` : ''}</span>
+                                        </span>
+                                      </span>
+                                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                                        isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'
+                                      }`}>
+                                        {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                                      </div>
+                                    </button>
+                                  );
+                                });
+                              })()}
+                            </div>
+
+                            {/* Footer */}
+                            <div className="p-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-3xs font-semibold text-slate-500">
+                              <span>{newWOSupportEngineers.length} seleccionado(s)</span>
+                              <div className="flex items-center gap-2">
+                                {newWOSupportEngineers.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewWOSupportEngineers([])}
+                                    className="text-indigo-600 hover:underline font-bold"
+                                  >
+                                    Limpiar
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => { setWoSupportEngDropdownOpen(false); setWoSupportEngSearchQuery(''); }}
+                                  className="bg-indigo-600 text-white font-bold px-2.5 py-1 rounded-md hover:bg-indigo-700 transition cursor-pointer"
+                                >
+                                  Listo ✓
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -9513,53 +9654,274 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         />
                       </div>
 
-                      {/* Ingeniero Apoyo */}
+                      {/* Ingeniero Apoyo — Professional searchable multi-select dropdown */}
                       <div className="space-y-1 col-span-1">
                         <label className="block text-[10px] font-bold text-slate-500 uppercase">7. Técnico(s) de Apoyo (Opcional)</label>
-                        <div className="flex flex-wrap gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg max-h-36 overflow-y-auto">
-                          {engineers.filter(e => e.id !== editedWO?.engineerId).map(e => {
-                            const selectedSupport = editedWO?.supportEngineerIds || (editedWO?.supportEngineerId ? [editedWO.supportEngineerId] : []);
-                            const isChecked = selectedSupport.includes(e.id);
-                            return (
-                              <label key={e.id} className="flex items-center gap-1.5 px-2 py-1 bg-white hover:bg-slate-100 rounded-md border border-slate-200 cursor-pointer text-[10px] font-medium">
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={(evt) => {
-                                    if (editedWO) {
-                                      const nextSupport = evt.target.checked
-                                        ? [...selectedSupport, e.id]
-                                        : selectedSupport.filter(id => id !== e.id);
-                                      setEditedWO({
-                                        ...editedWO,
-                                        supportEngineerIds: nextSupport,
-                                        supportEngineerId: nextSupport[0] || undefined
-                                      });
-                                    }
-                                  }}
-                                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3"
-                                />
-                                <span>{getEngineerEmoji(e.id)} {e.name.replace('Ing. ', '')}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
+
+                        {(() => {
+                          const selectedSupport = editedWO?.supportEngineerIds || (editedWO?.supportEngineerId ? [editedWO.supportEngineerId] : []);
+                          return (
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => setEditWoSupportEngDropdownOpen(!editWoSupportEngDropdownOpen)}
+                                className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold flex items-center justify-between text-slate-800 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left min-h-[42px] transition-all hover:border-indigo-300"
+                              >
+                                {selectedSupport.length === 0 ? (
+                                  <span className="text-slate-400 font-normal flex items-center gap-1.5">
+                                    <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <span>— Sin técnicos de apoyo —</span>
+                                  </span>
+                                ) : (
+                                  <div className="flex flex-wrap items-center gap-1.5 py-0.5">
+                                    {selectedSupport.map(id => {
+                                      const eng = engineers.find(e => e.id === id);
+                                      if (!eng) return null;
+                                      return (
+                                        <span
+                                          key={id}
+                                          className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-3xs px-2 py-0.5 rounded-md transition-colors"
+                                        >
+                                          <span>{getEngineerEmoji(eng.id)}</span>
+                                          <span>{eng.name.replace('Ing. ', '')}</span>
+                                          <span
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (editedWO) {
+                                                const nextSupport = selectedSupport.filter(x => x !== id);
+                                                setEditedWO({
+                                                  ...editedWO,
+                                                  supportEngineerIds: nextSupport,
+                                                  supportEngineerId: nextSupport[0] || undefined
+                                                });
+                                              }
+                                            }}
+                                            className="ml-0.5 text-indigo-400 hover:text-indigo-700 font-black cursor-pointer"
+                                            title="Quitar"
+                                          >
+                                            ×
+                                          </span>
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                                  {selectedSupport.length > 0 && (
+                                    <span className="bg-indigo-600 text-white font-extrabold text-[9px] px-1.5 py-0.2 rounded-full">
+                                      {selectedSupport.length}
+                                    </span>
+                                  )}
+                                  <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${editWoSupportEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                </div>
+                              </button>
+
+                              {editWoSupportEngDropdownOpen && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-40"
+                                    onClick={() => { setEditWoSupportEngDropdownOpen(false); setEditWoSupportEngSearchQuery(''); }}
+                                  />
+
+                                  <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150 font-sans">
+                                    <div className="p-2.5 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
+                                      <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                      <input
+                                        type="text"
+                                        placeholder="Buscar técnico por nombre o especialidad..."
+                                        value={editWoSupportEngSearchQuery}
+                                        onChange={e => setEditWoSupportEngSearchQuery(e.target.value)}
+                                        className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 font-semibold"
+                                        autoFocus
+                                      />
+                                      {editWoSupportEngSearchQuery && (
+                                        <button
+                                          type="button"
+                                          onClick={() => setEditWoSupportEngSearchQuery('')}
+                                          className="text-slate-400 hover:text-slate-600 p-0.5"
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    <div className="overflow-y-auto divide-y divide-slate-50 p-1">
+                                      {(() => {
+                                        const filtered = engineers.filter(e =>
+                                          e.id !== editedWO?.engineerId &&
+                                          (e.name.toLowerCase().includes(editWoSupportEngSearchQuery.toLowerCase()) ||
+                                           e.specialty.toLowerCase().includes(editWoSupportEngSearchQuery.toLowerCase()))
+                                        );
+                                        if (filtered.length === 0) {
+                                          return (
+                                            <div className="p-4 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                              No se encontraron ingenieros
+                                            </div>
+                                          );
+                                        }
+                                        return filtered.map(e => {
+                                          const isChecked = selectedSupport.includes(e.id);
+                                          return (
+                                            <button
+                                              key={e.id}
+                                              type="button"
+                                              onClick={() => {
+                                                if (editedWO) {
+                                                  const nextSupport = isChecked
+                                                    ? selectedSupport.filter(id => id !== e.id)
+                                                    : [...selectedSupport, e.id];
+                                                  setEditedWO({
+                                                    ...editedWO,
+                                                    supportEngineerIds: nextSupport,
+                                                    supportEngineerId: nextSupport[0] || undefined
+                                                  });
+                                                }
+                                              }}
+                                              className={`w-full p-2.5 rounded-lg text-left text-xs font-semibold transition-colors flex items-center justify-between cursor-pointer ${
+                                                isChecked ? 'bg-indigo-50/80 text-indigo-900 font-bold' : 'hover:bg-slate-50 text-slate-800'
+                                              }`}
+                                            >
+                                              <span className="flex items-center gap-2.5 min-w-0">
+                                                <span className="text-base leading-none shrink-0">{getEngineerEmoji(e.id)}</span>
+                                                <span className="truncate">
+                                                  <span className="font-bold text-slate-900 block truncate">{e.name}</span>
+                                                  <span className="text-[9px] text-slate-400 font-medium block leading-tight">{e.specialty} {e.sede ? `• 📍 ${e.sede}` : ''}</span>
+                                                </span>
+                                              </span>
+                                              <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                                                isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'
+                                              }`}>
+                                                {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                                              </div>
+                                            </button>
+                                          );
+                                        });
+                                      })()}
+                                    </div>
+
+                                    <div className="p-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-3xs font-semibold text-slate-500">
+                                      <span>{selectedSupport.length} seleccionado(s)</span>
+                                      <div className="flex items-center gap-2">
+                                        {selectedSupport.length > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              if (editedWO) {
+                                                setEditedWO({
+                                                  ...editedWO,
+                                                  supportEngineerIds: [],
+                                                  supportEngineerId: undefined
+                                                });
+                                              }
+                                            }}
+                                            className="text-indigo-600 hover:underline font-bold"
+                                          >
+                                            Limpiar
+                                          </button>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={() => { setEditWoSupportEngDropdownOpen(false); setEditWoSupportEngSearchQuery(''); }}
+                                          className="bg-indigo-600 text-white font-bold px-2.5 py-1 rounded-md hover:bg-indigo-700 transition cursor-pointer"
+                                        >
+                                          Listo ✓
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
 
-                      {/* Ingeniero Principal */}
+                      {/* Ingeniero Principal — Professional searchable dropdown */}
                       <div className="space-y-1 col-span-1">
                         <label className="block text-[10px] font-bold text-slate-500 uppercase">6. Técnico Principal</label>
-                        <select
-                          value={editedWO?.engineerId || ''}
-                          onChange={e => setEditedWO(prev => prev ? { ...prev, engineerId: e.target.value } : null)}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs"
-                        >
-                          {engineers.map(eng => (
-                            <option key={eng.id} value={eng.id}>
-                              {getEngineerEmoji(eng.id)} {eng.name}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setEditWoEngDropdownOpen(!editWoEngDropdownOpen)}
+                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold flex items-center justify-between text-slate-800 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left h-[42px] transition-all hover:border-indigo-300"
+                          >
+                            {editedWO?.engineerId ? (() => {
+                              const eng = engineers.find(e => e.id === editedWO.engineerId);
+                              return (
+                                <span className="flex items-center gap-2.5">
+                                  <span className="text-lg leading-none">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
+                                  <span className="truncate font-bold text-slate-800">{eng?.name || 'Seleccionar Técnico'}</span>
+                                </span>
+                              );
+                            })() : (
+                              <span className="text-slate-400 font-normal">— Seleccionar Técnico —</span>
+                            )}
+                            <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${editWoEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                          </button>
+
+                          {editWoEngDropdownOpen && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-40"
+                                onClick={() => { setEditWoEngDropdownOpen(false); setEditWoEngSearchQuery(''); }}
+                              />
+
+                              <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150">
+                                <div className="p-2.5 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
+                                  <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <input
+                                    type="text"
+                                    placeholder="Buscar ingeniero..."
+                                    value={editWoEngSearchQuery}
+                                    onChange={e => setEditWoEngSearchQuery(e.target.value)}
+                                    className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 font-semibold"
+                                    autoFocus
+                                  />
+                                </div>
+
+                                <div className="overflow-y-auto divide-y divide-slate-50">
+                                  {(() => {
+                                    const filtered = engineers.filter(e =>
+                                      e.name.toLowerCase().includes(editWoEngSearchQuery.toLowerCase())
+                                    );
+                                    if (filtered.length === 0) {
+                                      return (
+                                        <div className="p-4 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                          No se encontraron ingenieros
+                                        </div>
+                                      );
+                                    }
+                                    return filtered.map(e => {
+                                      const isSelected = editedWO?.engineerId === e.id;
+                                      return (
+                                        <button
+                                          key={e.id}
+                                          type="button"
+                                          onClick={() => {
+                                            if (editedWO) {
+                                              setEditedWO({ ...editedWO, engineerId: e.id });
+                                            }
+                                            setEditWoEngDropdownOpen(false);
+                                            setEditWoEngSearchQuery('');
+                                          }}
+                                          className={`w-full p-3 text-left text-xs font-semibold hover:bg-indigo-50/60 transition-colors flex items-center justify-between cursor-pointer ${
+                                            isSelected ? 'bg-indigo-50 text-indigo-750 font-black' : 'text-slate-800'
+                                          }`}
+                                        >
+                                          <span className="flex items-center gap-3">
+                                            <span className="text-lg leading-none w-7 text-center">{getEngineerEmoji(e.id)}</span>
+                                            <span className="font-bold">{e.name}</span>
+                                          </span>
+                                          {isSelected && <Check className="w-4 h-4 text-indigo-600 shrink-0" />}
+                                        </button>
+                                      );
+                                    });
+                                  })()}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
 
                       {/* Duración en Días */}
