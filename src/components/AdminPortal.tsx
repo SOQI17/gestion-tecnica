@@ -3779,45 +3779,67 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           return cols;
         };
 
-        // ── The format has TWO header rows, skip both ─────────────────────────
-        // Row 0: "Nombre de Persona o Institución" | "Equipo"(merged) | "Tubo de Rayos X"(merged) | "Fecha" | "Responsable"
-        // Row 1: "" | "Marca" | "Modelo" | "Serie" | "Marca" | "Modelo" | "Serie" | "" | ""
-        // Row 2+: actual data
-        //
-        // Column positions (0-indexed):
-        //  0 = Nombre de Persona o Institución
-        //  1 = Equipo - Marca
-        //  2 = Equipo - Modelo
-        //  3 = Equipo - Serie
-        //  4 = Tubo de Rayos X - Marca
-        //  5 = Tubo de Rayos X - Modelo
-        //  6 = Tubo de Rayos X - Serie
-        //  7 = Fecha
-        //  8 = Responsable
+        // ── Detect header count ────────────────────────────────────────────────
+        // Check if row 1 is a second header row (contains 'Marca', 'Modelo', 'Serie') or data
+        const secondLine = allLines[1] || '';
+        const isSecondHeader = /marca|modelo|serie/i.test(secondLine);
+        const headerRowsCount = isSecondHeader ? 2 : 1;
 
-        const dataLines = allLines.slice(2).filter(l => l.trim() !== '');
+        const dataLines = allLines.slice(headerRowsCount).filter(l => l.trim() !== '');
 
         if (dataLines.length === 0) {
-          setRegistryCsvError("El archivo no tiene datos después de las 2 filas de encabezados.");
+          setRegistryCsvError(`El archivo no tiene datos después de las ${headerRowsCount} fila(s) de encabezados.`);
           return;
         }
 
         const base = Date.now();
         const formatted: MaintenanceRegistry[] = dataLines.map((line, idx) => {
-          const cols = splitLine(line);
+          let cols = splitLine(line);
+
+          // If cols[0] contains semicolons, split it further
+          if (cols.length === 1 && cols[0].includes(';')) {
+            cols = cols[0].split(';').map(c => c.trim());
+          }
+
           const col = (i: number) => (cols[i] || '').trim().replace(/^["']|["']$/g, '');
+
+          let inst = col(0) || '-';
+          let eqB = col(1) || '-';
+          let eqM = col(2) || '-';
+          let eqS = col(3) || '-';
+          let tubB = col(4) || '-';
+          let tubM = col(5) || '-';
+          let tubS = col(6) || '-';
+          let fec = col(7) || '-';
+          let resp = col(8) || '-';
+
+          // Auto-fix if inst string has inline semicolons
+          if (inst.includes(';')) {
+            const parts = inst.split(';').map(p => p.trim()).filter(Boolean);
+            if (parts.length >= 3) {
+              const isPart1Date = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|ene|abr|ago|dic|\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})\b/i.test(parts[1]);
+              if (isPart1Date) {
+                eqS = parts[0];
+                fec = parts[1];
+                inst = parts[2];
+                if (parts[3]) resp = parts[3];
+              } else {
+                inst = parts[parts.length - 1] || parts[0];
+              }
+            }
+          }
 
           return {
             id: `REG-${base}-${idx}`,
-            institutionName: col(0) || '-',
-            eqBrand:         col(1) || '-',
-            eqModel:         col(2) || '-',
-            eqSerial:        col(3) || '-',
-            tuboBrand:       col(4) || '-',
-            tuboModel:       col(5) || '-',
-            tuboSerial:      col(6) || '-',
-            fecha:           col(7) || '-',
-            responsable:     col(8) || '-',
+            institutionName: inst,
+            eqBrand:         eqB,
+            eqModel:         eqM,
+            eqSerial:        eqS,
+            tuboBrand:       tubB,
+            tuboModel:       tubM,
+            tuboSerial:      tubS,
+            fecha:           fec,
+            responsable:     resp,
             createdAt: new Date().toISOString()
           };
         });
@@ -4274,6 +4296,49 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
   };
 
   const renderRegistroTab = () => {
+    const getEffectiveRegistryFields = (reg: MaintenanceRegistry) => {
+      let institutionName = (reg.institutionName || '').trim();
+      let eqBrand = (reg.eqBrand || '').trim();
+      let eqModel = (reg.eqModel || '').trim();
+      let eqSerial = (reg.eqSerial || '').trim();
+      let tuboBrand = (reg.tuboBrand || '').trim();
+      let tuboModel = (reg.tuboModel || '').trim();
+      let tuboSerial = (reg.tuboSerial || '').trim();
+      let fecha = (reg.fecha || '').trim();
+      let responsable = (reg.responsable || '').trim();
+
+      if (institutionName.includes(';')) {
+        const parts = institutionName.split(';').map(p => p.trim()).filter(Boolean);
+        if (parts.length >= 3) {
+          const isPart1Date = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|ene|abr|ago|dic|\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})\b/i.test(parts[1]);
+          if (isPart1Date) {
+            if (!eqSerial || eqSerial === '-') eqSerial = parts[0];
+            if (!fecha || fecha === '-') fecha = parts[1];
+            if (parts[2]) institutionName = parts[2];
+            if (parts[3] && (!responsable || responsable === '-')) responsable = parts[3];
+          } else {
+            institutionName = parts[parts.length - 1] || parts[0];
+          }
+        } else if (parts.length === 2) {
+          institutionName = parts[0];
+          if (!responsable || responsable === '-') responsable = parts[1];
+        }
+      }
+
+      return {
+        ...reg,
+        institutionName: institutionName || '-',
+        eqBrand: eqBrand || '-',
+        eqModel: eqModel || '-',
+        eqSerial: eqSerial || '-',
+        tuboBrand: tuboBrand || '-',
+        tuboModel: tuboModel || '-',
+        tuboSerial: tuboSerial || '-',
+        fecha: fecha || '-',
+        responsable: responsable || '-'
+      };
+    };
+
     const parseRegistryDateMs = (dateStr: string): number => {
       if (!dateStr || dateStr === '-') return 0;
       const str = dateStr.trim();
@@ -4349,7 +4414,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     };
 
     const query = registrySearch.toLowerCase().trim();
-    const filtered = (maintenanceRegistries || []).filter(reg => {
+    const effectiveRegistries = (maintenanceRegistries || []).map(getEffectiveRegistryFields);
+
+    const filtered = effectiveRegistries.filter(reg => {
       return (
         reg.institutionName.toLowerCase().includes(query) ||
         reg.eqBrand.toLowerCase().includes(query) ||
@@ -4368,13 +4435,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         const timeB = parseRegistryDateMs(b.fecha);
         cmp = timeA - timeB;
       } else if (registrySortField === 'institution') {
-        cmp = a.institutionName.localeCompare(b.institutionName, 'es', { sensitivity: 'base' });
+        cmp = a.institutionName.localeCompare(b.institutionName, 'es', { sensitivity: 'base', numeric: true });
       } else if (registrySortField === 'responsable') {
-        cmp = a.responsable.localeCompare(b.responsable, 'es', { sensitivity: 'base' });
+        cmp = a.responsable.localeCompare(b.responsable, 'es', { sensitivity: 'base', numeric: true });
       } else if (registrySortField === 'equipment') {
         const eqA = `${a.eqBrand} ${a.eqModel}`.trim();
         const eqB = `${b.eqBrand} ${b.eqModel}`.trim();
-        cmp = eqA.localeCompare(eqB, 'es', { sensitivity: 'base' });
+        cmp = eqA.localeCompare(eqB, 'es', { sensitivity: 'base', numeric: true });
       }
       return registrySortDir === 'asc' ? cmp : -cmp;
     });
