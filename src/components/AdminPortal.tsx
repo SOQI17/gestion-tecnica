@@ -2263,7 +2263,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       for (let p = 0; p < placeholdersCount; p++) {
         const prevDay = daysInPrevMonth - (placeholdersCount - 1 - p);
         const prevDateStr = `${prevMonthYear}-${prevMonth.toString().padStart(2, '0')}-${prevDay.toString().padStart(2, '0')}`;
-        const prevDayOrders = workOrders.filter(wo =>
+        const prevDayOrders = activeWorkOrdersList.filter(wo =>
           (!wo.durationDays || wo.durationDays <= 1) && wo.plannedDate === prevDateStr
         );
         const prevDayVacations = (vacations || []).filter(v =>
@@ -2420,7 +2420,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     // --- Current month days ---
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${calendarYear}-${calendarMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      const dayOrders = workOrders.filter(wo => {
+      const dayOrders = activeWorkOrdersList.filter(wo => {
+        if (filterOnlyConflicting && !conflictingWOIds.has(wo.id)) return false;
         return (!wo.durationDays || wo.durationDays <= 1) && wo.plannedDate === dateStr;
       });
       const dayVacations = (vacations || []).filter(v => {
@@ -2581,8 +2582,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               const matchesEng = highlightedEngineerId
                 ? (wo.engineerId === highlightedEngineerId || wo.supportEngineerId === highlightedEngineerId || wo.supportEngineerIds?.includes(highlightedEngineerId))
                 : true;
-              const isHighlighted = matchesQuery && matchesEng;
-              const hasHighlightActive = !!highlightedEngineerId || !!searchQuery;
+              const matchesConflict = filterOnlyConflicting ? conflictingWOIds.has(wo.id) : true;
+
+              const isHighlighted = matchesQuery && matchesEng && matchesConflict;
+              const hasHighlightActive = !!highlightedEngineerId || !!searchQuery || filterOnlyConflicting;
 
               const isConflicting = conflictingWOIds.has(wo.id);
               const isReassigned = reassignedWOIds.has(wo.id);
@@ -2712,7 +2715,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
       for (let n = 1; n <= remainingCells; n++) {
         const nextDateStr = `${nextMonthYear}-${nextMonth.toString().padStart(2, '0')}-${n.toString().padStart(2, '0')}`;
-        const nextDayOrders = workOrders.filter(wo =>
+        const nextDayOrders = activeWorkOrdersList.filter(wo =>
           (!wo.durationDays || wo.durationDays <= 1) && wo.plannedDate === nextDateStr
         );
         const nextDayVacations = (vacations || []).filter(v =>
