@@ -729,16 +729,22 @@ export default function AdminPortal({
   const [isContractImporterOpen, setIsContractImporterOpen] = useState(false);
   const [contractCsvError, setContractCsvError] = useState<string | null>(null);
 
-  // Contratos con GE states
+  // Contratos con GE states & Dashboard
   const [contractGeSearch, setContractGeSearch] = useState('');
   const [contractGePage, setContractGePage] = useState(1);
   const [isContractGeImporterOpen, setIsContractGeImporterOpen] = useState(false);
+  const [isGeDashboardExpanded, setIsGeDashboardExpanded] = useState(true);
   const [contractGeCsvError, setContractGeCsvError] = useState<string | null>(null);
   const [isContractGeModalOpen, setIsContractGeModalOpen] = useState(false);
   const [editingContractGe, setEditingContractGe] = useState<ContractGE | null>(null);
   const [geFormCliente, setGeFormCliente] = useState('');
+  const [geFormSid, setGeFormSid] = useState('');
+  const [geFormModalidad, setGeFormModalidad] = useState('');
+  const [geFormEquipo, setGeFormEquipo] = useState('');
+  const [geFormEquipmentNum, setGeFormEquipmentNum] = useState('');
   const [geFormInvoice, setGeFormInvoice] = useState('');
   const [geFormAmount, setGeFormAmount] = useState('');
+  const [geFormMonths, setGeFormMonths] = useState('');
   const [geFormInvoiceDate, setGeFormInvoiceDate] = useState('');
   const [geFormDueDate, setGeFormDueDate] = useState('');
   const [geFormPaymentPeriod, setGeFormPaymentPeriod] = useState('');
@@ -5507,14 +5513,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         };
 
         const idxCliente = findCol(['CLIENTE', 'CUSTOMER']);
+        const idxSid = findCol(['SID', 'SYSTEM ID', 'SERIAL']);
+        const idxModalidad = findCol(['MODALIDAD', 'MODALITY']);
+        const idxEquipo = findCol(['EQUIPO', 'EQUIPMENT NAME', 'MODELO']);
+        const idxEqNum = findCol(['EQUIPMENT #', 'EQUIPMENT', 'CUOTA']);
         const idxInvoice = findCol(['INVOICE', 'FACTURA']);
         const idxAmount = findCol(['INVOICE AMOUNT', 'AMOUNT', 'MONTO', 'VALOR']);
-        const idxDate = findCol(['INVOICE DATE', 'FECHA FACTURA', 'FECHA EMISION']);
+        const idxMonths = findCol(['MONTHS', 'MESES', 'DURACION']);
+        const idxDate = findCol(['INVOICE DATE', 'CONTRACT DATE', 'FECHA FACTURA', 'FECHA EMISION']);
         const idxDueDate = findCol(['DUE DATE', 'VENCIMIENTO', 'FECHA VENCIMIENTO']);
         const idxPeriod = findCol(['FECHA/AÑO PAGO', 'PAGO', 'PERIODO', 'YEAR PAGO']);
-        const idxMonth = findCol(['#MES', 'MES', 'MONTH']);
+        const idxMonth = findCol(['#MES', 'MES']);
         const idxContract = findCol(['CONTRATO', 'CONTRACT']);
-        const idxObs = findCol(['OBSERVACIONES', 'OBSERVACION', 'NOTES', 'REMARKS']);
+        const idxObs = findCol(['OBSERVACIONES', 'COMMENTS', 'OBSERVACION', 'NOTES', 'REMARKS']);
 
         const parsedItems: ContractGE[] = [];
 
@@ -5526,24 +5537,40 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           if (cols.length < 2) continue;
 
           const rawCliente = idxCliente !== -1 ? cols[idxCliente] : cols[0];
-          const rawInvoice = idxInvoice !== -1 ? cols[idxInvoice] : cols[1];
-          const rawAmount = idxAmount !== -1 ? cols[idxAmount] : (cols[2] || '0');
-          const rawDate = idxDate !== -1 ? cols[idxDate] : (cols[3] || '');
-          const rawDueDate = idxDueDate !== -1 ? cols[idxDueDate] : (cols[4] || '');
-          const rawPeriod = idxPeriod !== -1 ? cols[idxPeriod] : (cols[5] || '');
-          const rawMonth = idxMonth !== -1 ? cols[idxMonth] : (cols[6] || '');
-          const rawContract = idxContract !== -1 ? cols[idxContract] : (cols[7] || '');
-          const rawObs = idxObs !== -1 ? cols[idxObs] : (cols[8] || '');
+          const rawSid = idxSid !== -1 ? cols[idxSid] : '';
+          const rawModalidad = idxModalidad !== -1 ? cols[idxModalidad] : '';
+          const rawEquipo = idxEquipo !== -1 ? cols[idxEquipo] : '';
+          const rawEqNum = idxEqNum !== -1 ? cols[idxEqNum] : '';
+          const rawInvoice = idxInvoice !== -1 ? cols[idxInvoice] : `INV-${i}`;
+          const rawAmount = idxAmount !== -1 ? cols[idxAmount] : '0';
+          const rawMonths = idxMonths !== -1 ? cols[idxMonths] : '';
+          const rawDate = idxDate !== -1 ? cols[idxDate] : '';
+          const rawDueDate = idxDueDate !== -1 ? cols[idxDueDate] : '';
+          const rawPeriod = idxPeriod !== -1 ? cols[idxPeriod] : '';
+          const rawMonth = idxMonth !== -1 ? cols[idxMonth] : '';
+          const rawContract = idxContract !== -1 ? cols[idxContract] : '';
+          const rawObs = idxObs !== -1 ? cols[idxObs] : '';
 
-          if (!rawCliente && !rawInvoice) continue;
+          if (!rawCliente && !rawInvoice && !rawEquipo) continue;
 
-          const cleanAmount = parseFloat(rawAmount.replace(/[\$\,\s]/g, '')) || 0;
+          let cleanAmountStr = rawAmount.replace(/[\$\s]/g, '');
+          if (cleanAmountStr.includes(',') && cleanAmountStr.includes('.')) {
+            cleanAmountStr = cleanAmountStr.replace(/\,/g, '');
+          } else if (cleanAmountStr.includes(',')) {
+            cleanAmountStr = cleanAmountStr.replace(/\./g, '').replace(/\,/g, '.');
+          }
+          const cleanAmount = parseFloat(cleanAmountStr) || 0;
 
           const newItem: ContractGE = {
             id: `GE-${rawInvoice || Date.now()}-${i}`,
             cliente: rawCliente || 'Cliente Desconocido',
+            sid: rawSid,
+            modalidad: rawModalidad,
+            equipo: rawEquipo,
+            equipmentNum: rawEqNum,
             invoice: rawInvoice || `INV-${i}`,
             invoiceAmount: cleanAmount,
+            months: rawMonths,
             invoiceDate: rawDate,
             dueDate: rawDueDate,
             paymentPeriod: rawPeriod,
@@ -5578,6 +5605,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     const query = contractGeSearch.toLowerCase().trim();
     const filteredGE = contractsGE.filter(c => 
       c.cliente.toLowerCase().includes(query) ||
+      (c.sid || '').toLowerCase().includes(query) ||
+      (c.modalidad || '').toLowerCase().includes(query) ||
+      (c.equipo || '').toLowerCase().includes(query) ||
       c.invoice.toLowerCase().includes(query) ||
       (c.contractNum || '').toLowerCase().includes(query) ||
       (c.paymentPeriod || '').toLowerCase().includes(query) ||
@@ -5586,6 +5616,54 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     const totalAmount = filteredGE.reduce((sum, item) => sum + (item.invoiceAmount || 0), 0);
     const withObsCount = filteredGE.filter(item => item.observaciones && item.observaciones.trim().length > 0).length;
+
+    // Analytics: Top Clients
+    const clientStatsMap = new Map<string, { totalAmount: number; count: number }>();
+    contractsGE.forEach(c => {
+      const name = c.cliente || 'Desconocido';
+      const current = clientStatsMap.get(name) || { totalAmount: 0, count: 0 };
+      clientStatsMap.set(name, {
+        totalAmount: current.totalAmount + (c.invoiceAmount || 0),
+        count: current.count + 1
+      });
+    });
+    const topClients = Array.from(clientStatsMap.entries())
+      .map(([name, stat]) => ({ name, ...stat }))
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .slice(0, 5);
+
+    // Analytics: Modalidad breakdown
+    const modalityMap = new Map<string, { totalAmount: number; count: number }>();
+    contractsGE.forEach(c => {
+      const mod = (c.modalidad && c.modalidad.trim() ? c.modalidad.trim() : 'GE General').toUpperCase();
+      const current = modalityMap.get(mod) || { totalAmount: 0, count: 0 };
+      modalityMap.set(mod, {
+        totalAmount: current.totalAmount + (c.invoiceAmount || 0),
+        count: current.count + 1
+      });
+    });
+    const topModalities = Array.from(modalityMap.entries())
+      .map(([modality, stat]) => ({ modality, ...stat }))
+      .sort((a, b) => b.totalAmount - a.totalAmount);
+
+    // Analytics: Month Duration ranges
+    let dur1_6 = 0;
+    let dur7_12 = 0;
+    let dur13_24 = 0;
+    let dur25Plus = 0;
+    contractsGE.forEach(c => {
+      const m = parseInt(String(c.months || c.monthNum || 0)) || 0;
+      if (m <= 6) dur1_6++;
+      else if (m <= 12) dur7_12++;
+      else if (m <= 24) dur13_24++;
+      else dur25Plus++;
+    });
+
+    // Renewal Warnings
+    const renewalAlerts = contractsGE.filter(c => {
+      const obs = (c.observaciones || '').toUpperCase();
+      return obs.includes('RENOVACION') || obs.includes('RENOVACIÓN') || obs.includes('SIN FECHA');
+    });
 
     const itemsPerPage = 12;
     const totalPagesGE = Math.ceil(filteredGE.length / itemsPerPage) || 1;
@@ -5597,13 +5675,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
           <div>
             <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-              <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
-              Contratos con GE & Registro de Facturación
+              <BarChart3 className="w-4 h-4 text-indigo-600" />
+              Dashboard de Contratos con GE & Facturación
             </h4>
-            <p className="text-3xs text-slate-500 mt-0.5 font-medium">Control de facturas, montos, cuotas y observaciones para contratos con Garantía Extendida (GE).</p>
+            <p className="text-3xs text-slate-500 mt-0.5 font-medium">Control ejecutivo de facturación, modalidades (CT, MR, SURGERY), coberturas y renovaciones.</p>
           </div>
 
           <div className="flex flex-wrap gap-2 items-center">
+            <button
+              onClick={() => setIsGeDashboardExpanded(!isGeDashboardExpanded)}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-slate-200 transition-colors cursor-pointer"
+            >
+              <PieChart className="w-3.5 h-3.5 text-indigo-600" />
+              <span>{isGeDashboardExpanded ? 'Ocultar Dashboard' : '📊 Ver Dashboard'}</span>
+            </button>
+
             {userRole === 'admin' && (
               <button
                 onClick={() => setIsContractGeImporterOpen(!isContractGeImporterOpen)}
@@ -5617,12 +5703,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <span>{isContractGeImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV GE'}</span>
               </button>
             )}
+
             <button
               onClick={() => {
                 setEditingContractGe(null);
                 setGeFormCliente('');
+                setGeFormSid('');
+                setGeFormModalidad('');
+                setGeFormEquipo('');
+                setGeFormEquipmentNum('');
                 setGeFormInvoice('');
                 setGeFormAmount('');
+                setGeFormMonths('');
                 setGeFormInvoiceDate(currentDateStr);
                 setGeFormDueDate('');
                 setGeFormPaymentPeriod('');
@@ -5643,12 +5735,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         {isContractGeImporterOpen && (
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
             <div className="border-b border-slate-100 pb-2 flex justify-between items-center">
-              <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wider font-mono">📥 Ingestor de Contratos con GE (CSV)</h5>
+              <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wider font-mono">📥 Ingestor de Contratos con GE (CSV Completo)</h5>
               <button 
                 onClick={() => {
-                  const headers = ['CLIENTE', 'INVOICE', 'INVOICE AMOUNT', 'INVOICE DATE', 'DUE DATE', 'FECHA/AÑO PAGO', '#MES', 'CONTRATO', 'OBSERVACIONES'];
-                  const sample1 = ['Hospital Metropolitano', '100601349', '$3,557.25', '6/6/2022', '6/7/2022', 'June-2022', '1', '1', ''];
-                  const sample2 = ['Dr. Figueroa', '100603796', '$2,176.00', '1/9/2022', '1/10/2022', '', '3', '1', 'Sin fecha de pago'];
+                  const headers = ['CLIENTE', 'SID', 'MODALIDAD', 'EQUIPO', 'EQUIPMENT #', 'INVOICE', 'INVOICE AMOUNT', 'MONTHS', 'INVOICE DATE', 'DUE DATE', 'FECHA/AÑO PAGO', '#MES', 'CONTRATO', 'OBSERVACIONES'];
+                  const sample1 = ['CETCUS', 'CE6XG22000', 'CT', 'REVOLUTION ACT', '1', '100601349', '$3,000.00', '12', '6/6/2022', '6/7/2022', 'June-2022', '1', '1', ''];
+                  const sample2 = ['CLIN. SAN RAFAEL', 'MR1766EC', 'MR', '1.5T SIGNA CREATOR', '2', '100601350', '$1,500.00', '29', '21/6/2022', '21/7/2022', 'June-2022', '1', '1', 'RENOVACION'];
                   const csv = "\uFEFF" + [headers.join(';'), sample1.join(';'), sample2.join(';')].join('\n');
                   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                   const url = URL.createObjectURL(blob);
@@ -5659,11 +5751,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 }}
                 className="text-[10px] font-bold text-indigo-600 hover:underline cursor-pointer"
               >
-                📥 Descargar Plantilla Ejemplo (GE)
+                📥 Descargar Plantilla CSV Ejemplo (GE)
               </button>
             </div>
             <p className="text-3xs text-slate-505 font-medium leading-relaxed">
-              Suba un CSV con cabeceras: **CLIENTE**, **INVOICE**, **INVOICE AMOUNT**, **INVOICE DATE**, **DUE DATE**, **FECHA/AÑO PAGO**, **#MES**, **CONTRATO**, **OBSERVACIONES**.
+              Soporta cabeceras de **Imagen 1** y **Imagen 2**: **CLIENTE**, **SID**, **MODALIDAD**, **EQUIPO**, **EQUIPMENT #**, **INVOICE**, **INVOICE AMOUNT**, **MONTHS**, **INVOICE DATE**, **DUE DATE**, **FECHA/AÑO PAGO**, **#MES**, **CONTRATO**, **OBSERVACIONES**.
             </p>
             <div className="flex flex-col gap-2">
               <input
@@ -5682,45 +5774,169 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
         )}
 
-        {/* KPI Cards for GE */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex items-center justify-between">
+        {/* Top KPI Cards Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Total Facturado</span>
-              <span className="text-base font-black text-indigo-700">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Total Facturado GE</span>
+              <span className="text-lg font-black text-indigo-700">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Volumen Total USD acumulado</p>
             </div>
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shadow-2xs">
               💰
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex items-center justify-between">
+          <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center justify-between">
             <div>
               <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Total Registros GE</span>
-              <span className="text-base font-black text-slate-800">{filteredGE.length} Facturas</span>
+              <span className="text-lg font-black text-slate-800">{filteredGE.length} Facturas</span>
+              <p className="text-[9px] text-slate-400 font-semibold mt-0.5">{contractsGE.length} guardadas en Firestore</p>
             </div>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm shadow-2xs">
               🧾
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex items-center justify-between">
+          <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Con Observaciones</span>
-              <span className="text-base font-black text-amber-600">{withObsCount} Pendientes</span>
+              <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Modalidad Principal</span>
+              <span className="text-lg font-black text-purple-700">{topModalities[0]?.modality || 'GE General'}</span>
+              <p className="text-[9px] text-slate-400 font-semibold mt-0.5">${(topModalities[0]?.totalAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} USD</p>
             </div>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm shadow-2xs">
+              ⚡
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center justify-between">
+            <div>
+              <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Renovaciones & Alertas</span>
+              <span className="text-lg font-black text-amber-600">{renewalAlerts.length} Pendientes</span>
+              <p className="text-[9px] text-amber-650 font-semibold mt-0.5">{withObsCount} observaciones notas</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm shadow-2xs">
               ⚠️
             </div>
           </div>
         </div>
+
+        {/* Visual Analytics Dashboard Section */}
+        {isGeDashboardExpanded && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Card 1: Top 5 Clientes por Facturación */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-indigo-600" />
+                  <span>Top Clientes por Facturación ($)</span>
+                </h5>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Top 5</span>
+              </div>
+              <div className="space-y-2.5">
+                {topClients.length === 0 ? (
+                  <p className="text-3xs text-slate-400 italic">No hay datos suficientes.</p>
+                ) : (
+                  topClients.map((client, idx) => {
+                    const pct = totalAmount > 0 ? (client.totalAmount / totalAmount) * 100 : 0;
+                    return (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between items-center text-3xs">
+                          <span className="font-extrabold text-slate-800 truncate max-w-[150px]">{client.name}</span>
+                          <span className="font-mono font-bold text-indigo-700">
+                            ${client.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ({pct.toFixed(1)}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                          <div
+                            className="bg-gradient-to-r from-indigo-500 to-indigo-600 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${Math.max(pct, 5)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Card 2: Distribución por Modalidad */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
+                  <Percent className="w-4 h-4 text-purple-600" />
+                  <span>Distribución por Modalidad</span>
+                </h5>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">{topModalities.length} Modalidades</span>
+              </div>
+              <div className="space-y-2">
+                {topModalities.length === 0 ? (
+                  <p className="text-3xs text-slate-400 italic">No hay modalidades registradas.</p>
+                ) : (
+                  topModalities.slice(0, 4).map((mod, idx) => {
+                    const pct = totalAmount > 0 ? (mod.totalAmount / totalAmount) * 100 : 0;
+                    const colors = [
+                      'bg-indigo-50 text-indigo-800 border-indigo-200',
+                      'bg-purple-50 text-purple-800 border-purple-200',
+                      'bg-emerald-50 text-emerald-800 border-emerald-200',
+                      'bg-amber-50 text-amber-800 border-amber-200'
+                    ];
+                    return (
+                      <div key={idx} className={`p-2 rounded-xl border flex items-center justify-between ${colors[idx % colors.length]}`}>
+                        <div>
+                          <span className="font-black text-xs block">{mod.modality}</span>
+                          <span className="text-[9px] opacity-80 font-semibold">{mod.count} Facturas</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-mono font-black text-xs block">
+                            ${mod.totalAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                          </span>
+                          <span className="text-[9px] font-bold opacity-80">{pct.toFixed(1)}% del Total</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Card 3: Duración de Cobertura en Meses */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
+                  <CalendarRange className="w-4 h-4 text-emerald-600" />
+                  <span>Duración Cobertura (Meses)</span>
+                </h5>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Rango Meses</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-slate-500 uppercase">1 - 6 Meses</span>
+                  <span className="text-base font-black text-slate-800">{dur1_6} Facturas</span>
+                </div>
+                <div className="bg-indigo-50 border border-indigo-150 p-2.5 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-indigo-700 uppercase">7 - 12 Meses</span>
+                  <span className="text-base font-black text-indigo-900">{dur7_12} Facturas</span>
+                </div>
+                <div className="bg-purple-50 border border-purple-150 p-2.5 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-purple-700 uppercase">13 - 24 Meses</span>
+                  <span className="text-base font-black text-purple-900">{dur13_24} Facturas</span>
+                </div>
+                <div className="bg-amber-50 border border-amber-150 p-2.5 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-amber-700 uppercase">&gt; 24 Meses</span>
+                  <span className="text-base font-black text-amber-900">{dur25Plus} Facturas</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filter and Search GE */}
         <div className="flex items-center gap-3">
           <div className="relative flex-1 max-w-md">
             <input
               type="text"
-              placeholder="Buscar por cliente, invoice, contrato, periodo, observaciones..."
+              placeholder="Buscar por cliente, SID, modalidad, equipo, invoice, periodo, observaciones..."
               value={contractGeSearch}
               onChange={(e) => {
                 setContractGeSearch(e.target.value);
@@ -5733,96 +5949,133 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           <span className="text-3xs text-slate-400 font-bold uppercase tracking-wider">{filteredGE.length} Registros GE encontrados</span>
         </div>
 
-        {/* Table for Contratos con GE matching Image 2 */}
+        {/* Combined Table for Contratos con GE matching Image 1 & Image 2 */}
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
           <table className="w-full text-left border-collapse text-[11px] font-sans">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-655 font-extrabold uppercase text-[9px] tracking-wider">
                 <th className="p-3">CLIENTE:</th>
+                <th className="p-3">SID / MODALIDAD</th>
+                <th className="p-3">EQUIPO</th>
                 <th className="p-3">INVOICE:</th>
                 <th className="p-3 text-right">INVOICE AMOUNT</th>
-                <th className="p-3">INVOICE DATE</th>
-                <th className="p-3">DUE DATE</th>
-                <th className="p-3">FECHA/AÑO PAGO</th>
-                <th className="p-3 text-center">#MES</th>
+                <th className="p-3 text-center">MONTHS</th>
+                <th className="p-3">FECHA FACTURA</th>
+                <th className="p-3">PERIODO / #MES</th>
                 <th className="p-3 text-center">CONTRATO</th>
-                <th className="p-3">OBSERVACIONES:</th>
+                <th className="p-3">OBSERVACIONES / COMMENTS</th>
                 <th className="p-3 text-right no-print">ACCIONES</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-750 font-medium">
               {paginatedGE.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center p-8 text-slate-400 font-semibold italic">
+                  <td colSpan={11} className="text-center p-8 text-slate-400 font-semibold italic">
                     No se encontraron registros de Contratos con GE. Haga clic en "Importar CSV GE" para cargar sus facturas.
                   </td>
                 </tr>
               ) : (
-                paginatedGE.map((item, idx) => (
-                  <tr key={item.id || idx} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3 font-extrabold text-slate-900">{item.cliente}</td>
-                    <td className="p-3 font-mono font-bold text-indigo-700">{item.invoice}</td>
-                    <td className="p-3 font-mono font-bold text-right text-emerald-700">
-                      ${(item.invoiceAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="p-3 font-mono text-slate-600">{item.invoiceDate || '—'}</td>
-                    <td className="p-3 font-mono text-slate-600">{item.dueDate || '—'}</td>
-                    <td className="p-3 font-semibold text-slate-700">{item.paymentPeriod || '—'}</td>
-                    <td className="p-3 text-center">
-                      <span className="bg-slate-100 text-slate-700 font-mono font-bold text-[9px] px-2 py-0.5 rounded border border-slate-200">
-                        {item.monthNum || '1'}
-                      </span>
-                    </td>
-                    <td className="p-3 text-center">
-                      <span className="bg-indigo-50 text-indigo-800 font-mono font-bold text-[9px] px-2 py-0.5 rounded border border-indigo-100">
-                        {item.contractNum || '1'}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      {item.observaciones ? (
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded border bg-amber-50 text-amber-800 border-amber-200 inline-block">
-                          {item.observaciones}
+                paginatedGE.map((item, idx) => {
+                  const isRenewal = (item.observaciones || '').toUpperCase().includes('RENOVACION') || (item.observaciones || '').toUpperCase().includes('RENOVACIÓN');
+                  return (
+                    <tr key={item.id || idx} className={`hover:bg-slate-50/80 transition-colors ${isRenewal ? 'bg-amber-50/40' : ''}`}>
+                      <td className="p-3 font-extrabold text-slate-900">{item.cliente}</td>
+                      <td className="p-3">
+                        <div className="space-y-0.5">
+                          {item.sid && <span className="font-mono text-[9px] font-bold text-slate-600 block">{item.sid}</span>}
+                          {item.modalidad && (
+                            <span className="bg-indigo-50 text-indigo-700 text-[8px] font-black px-1.5 py-0.2 rounded border border-indigo-100 uppercase">
+                              {item.modalidad}
+                            </span>
+                          )}
+                          {!item.sid && !item.modalidad && <span className="text-slate-400 text-[10px]">—</span>}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <span className="font-bold text-slate-800">{item.equipo || '—'}</span>
+                        {item.equipmentNum && <span className="text-[9px] text-slate-500 font-medium block">Cuota #{item.equipmentNum}</span>}
+                      </td>
+                      <td className="p-3 font-mono font-bold text-indigo-700">{item.invoice}</td>
+                      <td className="p-3 font-mono font-bold text-right text-emerald-700">
+                        ${(item.invoiceAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="p-3 text-center">
+                        {item.months ? (
+                          <span className="bg-amber-100 text-amber-900 font-mono font-black text-[9px] px-2 py-0.5 rounded border border-amber-200">
+                            {item.months} mes{parseInt(String(item.months)) !== 1 ? 'es' : ''}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-[10px]">—</span>
+                        )}
+                      </td>
+                      <td className="p-3 font-mono text-slate-600">
+                        <div>{item.invoiceDate || '—'}</div>
+                        {item.dueDate && <div className="text-[9px] text-slate-400">Venc: {item.dueDate}</div>}
+                      </td>
+                      <td className="p-3">
+                        <span className="font-semibold text-slate-700 block">{item.paymentPeriod || '—'}</span>
+                        {item.monthNum && <span className="text-[9px] text-slate-400 font-mono">#Mes: {item.monthNum}</span>}
+                      </td>
+                      <td className="p-3 text-center">
+                        <span className="bg-indigo-50 text-indigo-800 font-mono font-bold text-[9px] px-2 py-0.5 rounded border border-indigo-100">
+                          {item.contractNum || '1'}
                         </span>
-                      ) : (
-                        <span className="text-slate-400 text-[10px]">—</span>
-                      )}
-                    </td>
-                    <td className="p-3 text-right no-print">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => {
-                            setEditingContractGe(item);
-                            setGeFormCliente(item.cliente);
-                            setGeFormInvoice(item.invoice);
-                            setGeFormAmount(String(item.invoiceAmount || ''));
-                            setGeFormInvoiceDate(item.invoiceDate || '');
-                            setGeFormDueDate(item.dueDate || '');
-                            setGeFormPaymentPeriod(item.paymentPeriod || '');
-                            setGeFormMonthNum(String(item.monthNum || '1'));
-                            setGeFormContractNum(String(item.contractNum || '1'));
-                            setGeFormObs(item.observaciones || '');
-                            setIsContractGeModalOpen(true);
-                          }}
-                          className="text-indigo-600 hover:text-indigo-900 font-bold px-2 py-1 rounded hover:bg-indigo-50 transition-colors text-3xs"
-                        >
-                          Editar
-                        </button>
-                        {userRole === 'admin' && onDeleteContractGE && (
+                      </td>
+                      <td className="p-3">
+                        {item.observaciones ? (
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border inline-block ${
+                            isRenewal 
+                              ? 'bg-amber-50 text-amber-900 border-amber-300 animate-pulse' 
+                              : 'bg-slate-100 text-slate-700 border-slate-200'
+                          }`}>
+                            {item.observaciones}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-[10px]">—</span>
+                        )}
+                      </td>
+                      <td className="p-3 text-right no-print">
+                        <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => {
-                              if (window.confirm(`¿Desea eliminar la factura GE ${item.invoice}?`)) {
-                                onDeleteContractGE(item.id);
-                              }
+                              setEditingContractGe(item);
+                              setGeFormCliente(item.cliente);
+                              setGeFormSid(item.sid || '');
+                              setGeFormModalidad(item.modalidad || '');
+                              setGeFormEquipo(item.equipo || '');
+                              setGeFormEquipmentNum(String(item.equipmentNum || ''));
+                              setGeFormInvoice(item.invoice);
+                              setGeFormAmount(String(item.invoiceAmount || ''));
+                              setGeFormMonths(String(item.months || ''));
+                              setGeFormInvoiceDate(item.invoiceDate || '');
+                              setGeFormDueDate(item.dueDate || '');
+                              setGeFormPaymentPeriod(item.paymentPeriod || '');
+                              setGeFormMonthNum(String(item.monthNum || '1'));
+                              setGeFormContractNum(String(item.contractNum || '1'));
+                              setGeFormObs(item.observaciones || '');
+                              setIsContractGeModalOpen(true);
                             }}
-                            className="text-rose-600 hover:text-rose-900 font-bold px-1.5 py-1 rounded hover:bg-rose-50 transition-colors text-3xs"
+                            className="text-indigo-600 hover:text-indigo-900 font-bold px-2 py-1 rounded hover:bg-indigo-50 transition-colors text-3xs"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            Editar
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {userRole === 'admin' && onDeleteContractGE && (
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`¿Desea eliminar la factura GE ${item.invoice}?`)) {
+                                  onDeleteContractGE(item.id);
+                                }
+                              }}
+                              className="text-rose-600 hover:text-rose-900 font-bold px-1.5 py-1 rounded hover:bg-rose-50 transition-colors text-3xs"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -13987,8 +14240,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 const geItem: ContractGE = {
                   id: editingContractGe ? editingContractGe.id : `GE-${geFormInvoice}-${Date.now()}`,
                   cliente: geFormCliente,
+                  sid: geFormSid,
+                  modalidad: geFormModalidad,
+                  equipo: geFormEquipo,
+                  equipmentNum: geFormEquipmentNum,
                   invoice: geFormInvoice,
                   invoiceAmount: parsedAmount,
+                  months: geFormMonths,
                   invoiceDate: geFormInvoiceDate,
                   dueDate: geFormDueDate,
                   paymentPeriod: geFormPaymentPeriod,
@@ -14021,7 +14279,53 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">SID (SYSTEM ID)</label>
+                  <input
+                    type="text"
+                    placeholder="ej: CE6XG22000"
+                    value={geFormSid}
+                    onChange={e => setGeFormSid(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">MODALIDAD</label>
+                  <input
+                    type="text"
+                    placeholder="ej: CT, MR, SURGERY"
+                    value={geFormModalidad}
+                    onChange={e => setGeFormModalidad(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-bold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">EQUIPMENT #</label>
+                  <input
+                    type="text"
+                    placeholder="ej: 1"
+                    value={geFormEquipmentNum}
+                    onChange={e => setGeFormEquipmentNum(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block font-bold text-slate-700">EQUIPO (MODELO)</label>
+                <input
+                  type="text"
+                  placeholder="ej: REVOLUTION ACT, 1.5T SIGNA CREATOR"
+                  value={geFormEquipo}
+                  onChange={e => setGeFormEquipo(e.target.value)}
+                  className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="block font-bold text-slate-700">INVOICE (FACTURA) *</label>
                   <input
@@ -14041,6 +14345,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     placeholder="ej: 3557.25"
                     value={geFormAmount}
                     onChange={e => setGeFormAmount(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">MONTHS (MESES)</label>
+                  <input
+                    type="text"
+                    placeholder="ej: 12"
+                    value={geFormMonths}
+                    onChange={e => setGeFormMonths(e.target.value)}
                     className="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold"
                   />
                 </div>
@@ -14106,10 +14421,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </div>
 
               <div className="space-y-1">
-                <label className="block font-bold text-slate-700">OBSERVACIONES</label>
+                <label className="block font-bold text-slate-700">OBSERVACIONES / COMMENTS</label>
                 <input
                   type="text"
-                  placeholder="ej: Sin fecha de pago"
+                  placeholder="ej: RENOVACION o Sin fecha de pago"
                   value={geFormObs}
                   onChange={e => setGeFormObs(e.target.value)}
                   className="w-full p-2 border border-slate-200 rounded-lg font-semibold"

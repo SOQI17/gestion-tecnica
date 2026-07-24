@@ -219,13 +219,18 @@ export interface ScheduledTraining {
 export interface ContractGE {
   id: string;
   cliente: string;
+  sid?: string;              // SID (System ID / Serial ID: ej. CE6XG22000)
+  modalidad?: string;        // MODALIDAD (ej: CT, MR, SURGERY)
+  equipo?: string;           // EQUIPO (ej: REVOLUTION ACT, 1.5T SIGNA CREATOR)
+  equipmentNum?: number | string; // EQUIPMENT # / Cuota equipo
   invoice: string;           // INVOICE (Nº Factura)
   invoiceAmount: number;     // INVOICE AMOUNT (Monto en USD)
-  invoiceDate: string;       // INVOICE DATE
+  months?: number | string;  // MONTHS (Duración en meses)
+  invoiceDate: string;       // INVOICE DATE / CONTRACT DATE
   dueDate: string;           // DUE DATE
   paymentPeriod?: string;    // FECHA/AÑO PAGO (ej: June-2022)
   monthNum?: number | string; // #MES
   contractNum?: string;      // CONTRATO
-  observaciones?: string;    // OBSERVACIONES
+  observaciones?: string;    // OBSERVACIONES / COMMENTS (ej: RENOVACION)
   createdAt?: string;
 }
