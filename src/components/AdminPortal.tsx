@@ -5641,8 +5641,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
   const renderGeSubView = () => {
     const query = contractGeSearch.toLowerCase().trim();
-    const filteredGE = contractsGE.filter(c => 
-      c.cliente.toLowerCase().includes(query) ||
+    const filteredGE = contractsGE.filter(c => {
+      let name = (c.cliente || 'Desconocido').trim();
+      name = name.replace(/\uFFFD/g, 'í').replace(/Mara/g, 'María').trim();
+      return name.toLowerCase().includes(query) ||
       (c.sid || '').toLowerCase().includes(query) ||
       (c.modalidad || '').toLowerCase().includes(query) ||
       (c.equipo || '').toLowerCase().includes(query) ||
@@ -5650,24 +5652,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       (c.contractNum || '').toLowerCase().includes(query) ||
       (c.paymentPeriod || '').toLowerCase().includes(query) ||
       (c.observaciones || '').toLowerCase().includes(query)
-    );
+    });
 
     const totalAmount = filteredGE.reduce((sum, item) => sum + (item.invoiceAmount || 0), 0);
     const withObsCount = filteredGE.filter(item => item.observaciones && item.observaciones.trim().length > 0).length;
 
-    // Analytics: Top Clients
+    // Analytics: Top Clients by Number of Invoices
     const clientStatsMap = new Map<string, { totalAmount: number; count: number }>();
     contractsGE.forEach(c => {
-      const name = c.cliente || 'Desconocido';
+      let name = (c.cliente || 'Desconocido').trim();
+      name = name.replace(/\uFFFD/g, 'í').replace(/Mara/g, 'María').trim();
+
       const current = clientStatsMap.get(name) || { totalAmount: 0, count: 0 };
       clientStatsMap.set(name, {
         totalAmount: current.totalAmount + (c.invoiceAmount || 0),
         count: current.count + 1
       });
     });
-    const topClients = Array.from(clientStatsMap.entries())
+    const topClientsByCount = Array.from(clientStatsMap.entries())
       .map(([name, stat]) => ({ name, ...stat }))
-      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .sort((a, b) => b.count - a.count || b.totalAmount - a.totalAmount)
       .slice(0, 5);
 
     // Analytics: Modalidad breakdown
@@ -5897,12 +5901,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
           <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Modalidad Principal</span>
-              <span className="text-lg font-black text-purple-700">{topModalities[0]?.modality || 'GE General'}</span>
-              <p className="text-[9px] text-slate-400 font-semibold mt-0.5">${(topModalities[0]?.totalAmount || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} USD</p>
+              <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Cliente con Más Facturas</span>
+              <span className="text-sm font-black text-indigo-700 truncate max-w-[140px] block">{topClientsByCount[0]?.name || 'N/A'}</span>
+              <p className="text-[9px] text-indigo-600 font-bold mt-0.5">{topClientsByCount[0]?.count || 0} Facturas registradas</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm shadow-2xs">
-              ⚡
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shadow-2xs">
+              🏆
             </div>
           </div>
 
@@ -5921,28 +5925,36 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         {/* Visual Analytics Dashboard Section */}
         {isGeDashboardExpanded && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Card 1: Top 5 Clientes por Facturación */}
+            {/* Card 1: Top 5 Clientes por Cantidad de Facturas */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
               <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                 <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-indigo-600" />
-                  <span>Top Clientes por Facturación ($)</span>
+                  <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
+                  <span>Clientes con Más Facturas (N° Facturas)</span>
                 </h5>
                 <span className="text-[9px] font-bold text-slate-400 uppercase">Top 5</span>
               </div>
               <div className="space-y-2.5">
-                {topClients.length === 0 ? (
+                {topClientsByCount.length === 0 ? (
                   <p className="text-3xs text-slate-400 italic">No hay datos suficientes.</p>
                 ) : (
-                  topClients.map((client, idx) => {
-                    const pct = totalAmount > 0 ? (client.totalAmount / totalAmount) * 100 : 0;
+                  topClientsByCount.map((client, idx) => {
+                    const pct = filteredGE.length > 0 ? (client.count / filteredGE.length) * 100 : 0;
                     return (
                       <div key={idx} className="space-y-1">
                         <div className="flex justify-between items-center text-3xs">
-                          <span className="font-extrabold text-slate-800 truncate max-w-[150px]">{client.name}</span>
-                          <span className="font-mono font-bold text-indigo-700">
-                            ${client.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ({pct.toFixed(1)}%)
-                          </span>
+                          <div className="truncate max-w-[170px]">
+                            <span className="font-extrabold text-slate-900 block truncate">{client.name}</span>
+                            <span className="text-[9px] text-slate-400 font-semibold font-mono">${client.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="font-mono font-black text-indigo-700 block text-xs">
+                              {client.count} factura{client.count !== 1 ? 's' : ''}
+                            </span>
+                            <span className="text-[9px] font-bold text-indigo-500">
+                              {pct.toFixed(1)}% del total
+                            </span>
+                          </div>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
                           <div
