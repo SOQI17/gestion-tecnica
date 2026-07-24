@@ -325,6 +325,70 @@ const checkTimeOverlap = (timeStr1: string, timeStr2: string): boolean => {
   return start1 < end2 && start2 < end1;
 };
 
+const getContractExpirationAlert = (endDateStr: string, status?: string) => {
+  if (!endDateStr) return null;
+  if (status === 'Vencido' || status === 'Cancelado') {
+    return {
+      level: 'expired',
+      days: 0,
+      text: '🔴 Vencido',
+      badgeText: 'VENCIDO',
+      colorClass: 'bg-red-100 text-red-800 border-red-200 font-bold'
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const parts = endDateStr.split('-');
+  if (parts.length < 3) return null;
+  const endDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  endDate.setHours(0, 0, 0, 0);
+
+  const diffTime = endDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return {
+      level: 'expired',
+      days: Math.abs(diffDays),
+      text: `🔴 Vencido hace ${Math.abs(diffDays)}d`,
+      badgeText: `VENCIDO (${Math.abs(diffDays)}d)`,
+      colorClass: 'bg-red-100 text-red-800 border-red-300 font-extrabold'
+    };
+  }
+
+  if (diffDays <= 30) {
+    // 🚨 1 Month Alert (<= 30 days)
+    return {
+      level: 'urgent_1m',
+      days: diffDays,
+      text: `🚨 Vence en ${diffDays} días (1 mes)`,
+      badgeText: `🚨 1 MES (${diffDays}d)`,
+      colorClass: 'bg-red-50 text-red-850 border-red-300 font-black animate-pulse'
+    };
+  }
+
+  if (diffDays <= 90) {
+    // ⚠️ 3 Months Alert (31 to 90 days)
+    return {
+      level: 'warning_3m',
+      days: diffDays,
+      text: `⚠️ Vence en ${diffDays} días (3 meses)`,
+      badgeText: `⚠️ 3 MESES (${diffDays}d)`,
+      colorClass: 'bg-amber-50 text-amber-900 border-amber-300 font-extrabold'
+    };
+  }
+
+  return {
+    level: 'ok',
+    days: diffDays,
+    text: `Vigente (${diffDays}d restantes)`,
+    badgeText: 'VIGENTE',
+    colorClass: 'bg-emerald-50 text-emerald-800 border-emerald-200 font-bold'
+  };
+};
+
 const getEngineerEmoji = (engineerId: string): string => {
   const emojis: Record<string, string> = {
     'ENG-001': '🔴',
@@ -645,6 +709,7 @@ export default function AdminPortal({
   // Contratos Tab states
   const [contractSearch, setContractSearch] = useState('');
   const [contractPage, setContractPage] = useState(1);
+  const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | null>(null);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isContractImporterOpen, setIsContractImporterOpen] = useState(false);
   const [contractCsvError, setContractCsvError] = useState<string | null>(null);
@@ -5383,12 +5448,23 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     const query = contractSearch.toLowerCase().trim();
     const filtered = contracts.filter(con => {
       const client = clients.find(c => c.id === con.clientId);
-      return (
+      const matchesQuery = (
         con.id.toLowerCase().includes(query) ||
         con.type.toLowerCase().includes(query) ||
         (con.coverage || '').toLowerCase().includes(query) ||
         (client?.name || '').toLowerCase().includes(query)
       );
+
+      if (!matchesQuery) return false;
+
+      if (contractFilterExpiration) {
+        const expAlert = getContractExpirationAlert(con.endDate, con.status);
+        if (contractFilterExpiration === '1m' && expAlert?.level !== 'urgent_1m') return false;
+        if (contractFilterExpiration === '3m' && expAlert?.level !== 'warning_3m') return false;
+        if (contractFilterExpiration === 'expired' && expAlert?.level !== 'expired') return false;
+      }
+
+      return true;
     });
 
     const itemsPerPage = 10;
@@ -5498,6 +5574,104 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
         )}
 
+        {/* Expiration Alert Summary Cards */}
+        {(() => {
+          const urgent1m = contracts.filter(c => {
+            const alert = getContractExpirationAlert(c.endDate, c.status);
+            return alert?.level === 'urgent_1m';
+          });
+          const warning3m = contracts.filter(c => {
+            const alert = getContractExpirationAlert(c.endDate, c.status);
+            return alert?.level === 'warning_3m';
+          });
+          const expiredCount = contracts.filter(c => {
+            const alert = getContractExpirationAlert(c.endDate, c.status);
+            return alert?.level === 'expired';
+          });
+
+          return (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* 1 Month Alert Card */}
+              <div 
+                onClick={() => {
+                  setContractFilterExpiration(contractFilterExpiration === '1m' ? null : '1m');
+                  setContractPage(1);
+                }}
+                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
+                  contractFilterExpiration === '1m'
+                    ? 'bg-red-600 text-white border-red-700 ring-2 ring-red-400'
+                    : 'bg-red-50 hover:bg-red-100 text-red-950 border-red-200'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center font-black text-xs shrink-0 animate-pulse">
+                    🚨
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer en 1 Mes</span>
+                    <span className="text-sm font-black leading-tight">{urgent1m.length} Contratos</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold underline">
+                  {contractFilterExpiration === '1m' ? '✓ Viendo' : 'Filtrar'}
+                </span>
+              </div>
+
+              {/* 3 Months Alert Card */}
+              <div 
+                onClick={() => {
+                  setContractFilterExpiration(contractFilterExpiration === '3m' ? null : '3m');
+                  setContractPage(1);
+                }}
+                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
+                  contractFilterExpiration === '3m'
+                    ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-400'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-200'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-black text-xs shrink-0">
+                    ⚠️
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer en 3 Meses</span>
+                    <span className="text-sm font-black leading-tight">{warning3m.length} Contratos</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold underline">
+                  {contractFilterExpiration === '3m' ? '✓ Viendo' : 'Filtrar'}
+                </span>
+              </div>
+
+              {/* Expired / All Reset Card */}
+              <div 
+                onClick={() => {
+                  setContractFilterExpiration(contractFilterExpiration === 'expired' ? null : 'expired');
+                  setContractPage(1);
+                }}
+                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
+                  contractFilterExpiration === 'expired'
+                    ? 'bg-slate-800 text-white border-slate-900 ring-2 ring-slate-400'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-black text-xs shrink-0">
+                    ⌛
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-extrabold uppercase tracking-wide opacity-90">Vencidos / Total</span>
+                    <span className="text-sm font-black leading-tight">{expiredCount.length} Vencidos ({contracts.length} Total)</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold underline">
+                  {contractFilterExpiration === 'expired' ? '✓ Viendo' : contractFilterExpiration ? 'Ver Todos' : 'Filtrar'}
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Filter and Search */}
         <div className="flex items-center gap-3">
           <div className="relative flex-1 max-w-md">
@@ -5541,6 +5715,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               ) : (
                 paginated.map(con => {
                   const client = clients.find(c => c.id === con.clientId);
+                  const expAlert = getContractExpirationAlert(con.endDate, con.status);
+
+                  let rowBg = 'hover:bg-indigo-50/20';
+                  if (expAlert?.level === 'urgent_1m') rowBg = 'bg-red-50/40 hover:bg-red-50/60 border-l-4 border-l-red-500';
+                  else if (expAlert?.level === 'warning_3m') rowBg = 'bg-amber-50/30 hover:bg-amber-50/50 border-l-4 border-l-amber-500';
+                  else if (expAlert?.level === 'expired') rowBg = 'bg-red-50/20 hover:bg-red-50/40 opacity-75';
+
                   return (
                     <tr 
                       key={con.id} 
@@ -5548,23 +5729,42 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         setSelectedContractForDetails(con);
                         setIsContractDetailsModalOpen(true);
                       }}
-                      className="hover:bg-indigo-50/20 transition-colors cursor-pointer"
+                      className={`transition-colors cursor-pointer ${rowBg}`}
                     >
                       <td className="p-3.5 font-mono font-bold text-slate-900">{con.id}</td>
                       <td className="p-3.5 font-extrabold text-slate-900">{client?.name || `ID: ${con.clientId}`}</td>
                       <td className="p-3.5 font-bold text-indigo-700">{con.type}</td>
                       <td className="p-3.5 font-mono">{con.startDate}</td>
-                      <td className="p-3.5 font-mono font-bold text-slate-700">{con.endDate}</td>
+                      <td className="p-3.5 font-mono font-bold">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-slate-800">{con.endDate}</span>
+                          {expAlert && expAlert.level !== 'ok' && (
+                            <span className={`text-[8px] px-1.5 py-0.5 rounded border inline-flex items-center gap-1 w-max ${expAlert.colorClass}`}>
+                              {expAlert.badgeText}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-3.5">
-                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider ${
-                          con.status === 'Activo' 
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                            : con.status === 'Pendiente'
-                            ? 'bg-amber-50 text-amber-800 border-amber-200'
-                            : 'bg-red-50 text-red-800 border-red-200'
-                        }`}>
-                          {con.status}
-                        </span>
+                        {expAlert && expAlert.level === 'urgent_1m' ? (
+                          <span className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-red-100 text-red-900 border-red-300 animate-pulse">
+                            🚨 1 Mes (Por Vencer)
+                          </span>
+                        ) : expAlert && expAlert.level === 'warning_3m' ? (
+                          <span className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-amber-100 text-amber-900 border-amber-300">
+                            ⚠️ 3 Meses (Por Vencer)
+                          </span>
+                        ) : (
+                          <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider ${
+                            con.status === 'Activo' 
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                              : con.status === 'Pendiente'
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : 'bg-red-50 text-red-800 border-red-200'
+                          }`}>
+                            {con.status}
+                          </span>
+                        )}
                       </td>
                       <td className="p-3.5 max-w-[200px]" title={con.coverage}>
                         <div className="space-y-1">
@@ -12984,6 +13184,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
 
             <div className="space-y-4 text-xs">
+              {/* Expiration Alert Box */}
+              {(() => {
+                const exp = getContractExpirationAlert(selectedContractForDetails.endDate, selectedContractForDetails.status);
+                if (!exp || exp.level === 'ok') return null;
+                return (
+                  <div className={`p-2.5 rounded-lg border text-xs font-bold flex items-center justify-between gap-2 ${exp.colorClass}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{exp.level === 'urgent_1m' ? '🚨' : exp.level === 'warning_3m' ? '⚠️' : '🔴'}</span>
+                      <span>Alerta de Vencimiento: Este contrato {exp.text}</span>
+                    </div>
+                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/70 font-black">
+                      {exp.badgeText}
+                    </span>
+                  </div>
+                );
+              })()}
               {/* Header Contract Info card */}
               <div className="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
                 <div>
