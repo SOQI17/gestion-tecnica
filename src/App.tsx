@@ -63,78 +63,65 @@ export default function App() {
     setAuthLoading(true);
     const unsubAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        const targetEmail = firebaseUser.email?.trim().toLowerCase() || '';
+        const matchedEng = engineers.find(eng => eng.email.trim().toLowerCase() === targetEmail) || 
+                           masterEngineers.find(eng => eng.email.trim().toLowerCase() === targetEmail);
+        
+        let expectedRole: 'admin' | 'engineer' | 'sales' = 'sales';
+        let expectedEngId: string | undefined;
+
+        if (targetEmail === 'alexis.guerra@orimec.com.ec') {
+          expectedRole = 'admin';
+        } else if (matchedEng) {
+          expectedRole = 'engineer';
+          expectedEngId = matchedEng.id;
+        } else {
+          expectedRole = 'sales';
+        }
+
         try {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data() as AppUser;
-            setCurrentUser(userData);
-            if (userData.role === 'engineer') {
-              setActiveTab('engineer');
-            } else if (userData.role === 'sales') {
-              setActiveTab('sales');
+            // Overwrite if old Firestore role mismatched expected role (e.g. sales user saved previously as engineer)
+            if (userData.role !== expectedRole) {
+              const updatedProfile: AppUser = {
+                uid: firebaseUser.uid,
+                email: targetEmail,
+                role: expectedRole,
+                ...(expectedEngId ? { engineerId: expectedEngId } : {})
+              };
+              await setDoc(doc(db, 'users', firebaseUser.uid), updatedProfile);
+              setCurrentUser(updatedProfile);
+              setActiveTab(expectedRole);
             } else {
-              setActiveTab('admin');
+              setCurrentUser(userData);
+              setActiveTab(userData.role);
             }
           } else {
             // Auto-crear perfil en Firestore si es nuevo
-            let role: 'admin' | 'engineer' | 'sales' = 'engineer';
-            let engineerId: string | undefined;
-
-            const targetEmail = firebaseUser.email?.trim().toLowerCase() || '';
-            if (targetEmail === 'alexis.guerra@orimec.com.ec') {
-              role = 'admin';
-            } else if (targetEmail.includes('vendedor') || targetEmail.includes('ventas') || targetEmail.includes('comercial')) {
-              role = 'sales';
-            } else {
-              const matchedEng = engineers.find(eng => eng.email.trim().toLowerCase() === targetEmail) || 
-                                 masterEngineers.find(eng => eng.email.trim().toLowerCase() === targetEmail);
-              if (matchedEng) {
-                role = 'engineer';
-                engineerId = matchedEng.id;
-              } else {
-                role = 'sales';
-              }
-            }
-
             const newProfile: AppUser = {
               uid: firebaseUser.uid,
               email: targetEmail,
-              role,
-              ...(role === 'engineer' && { engineerId })
+              role: expectedRole,
+              ...(expectedEngId ? { engineerId: expectedEngId } : {})
             };
 
             await setDoc(doc(db, 'users', firebaseUser.uid), newProfile);
             setCurrentUser(newProfile);
-            if (role === 'engineer') {
-              setActiveTab('engineer');
-            } else if (role === 'sales') {
-              setActiveTab('sales');
-            } else {
-              setActiveTab('admin');
-            }
+            setActiveTab(expectedRole);
           }
           setDbError(null);
         } catch (e: any) {
           console.error("Error al leer perfil de usuario:", e);
-          const targetEmail = firebaseUser.email?.trim().toLowerCase() || '';
-          let role: 'admin' | 'engineer' = 'engineer';
-          let engineerId: string | undefined;
-          if (targetEmail === 'alexis.guerra@orimec.com.ec') role = 'admin';
-          else {
-            const matchedEng = masterEngineers.find(eng => eng.email.trim().toLowerCase() === targetEmail);
-            if (matchedEng) {
-              role = 'engineer';
-              engineerId = matchedEng.id;
-            }
-          }
-          setCurrentUser({
+          const fallbackProfile: AppUser = {
             uid: firebaseUser.uid,
             email: targetEmail,
-            role,
-            engineerId
-          });
-          if (role === 'engineer') setActiveTab('engineer');
-          else setActiveTab('admin');
+            role: expectedRole,
+            ...(expectedEngId ? { engineerId: expectedEngId } : {})
+          };
+          setCurrentUser(fallbackProfile);
+          setActiveTab(expectedRole);
         }
       } else {
         setCurrentUser(null);
@@ -912,19 +899,20 @@ export default function App() {
             </button>
           </div>
 
-          {currentUser.role === 'admin' && (
+          {/* Navigation Switcher Capsule: ONLY ADMIN or DEMO MODE CAN SWITCH PORTALS */}
+          {(currentUser.role === 'admin' || isDemoMode) ? (
             <>
-              {/* Discrete clear DB button */}
-              <button
-                onClick={handleClearAllData}
-                className="text-slate-400 hover:text-rose-600 text-[9px] font-bold px-2 py-1 rounded-md hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all cursor-pointer flex items-center gap-1"
-                title="Restablecer base de datos maestra"
-              >
-                <Trash2 className="w-3 h-3 text-rose-500" />
-                <span className="hidden sm:inline">Restablecer BD</span>
-              </button>
+              {currentUser.role === 'admin' && (
+                <button
+                  onClick={handleClearAllData}
+                  className="text-slate-400 hover:text-rose-600 text-[9px] font-bold px-2 py-1 rounded-md hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all cursor-pointer flex items-center gap-1"
+                  title="Restablecer base de datos maestra"
+                >
+                  <Trash2 className="w-3 h-3 text-rose-500" />
+                  <span className="hidden sm:inline">Restablecer BD</span>
+                </button>
+              )}
 
-              {/* Navigation Switcher Capsule */}
               <nav className="flex bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/60" id="nav-container-tabs">
                 {[
                   { id: 'admin', label: 'Administrador', icon: CalendarDays },
@@ -951,6 +939,20 @@ export default function App() {
                 })}
               </nav>
             </>
+          ) : (
+            <div className="bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10px] font-extrabold px-3 py-1 rounded-lg flex items-center gap-1.5 uppercase tracking-wider">
+              {currentUser.role === 'sales' ? (
+                <>
+                  <Briefcase className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Portal Vendedor</span>
+                </>
+              ) : (
+                <>
+                  <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Portal Ingeniero</span>
+                </>
+              )}
+            </div>
           )}
         </div>
       </header>

@@ -52,18 +52,15 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
     }
 
     // Role detection by email
-    let role: 'admin' | 'engineer' | 'sales' = 'engineer';
-    let matchedEngineer: Engineer | undefined;
+    const matchedEngineer = engineers.find(eng => cleanEmail(eng.email) === targetEmail);
+    let role: 'admin' | 'engineer' | 'sales' = 'sales';
 
     if (targetEmail === 'alexis.guerra@orimec.com.ec') {
       role = 'admin';
-    } else if (targetEmail.includes('vendedor') || targetEmail.includes('ventas') || targetEmail.includes('comercial')) {
-      role = 'sales';
+    } else if (matchedEngineer) {
+      role = 'engineer';
     } else {
-      matchedEngineer = engineers.find(eng => cleanEmail(eng.email) === targetEmail);
-      if (!matchedEngineer) {
-        role = 'sales';
-      }
+      role = 'sales';
     }
 
     try {
@@ -90,7 +87,19 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
         // Fetch profile
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
-          onLoginSuccess(userDoc.data() as AppUser, false);
+          const fetchedProfile = userDoc.data() as AppUser;
+          if (fetchedProfile.role !== role) {
+            const correctedProfile: AppUser = {
+              uid: firebaseUser.uid,
+              email: targetEmail,
+              role,
+              ...(role === 'engineer' && { engineerId: matchedEngineer?.id })
+            };
+            await setDoc(doc(db, 'users', firebaseUser.uid), correctedProfile);
+            onLoginSuccess(correctedProfile, false);
+          } else {
+            onLoginSuccess(fetchedProfile, false);
+          }
         } else {
           // If auth worked but firestore profile doesn't exist, create it dynamically
           const userProfile: AppUser = {
