@@ -14520,6 +14520,67 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </>
               )}
 
+              {/* Sección de Selección Rápida de Montos Históricos para Cliente Existente */}
+              {geFormMode === 'existing' && geFormCliente && (
+                (() => {
+                  const amountsMap = new Map<number, { count: number; maxMonth: number }>();
+                  contractsGE.forEach(c => {
+                    if (c.cliente && c.cliente.trim().toLowerCase() === geFormCliente.trim().toLowerCase()) {
+                      const amt = c.invoiceAmount || 0;
+                      if (amt > 0) {
+                        const existing = amountsMap.get(amt) || { count: 0, maxMonth: 0 };
+                        const m = parseInt(String(c.monthNum || 0), 10) || 0;
+                        amountsMap.set(amt, {
+                          count: existing.count + 1,
+                          maxMonth: Math.max(existing.maxMonth, m)
+                        });
+                      }
+                    }
+                  });
+
+                  const prevAmounts = Array.from(amountsMap.entries()).map(([amount, info]) => ({ amount, ...info }));
+
+                  if (prevAmounts.length === 0) return null;
+
+                  return (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                          💵 Historial de Montos ($) para {geFormCliente}:
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-bold">Clic para seleccionar</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {prevAmounts.map((item, idx) => {
+                          const isSelected = parseFloat(geFormAmount.replace(/[\$\,\s]/g, '')) === item.amount;
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                setGeFormAmount(String(item.amount));
+                                const nextM = autoCalculateGeNextMonth(geFormCliente);
+                                setGeFormMonthNum(nextM);
+                              }}
+                              className={`text-2xs font-mono font-black px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
+                                isSelected
+                                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                                  : 'bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200 hover:border-emerald-300'
+                              }`}
+                            >
+                              <span>${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                              <span className={`text-[9px] font-sans font-bold px-1 rounded ${isSelected ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+                                {item.count} factura{item.count > 1 ? 's' : ''} • Úl. #Mes: {item.maxMonth}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
+
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="block font-bold text-slate-700">INVOICE (FACTURA) *</label>
