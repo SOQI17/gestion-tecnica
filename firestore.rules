@@ -63,5 +63,9 @@ service cloud.firestore {
     match /scheduledTrainings/{trainingId} {
       allow read, write: if true;
     }
+    // 14. Reglas para Contratos con GE (ContractsGE)
+    match /contractsGE/{contractGeId} {
+      allow read, write: if true;
+    }
   }
 }
