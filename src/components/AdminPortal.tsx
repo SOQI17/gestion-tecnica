@@ -4478,17 +4478,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
 
           <div className="flex flex-wrap gap-2 items-center">
-            <button
-              onClick={() => setIsClientImporterOpen(!isClientImporterOpen)}
-              className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
-                isClientImporterOpen 
-                  ? 'bg-amber-600 border-amber-600 text-white' 
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>{isClientImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
-            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setIsClientImporterOpen(!isClientImporterOpen)}
+                className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
+                  isClientImporterOpen 
+                    ? 'bg-amber-600 border-amber-600 text-white' 
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>{isClientImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 setEditingClient(null);
@@ -4871,17 +4873,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               <Download className="w-3.5 h-3.5" />
               <span>📊 Exportar Excel</span>
             </button>
-            <button
-              onClick={() => setIsRegistryImporterOpen(!isRegistryImporterOpen)}
-              className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
-                isRegistryImporterOpen 
-                  ? 'bg-amber-600 border-amber-600 text-white' 
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>{isRegistryImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
-            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setIsRegistryImporterOpen(!isRegistryImporterOpen)}
+                className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
+                  isRegistryImporterOpen 
+                    ? 'bg-amber-600 border-amber-600 text-white' 
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>{isRegistryImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 setRegFormInstitutionName('');
@@ -5218,17 +5222,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
 
           <div className="flex flex-wrap gap-2 items-center">
-            <button
-              onClick={() => setIsEquipImporterOpen(!isEquipImporterOpen)}
-              className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
-                isEquipImporterOpen 
-                  ? 'bg-amber-600 border-amber-600 text-white' 
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>{isEquipImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
-            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setIsEquipImporterOpen(!isEquipImporterOpen)}
+                className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
+                  isEquipImporterOpen 
+                    ? 'bg-amber-600 border-amber-600 text-white' 
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>{isEquipImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 setEditingEquip(null);
@@ -5598,17 +5604,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
 
           <div className="flex flex-wrap gap-2 items-center">
-            <button
-              onClick={() => setIsContractGeImporterOpen(!isContractGeImporterOpen)}
-              className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
-                isContractGeImporterOpen 
-                  ? 'bg-amber-600 border-amber-600 text-white' 
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>{isContractGeImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV GE'}</span>
-            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setIsContractGeImporterOpen(!isContractGeImporterOpen)}
+                className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
+                  isContractGeImporterOpen 
+                    ? 'bg-amber-600 border-amber-600 text-white' 
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>{isContractGeImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV GE'}</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 setEditingContractGe(null);
@@ -5799,7 +5807,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         >
                           Editar
                         </button>
-                        {onDeleteContractGE && (
+                        {userRole === 'admin' && onDeleteContractGE && (
                           <button
                             onClick={() => {
                               if (window.confirm(`¿Desea eliminar la factura GE ${item.invoice}?`)) {
@@ -5887,17 +5895,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
 
             <div className="flex flex-wrap gap-2 items-center">
-              <button
-                onClick={() => setIsContractImporterOpen(!isContractImporterOpen)}
-                className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
-                  isContractImporterOpen 
-                    ? 'bg-amber-600 border-amber-600 text-white' 
-                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                }`}
-              >
-                <Database className="w-3.5 h-3.5" />
-                <span>{isContractImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
-              </button>
+              {userRole === 'admin' && (
+                <button
+                  onClick={() => setIsContractImporterOpen(!isContractImporterOpen)}
+                  className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
+                    isContractImporterOpen 
+                      ? 'bg-amber-600 border-amber-600 text-white' 
+                      : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                  }`}
+                >
+                  <Database className="w-3.5 h-3.5" />
+                  <span>{isContractImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
+                </button>
+              )}
               <button
                 onClick={() => {
                   setEditingContract(null);
