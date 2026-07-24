@@ -5604,6 +5604,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     reader.readAsText(file, 'UTF-8');
   };
 
+  const autoCalculateGeNextMonth = (clientName: string) => {
+    if (!clientName) return '1';
+    const clientRecords = contractsGE.filter(c => 
+      c.cliente && c.cliente.trim().toLowerCase() === clientName.trim().toLowerCase()
+    );
+    if (clientRecords.length === 0) return '1';
+    let maxMonth = 0;
+    clientRecords.forEach(c => {
+      const num = parseInt(String(c.monthNum || 0), 10);
+      if (!isNaN(num) && num > maxMonth) {
+        maxMonth = num;
+      }
+    });
+    return String(maxMonth > 0 ? maxMonth + 1 : 1);
+  };
+
   const renderGeSubView = () => {
     const query = contractGeSearch.toLowerCase().trim();
     const filteredGE = contractsGE.filter(c => 
@@ -6054,7 +6070,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setGeFormInvoiceDate(currentDateStr);
                               setGeFormDueDate('');
                               setGeFormPaymentPeriod('');
-                              setGeFormMonthNum('');
+                              const nextM = autoCalculateGeNextMonth(item.cliente);
+                              setGeFormMonthNum(nextM);
                               setGeFormContractNum(String(item.contractNum || '1'));
                               setGeFormObs('');
                               setIsContractGeModalOpen(true);
@@ -14419,6 +14436,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   if (client.modalidad) setGeFormModalidad(client.modalidad);
                                   if (client.equipo) setGeFormEquipo(client.equipo);
                                   if (client.equipmentNum) setGeFormEquipmentNum(String(client.equipmentNum));
+                                  const nextM = autoCalculateGeNextMonth(client.name);
+                                  setGeFormMonthNum(nextM);
                                   setIsGeClientDropdownOpen(false);
                                 }}
                                 className="w-full text-left p-2.5 hover:bg-indigo-50 transition-colors flex justify-between items-center cursor-pointer"
