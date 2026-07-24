@@ -215,3 +215,17 @@ export interface ScheduledTraining {
   createdAt?: string;
   certificateUrl?: string; // Diploma / Certificado de capacitación (PDF/Imagen en Cloudinary)
 }
+
+export interface ContractGE {
+  id: string;
+  cliente: string;
+  invoice: string;           // INVOICE (Nº Factura)
+  invoiceAmount: number;     // INVOICE AMOUNT (Monto en USD)
+  invoiceDate: string;       // INVOICE DATE
+  dueDate: string;           // DUE DATE
+  paymentPeriod?: string;    // FECHA/AÑO PAGO (ej: June-2022)
+  monthNum?: number | string; // #MES
+  contractNum?: string;      // CONTRATO
+  observaciones?: string;    // OBSERVACIONES
+  createdAt?: string;
+}

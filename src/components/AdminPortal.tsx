@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload } from 'lucide-react';
-import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining } from '../types';
+import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl } from '../utils/cloudinary';
@@ -49,6 +49,11 @@ interface AdminPortalProps {
   onAddScheduledTraining?: (st: ScheduledTraining) => void;
   onUpdateScheduledTraining?: (st: ScheduledTraining) => void;
   onDeleteScheduledTraining?: (stId: string) => void;
+  contractsGE?: ContractGE[];
+  onAddContractGE?: (cGE: ContractGE) => void;
+  onUpdateContractGE?: (cGE: ContractGE) => void;
+  onDeleteContractGE?: (id: string) => void;
+  onBulkUploadContractsGE?: (cGEs: ContractGE[]) => void;
 }
 
 const getEndDateStr = (startDateStr: string, duration: number): string => {
@@ -484,7 +489,12 @@ export default function AdminPortal({
   scheduledTrainings = [],
   onAddScheduledTraining,
   onUpdateScheduledTraining,
-  onDeleteScheduledTraining
+  onDeleteScheduledTraining,
+  contractsGE = [],
+  onAddContractGE,
+  onUpdateContractGE,
+  onDeleteContractGE,
+  onBulkUploadContractsGE
 }: AdminPortalProps) {
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -711,12 +721,30 @@ export default function AdminPortal({
   const [equipFormStatus, setEquipFormStatus] = useState<'Operativo' | 'No Operativo'>('Operativo');
 
   // Contratos Tab states
+  const [contractsSubTab, setContractsSubTab] = useState<'garantias' | 'ge'>('garantias');
   const [contractSearch, setContractSearch] = useState('');
   const [contractPage, setContractPage] = useState(1);
   const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | null>(null);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isContractImporterOpen, setIsContractImporterOpen] = useState(false);
   const [contractCsvError, setContractCsvError] = useState<string | null>(null);
+
+  // Contratos con GE states
+  const [contractGeSearch, setContractGeSearch] = useState('');
+  const [contractGePage, setContractGePage] = useState(1);
+  const [isContractGeImporterOpen, setIsContractGeImporterOpen] = useState(false);
+  const [contractGeCsvError, setContractGeCsvError] = useState<string | null>(null);
+  const [isContractGeModalOpen, setIsContractGeModalOpen] = useState(false);
+  const [editingContractGe, setEditingContractGe] = useState<ContractGE | null>(null);
+  const [geFormCliente, setGeFormCliente] = useState('');
+  const [geFormInvoice, setGeFormInvoice] = useState('');
+  const [geFormAmount, setGeFormAmount] = useState('');
+  const [geFormInvoiceDate, setGeFormInvoiceDate] = useState('');
+  const [geFormDueDate, setGeFormDueDate] = useState('');
+  const [geFormPaymentPeriod, setGeFormPaymentPeriod] = useState('');
+  const [geFormMonthNum, setGeFormMonthNum] = useState('');
+  const [geFormContractNum, setGeFormContractNum] = useState('');
+  const [geFormObs, setGeFormObs] = useState('');
 
   // Contratos Form states
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
@@ -5448,93 +5476,464 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     );
   };
 
-  const renderContratosTab = () => {
-    const query = contractSearch.toLowerCase().trim();
-    const filtered = contracts.filter(con => {
-      const client = clients.find(c => c.id === con.clientId);
-      const matchesQuery = (
-        con.id.toLowerCase().includes(query) ||
-        con.type.toLowerCase().includes(query) ||
-        (con.coverage || '').toLowerCase().includes(query) ||
-        (client?.name || '').toLowerCase().includes(query)
-      );
+  const handleContractGeCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-      if (!matchesQuery) return false;
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const content = evt.target?.result as string;
+        if (!content) return;
 
-      if (contractFilterExpiration) {
-        const expAlert = getContractExpirationAlert(con.endDate, con.status);
-        if (contractFilterExpiration === '1m' && expAlert?.level !== 'urgent_1m') return false;
-        if (contractFilterExpiration === '3m' && expAlert?.level !== 'warning_3m') return false;
-        if (contractFilterExpiration === 'expired' && expAlert?.level !== 'expired') return false;
+        const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
+        if (lines.length < 2) {
+          setContractGeCsvError("El archivo CSV debe contener al menos la cabecera y una fila de datos.");
+          return;
+        }
+
+        const firstLine = lines[0];
+        const delimiter = firstLine.includes(';') ? ';' : firstLine.includes('\t') ? '\t' : ',';
+        const headers = firstLine.split(delimiter).map(h => h.trim().replace(/^[\uFEFF\s"']+|[\s"']+$/g, '').toUpperCase());
+
+        const findCol = (keys: string[]) => {
+          return headers.findIndex(h => keys.some(k => h.includes(k.toUpperCase())));
+        };
+
+        const idxCliente = findCol(['CLIENTE', 'CUSTOMER']);
+        const idxInvoice = findCol(['INVOICE', 'FACTURA']);
+        const idxAmount = findCol(['INVOICE AMOUNT', 'AMOUNT', 'MONTO', 'VALOR']);
+        const idxDate = findCol(['INVOICE DATE', 'FECHA FACTURA', 'FECHA EMISION']);
+        const idxDueDate = findCol(['DUE DATE', 'VENCIMIENTO', 'FECHA VENCIMIENTO']);
+        const idxPeriod = findCol(['FECHA/AÑO PAGO', 'PAGO', 'PERIODO', 'YEAR PAGO']);
+        const idxMonth = findCol(['#MES', 'MES', 'MONTH']);
+        const idxContract = findCol(['CONTRATO', 'CONTRACT']);
+        const idxObs = findCol(['OBSERVACIONES', 'OBSERVACION', 'NOTES', 'REMARKS']);
+
+        const parsedItems: ContractGE[] = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+
+          const cols = line.split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
+          if (cols.length < 2) continue;
+
+          const rawCliente = idxCliente !== -1 ? cols[idxCliente] : cols[0];
+          const rawInvoice = idxInvoice !== -1 ? cols[idxInvoice] : cols[1];
+          const rawAmount = idxAmount !== -1 ? cols[idxAmount] : (cols[2] || '0');
+          const rawDate = idxDate !== -1 ? cols[idxDate] : (cols[3] || '');
+          const rawDueDate = idxDueDate !== -1 ? cols[idxDueDate] : (cols[4] || '');
+          const rawPeriod = idxPeriod !== -1 ? cols[idxPeriod] : (cols[5] || '');
+          const rawMonth = idxMonth !== -1 ? cols[idxMonth] : (cols[6] || '');
+          const rawContract = idxContract !== -1 ? cols[idxContract] : (cols[7] || '');
+          const rawObs = idxObs !== -1 ? cols[idxObs] : (cols[8] || '');
+
+          if (!rawCliente && !rawInvoice) continue;
+
+          const cleanAmount = parseFloat(rawAmount.replace(/[\$\,\s]/g, '')) || 0;
+
+          const newItem: ContractGE = {
+            id: `GE-${rawInvoice || Date.now()}-${i}`,
+            cliente: rawCliente || 'Cliente Desconocido',
+            invoice: rawInvoice || `INV-${i}`,
+            invoiceAmount: cleanAmount,
+            invoiceDate: rawDate,
+            dueDate: rawDueDate,
+            paymentPeriod: rawPeriod,
+            monthNum: rawMonth,
+            contractNum: rawContract,
+            observaciones: rawObs,
+            createdAt: new Date().toISOString()
+          };
+
+          parsedItems.push(newItem);
+        }
+
+        if (parsedItems.length === 0) {
+          setContractGeCsvError("No se pudieron parsear registros válidos. Verifique el formato del CSV.");
+          return;
+        }
+
+        if (onBulkUploadContractsGE) {
+          await onBulkUploadContractsGE(parsedItems);
+        }
+        setContractGeCsvError(null);
+        setIsContractGeImporterOpen(false);
+      } catch (err: any) {
+        console.error("Error procesando CSV GE:", err);
+        setContractGeCsvError("Error procesando archivo CSV: " + (err.message || String(err)));
       }
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
 
-      return true;
-    });
+  const renderGeSubView = () => {
+    const query = contractGeSearch.toLowerCase().trim();
+    const filteredGE = contractsGE.filter(c => 
+      c.cliente.toLowerCase().includes(query) ||
+      c.invoice.toLowerCase().includes(query) ||
+      (c.contractNum || '').toLowerCase().includes(query) ||
+      (c.paymentPeriod || '').toLowerCase().includes(query) ||
+      (c.observaciones || '').toLowerCase().includes(query)
+    );
 
-    const itemsPerPage = 10;
-    const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-    const paginated = filtered.slice((contractPage - 1) * itemsPerPage, contractPage * itemsPerPage);
+    const totalAmount = filteredGE.reduce((sum, item) => sum + (item.invoiceAmount || 0), 0);
+    const withObsCount = filteredGE.filter(item => item.observaciones && item.observaciones.trim().length > 0).length;
+
+    const itemsPerPage = 12;
+    const totalPagesGE = Math.ceil(filteredGE.length / itemsPerPage) || 1;
+    const paginatedGE = filteredGE.slice((contractGePage - 1) * itemsPerPage, contractGePage * itemsPerPage);
 
     return (
       <div className="space-y-6 font-sans">
-        {/* Header Block */}
+        {/* Header Block GE */}
         <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
           <div>
             <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-indigo-600" />
-              Gestión de Contratos y Garantías
+              <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
+              Contratos con GE & Registro de Facturación
             </h4>
-            <p className="text-3xs text-slate-500 mt-0.5 font-medium">Administra los contratos de servicio, garantías comerciales y coberturas de mantenimiento.</p>
+            <p className="text-3xs text-slate-500 mt-0.5 font-medium">Control de facturas, montos, cuotas y observaciones para contratos con Garantía Extendida (GE).</p>
           </div>
 
           <div className="flex flex-wrap gap-2 items-center">
             <button
-              onClick={() => setIsContractImporterOpen(!isContractImporterOpen)}
+              onClick={() => setIsContractGeImporterOpen(!isContractGeImporterOpen)}
               className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
-                isContractImporterOpen 
+                isContractGeImporterOpen 
                   ? 'bg-amber-600 border-amber-600 text-white' 
                   : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
               }`}
             >
               <Database className="w-3.5 h-3.5" />
-              <span>{isContractImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
+              <span>{isContractGeImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV GE'}</span>
             </button>
             <button
               onClick={() => {
-                setEditingContract(null);
-                setContractFormId('');
-                setContractFormClientId('');
-                setContractFormType('Garantía extendida/Contrato');
-                setContractFormStart(currentDateStr);
-                setContractFormEnd(currentDateStr);
-                setContractFormStatus('Activo');
-                setContractFormCoverage('');
-                setContractClientSearchQuery('');
-                setIsContractClientDropdownOpen(false);
-                setIsCreatingNewClientForContract(false);
-                setNewContractClientName('');
-                setNewContractClientIndustry('');
-                setNewContractClientAddress('');
-                setNewContractClientContactName('');
-                setNewContractClientContactPhone('');
-                setContractFormEquipmentItems([]);
-                setTempEquipName('');
-                setTempEquipBrand('');
-                setContractFormFrequency('Ninguno');
-                setContractFormMaintenanceDates([]);
-                setTempMaintenanceDate('');
-                setContractFormQcDate('');
-                setContractFormPdfUrl('');
-                setContractFormSchedulePdfUrl('');
-                setIsContractModalOpen(true);
+                setEditingContractGe(null);
+                setGeFormCliente('');
+                setGeFormInvoice('');
+                setGeFormAmount('');
+                setGeFormInvoiceDate(currentDateStr);
+                setGeFormDueDate('');
+                setGeFormPaymentPeriod('');
+                setGeFormMonthNum('');
+                setGeFormContractNum('');
+                setGeFormObs('');
+                setIsContractGeModalOpen(true);
               }}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-indigo-600 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Nuevo Contrato</span>
+              <span>+ Nueva Factura GE</span>
             </button>
           </div>
         </div>
+
+        {/* CSV GE Importer Panel */}
+        {isContractGeImporterOpen && (
+          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+            <div className="border-b border-slate-100 pb-2 flex justify-between items-center">
+              <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wider font-mono">📥 Ingestor de Contratos con GE (CSV)</h5>
+              <button 
+                onClick={() => {
+                  const headers = ['CLIENTE', 'INVOICE', 'INVOICE AMOUNT', 'INVOICE DATE', 'DUE DATE', 'FECHA/AÑO PAGO', '#MES', 'CONTRATO', 'OBSERVACIONES'];
+                  const sample1 = ['Hospital Metropolitano', '100601349', '$3,557.25', '6/6/2022', '6/7/2022', 'June-2022', '1', '1', ''];
+                  const sample2 = ['Dr. Figueroa', '100603796', '$2,176.00', '1/9/2022', '1/10/2022', '', '3', '1', 'Sin fecha de pago'];
+                  const csv = "\uFEFF" + [headers.join(';'), sample1.join(';'), sample2.join(';')].join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'plantilla_contratos_ge.csv';
+                  a.click();
+                }}
+                className="text-[10px] font-bold text-indigo-600 hover:underline cursor-pointer"
+              >
+                📥 Descargar Plantilla Ejemplo (GE)
+              </button>
+            </div>
+            <p className="text-3xs text-slate-505 font-medium leading-relaxed">
+              Suba un CSV con cabeceras: **CLIENTE**, **INVOICE**, **INVOICE AMOUNT**, **INVOICE DATE**, **DUE DATE**, **FECHA/AÑO PAGO**, **#MES**, **CONTRATO**, **OBSERVACIONES**.
+            </p>
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleContractGeCsvUpload}
+                className="block w-full text-3xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all"
+              />
+              {contractGeCsvError && (
+                <div className="text-3xs text-red-650 font-bold bg-red-50 p-2 rounded-lg border border-red-100 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                  <span>{contractGeCsvError}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* KPI Cards for GE */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex items-center justify-between">
+            <div>
+              <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Total Facturado</span>
+              <span className="text-base font-black text-indigo-700">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+              💰
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex items-center justify-between">
+            <div>
+              <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Total Registros GE</span>
+              <span className="text-base font-black text-slate-800">{filteredGE.length} Facturas</span>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
+              🧾
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex items-center justify-between">
+            <div>
+              <span className="block text-[9px] font-extrabold uppercase tracking-wide text-slate-400">Con Observaciones</span>
+              <span className="text-base font-black text-amber-600">{withObsCount} Pendientes</span>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs">
+              ⚠️
+            </div>
+          </div>
+        </div>
+
+        {/* Filter and Search GE */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 max-w-md">
+            <input
+              type="text"
+              placeholder="Buscar por cliente, invoice, contrato, periodo, observaciones..."
+              value={contractGeSearch}
+              onChange={(e) => {
+                setContractGeSearch(e.target.value);
+                setContractGePage(1);
+              }}
+              className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400"
+            />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          </div>
+          <span className="text-3xs text-slate-400 font-bold uppercase tracking-wider">{filteredGE.length} Registros GE encontrados</span>
+        </div>
+
+        {/* Table for Contratos con GE matching Image 2 */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+          <table className="w-full text-left border-collapse text-[11px] font-sans">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-655 font-extrabold uppercase text-[9px] tracking-wider">
+                <th className="p-3">CLIENTE:</th>
+                <th className="p-3">INVOICE:</th>
+                <th className="p-3 text-right">INVOICE AMOUNT</th>
+                <th className="p-3">INVOICE DATE</th>
+                <th className="p-3">DUE DATE</th>
+                <th className="p-3">FECHA/AÑO PAGO</th>
+                <th className="p-3 text-center">#MES</th>
+                <th className="p-3 text-center">CONTRATO</th>
+                <th className="p-3">OBSERVACIONES:</th>
+                <th className="p-3 text-right no-print">ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-slate-750 font-medium">
+              {paginatedGE.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="text-center p-8 text-slate-400 font-semibold italic">
+                    No se encontraron registros de Contratos con GE. Haga clic en "Importar CSV GE" para cargar sus facturas.
+                  </td>
+                </tr>
+              ) : (
+                paginatedGE.map((item, idx) => (
+                  <tr key={item.id || idx} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-3 font-extrabold text-slate-900">{item.cliente}</td>
+                    <td className="p-3 font-mono font-bold text-indigo-700">{item.invoice}</td>
+                    <td className="p-3 font-mono font-bold text-right text-emerald-700">
+                      ${(item.invoiceAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="p-3 font-mono text-slate-600">{item.invoiceDate || '—'}</td>
+                    <td className="p-3 font-mono text-slate-600">{item.dueDate || '—'}</td>
+                    <td className="p-3 font-semibold text-slate-700">{item.paymentPeriod || '—'}</td>
+                    <td className="p-3 text-center">
+                      <span className="bg-slate-100 text-slate-700 font-mono font-bold text-[9px] px-2 py-0.5 rounded border border-slate-200">
+                        {item.monthNum || '1'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <span className="bg-indigo-50 text-indigo-800 font-mono font-bold text-[9px] px-2 py-0.5 rounded border border-indigo-100">
+                        {item.contractNum || '1'}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      {item.observaciones ? (
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded border bg-amber-50 text-amber-800 border-amber-200 inline-block">
+                          {item.observaciones}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-[10px]">—</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-right no-print">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => {
+                            setEditingContractGe(item);
+                            setGeFormCliente(item.cliente);
+                            setGeFormInvoice(item.invoice);
+                            setGeFormAmount(String(item.invoiceAmount || ''));
+                            setGeFormInvoiceDate(item.invoiceDate || '');
+                            setGeFormDueDate(item.dueDate || '');
+                            setGeFormPaymentPeriod(item.paymentPeriod || '');
+                            setGeFormMonthNum(String(item.monthNum || '1'));
+                            setGeFormContractNum(String(item.contractNum || '1'));
+                            setGeFormObs(item.observaciones || '');
+                            setIsContractGeModalOpen(true);
+                          }}
+                          className="text-indigo-600 hover:text-indigo-900 font-bold px-2 py-1 rounded hover:bg-indigo-50 transition-colors text-3xs"
+                        >
+                          Editar
+                        </button>
+                        {onDeleteContractGE && (
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`¿Desea eliminar la factura GE ${item.invoice}?`)) {
+                                onDeleteContractGE(item.id);
+                              }
+                            }}
+                            className="text-rose-600 hover:text-rose-900 font-bold px-1.5 py-1 rounded hover:bg-rose-50 transition-colors text-3xs"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+
+          {/* Pagination GE */}
+          {totalPagesGE > 1 && (
+            <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 flex items-center justify-between font-sans">
+              <span className="text-3xs text-slate-500 font-medium">Pág. {contractGePage} de {totalPagesGE}</span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setContractGePage(prev => Math.max(prev - 1, 1))}
+                  disabled={contractGePage === 1}
+                  className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Anterior
+                </button>
+                <button
+                  onClick={() => setContractGePage(prev => Math.min(prev + 1, totalPagesGE))}
+                  disabled={contractGePage === totalPagesGE}
+                  className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderContratosTab = () => {
+    const renderGarantiasSubView = () => {
+      const query = contractSearch.toLowerCase().trim();
+      const filtered = contracts.filter(con => {
+        const client = clients.find(c => c.id === con.clientId);
+        const matchesQuery = (
+          con.id.toLowerCase().includes(query) ||
+          con.type.toLowerCase().includes(query) ||
+          (con.coverage || '').toLowerCase().includes(query) ||
+          (client?.name || '').toLowerCase().includes(query)
+        );
+
+        if (!matchesQuery) return false;
+
+        if (contractFilterExpiration) {
+          const expAlert = getContractExpirationAlert(con.endDate, con.status);
+          if (contractFilterExpiration === '1m' && expAlert?.level !== 'urgent_1m') return false;
+          if (contractFilterExpiration === '3m' && expAlert?.level !== 'warning_3m') return false;
+          if (contractFilterExpiration === 'expired' && expAlert?.level !== 'expired') return false;
+        }
+
+        return true;
+      });
+
+      const itemsPerPage = 10;
+      const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+      const paginated = filtered.slice((contractPage - 1) * itemsPerPage, contractPage * itemsPerPage);
+
+      return (
+        <div className="space-y-6 font-sans">
+          {/* Header Block */}
+          <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+            <div>
+              <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-indigo-600" />
+                Gestión de Contratos y Garantías
+              </h4>
+              <p className="text-3xs text-slate-500 mt-0.5 font-medium">Administra los contratos de servicio, garantías comerciales y coberturas de mantenimiento.</p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 items-center">
+              <button
+                onClick={() => setIsContractImporterOpen(!isContractImporterOpen)}
+                className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
+                  isContractImporterOpen 
+                    ? 'bg-amber-600 border-amber-600 text-white' 
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>{isContractImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV'}</span>
+              </button>
+              <button
+                onClick={() => {
+                  setEditingContract(null);
+                  setContractFormId('');
+                  setContractFormClientId('');
+                  setContractFormType('Garantía extendida/Contrato');
+                  setContractFormStart(currentDateStr);
+                  setContractFormEnd(currentDateStr);
+                  setContractFormStatus('Activo');
+                  setContractFormCoverage('');
+                  setContractClientSearchQuery('');
+                  setIsContractClientDropdownOpen(false);
+                  setIsCreatingNewClientForContract(false);
+                  setNewContractClientName('');
+                  setNewContractClientIndustry('');
+                  setNewContractClientAddress('');
+                  setNewContractClientContactName('');
+                  setNewContractClientContactPhone('');
+                  setContractFormEquipmentItems([]);
+                  setTempEquipName('');
+                  setTempEquipBrand('');
+                  setContractFormFrequency('Ninguno');
+                  setContractFormMaintenanceDates([]);
+                  setTempMaintenanceDate('');
+                  setContractFormQcDate('');
+                  setContractFormPdfUrl('');
+                  setContractFormSchedulePdfUrl('');
+                  setIsContractModalOpen(true);
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-indigo-600 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Nuevo Contrato</span>
+              </button>
+            </div>
+          </div>
 
         {/* CSV Importer Panel */}
         {isContractImporterOpen && (
@@ -5873,6 +6272,40 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
           )}
         </div>
+      </div>
+    );
+  };
+
+    return (
+      <div className="space-y-6 font-sans">
+        {/* Top Sub-Tab Switcher Capsule */}
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/80 max-w-max no-print">
+          <button
+            onClick={() => setContractsSubTab('garantias')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+              contractsSubTab === 'garantias'
+                ? 'bg-white text-indigo-900 shadow-sm border border-slate-200/60'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Briefcase className="w-4 h-4 text-indigo-600" />
+            <span>Gestión de Contratos y Garantías</span>
+          </button>
+
+          <button
+            onClick={() => setContractsSubTab('ge')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+              contractsSubTab === 'ge'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Contratos con GE</span>
+          </button>
+        </div>
+
+        {contractsSubTab === 'garantias' ? renderGarantiasSubView() : renderGeSubView()}
       </div>
     );
   };
@@ -13507,6 +13940,191 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 Cerrar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Contratos con GE (Garantía Extendida & Facturación) */}
+      {isContractGeModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <FileSpreadsheet className="w-5 h-5 text-indigo-600" />
+                <span>{editingContractGe ? 'Editar Factura GE' : 'Nueva Factura GE'}</span>
+              </h3>
+              <button
+                onClick={() => {
+                  setIsContractGeModalOpen(false);
+                  setEditingContractGe(null);
+                }}
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!geFormCliente || !geFormInvoice) {
+                  alert('Por favor ingrese el nombre del cliente y el número de invoice/factura.');
+                  return;
+                }
+
+                const parsedAmount = parseFloat(geFormAmount.replace(/[\$\,\s]/g, '')) || 0;
+
+                const geItem: ContractGE = {
+                  id: editingContractGe ? editingContractGe.id : `GE-${geFormInvoice}-${Date.now()}`,
+                  cliente: geFormCliente,
+                  invoice: geFormInvoice,
+                  invoiceAmount: parsedAmount,
+                  invoiceDate: geFormInvoiceDate,
+                  dueDate: geFormDueDate,
+                  paymentPeriod: geFormPaymentPeriod,
+                  monthNum: geFormMonthNum || '1',
+                  contractNum: geFormContractNum || '1',
+                  observaciones: geFormObs,
+                  createdAt: editingContractGe?.createdAt || new Date().toISOString()
+                };
+
+                if (editingContractGe && onUpdateContractGE) {
+                  onUpdateContractGE(geItem);
+                } else if (onAddContractGE) {
+                  onAddContractGE(geItem);
+                }
+
+                setIsContractGeModalOpen(false);
+                setEditingContractGe(null);
+              }}
+              className="space-y-3 text-xs"
+            >
+              <div className="space-y-1">
+                <label className="block font-bold text-slate-700">CLIENTE *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="ej: Hospital Metropolitano"
+                  value={geFormCliente}
+                  onChange={e => setGeFormCliente(e.target.value)}
+                  className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">INVOICE (FACTURA) *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ej: 100601349"
+                    value={geFormInvoice}
+                    onChange={e => setGeFormInvoice(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">INVOICE AMOUNT ($)</label>
+                  <input
+                    type="text"
+                    placeholder="ej: 3557.25"
+                    value={geFormAmount}
+                    onChange={e => setGeFormAmount(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">INVOICE DATE</label>
+                  <input
+                    type="text"
+                    placeholder="ej: 6/6/2022 o 2022-06-06"
+                    value={geFormInvoiceDate}
+                    onChange={e => setGeFormInvoiceDate(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">DUE DATE</label>
+                  <input
+                    type="text"
+                    placeholder="ej: 6/7/2022 o 2022-07-06"
+                    value={geFormDueDate}
+                    onChange={e => setGeFormDueDate(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">FECHA/AÑO PAGO</label>
+                  <input
+                    type="text"
+                    placeholder="ej: June-2022"
+                    value={geFormPaymentPeriod}
+                    onChange={e => setGeFormPaymentPeriod(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">#MES</label>
+                  <input
+                    type="text"
+                    placeholder="ej: 1"
+                    value={geFormMonthNum}
+                    onChange={e => setGeFormMonthNum(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">CONTRATO</label>
+                  <input
+                    type="text"
+                    placeholder="ej: 1"
+                    value={geFormContractNum}
+                    onChange={e => setGeFormContractNum(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block font-bold text-slate-700">OBSERVACIONES</label>
+                <input
+                  type="text"
+                  placeholder="ej: Sin fecha de pago"
+                  value={geFormObs}
+                  onChange={e => setGeFormObs(e.target.value)}
+                  className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsContractGeModalOpen(false);
+                    setEditingContractGe(null);
+                  }}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
+                >
+                  {editingContractGe ? 'Guardar Cambios' : 'Registrar Factura GE'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

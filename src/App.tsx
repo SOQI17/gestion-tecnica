@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
-import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining } from './types';
+import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from './types';
 import AdminPortal from './components/AdminPortal';
 import EngineerPortal from './components/EngineerPortal';
 import Login from './components/Login';
@@ -39,6 +39,15 @@ export default function App() {
   const [scheduledTrainings, setScheduledTrainings] = useState<ScheduledTraining[]>(() => {
     try {
       const saved = localStorage.getItem('fsm_scheduled_trainings');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [contractsGE, setContractsGE] = useState<ContractGE[]>(() => {
+    try {
+      const saved = localStorage.getItem('fsm_contracts_ge');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -312,6 +321,20 @@ export default function App() {
       console.warn("Error leyendo capacitaciones programadas de Firestore:", error);
     });
 
+    // 11. Suscribirse a la Colección de Contratos con GE
+    const unsubContractsGE = onSnapshot(collection(db, 'contractsGE'), (snapshot) => {
+      const list: ContractGE[] = [];
+      snapshot.forEach(docSnap => {
+        if (docSnap.id !== 'fsm_placeholder') {
+          list.push(docSnap.data() as ContractGE);
+        }
+      });
+      setContractsGE(list);
+      try { localStorage.setItem('fsm_contracts_ge', JSON.stringify(list)); } catch (e) {}
+    }, (error) => {
+      console.warn("Error leyendo contratos con GE de Firestore:", error);
+    });
+
     return () => {
       unsubEngineers();
       unsubClients();
@@ -323,6 +346,7 @@ export default function App() {
       unsubPermissions();
       unsubRegistries();
       unsubScheduledTrainings();
+      unsubContractsGE();
     };
   }, []);
 
@@ -648,6 +672,77 @@ export default function App() {
     } catch (error: any) {
       console.error("Error al eliminar capacitación programada:", error);
       handleFirestoreError(error, OperationType.DELETE, `scheduledTrainings/${stId}`);
+    }
+  };
+
+  const handleAddContractGE = async (cGE: ContractGE) => {
+    setContractsGE(prev => {
+      const next = [...prev.filter(x => x.id !== cGE.id), cGE];
+      try { localStorage.setItem('fsm_contracts_ge', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+    try {
+      await setDoc(doc(db, 'contractsGE', cGE.id), cleanUndefined(cGE));
+      showNotification(`Registro de Garantía Extendida (${cGE.invoice}) guardado.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `contractsGE/${cGE.id}`);
+    }
+  };
+
+  const handleUpdateContractGE = async (cGE: ContractGE) => {
+    setContractsGE(prev => {
+      const next = prev.map(x => x.id === cGE.id ? cGE : x);
+      try { localStorage.setItem('fsm_contracts_ge', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+    try {
+      await setDoc(doc(db, 'contractsGE', cGE.id), cleanUndefined(cGE));
+      showNotification(`Registro de GE (${cGE.invoice}) actualizado.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `contractsGE/${cGE.id}`);
+    }
+  };
+
+  const handleDeleteContractGE = async (id: string) => {
+    setContractsGE(prev => {
+      const next = prev.filter(x => x.id !== id);
+      try { localStorage.setItem('fsm_contracts_ge', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+    try {
+      await deleteDoc(doc(db, 'contractsGE', id));
+      showNotification(`Registro de GE eliminado.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `contractsGE/${id}`);
+    }
+  };
+
+  const handleBulkUploadContractsGE = async (cGEs: ContractGE[]) => {
+    try {
+      showNotification(`Importando ${cGEs.length} registros de Contratos con GE...`, 'info');
+      const BATCH_SIZE = 400;
+      const totalBatches = Math.ceil(cGEs.length / BATCH_SIZE);
+
+      for (let b = 0; b < totalBatches; b++) {
+        const slice = cGEs.slice(b * BATCH_SIZE, (b + 1) * BATCH_SIZE);
+        const batch = writeBatch(db);
+        slice.forEach(item => {
+          batch.set(doc(db, 'contractsGE', item.id), cleanUndefined(item));
+        });
+        await batch.commit();
+      }
+
+      setContractsGE(prev => {
+        const newIds = new Set(cGEs.map(x => x.id));
+        const kept = prev.filter(x => !newIds.has(x.id));
+        const merged = [...kept, ...cGEs];
+        try { localStorage.setItem('fsm_contracts_ge', JSON.stringify(merged)); } catch (e) {}
+        return merged;
+      });
+
+      showNotification(`¡Carga masiva exitosa! Se importaron ${cGEs.length} registros de Contratos con GE.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'bulk-contracts-ge');
     }
   };
 
@@ -1049,6 +1144,11 @@ export default function App() {
                 onAddScheduledTraining={handleAddScheduledTraining}
                 onUpdateScheduledTraining={handleUpdateScheduledTraining}
                 onDeleteScheduledTraining={handleDeleteScheduledTraining}
+                contractsGE={contractsGE}
+                onAddContractGE={handleAddContractGE}
+                onUpdateContractGE={handleUpdateContractGE}
+                onDeleteContractGE={handleDeleteContractGE}
+                onBulkUploadContractsGE={handleBulkUploadContractsGE}
               />
             )}
             {activeTab === 'engineer' && (
