@@ -14659,7 +14659,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 })()
               )}
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="block font-bold text-slate-700">INVOICE (FACTURA) *</label>
                   <input
@@ -14682,39 +14682,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     className="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold"
                   />
                 </div>
-
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">MONTHS (MESES)</label>
-                  <input
-                    type="text"
-                    placeholder="ej: 12"
-                    value={geFormMonths}
-                    onChange={e => setGeFormMonths(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold"
-                  />
-                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">INVOICE DATE</label>
+                  <label className="block font-bold text-slate-700">FECHA FACTURA (INVOICE DATE)</label>
                   <input
-                    type="text"
-                    placeholder="ej: 6/6/2022 o 2022-06-06"
+                    type="date"
                     value={geFormInvoiceDate}
                     onChange={e => setGeFormInvoiceDate(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono font-semibold text-slate-800 cursor-pointer"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">DUE DATE</label>
+                  <label className="block font-bold text-slate-700">FECHA VENCIMIENTO (DUE DATE)</label>
                   <input
-                    type="text"
-                    placeholder="ej: 6/7/2022 o 2022-07-06"
+                    type="date"
                     value={geFormDueDate}
                     onChange={e => setGeFormDueDate(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                    className="w-full p-2 border border-slate-200 rounded-lg font-mono font-semibold text-slate-800 cursor-pointer"
                   />
                 </div>
               </div>
