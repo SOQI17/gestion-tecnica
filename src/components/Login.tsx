@@ -58,7 +58,13 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
     if (targetEmail === 'alexis.guerra@orimec.com.ec') {
       role = 'admin';
     } else if (matchedEngineer) {
-      role = 'engineer';
+      const specLower = (matchedEngineer.specialty || '').toLowerCase();
+      const isVentas = specLower.includes('ventas') || specLower.includes('vendedor') || specLower.includes('comercial');
+      if (isVentas) {
+        role = 'sales';
+      } else {
+        role = 'engineer';
+      }
     } else {
       role = 'sales';
     }

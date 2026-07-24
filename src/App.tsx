@@ -73,8 +73,14 @@ export default function App() {
         if (targetEmail === 'alexis.guerra@orimec.com.ec') {
           expectedRole = 'admin';
         } else if (matchedEng) {
-          expectedRole = 'engineer';
-          expectedEngId = matchedEng.id;
+          const specLower = (matchedEng.specialty || '').toLowerCase();
+          const isVentas = specLower.includes('ventas') || specLower.includes('vendedor') || specLower.includes('comercial');
+          if (isVentas) {
+            expectedRole = 'sales';
+          } else {
+            expectedRole = 'engineer';
+            expectedEngId = matchedEng.id;
+          }
         } else {
           expectedRole = 'sales';
         }
