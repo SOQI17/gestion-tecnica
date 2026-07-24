@@ -5769,6 +5769,39 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
         </div>
 
+        {/* Banner de Reparación de Montos por Coma Desplazada */}
+        {contractsGE.some(c => (c.invoiceAmount || 0) >= 10000) && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <h5 className="font-extrabold text-xs text-amber-950">⚠️ Se detectaron facturas guardadas con montos desajustados (ej: $40,083.00 en vez de $400.83)</h5>
+                <p className="text-3xs text-amber-800 font-medium mt-0.5">Pulse el botón para corregir automáticamente todas las facturas en Firestore dividiéndolas entre 100.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                const fixCount = contractsGE.filter(c => (c.invoiceAmount || 0) >= 10000).length;
+                if (window.confirm(`¿Desea corregir automáticamente ${fixCount} facturas en Firestore que tienen valores mayores a $10,000 debido a comas desplazadas (ej: $40,083.00 → $400.83 y $36,204.00 → $362.04)?`)) {
+                  const fixedList = contractsGE.map(item => {
+                    if (item.invoiceAmount && item.invoiceAmount >= 10000) {
+                      return { ...item, invoiceAmount: item.invoiceAmount / 100 };
+                    }
+                    return item;
+                  });
+                  if (onBulkUploadContractsGE) {
+                    await onBulkUploadContractsGE(fixedList);
+                  }
+                }
+              }}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-black text-xs px-4 py-2 rounded-xl border border-amber-700 cursor-pointer shadow-xs transition-all shrink-0"
+            >
+              🔧 Corregir Todo en Firestore ($40,083 → $400.83)
+            </button>
+          </div>
+        )}
+
         {/* CSV GE Importer Panel */}
         {isContractGeImporterOpen && (
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
