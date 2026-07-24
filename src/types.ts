@@ -165,7 +165,7 @@ export interface EngineerPermission {
 export interface AppUser {
   uid: string;
   email: string;
-  role: 'admin' | 'engineer';
+  role: 'admin' | 'engineer' | 'sales';
   engineerId?: string; // Solo presente si el rol es 'engineer'
 }
 

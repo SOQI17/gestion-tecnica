@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, User, Shield, ArrowRight } from 'lucide-react';
+import { Layers, Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, User, Shield, ArrowRight, Briefcase } from 'lucide-react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -21,7 +21,7 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
 
   // Demo mode state
   const [isDemoMode, setIsDemoMode] = useState(false);
-  const [demoRole, setDemoRole] = useState<'admin' | 'engineer'>('admin');
+  const [demoRole, setDemoRole] = useState<'admin' | 'engineer' | 'sales'>('admin');
   const [demoEngineerId, setDemoEngineerId] = useState(engineers[0]?.id || 'ENG-001');
 
   const cleanEmail = (emailStr: string) => emailStr.trim().toLowerCase();
@@ -52,17 +52,17 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
     }
 
     // Role detection by email
-    let role: 'admin' | 'engineer' = 'engineer';
+    let role: 'admin' | 'engineer' | 'sales' = 'engineer';
     let matchedEngineer: Engineer | undefined;
 
     if (targetEmail === 'alexis.guerra@orimec.com.ec') {
       role = 'admin';
+    } else if (targetEmail.includes('vendedor') || targetEmail.includes('ventas') || targetEmail.includes('comercial')) {
+      role = 'sales';
     } else {
       matchedEngineer = engineers.find(eng => cleanEmail(eng.email) === targetEmail);
       if (!matchedEngineer) {
-        setError('El correo electrónico no está registrado en el listado de técnicos autorizados. Contacte al administrador.');
-        setLoading(false);
-        return;
+        role = 'sales';
       }
     }
 
@@ -134,6 +134,8 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
         const eng = engineers.find(e => e.id === demoEngineerId);
         mockEmail = eng?.email || 'ingeniero@orimec.com';
         mockEngId = demoEngineerId;
+      } else if (demoRole === 'sales') {
+        mockEmail = 'ventas@orimec.com.ec';
       }
 
       const mockUser: AppUser = {
@@ -311,23 +313,35 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
             {/* Demo Role Selector */}
             <div className="space-y-1.5">
               <label className="text-3xs font-bold text-slate-400 uppercase tracking-wider block">Seleccionar Rol de Prueba</label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setDemoRole('admin')}
-                  className={`flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
                     demoRole === 'admin'
                       ? 'bg-slate-800 text-amber-500 border-amber-600/70 shadow-sm'
                       : 'bg-slate-800/40 text-slate-450 border-slate-700 hover:text-white hover:border-slate-600'
                   }`}
                 >
                   <Shield className="w-3.5 h-3.5" />
-                  <span>Administrador</span>
+                  <span>Admin</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDemoRole('sales')}
+                  className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
+                    demoRole === 'sales'
+                      ? 'bg-slate-800 text-purple-400 border-purple-600/70 shadow-sm'
+                      : 'bg-slate-800/40 text-slate-450 border-slate-700 hover:text-white hover:border-slate-600'
+                  }`}
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  <span>Vendedor</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setDemoRole('engineer')}
-                  className={`flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
                     demoRole === 'engineer'
                       ? 'bg-slate-800 text-teal-500 border-teal-600/70 shadow-sm'
                       : 'bg-slate-800/40 text-slate-450 border-slate-700 hover:text-white hover:border-slate-600'

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2 } from 'lucide-react';
+import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
 import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining } from './types';
 import AdminPortal from './components/AdminPortal';
@@ -24,7 +24,7 @@ const cleanUndefined = (obj: any): any => {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'admin' | 'engineer'>('engineer');
+  const [activeTab, setActiveTab] = useState<'admin' | 'engineer' | 'sales'>('sales');
 
   // Simple state starting from 0, connecting directly to Firestore
   const [engineers, setEngineers] = useState<Engineer[]>([]);
@@ -70,23 +70,29 @@ export default function App() {
             setCurrentUser(userData);
             if (userData.role === 'engineer') {
               setActiveTab('engineer');
+            } else if (userData.role === 'sales') {
+              setActiveTab('sales');
             } else {
               setActiveTab('admin');
             }
           } else {
             // Auto-crear perfil en Firestore si es nuevo
-            let role: 'admin' | 'engineer' = 'engineer';
+            let role: 'admin' | 'engineer' | 'sales' = 'engineer';
             let engineerId: string | undefined;
 
             const targetEmail = firebaseUser.email?.trim().toLowerCase() || '';
             if (targetEmail === 'alexis.guerra@orimec.com.ec') {
               role = 'admin';
+            } else if (targetEmail.includes('vendedor') || targetEmail.includes('ventas') || targetEmail.includes('comercial')) {
+              role = 'sales';
             } else {
               const matchedEng = engineers.find(eng => eng.email.trim().toLowerCase() === targetEmail) || 
                                  masterEngineers.find(eng => eng.email.trim().toLowerCase() === targetEmail);
               if (matchedEng) {
                 role = 'engineer';
                 engineerId = matchedEng.id;
+              } else {
+                role = 'sales';
               }
             }
 
@@ -101,6 +107,8 @@ export default function App() {
             setCurrentUser(newProfile);
             if (role === 'engineer') {
               setActiveTab('engineer');
+            } else if (role === 'sales') {
+              setActiveTab('sales');
             } else {
               setActiveTab('admin');
             }
@@ -850,7 +858,7 @@ export default function App() {
         onLoginSuccess={(user, isDemo) => {
           setCurrentUser(user);
           setIsDemoMode(isDemo);
-          setActiveTab(user.role === 'admin' ? 'admin' : 'engineer');
+          setActiveTab(user.role === 'admin' ? 'admin' : user.role === 'sales' ? 'sales' : 'engineer');
         }}
       />
     );
@@ -893,7 +901,7 @@ export default function App() {
             <div className="text-right">
               <p className="text-[9px] font-extrabold text-slate-900 leading-none">{currentUser.email}</p>
               <p className="text-[8px] font-bold text-indigo-650 mt-1 leading-none uppercase tracking-wide">
-                {currentUser.role === 'admin' ? 'Administrador' : 'Ingeniero'} {isDemoMode && '(Demo)'}
+                {currentUser.role === 'admin' ? 'Administrador' : currentUser.role === 'sales' ? 'Vendedor' : 'Ingeniero'} {isDemoMode && '(Demo)'}
               </p>
             </div>
             <button
@@ -920,6 +928,7 @@ export default function App() {
               <nav className="flex bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/60" id="nav-container-tabs">
                 {[
                   { id: 'admin', label: 'Administrador', icon: CalendarDays },
+                  { id: 'sales', label: 'Vendedor Portal', icon: Briefcase },
                   { id: 'engineer', label: 'Ingeniero Portal', icon: Smartphone },
                 ].map(tab => {
                   const Icon = tab.icon;
@@ -988,8 +997,9 @@ export default function App() {
                 </div>
               </div>
             )}
-            {activeTab === 'admin' && (
+            {(activeTab === 'admin' || activeTab === 'sales') && (
               <AdminPortal
+                userRole={activeTab === 'sales' ? 'sales' : currentUser.role}
                 engineers={engineers}
                 clients={clients}
                 workOrders={workOrders}

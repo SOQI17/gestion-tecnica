@@ -6,6 +6,7 @@ import CapacitacionesPortal from './CapacitacionesPortal';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl } from '../utils/cloudinary';
 
 interface AdminPortalProps {
+  userRole?: 'admin' | 'engineer' | 'sales';
   engineers: Engineer[];
   clients: Client[];
   workOrders: WorkOrder[];
@@ -441,6 +442,7 @@ const getEngineerHexColor = (engineerId: string): string => {
 };
 
 export default function AdminPortal({
+  userRole = 'admin',
   engineers,
   clients,
   workOrders,
@@ -566,7 +568,9 @@ export default function AdminPortal({
   const [highlightedEngineerId, setHighlightedEngineerId] = useState<string | null>(null);
 
   // Main Admin Tab state
-  const [activeAdminTab, setActiveAdminTab] = useState<'agendamiento' | 'clientes' | 'equipos' | 'contratos' | 'cronograma' | 'vacaciones' | 'capacitaciones' | 'registro'>('agendamiento');
+  const [activeAdminTab, setActiveAdminTab] = useState<'agendamiento' | 'clientes' | 'equipos' | 'registro' | 'contratos' | 'cronograma' | 'vacaciones' | 'capacitaciones'>(
+    userRole === 'sales' ? 'clientes' : 'agendamiento'
+  );
 
   // Vacaciones Tab states
   const [vacFormEngId, setVacFormEngId] = useState('');
@@ -7721,34 +7725,42 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Top Global Admin Navigation Bar */}
       <div className="bg-slate-900 text-white rounded-2xl p-2.5 shadow-md no-print mb-6">
         <div className="flex flex-wrap gap-1 md:gap-2">
-          {[
-            { id: 'agendamiento', label: 'Agendamiento', icon: CalendarRange, color: 'text-indigo-400' },
-            { id: 'clientes', label: 'Clientes (Terceros)', icon: Users, color: 'text-sky-400' },
-            { id: 'equipos', label: 'Equipos (Activos)', icon: Cpu, color: 'text-emerald-400' },
-            { id: 'registro', label: 'Registro MTO', icon: FileSpreadsheet, color: 'text-pink-400' },
-            { id: 'contratos', label: 'Contratos', icon: Briefcase, color: 'text-amber-400' },
-            { id: 'cronograma', label: 'Cronograma', icon: CalendarIcon, color: 'text-rose-400' },
-            { id: 'vacaciones', label: 'Vacaciones', icon: Palmtree, color: 'text-teal-400' },
-            { id: 'capacitaciones', label: 'Capacitaciones', icon: BookOpen, color: 'text-purple-400' }
-          ].map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeAdminTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                id={`btn-admin-tab-${tab.id}`}
-                onClick={() => setActiveAdminTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                  isActive 
-                    ? 'bg-white text-slate-900 shadow-md font-extrabold scale-[1.02]' 
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : tab.color}`} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+          {(() => {
+            const allAdminTabs = [
+              { id: 'agendamiento', label: 'Agendamiento', icon: CalendarRange, color: 'text-indigo-400' },
+              { id: 'clientes', label: 'Clientes (Terceros)', icon: Users, color: 'text-sky-400' },
+              { id: 'equipos', label: 'Equipos (Activos)', icon: Cpu, color: 'text-emerald-400' },
+              { id: 'registro', label: 'Registro MTO', icon: FileSpreadsheet, color: 'text-pink-400' },
+              { id: 'contratos', label: 'Contratos', icon: Briefcase, color: 'text-amber-400' },
+              { id: 'cronograma', label: 'Cronograma', icon: CalendarIcon, color: 'text-rose-400' },
+              { id: 'vacaciones', label: 'Vacaciones', icon: Palmtree, color: 'text-teal-400' },
+              { id: 'capacitaciones', label: 'Capacitaciones', icon: BookOpen, color: 'text-purple-400' }
+            ];
+
+            const visibleAdminTabs = userRole === 'sales'
+              ? allAdminTabs.filter(t => t.id === 'clientes' || t.id === 'contratos')
+              : allAdminTabs;
+
+            return visibleAdminTabs.map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeAdminTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  id={`btn-admin-tab-${tab.id}`}
+                  onClick={() => setActiveAdminTab(tab.id as any)}
+                  className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    isActive 
+                      ? 'bg-white text-slate-900 shadow-md font-extrabold scale-[1.02]' 
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : tab.color}`} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            });
+          })()}
         </div>
       </div>
 
