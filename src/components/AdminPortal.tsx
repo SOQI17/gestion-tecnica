@@ -5674,6 +5674,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       .sort((a, b) => b.count - a.count || b.totalAmount - a.totalAmount)
       .slice(0, 5);
 
+    const topClientsByAmount = Array.from(clientStatsMap.entries())
+      .map(([name, stat]) => ({ name, ...stat }))
+      .sort((a, b) => b.totalAmount - a.totalAmount || b.count - a.count)
+      .slice(0, 5);
+
     // Analytics: Modalidad breakdown
     const modalityMap = new Map<string, { totalAmount: number; count: number }>();
     contractsGE.forEach(c => {
@@ -5969,38 +5974,42 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </div>
             </div>
 
-            {/* Card 2: Distribución por Modalidad */}
+            {/* Card 2: Clientes con Mayor Valor de Facturación ($ USD) */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
               <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                 <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
-                  <Percent className="w-4 h-4 text-purple-600" />
-                  <span>Distribución por Modalidad</span>
+                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                  <span>Clientes con Mayor Facturación ($ USD)</span>
                 </h5>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">{topModalities.length} Modalidades</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Top 5</span>
               </div>
-              <div className="space-y-2">
-                {topModalities.length === 0 ? (
-                  <p className="text-3xs text-slate-400 italic">No hay modalidades registradas.</p>
+              <div className="space-y-2.5">
+                {topClientsByAmount.length === 0 ? (
+                  <p className="text-3xs text-slate-400 italic">No hay datos suficientes.</p>
                 ) : (
-                  topModalities.slice(0, 4).map((mod, idx) => {
-                    const pct = totalAmount > 0 ? (mod.totalAmount / totalAmount) * 100 : 0;
-                    const colors = [
-                      'bg-indigo-50 text-indigo-800 border-indigo-200',
-                      'bg-purple-50 text-purple-800 border-purple-200',
-                      'bg-emerald-50 text-emerald-800 border-emerald-200',
-                      'bg-amber-50 text-amber-800 border-amber-200'
-                    ];
+                  topClientsByAmount.map((client, idx) => {
+                    const pct = totalAmount > 0 ? (client.totalAmount / totalAmount) * 100 : 0;
                     return (
-                      <div key={idx} className={`p-2 rounded-xl border flex items-center justify-between ${colors[idx % colors.length]}`}>
-                        <div>
-                          <span className="font-black text-xs block">{mod.modality}</span>
-                          <span className="text-[9px] opacity-80 font-semibold">{mod.count} Facturas</span>
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between items-center text-3xs">
+                          <div className="truncate max-w-[160px]">
+                            <span className="font-extrabold text-slate-900 block truncate">{client.name}</span>
+                            <span className="text-[9px] text-slate-400 font-semibold">{client.count} factura{client.count !== 1 ? 's' : ''}</span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="font-mono font-black text-emerald-700 block text-xs">
+                              ${client.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-[9px] font-bold text-emerald-600">
+                              {pct.toFixed(1)}% del total
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="font-mono font-black text-xs block">
-                            ${mod.totalAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-                          </span>
-                          <span className="text-[9px] font-bold opacity-80">{pct.toFixed(1)}% del Total</span>
+                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                          <div
+                            className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${Math.max(pct, 5)}%` }}
+                          />
                         </div>
                       </div>
                     );
