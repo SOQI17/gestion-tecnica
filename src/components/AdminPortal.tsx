@@ -737,6 +737,9 @@ export default function AdminPortal({
   const [contractGeCsvError, setContractGeCsvError] = useState<string | null>(null);
   const [isContractGeModalOpen, setIsContractGeModalOpen] = useState(false);
   const [editingContractGe, setEditingContractGe] = useState<ContractGE | null>(null);
+  const [geFormMode, setGeFormMode] = useState<'existing' | 'new'>('existing');
+  const [geClientSearchQuery, setGeClientSearchQuery] = useState('');
+  const [isGeClientDropdownOpen, setIsGeClientDropdownOpen] = useState(false);
   const [geFormCliente, setGeFormCliente] = useState('');
   const [geFormSid, setGeFormSid] = useState('');
   const [geFormModalidad, setGeFormModalidad] = useState('');
@@ -6038,7 +6041,33 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => {
+                              setEditingContractGe(null);
+                              setGeFormMode('existing');
+                              setGeFormCliente(item.cliente);
+                              setGeFormSid(item.sid || '');
+                              setGeFormModalidad(item.modalidad || '');
+                              setGeFormEquipo(item.equipo || '');
+                              setGeFormEquipmentNum(String(item.equipmentNum || ''));
+                              setGeFormInvoice('');
+                              setGeFormAmount('');
+                              setGeFormMonths(String(item.months || ''));
+                              setGeFormInvoiceDate(currentDateStr);
+                              setGeFormDueDate('');
+                              setGeFormPaymentPeriod('');
+                              setGeFormMonthNum('');
+                              setGeFormContractNum(String(item.contractNum || '1'));
+                              setGeFormObs('');
+                              setIsContractGeModalOpen(true);
+                            }}
+                            className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold px-2 py-1 rounded transition-colors text-3xs border border-indigo-200 cursor-pointer"
+                            title={`Agregar nueva factura para ${item.cliente}`}
+                          >
+                            + Factura
+                          </button>
+                          <button
+                            onClick={() => {
                               setEditingContractGe(item);
+                              setGeFormMode('existing');
                               setGeFormCliente(item.cliente);
                               setGeFormSid(item.sid || '');
                               setGeFormModalidad(item.modalidad || '');
@@ -14227,11 +14256,52 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </button>
             </div>
 
+            {/* Switcher de Modo: Cliente Existente vs Nuevo Cliente GE */}
+            {!editingContractGe && (
+              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGeFormMode('existing');
+                  }}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    geFormMode === 'existing'
+                      ? 'bg-white text-indigo-700 shadow-2xs font-extrabold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <span>👥 Cliente Existente</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGeFormMode('new');
+                    setGeFormCliente('');
+                    setGeFormSid('');
+                    setGeFormModalidad('');
+                    setGeFormEquipo('');
+                    setGeFormEquipmentNum('');
+                  }}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    geFormMode === 'new'
+                      ? 'bg-white text-indigo-700 shadow-2xs font-extrabold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <span>✨ Nuevo Cliente GE</span>
+                </button>
+              </div>
+            )}
+
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!geFormCliente || !geFormInvoice) {
-                  alert('Por favor ingrese el nombre del cliente y el número de invoice/factura.');
+                if (!geFormCliente) {
+                  alert('Por favor seleccione o ingrese el nombre del cliente.');
+                  return;
+                }
+                if (!geFormInvoice) {
+                  alert('Por favor ingrese el número de invoice/factura.');
                   return;
                 }
 
@@ -14267,17 +14337,118 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               }}
               className="space-y-3 text-xs"
             >
-              <div className="space-y-1">
-                <label className="block font-bold text-slate-700">CLIENTE *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="ej: Hospital Metropolitano"
-                  value={geFormCliente}
-                  onChange={e => setGeFormCliente(e.target.value)}
-                  className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
-                />
-              </div>
+              {/* Cliente Selector depending on geFormMode */}
+              {geFormMode === 'existing' && !editingContractGe ? (
+                <div className="space-y-1 relative">
+                  <label className="block font-bold text-slate-700">SELECCIONAR CLIENTE EXISTENTE *</label>
+                  {geFormCliente ? (
+                    <div className="bg-indigo-50 border border-indigo-200 p-2.5 rounded-xl flex justify-between items-center">
+                      <div>
+                        <span className="block text-[9px] font-bold text-indigo-500 uppercase">Cliente Seleccionado</span>
+                        <span className="font-extrabold text-indigo-900 text-sm">{geFormCliente}</span>
+                        {geFormEquipo && <span className="text-[10px] text-slate-500 font-semibold block">{geFormEquipo} ({geFormModalidad || 'GE'})</span>}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGeFormCliente('');
+                          setGeFormSid('');
+                          setGeFormModalidad('');
+                          setGeFormEquipo('');
+                          setGeFormEquipmentNum('');
+                          setGeClientSearchQuery('');
+                          setIsGeClientDropdownOpen(true);
+                        }}
+                        className="text-xs font-bold text-indigo-700 hover:underline cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-indigo-200"
+                      >
+                        Cambiar Cliente
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Buscar cliente guardado (ej. Hospital Metropolitano, Dr. Figueroa...)"
+                        value={geClientSearchQuery}
+                        onFocus={() => setIsGeClientDropdownOpen(true)}
+                        onChange={(e) => {
+                          setGeClientSearchQuery(e.target.value);
+                          setIsGeClientDropdownOpen(true);
+                        }}
+                        className="w-full p-2.5 border border-slate-200 rounded-xl font-semibold text-slate-800 outline-hidden focus:ring-2 focus:ring-indigo-500"
+                      />
+                      {isGeClientDropdownOpen && (
+                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100">
+                          {(() => {
+                            const existingMap = new Map<string, { name: string; sid?: string; modalidad?: string; equipo?: string; equipmentNum?: string | number }>();
+                            clients.forEach(c => {
+                              if (c.name && !existingMap.has(c.name.trim().toLowerCase())) {
+                                existingMap.set(c.name.trim().toLowerCase(), { name: c.name.trim() });
+                              }
+                            });
+                            contractsGE.forEach(c => {
+                              if (c.cliente && !existingMap.has(c.cliente.trim().toLowerCase())) {
+                                existingMap.set(c.cliente.trim().toLowerCase(), {
+                                  name: c.cliente.trim(),
+                                  sid: c.sid,
+                                  modalidad: c.modalidad,
+                                  equipo: c.equipo,
+                                  equipmentNum: c.equipmentNum
+                                });
+                              }
+                            });
+                            const clientList = Array.from(existingMap.values()).filter(c =>
+                              c.name.toLowerCase().includes(geClientSearchQuery.toLowerCase().trim())
+                            );
+
+                            if (clientList.length === 0) {
+                              return (
+                                <div className="p-3 text-center text-slate-400 text-3xs italic">
+                                  No se encontraron clientes coincidentes. Pruebe a cambiar a "✨ Nuevo Cliente GE".
+                                </div>
+                              );
+                            }
+
+                            return clientList.map((client, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  setGeFormCliente(client.name);
+                                  if (client.sid) setGeFormSid(client.sid);
+                                  if (client.modalidad) setGeFormModalidad(client.modalidad);
+                                  if (client.equipo) setGeFormEquipo(client.equipo);
+                                  if (client.equipmentNum) setGeFormEquipmentNum(String(client.equipmentNum));
+                                  setIsGeClientDropdownOpen(false);
+                                }}
+                                className="w-full text-left p-2.5 hover:bg-indigo-50 transition-colors flex justify-between items-center cursor-pointer"
+                              >
+                                <div>
+                                  <span className="font-extrabold text-slate-800 text-xs block">{client.name}</span>
+                                  {client.equipo && <span className="text-[10px] text-slate-500 font-semibold">{client.equipo} {client.modalidad ? `• ${client.modalidad}` : ''}</span>}
+                                </div>
+                                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">Seleccionar</span>
+                              </button>
+                            ));
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700">NOMBRE DEL NUEVO CLIENTE *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ej: Nuevo Centro Médico San Francisco"
+                    value={geFormCliente}
+                    onChange={e => setGeFormCliente(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
