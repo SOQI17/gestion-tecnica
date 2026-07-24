@@ -5556,13 +5556,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
           if (!rawCliente && !rawInvoice && !rawEquipo) continue;
 
-          let cleanAmountStr = rawAmount.replace(/[\$\s]/g, '');
-          if (cleanAmountStr.includes(',') && cleanAmountStr.includes('.')) {
-            cleanAmountStr = cleanAmountStr.replace(/\,/g, '');
-          } else if (cleanAmountStr.includes(',')) {
-            cleanAmountStr = cleanAmountStr.replace(/\./g, '').replace(/\,/g, '.');
-          }
-          const cleanAmount = parseFloat(cleanAmountStr) || 0;
+          const cleanAmount = parseGeCsvAmount(rawAmount);
 
           const newItem: ContractGE = {
             id: `GE-${rawInvoice || Date.now()}-${i}`,
@@ -5602,6 +5596,31 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       }
     };
     reader.readAsText(file, 'UTF-8');
+  };
+
+  const parseGeCsvAmount = (rawStr: string | number): number => {
+    if (typeof rawStr === 'number') return rawStr;
+    if (!rawStr) return 0;
+    let str = String(rawStr).trim().replace(/[\$\s]/g, '');
+    if (!str) return 0;
+
+    if (str.includes(',') && str.includes('.')) {
+      const lastComma = str.lastIndexOf(',');
+      const lastDot = str.lastIndexOf('.');
+      if (lastComma > lastDot) {
+        // e.g. 3.557,25 -> 3557.25
+        str = str.replace(/\./g, '').replace(',', '.');
+      } else {
+        // e.g. 3,557.25 -> 3557.25
+        str = str.replace(/,/g, '');
+      }
+    } else if (str.includes(',')) {
+      // Comma is decimal separator! e.g. "400,83" -> "400.83", "362,04" -> "362.04"
+      str = str.replace(',', '.');
+    }
+
+    const val = parseFloat(str);
+    return isNaN(val) ? 0 : val;
   };
 
   const autoCalculateGeNextMonth = (clientName: string) => {
@@ -5783,6 +5802,32 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 onChange={handleContractGeCsvUpload}
                 className="block w-full text-3xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all"
               />
+              {contractsGE.some(c => (c.invoiceAmount || 0) >= 10000 && Number.isInteger(c.invoiceAmount)) && (
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-[10px] text-amber-800 font-bold">
+                    ⚠️ Se detectaron montos previamente importados con comas desplazadas (ej. $40,083.00 en vez de $400.83).
+                  </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (window.confirm("¿Desea auto-corregir los montos de facturas en Firestore que fueron importados con comas desplazadas (ej: $40,083.00 → $400.83 y $36,204.00 → $362.04)?")) {
+                        const fixedList = contractsGE.map(item => {
+                          if (item.invoiceAmount && item.invoiceAmount >= 10000 && Number.isInteger(item.invoiceAmount)) {
+                            return { ...item, invoiceAmount: item.invoiceAmount / 100 };
+                          }
+                          return item;
+                        });
+                        if (onBulkUploadContractsGE) {
+                          await onBulkUploadContractsGE(fixedList);
+                        }
+                      }
+                    }}
+                    className="text-3xs font-extrabold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>🔧 Auto-Corregir Montos ($40,083 → $400.83)</span>
+                  </button>
+                </div>
+              )}
               {contractGeCsvError && (
                 <div className="text-3xs text-red-650 font-bold bg-red-50 p-2 rounded-lg border border-red-100 flex items-center gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5 text-red-500" />
