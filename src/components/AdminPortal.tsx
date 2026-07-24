@@ -14469,51 +14469,56 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
               )}
 
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">SID (SYSTEM ID)</label>
-                  <input
-                    type="text"
-                    placeholder="ej: CE6XG22000"
-                    value={geFormSid}
-                    onChange={e => setGeFormSid(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
-                  />
-                </div>
+              {/* SID, MODALIDAD y EQUIPO solo visibles al registrar Nuevo Cliente GE o al Editar */}
+              {(geFormMode === 'new' || editingContractGe) && (
+                <>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="block font-bold text-slate-700">SID (SYSTEM ID)</label>
+                      <input
+                        type="text"
+                        placeholder="ej: CE6XG22000"
+                        value={geFormSid}
+                        onChange={e => setGeFormSid(e.target.value)}
+                        className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                      />
+                    </div>
 
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">MODALIDAD</label>
-                  <input
-                    type="text"
-                    placeholder="ej: CT, MR, SURGERY"
-                    value={geFormModalidad}
-                    onChange={e => setGeFormModalidad(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-bold"
-                  />
-                </div>
+                    <div className="space-y-1">
+                      <label className="block font-bold text-slate-700">MODALIDAD</label>
+                      <input
+                        type="text"
+                        placeholder="ej: CT, MR, SURGERY"
+                        value={geFormModalidad}
+                        onChange={e => setGeFormModalidad(e.target.value)}
+                        className="w-full p-2 border border-slate-200 rounded-lg font-bold"
+                      />
+                    </div>
 
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">EQUIPMENT #</label>
-                  <input
-                    type="text"
-                    placeholder="ej: 1"
-                    value={geFormEquipmentNum}
-                    onChange={e => setGeFormEquipmentNum(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
-                  />
-                </div>
-              </div>
+                    <div className="space-y-1">
+                      <label className="block font-bold text-slate-700">EQUIPMENT #</label>
+                      <input
+                        type="text"
+                        placeholder="ej: 1"
+                        value={geFormEquipmentNum}
+                        onChange={e => setGeFormEquipmentNum(e.target.value)}
+                        className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                      />
+                    </div>
+                  </div>
 
-              <div className="space-y-1">
-                <label className="block font-bold text-slate-700">EQUIPO (MODELO)</label>
-                <input
-                  type="text"
-                  placeholder="ej: REVOLUTION ACT, 1.5T SIGNA CREATOR"
-                  value={geFormEquipo}
-                  onChange={e => setGeFormEquipo(e.target.value)}
-                  className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
-                />
-              </div>
+                  <div className="space-y-1">
+                    <label className="block font-bold text-slate-700">EQUIPO (MODELO)</label>
+                    <input
+                      type="text"
+                      placeholder="ej: REVOLUTION ACT, 1.5T SIGNA CREATOR"
+                      value={geFormEquipo}
+                      onChange={e => setGeFormEquipo(e.target.value)}
+                      className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
