@@ -6587,158 +6587,272 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           const inactiveCount = contracts.filter(c => c.status === 'Inactivo').length;
 
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
-              {/* Pending Admin Schedule Card */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+              {/* Card 1: TODOS LOS CONTRATOS */}
+              <div 
+                onClick={() => {
+                  setContractFilterExpiration(null);
+                  setContractPage(1);
+                }}
+                className={`p-3 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
+                  contractFilterExpiration === null
+                    ? 'bg-gradient-to-br from-indigo-600 to-indigo-800 text-white border-indigo-700 shadow-md ring-2 ring-indigo-500 ring-offset-1 scale-[1.02]'
+                    : 'bg-white hover:bg-indigo-50/40 text-slate-800 border-slate-200 hover:border-indigo-300 shadow-2xs hover:shadow-xs'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold ${
+                    contractFilterExpiration === null ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
+                  }`}>
+                    📁
+                  </div>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    contractFilterExpiration === null ? 'bg-white text-indigo-900 shadow-2xs' : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-700'
+                  }`}>
+                    {contractFilterExpiration === null ? '✓ ACTIVO' : 'TODOS'}
+                  </span>
+                </div>
+                <div className="mt-2.5">
+                  <span className={`block text-[9px] font-extrabold uppercase tracking-wider ${
+                    contractFilterExpiration === null ? 'text-indigo-200' : 'text-slate-400'
+                  }`}>
+                    Total Contratos
+                  </span>
+                  <span className="text-sm font-black tracking-tight leading-none mt-0.5 block">
+                    {contracts.length} <span className="text-[10px] font-semibold opacity-80">Registros</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 2: PENDIENTE ADMIN */}
               <div 
                 onClick={() => {
                   setContractFilterExpiration(contractFilterExpiration === 'pending_admin' ? null : 'pending_admin');
                   setContractPage(1);
                 }}
-                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
+                className={`p-3 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
                   contractFilterExpiration === 'pending_admin'
-                    ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-400'
+                    ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-white border-amber-600 shadow-md ring-2 ring-amber-400 ring-offset-1 scale-[1.02]'
                     : pendingAdminCount > 0
-                    ? 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300 animate-pulse'
-                    : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                    ? 'bg-amber-50/70 hover:bg-amber-100/80 text-amber-950 border-amber-300/80 shadow-2xs'
+                    : 'bg-white hover:bg-amber-50/30 text-slate-800 border-slate-200 hover:border-amber-300 shadow-2xs'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-black text-xs shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold ${
+                    contractFilterExpiration === 'pending_admin' ? 'bg-white/20 text-white' : 'bg-amber-200/80 text-amber-800'
+                  }`}>
                     ⏳
                   </div>
-                  <div>
-                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Pendiente Admin</span>
-                    <span className="text-xs font-black leading-tight">{pendingAdminCount} Contratos</span>
-                  </div>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    contractFilterExpiration === 'pending_admin' ? 'bg-white text-amber-900 shadow-2xs' : 'bg-amber-100/80 text-amber-800'
+                  }`}>
+                    {contractFilterExpiration === 'pending_admin' ? '✓ FILTRADO' : 'PENDIENTE'}
+                  </span>
                 </div>
-                <span className="text-[9px] font-bold underline">
-                  {contractFilterExpiration === 'pending_admin' ? '✓ Viendo' : 'Filtrar'}
-                </span>
+                <div className="mt-2.5">
+                  <span className={`block text-[9px] font-extrabold uppercase tracking-wider ${
+                    contractFilterExpiration === 'pending_admin' ? 'text-amber-200' : 'text-amber-800/80'
+                  }`}>
+                    Sin Cronograma
+                  </span>
+                  <span className="text-sm font-black tracking-tight leading-none mt-0.5 block">
+                    {pendingAdminCount} <span className="text-[10px] font-semibold opacity-80">Contratos</span>
+                  </span>
+                </div>
               </div>
 
-              {/* 1 Month Alert Card */}
+              {/* Card 3: POR VENCER 1M */}
               <div 
                 onClick={() => {
                   setContractFilterExpiration(contractFilterExpiration === '1m' ? null : '1m');
                   setContractPage(1);
                 }}
-                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
+                className={`p-3 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
                   contractFilterExpiration === '1m'
-                    ? 'bg-red-600 text-white border-red-700 ring-2 ring-red-400'
-                    : 'bg-red-50 hover:bg-red-100 text-red-950 border-red-200'
+                    ? 'bg-gradient-to-br from-rose-600 to-rose-800 text-white border-rose-700 shadow-md ring-2 ring-rose-500 ring-offset-1 scale-[1.02]'
+                    : urgent1m.length > 0
+                    ? 'bg-rose-50/80 hover:bg-rose-100 text-rose-950 border-rose-300/80 shadow-2xs animate-pulse'
+                    : 'bg-white hover:bg-rose-50/40 text-slate-800 border-slate-200 hover:border-rose-300 shadow-2xs'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-red-500 text-white flex items-center justify-center font-black text-xs shrink-0 animate-pulse">
+                <div className="flex items-center justify-between">
+                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold ${
+                    contractFilterExpiration === '1m' ? 'bg-white/20 text-white' : 'bg-rose-200/80 text-rose-800'
+                  }`}>
                     🚨
                   </div>
-                  <div>
-                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer 1M</span>
-                    <span className="text-xs font-black leading-tight">{urgent1m.length} Contratos</span>
-                  </div>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    contractFilterExpiration === '1m' ? 'bg-white text-rose-900 shadow-2xs' : 'bg-rose-100/80 text-rose-800'
+                  }`}>
+                    {contractFilterExpiration === '1m' ? '✓ FILTRADO' : '1 MES'}
+                  </span>
                 </div>
-                <span className="text-[9px] font-bold underline">
-                  {contractFilterExpiration === '1m' ? '✓ Viendo' : 'Filtrar'}
-                </span>
+                <div className="mt-2.5">
+                  <span className={`block text-[9px] font-extrabold uppercase tracking-wider ${
+                    contractFilterExpiration === '1m' ? 'text-rose-200' : 'text-rose-800/80'
+                  }`}>
+                    Por Vencer (1M)
+                  </span>
+                  <span className="text-sm font-black tracking-tight leading-none mt-0.5 block">
+                    {urgent1m.length} <span className="text-[10px] font-semibold opacity-80">Contratos</span>
+                  </span>
+                </div>
               </div>
 
-              {/* 3 Months Alert Card */}
+              {/* Card 4: POR VENCER 3M */}
               <div 
                 onClick={() => {
                   setContractFilterExpiration(contractFilterExpiration === '3m' ? null : '3m');
                   setContractPage(1);
                 }}
-                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
+                className={`p-3 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
                   contractFilterExpiration === '3m'
-                    ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-400'
-                    : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-200'
+                    ? 'bg-gradient-to-br from-amber-500 to-yellow-600 text-white border-amber-600 shadow-md ring-2 ring-amber-400 ring-offset-1 scale-[1.02]'
+                    : warning3m.length > 0
+                    ? 'bg-amber-50/60 hover:bg-amber-100/70 text-amber-950 border-amber-300/60 shadow-2xs'
+                    : 'bg-white hover:bg-amber-50/30 text-slate-800 border-slate-200 hover:border-amber-300 shadow-2xs'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-black text-xs shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold ${
+                    contractFilterExpiration === '3m' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
+                  }`}>
                     ⚠️
                   </div>
-                  <div>
-                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer 3M</span>
-                    <span className="text-xs font-black leading-tight">{warning3m.length} Contratos</span>
-                  </div>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    contractFilterExpiration === '3m' ? 'bg-white text-amber-950 shadow-2xs' : 'bg-amber-100/70 text-amber-800'
+                  }`}>
+                    {contractFilterExpiration === '3m' ? '✓ FILTRADO' : '3 MESES'}
+                  </span>
                 </div>
-                <span className="text-[9px] font-bold underline">
-                  {contractFilterExpiration === '3m' ? '✓ Viendo' : 'Filtrar'}
-                </span>
+                <div className="mt-2.5">
+                  <span className={`block text-[9px] font-extrabold uppercase tracking-wider ${
+                    contractFilterExpiration === '3m' ? 'text-amber-100' : 'text-amber-900/70'
+                  }`}>
+                    Por Vencer (3M)
+                  </span>
+                  <span className="text-sm font-black tracking-tight leading-none mt-0.5 block">
+                    {warning3m.length} <span className="text-[10px] font-semibold opacity-80">Contratos</span>
+                  </span>
+                </div>
               </div>
 
-              {/* Inactivos (No Renovados) Card */}
+              {/* Card 5: INACTIVOS */}
               <div 
                 onClick={() => {
                   setContractFilterExpiration(contractFilterExpiration === 'inactivo' ? null : 'inactivo');
                   setContractPage(1);
                 }}
-                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
+                className={`p-3 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
                   contractFilterExpiration === 'inactivo'
-                    ? 'bg-slate-700 text-white border-slate-800 ring-2 ring-slate-400'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                    ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-white border-slate-800 shadow-md ring-2 ring-slate-500 ring-offset-1 scale-[1.02]'
+                    : inactiveCount > 0
+                    ? 'bg-slate-100/80 hover:bg-slate-200 text-slate-900 border-slate-300 shadow-2xs'
+                    : 'bg-white hover:bg-slate-100/60 text-slate-800 border-slate-200 hover:border-slate-300 shadow-2xs'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-slate-500 text-white flex items-center justify-center font-black text-xs shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold ${
+                    contractFilterExpiration === 'inactivo' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                  }`}>
                     🚫
                   </div>
-                  <div>
-                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Inactivos</span>
-                    <span className="text-xs font-black leading-tight">{inactiveCount} Contratos</span>
-                  </div>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    contractFilterExpiration === 'inactivo' ? 'bg-white text-slate-900 shadow-2xs' : 'bg-slate-200/80 text-slate-700'
+                  }`}>
+                    {contractFilterExpiration === 'inactivo' ? '✓ FILTRADO' : 'INACTIVOS'}
+                  </span>
                 </div>
-                <span className="text-[9px] font-bold underline">
-                  {contractFilterExpiration === 'inactivo' ? '✓ Viendo' : 'Filtrar'}
-                </span>
+                <div className="mt-2.5">
+                  <span className={`block text-[9px] font-extrabold uppercase tracking-wider ${
+                    contractFilterExpiration === 'inactivo' ? 'text-slate-300' : 'text-slate-500'
+                  }`}>
+                    No Renovados
+                  </span>
+                  <span className="text-sm font-black tracking-tight leading-none mt-0.5 block">
+                    {inactiveCount} <span className="text-[10px] font-semibold opacity-80">Contratos</span>
+                  </span>
+                </div>
               </div>
 
-              {/* Expired / All Reset Card */}
+              {/* Card 6: VENCIDOS */}
               <div 
                 onClick={() => {
                   setContractFilterExpiration(contractFilterExpiration === 'expired' ? null : 'expired');
                   setContractPage(1);
                 }}
-                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
+                className={`p-3 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
                   contractFilterExpiration === 'expired'
-                    ? 'bg-slate-800 text-white border-slate-900 ring-2 ring-slate-400'
-                    : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                    ? 'bg-gradient-to-br from-red-700 to-red-950 text-white border-red-800 shadow-md ring-2 ring-red-500 ring-offset-1 scale-[1.02]'
+                    : expiredCount.length > 0
+                    ? 'bg-red-50/90 hover:bg-red-100 text-red-950 border-red-200 shadow-2xs'
+                    : 'bg-white hover:bg-red-50/30 text-slate-800 border-slate-200 hover:border-red-300 shadow-2xs'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-black text-xs shrink-0">
-                    ⌛
+                <div className="flex items-center justify-between">
+                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold ${
+                    contractFilterExpiration === 'expired' ? 'bg-white/20 text-white' : 'bg-red-200 text-red-800'
+                  }`}>
+                    🔴
                   </div>
-                  <div>
-                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Vencidos / Total</span>
-                    <span className="text-xs font-black leading-tight">{expiredCount.length} Vencidos ({contracts.length})</span>
-                  </div>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    contractFilterExpiration === 'expired' ? 'bg-white text-red-950 shadow-2xs' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {contractFilterExpiration === 'expired' ? '✓ FILTRADO' : 'VENCIDOS'}
+                  </span>
                 </div>
-                <span className="text-[9px] font-bold underline">
-                  {contractFilterExpiration === 'expired' ? '✓ Viendo' : contractFilterExpiration ? 'Ver Todos' : 'Filtrar'}
-                </span>
+                <div className="mt-2.5">
+                  <span className={`block text-[9px] font-extrabold uppercase tracking-wider ${
+                    contractFilterExpiration === 'expired' ? 'text-red-200' : 'text-red-800/80'
+                  }`}>
+                    Vencidos por Fecha
+                  </span>
+                  <span className="text-sm font-black tracking-tight leading-none mt-0.5 block">
+                    {expiredCount.length} <span className="text-[10px] font-semibold opacity-80">Contratos</span>
+                  </span>
+                </div>
               </div>
             </div>
           );
         })()}
 
         {/* Filter and Search */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-md">
-            <input
-              type="text"
-              placeholder="Buscar por Nº Contrato, tipo, cobertura, cliente..."
-              value={contractSearch}
-              onChange={(e) => {
-                setContractSearch(e.target.value);
-                setContractPage(1);
-              }}
-              className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400"
-            />
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-1 max-w-xl">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Buscar por Nº Contrato, tipo, cobertura, cliente..."
+                value={contractSearch}
+                onChange={(e) => {
+                  setContractSearch(e.target.value);
+                  setContractPage(1);
+                }}
+                className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 shadow-2xs"
+              />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            </div>
+
+            {contractFilterExpiration && (
+              <button
+                onClick={() => setContractFilterExpiration(null)}
+                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-lg text-3xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs shrink-0 animate-in fade-in zoom-in-95 duration-150"
+              >
+                <span>Filtro: {
+                  contractFilterExpiration === 'pending_admin' ? '⏳ Sin Cronograma' :
+                  contractFilterExpiration === '1m' ? '🚨 Por Vencer 1M' :
+                  contractFilterExpiration === '3m' ? '⚠️ Por Vencer 3M' :
+                  contractFilterExpiration === 'inactivo' ? '🚫 Inactivos' : '🔴 Vencidos'
+                }</span>
+                <span className="bg-indigo-200 text-indigo-900 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black">✕</span>
+              </button>
+            )}
           </div>
-          <span className="text-3xs text-slate-400 font-bold uppercase tracking-wider">{filtered.length} Contratos encontrados</span>
+
+          <div className="text-[10px] font-bold text-slate-500 bg-slate-100/80 px-2.5 py-1 rounded-lg border border-slate-200/60">
+            Mostrando <span className="font-extrabold text-indigo-700">{filtered.length}</span> de {contracts.length} contratos
+          </div>
         </div>
 
         {/* Contracts Table */}
