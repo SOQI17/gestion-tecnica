@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag } from 'lucide-react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -4435,10 +4435,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     const isExpiredDate = contractFormEnd && contractFormEnd < todayStr;
 
     let finalStatus = contractFormStatus;
-    if (isPendingSchedule) {
-      finalStatus = 'Pendiente';
-    } else if (isExpiredDate && contractFormStatus !== 'Inactivo') {
-      finalStatus = 'Vencido';
+    // Only override status if user didn't manually set Vencido/Inactivo
+    if (contractFormStatus !== 'Vencido' && contractFormStatus !== 'Inactivo') {
+      if (isPendingSchedule) {
+        finalStatus = 'Pendiente';
+      } else if (isExpiredDate) {
+        finalStatus = 'Vencido';
+      }
     }
 
     const isSalesReadOnly = !!editingContract && userRole === 'sales';
@@ -4512,6 +4515,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       if (onUpdateContract) onUpdateContract(con);
     } else {
       if (onAddContract) onAddContract(con);
+      setContractPage(1); // Reset to page 1 so the new contract is visible
     }
     setIsContractModalOpen(false);
     setEditingContract(null);
@@ -6472,7 +6476,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           const expAlert = getContractExpirationAlert(con.endDate, con.status);
           if (contractFilterExpiration === '1m' && expAlert?.level !== 'urgent_1m') return false;
           if (contractFilterExpiration === '3m' && expAlert?.level !== 'warning_3m') return false;
-          if (contractFilterExpiration === 'expired' && expAlert?.level !== 'expired') return false;
+          if (contractFilterExpiration === 'expired' && expAlert?.level !== 'expired' && con.status !== 'Vencido') return false;
           if (contractFilterExpiration === 'pending_admin') {
             const isPending = con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0));
             if (!isPending) return false;
