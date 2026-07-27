@@ -5639,6 +5639,109 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     return String(maxMonth > 0 ? maxMonth + 1 : 1);
   };
 
+  const exportContractsToExcel = () => {
+    if (contracts.length === 0) {
+      alert("No hay contratos registrados para exportar.");
+      return;
+    }
+
+    const headers = [
+      'N° CONTRATO',
+      'CLIENTE',
+      'TIPO DE CONTRATO',
+      'FECHA INICIO',
+      'FECHA VENCIMIENTO',
+      'ESTADO',
+      'DETALLE DE COBERTURA',
+      'FRECUENCIA MANTENIMIENTO',
+      'MONTO VALOR ($)',
+      'OBSERVACIONES / EQUIPOS'
+    ];
+
+    const rows = contracts.map(con => {
+      const client = clients.find(c => c.id === con.clientId);
+      const equipNames = (con.equipmentItems || []).map(e => `${e.name || ''} ${e.brand || ''} ${e.model || ''}`.trim()).filter(Boolean).join(', ');
+      return [
+        `"${(con.id || '').replace(/"/g, '""')}"`,
+        `"${(client?.name || con.clientId || '').replace(/"/g, '""')}"`,
+        `"${(con.contractType || '').replace(/"/g, '""')}"`,
+        `"${(con.startDate || '').replace(/"/g, '""')}"`,
+        `"${(con.endDate || '').replace(/"/g, '""')}"`,
+        `"${(con.status || '').replace(/"/g, '""')}"`,
+        `"${(con.coverageDetail || '').replace(/"/g, '""')}"`,
+        `"${(con.maintenanceFrequency || '').replace(/"/g, '""')}"`,
+        con.contractValue || 0,
+        `"${(equipNames || con.observaciones || '').replace(/"/g, '""')}"`
+      ].join(';');
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(';'), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    link.href = url;
+    link.download = `contratos_y_garantias_MTO_${today}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportContractsGeToExcel = () => {
+    if (contractsGE.length === 0) {
+      alert("No hay contratos GE registrados para exportar.");
+      return;
+    }
+
+    const headers = [
+      'CLIENTE',
+      'SID',
+      'MODALIDAD',
+      'EQUIPO',
+      'EQUIPMENT #',
+      'INVOICE (FACTURA)',
+      'INVOICE AMOUNT ($)',
+      'MONTHS (MESES)',
+      'INVOICE DATE',
+      'DUE DATE',
+      'FECHA/AÑO PAGO',
+      '#MES',
+      'CONTRATO',
+      'OBSERVACIONES / COMMENTS'
+    ];
+
+    const rows = contractsGE.map(c => {
+      let cleanName = (c.cliente || '').trim();
+      cleanName = cleanName.replace(/\uFFFD/g, 'í').replace(/Mara/g, 'María').trim();
+
+      return [
+        `"${cleanName.replace(/"/g, '""')}"`,
+        `"${(c.sid || '').replace(/"/g, '""')}"`,
+        `"${(c.modalidad || '').replace(/"/g, '""')}"`,
+        `"${(c.equipo || '').replace(/"/g, '""')}"`,
+        `"${(c.equipmentNum || '').replace(/"/g, '""')}"`,
+        `"${(c.invoice || '').replace(/"/g, '""')}"`,
+        c.invoiceAmount || 0,
+        `"${(c.months || '').replace(/"/g, '""')}"`,
+        `"${(c.invoiceDate || '').replace(/"/g, '""')}"`,
+        `"${(c.dueDate || '').replace(/"/g, '""')}"`,
+        `"${(c.paymentPeriod || '').replace(/"/g, '""')}"`,
+        `"${(c.monthNum || '').replace(/"/g, '""')}"`,
+        `"${(c.contractNum || '').replace(/"/g, '""')}"`,
+        `"${(c.observaciones || '').replace(/"/g, '""')}"`
+      ].join(';');
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(';'), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    link.href = url;
+    link.download = `contratos_GE_MTO_${today}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const renderGeSubView = () => {
     const query = contractGeSearch.toLowerCase().trim();
     const filteredGE = contractsGE.filter(c => {
@@ -5735,6 +5838,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             >
               <PieChart className="w-3.5 h-3.5 text-indigo-600" />
               <span>{isGeDashboardExpanded ? 'Ocultar Dashboard' : '📊 Ver Dashboard'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={exportContractsGeToExcel}
+              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-emerald-200 transition-colors cursor-pointer"
+              title="Descargar todas las facturas y contratos con GE en Excel (CSV)"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+              <span>📊 Exportar Excel</span>
             </button>
 
             {userRole === 'admin' && (
@@ -6293,6 +6406,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
 
             <div className="flex flex-wrap gap-2 items-center">
+              <button
+                type="button"
+                onClick={exportContractsToExcel}
+                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-emerald-200 transition-colors cursor-pointer"
+                title="Descargar todos los contratos de servicio y garantías en Excel (CSV)"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                <span>📊 Exportar Excel</span>
+              </button>
+
               {userRole === 'admin' && (
                 <button
                   onClick={() => setIsContractImporterOpen(!isContractImporterOpen)}
