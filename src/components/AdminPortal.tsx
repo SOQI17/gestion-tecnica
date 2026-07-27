@@ -6419,9 +6419,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
   const renderContratosTab = () => {
     const renderGarantiasSubView = () => {
+      const normalizeBrandName = (brand?: string): string => {
+        if (!brand) return '';
+        const trimmed = brand.trim();
+        const upper = trimmed.toUpperCase();
+        if (
+          upper === 'GE' ||
+          upper === 'GENERAL ELECTRIC' ||
+          upper === 'GE HEALTHCARE' ||
+          upper === 'GE MEDICAL' ||
+          upper === 'G.E.' ||
+          upper === 'GE MEDICAL SYSTEMS'
+        ) {
+          return 'GE';
+        }
+        return trimmed;
+      };
+
       const availableContractBrands = Array.from(
         new Set(
-          contracts.flatMap(c => (c.equipmentItems || []).map(e => e.brand?.trim()).filter(Boolean))
+          contracts.flatMap(c => (c.equipmentItems || []).map(e => normalizeBrandName(e.brand)).filter(Boolean))
         )
       ).sort();
 
@@ -6433,14 +6450,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           con.type.toLowerCase().includes(query) ||
           (con.coverage || '').toLowerCase().includes(query) ||
           (client?.name || '').toLowerCase().includes(query) ||
-          (con.equipmentItems || []).some(e => (e.brand || '').toLowerCase().includes(query) || (e.name || '').toLowerCase().includes(query))
+          (con.equipmentItems || []).some(e => 
+            (e.brand || '').toLowerCase().includes(query) || 
+            normalizeBrandName(e.brand).toLowerCase().includes(query) ||
+            (e.name || '').toLowerCase().includes(query)
+          )
         );
 
         if (!matchesQuery) return false;
 
         if (contractFilterBrand !== 'all') {
           const hasBrand = (con.equipmentItems || []).some(
-            e => (e.brand || '').trim().toLowerCase() === contractFilterBrand.toLowerCase()
+            e => normalizeBrandName(e.brand).toLowerCase() === contractFilterBrand.toLowerCase()
           );
           if (!hasBrand) return false;
         }
@@ -6927,7 +6948,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   const client = clients.find(c => c.id === con.clientId);
                   const expAlert = getContractExpirationAlert(con.endDate, con.status);
                   const brands = Array.from(
-                    new Set((con.equipmentItems || []).map(e => e.brand?.trim()).filter(Boolean))
+                    new Set((con.equipmentItems || []).map(e => normalizeBrandName(e.brand)).filter(Boolean))
                   );
 
                   let rowBg = 'hover:bg-indigo-50/20';
