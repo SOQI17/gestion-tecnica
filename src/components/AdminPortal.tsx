@@ -724,7 +724,7 @@ export default function AdminPortal({
   const [contractsSubTab, setContractsSubTab] = useState<'garantias' | 'ge'>('garantias');
   const [contractSearch, setContractSearch] = useState('');
   const [contractPage, setContractPage] = useState(1);
-  const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | null>(null);
+  const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | null>(null);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isContractImporterOpen, setIsContractImporterOpen] = useState(false);
   const [contractCsvError, setContractCsvError] = useState<string | null>(null);
@@ -785,6 +785,7 @@ export default function AdminPortal({
   const [contractFormMaintenanceDates, setContractFormMaintenanceDates] = useState<string[]>([]);
   const [tempMaintenanceDate, setTempMaintenanceDate] = useState('');
   const [contractFormQcDate, setContractFormQcDate] = useState('');
+  const [contractFormPendingAdmin, setContractFormPendingAdmin] = useState<boolean>(false);
 
   // Cloudinary Contract Attachments States
   const [contractFormPdfUrl, setContractFormPdfUrl] = useState('');
@@ -4388,20 +4389,23 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       return;
     }
 
+    const isPendingSchedule = contractFormPendingAdmin || (userRole === 'sales' && contractFormMaintenanceDates.length === 0) || (contractFormFrequency === 'Ninguno' && contractFormMaintenanceDates.length === 0);
+
     const con: Contract = {
       id: contractFormId.trim(),
       clientId: targetClientId,
       type: contractFormType,
       startDate: contractFormStart,
       endDate: contractFormEnd,
-      status: contractFormStatus,
+      status: isPendingSchedule ? 'Pendiente' : contractFormStatus,
       coverage: contractFormCoverage.trim(),
       equipmentItems: contractFormEquipmentItems,
-      maintenanceFrequency: contractFormFrequency,
-      maintenanceDates: contractFormMaintenanceDates,
-      qcDate: contractFormQcDate || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : ''),
+      maintenanceFrequency: isPendingSchedule ? 'Ninguno' : contractFormFrequency,
+      maintenanceDates: isPendingSchedule ? [] : contractFormMaintenanceDates,
+      qcDate: isPendingSchedule ? undefined : (contractFormQcDate || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : '')),
       contractPdfUrl: contractFormPdfUrl.trim() || undefined,
-      schedulePdfUrl: contractFormSchedulePdfUrl.trim() || undefined
+      schedulePdfUrl: contractFormSchedulePdfUrl.trim() || undefined,
+      pendingAdminSchedule: isPendingSchedule
     };
 
     // Auto-register new custom equipments under the selected client
@@ -6382,6 +6386,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           if (contractFilterExpiration === '1m' && expAlert?.level !== 'urgent_1m') return false;
           if (contractFilterExpiration === '3m' && expAlert?.level !== 'warning_3m') return false;
           if (contractFilterExpiration === 'expired' && expAlert?.level !== 'expired') return false;
+          if (contractFilterExpiration === 'pending_admin') {
+            const isPending = con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0));
+            if (!isPending) return false;
+          }
         }
 
         return true;
@@ -6454,6 +6462,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setContractFormQcDate('');
                   setContractFormPdfUrl('');
                   setContractFormSchedulePdfUrl('');
+                  setContractFormPendingAdmin(userRole === 'sales');
                   setIsContractModalOpen(true);
                 }}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-indigo-600 transition-colors"
@@ -6521,8 +6530,40 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             return alert?.level === 'expired';
           });
 
+          const pendingAdminCount = contracts.filter(c => 
+            c.pendingAdminSchedule || (c.maintenanceFrequency === 'Ninguno' && (!c.maintenanceDates || c.maintenanceDates.length === 0))
+          ).length;
+
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              {/* Pending Admin Schedule Card */}
+              <div 
+                onClick={() => {
+                  setContractFilterExpiration(contractFilterExpiration === 'pending_admin' ? null : 'pending_admin');
+                  setContractPage(1);
+                }}
+                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
+                  contractFilterExpiration === 'pending_admin'
+                    ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-400'
+                    : pendingAdminCount > 0
+                    ? 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300 animate-pulse'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-black text-xs shrink-0">
+                    ⏳
+                  </div>
+                  <div>
+                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Pendiente Admin</span>
+                    <span className="text-xs font-black leading-tight">{pendingAdminCount} Contratos</span>
+                  </div>
+                </div>
+                <span className="text-[9px] font-bold underline">
+                  {contractFilterExpiration === 'pending_admin' ? '✓ Viendo' : 'Filtrar'}
+                </span>
+              </div>
+
               {/* 1 Month Alert Card */}
               <div 
                 onClick={() => {
@@ -6535,16 +6576,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     : 'bg-red-50 hover:bg-red-100 text-red-950 border-red-200'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center font-black text-xs shrink-0 animate-pulse">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-red-500 text-white flex items-center justify-center font-black text-xs shrink-0 animate-pulse">
                     🚨
                   </div>
                   <div>
-                    <span className="block text-[9px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer en 1 Mes</span>
-                    <span className="text-sm font-black leading-tight">{urgent1m.length} Contratos</span>
+                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer en 1M</span>
+                    <span className="text-xs font-black leading-tight">{urgent1m.length} Contratos</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold underline">
+                <span className="text-[9px] font-bold underline">
                   {contractFilterExpiration === '1m' ? '✓ Viendo' : 'Filtrar'}
                 </span>
               </div>
@@ -6561,16 +6602,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-200'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-black text-xs shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-black text-xs shrink-0">
                     ⚠️
                   </div>
                   <div>
-                    <span className="block text-[9px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer en 3 Meses</span>
-                    <span className="text-sm font-black leading-tight">{warning3m.length} Contratos</span>
+                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer en 3M</span>
+                    <span className="text-xs font-black leading-tight">{warning3m.length} Contratos</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold underline">
+                <span className="text-[9px] font-bold underline">
                   {contractFilterExpiration === '3m' ? '✓ Viendo' : 'Filtrar'}
                 </span>
               </div>
@@ -6587,16 +6628,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-black text-xs shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-black text-xs shrink-0">
                     ⌛
                   </div>
                   <div>
-                    <span className="block text-[9px] font-extrabold uppercase tracking-wide opacity-90">Vencidos / Total</span>
-                    <span className="text-sm font-black leading-tight">{expiredCount.length} Vencidos ({contracts.length} Total)</span>
+                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Vencidos / Total</span>
+                    <span className="text-xs font-black leading-tight">{expiredCount.length} Vencidos ({contracts.length} Total)</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold underline">
+                <span className="text-[9px] font-bold underline">
                   {contractFilterExpiration === 'expired' ? '✓ Viendo' : contractFilterExpiration ? 'Ver Todos' : 'Filtrar'}
                 </span>
               </div>
@@ -6678,7 +6719,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </div>
                       </td>
                       <td className="p-3.5">
-                        {expAlert && expAlert.level === 'urgent_1m' ? (
+                        {con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0)) ? (
+                          <span className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-amber-100 text-amber-950 border-amber-300 animate-pulse">
+                            ⏳ PENDIENTE CRONOGRAMA
+                          </span>
+                        ) : expAlert && expAlert.level === 'urgent_1m' ? (
                           <span className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-red-100 text-red-900 border-red-300 animate-pulse">
                             🚨 1 Mes (Por Vencer)
                           </span>
@@ -6732,44 +6777,76 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </div>
                       </td>
                       <td className="p-3.5 text-right no-print">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingContract(con);
-                            setContractFormId(con.id);
-                            setContractFormClientId(con.clientId);
-                            setContractFormType(con.type);
-                            setContractFormStart(con.startDate);
-                            setContractFormEnd(con.endDate);
-                            setContractFormStatus(con.status);
-                            setContractFormCoverage(con.coverage || '');
-                            
-                            // Initialize search, new client, and equipment items
-                            const matchedClient = clients.find(c => c.id === con.clientId);
-                            setContractClientSearchQuery(matchedClient ? matchedClient.name : '');
-                            setIsContractClientDropdownOpen(false);
-                            setIsCreatingNewClientForContract(false);
-                            setNewContractClientName('');
-                            setNewContractClientIndustry('');
-                            setNewContractClientAddress('');
-                            setNewContractClientContactName('');
-                            setNewContractClientContactPhone('');
-                            setContractFormEquipmentItems(con.equipmentItems || []);
-                            setTempEquipName('');
-                            setTempEquipBrand('');
-                            setContractFormFrequency(con.maintenanceFrequency || 'Ninguno');
-                            setContractFormMaintenanceDates(con.maintenanceDates || []);
-                            setTempMaintenanceDate('');
-                            setContractFormQcDate(con.qcDate || '');
-                            setContractFormPdfUrl(con.contractPdfUrl || '');
-                            setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
-                            
-                            setIsContractModalOpen(true);
-                          }}
-                          className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
-                        >
-                          Editar
-                        </button>
+                        <div className="flex justify-end items-center gap-1.5">
+                          {(con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0))) && userRole === 'admin' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingContract(con);
+                                setContractFormId(con.id);
+                                setContractFormClientId(con.clientId);
+                                setContractFormType(con.type);
+                                setContractFormStart(con.startDate);
+                                setContractFormEnd(con.endDate);
+                                setContractFormStatus(con.status);
+                                setContractFormCoverage(con.coverage || '');
+                                setContractFormPendingAdmin(false);
+                                setContractFormFrequency('Trimestral');
+                                const matchedClient = clients.find(c => c.id === con.clientId);
+                                setContractClientSearchQuery(matchedClient ? matchedClient.name : '');
+                                setContractFormEquipmentItems(con.equipmentItems || []);
+                                setContractFormMaintenanceDates(con.maintenanceDates || []);
+                                setContractFormQcDate(con.qcDate || '');
+                                setContractFormPdfUrl(con.contractPdfUrl || '');
+                                setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
+                                setIsContractModalOpen(true);
+                              }}
+                              className="bg-amber-500 hover:bg-amber-600 text-white font-black text-3xs px-2 py-1 rounded-md transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                              title="Asignar Frecuencia y Fechas de Mantenimiento como Administrador"
+                            >
+                              <span>📅 Asignar Cronograma</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingContract(con);
+                              setContractFormId(con.id);
+                              setContractFormClientId(con.clientId);
+                              setContractFormType(con.type);
+                              setContractFormStart(con.startDate);
+                              setContractFormEnd(con.endDate);
+                              setContractFormStatus(con.status);
+                              setContractFormCoverage(con.coverage || '');
+                              setContractFormPendingAdmin(!!con.pendingAdminSchedule);
+                              
+                              // Initialize search, new client, and equipment items
+                              const matchedClient = clients.find(c => c.id === con.clientId);
+                              setContractClientSearchQuery(matchedClient ? matchedClient.name : '');
+                              setIsContractClientDropdownOpen(false);
+                              setIsCreatingNewClientForContract(false);
+                              setNewContractClientName('');
+                              setNewContractClientIndustry('');
+                              setNewContractClientAddress('');
+                              setNewContractClientContactName('');
+                              setNewContractClientContactPhone('');
+                              setContractFormEquipmentItems(con.equipmentItems || []);
+                              setTempEquipName('');
+                              setTempEquipBrand('');
+                              setContractFormFrequency(con.maintenanceFrequency || 'Ninguno');
+                              setContractFormMaintenanceDates(con.maintenanceDates || []);
+                              setTempMaintenanceDate('');
+                              setContractFormQcDate(con.qcDate || '');
+                              setContractFormPdfUrl(con.contractPdfUrl || '');
+                              setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
+                              
+                              setIsContractModalOpen(true);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
+                          >
+                            Editar
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -13968,8 +14045,38 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
 
                     {/* Maintenance Scheduling Panel */}
-                    <div className="space-y-2 pt-3 border-t border-slate-150">
+                    <div className="space-y-2.5 pt-3 border-t border-slate-150">
                       <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider">Mantenimientos Programados</h4>
+                      
+                      {/* Option: Dejar pendiente de programación por el Administrador */}
+                      <div className="bg-amber-50/90 border border-amber-250 rounded-xl p-2.5 space-y-1">
+                        <label className="flex items-start gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={contractFormPendingAdmin}
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setContractFormPendingAdmin(isChecked);
+                              if (isChecked) {
+                                setContractFormFrequency('Ninguno');
+                                setContractFormMaintenanceDates([]);
+                                setContractFormQcDate('');
+                              }
+                            }}
+                            className="w-4 h-4 mt-0.5 accent-amber-600 rounded cursor-pointer"
+                          />
+                          <div>
+                            <span className="font-extrabold text-[10.5px] text-amber-950 block">
+                              ⏳ Dejar sin mantenimiento (Pendiente de programación por Admin)
+                            </span>
+                            <p className="text-[9px] text-amber-850 font-medium leading-tight mt-0.5">
+                              {userRole === 'sales'
+                                ? 'Cargue los datos del contrato y el archivo PDF. El Administrador asignará las fechas del cronograma.'
+                                : 'Si activa esto, el contrato quedará marcado con alerta para definir las fechas posteriormente.'}
+                            </p>
+                          </div>
+                        </label>
+                      </div>
                       
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
