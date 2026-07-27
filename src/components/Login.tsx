@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, User, Shield, ArrowRight, Briefcase } from 'lucide-react';
+import { Layers, Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, User, Shield, ArrowRight, Briefcase, Activity } from 'lucide-react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -175,12 +175,12 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
         
         {/* Branding Title */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="bg-gradient-to-tr from-indigo-650 to-indigo-500 text-white p-3 rounded-2xl shadow-lg shadow-indigo-650/20 mb-4 animate-bounce-slow">
-            <Layers className="w-6 h-6" />
+          <div className="w-14 h-14 bg-gradient-to-tr from-indigo-650 via-indigo-500 to-indigo-400 text-white rounded-2xl shadow-xl shadow-indigo-650/30 mb-3 flex items-center justify-center border border-indigo-400/40">
+            <Activity className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-xl font-black text-white tracking-tight">Gestión Técnica</h2>
-          <p className="text-xs text-slate-400 font-semibold mt-1">
-            {isDemoMode ? 'Simulador de Acceso Local (Pruebas)' : 'Portal de Soporte y Control de Servicios'}
+          <h2 className="text-2xl font-black text-white tracking-tight">ORIMEC FSM</h2>
+          <p className="text-xs text-slate-300 font-semibold mt-1">
+            {isDemoMode ? 'Simulador de Acceso Local (Pruebas)' : 'Plataforma de Gestión Técnica Biomédica ORIMEC'}
           </p>
         </div>
 

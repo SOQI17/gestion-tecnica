@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase } from 'lucide-react';
+import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
 import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from './types';
 import AdminPortal from './components/AdminPortal';
@@ -957,13 +957,13 @@ export default function App() {
       {/* Top Banner Branding */}
       <header className="sticky top-0 bg-white border-b border-slate-200 z-50 px-4 md:px-6 py-2 flex items-center justify-between shadow-2xs no-print">
         <div className="flex items-center gap-3">
-          <div className="bg-indigo-650 text-white p-1.5 rounded-lg shadow-sm">
-            <Layers className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-700 via-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-500/25 flex items-center justify-center border border-indigo-400/30 shrink-0">
+            <Activity className="w-5 h-5 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h1 className="font-extrabold text-xs text-slate-900 tracking-tight">Gestión Técnica</h1>
-              <span className="bg-indigo-50 text-indigo-700 text-[8px] font-bold px-1.5 py-0.2 rounded border border-indigo-100 uppercase tracking-wider">
+              <h1 className="font-black text-xs text-slate-900 tracking-tight">ORIMEC FSM</h1>
+              <span className="bg-indigo-50 text-indigo-700 text-[8px] font-extrabold px-1.5 py-0.2 rounded border border-indigo-100 uppercase tracking-wider">
                 PRO
               </span>
               {dbError ? (
@@ -978,7 +978,7 @@ export default function App() {
                 </span>
               )}
             </div>
-            <p className="text-[9px] text-slate-400 font-semibold leading-none mt-0.5">Plataforma de Gestión Técnica</p>
+            <p className="text-[9px] text-slate-400 font-semibold leading-none mt-0.5">Plataforma de Gestión Técnica Biomédica ORIMEC</p>
           </div>
         </div>
 
