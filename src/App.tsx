@@ -514,7 +514,8 @@ export default function App() {
   };
 
   const handleDeleteContract = async (contractId: string) => {
-    if (userRole !== 'admin') {
+    const role = currentUser?.role || (activeTab === 'sales' ? 'sales' : 'engineer');
+    if (role !== 'admin') {
       alert("Solo el Administrador tiene autorización para eliminar contratos.");
       return;
     }
