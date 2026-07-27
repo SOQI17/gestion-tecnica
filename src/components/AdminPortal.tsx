@@ -796,6 +796,36 @@ export default function AdminPortal({
   const [uploadContractPdfProgress, setUploadContractPdfProgress] = useState(0);
   const [isUploadingSchedulePdf, setIsUploadingSchedulePdf] = useState(false);
   const [uploadSchedulePdfProgress, setUploadSchedulePdfProgress] = useState(0);
+  const [isDraggingContractPdf, setIsDraggingContractPdf] = useState(false);
+  const [isDraggingSchedulePdf, setIsDraggingSchedulePdf] = useState(false);
+
+  const handleUploadContractFile = async (file: File) => {
+    if (!file) return;
+    try {
+      setIsUploadingContractPdf(true);
+      setUploadContractPdfProgress(0);
+      const url = await uploadFileToCloudinary(file, (p) => setUploadContractPdfProgress(p));
+      setContractFormPdfUrl(url);
+    } catch (err: any) {
+      alert(err.message || 'Error al subir el archivo del contrato a Cloudinary');
+    } finally {
+      setIsUploadingContractPdf(false);
+    }
+  };
+
+  const handleUploadScheduleFile = async (file: File) => {
+    if (!file) return;
+    try {
+      setIsUploadingSchedulePdf(true);
+      setUploadSchedulePdfProgress(0);
+      const url = await uploadFileToCloudinary(file, (p) => setUploadSchedulePdfProgress(p));
+      setContractFormSchedulePdfUrl(url);
+    } catch (err: any) {
+      alert(err.message || 'Error al subir el cronograma a Cloudinary');
+    } finally {
+      setIsUploadingSchedulePdf(false);
+    }
+  };
 
   const [selectedContractForDetails, setSelectedContractForDetails] = useState<Contract | null>(null);
   const [isContractDetailsModalOpen, setIsContractDetailsModalOpen] = useState(false);
@@ -13918,8 +13948,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                         <div className="flex flex-col gap-2.5">
                           {/* Contrato PDF Upload Card */}
-                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
-                            <span className="block text-[9.5px] font-extrabold text-slate-700 uppercase tracking-wide">📄 Documento del Contrato</span>
+                          <div 
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsDraggingContractPdf(true);
+                            }}
+                            onDragLeave={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsDraggingContractPdf(false);
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsDraggingContractPdf(false);
+                              const file = e.dataTransfer.files?.[0];
+                              if (file) handleUploadContractFile(file);
+                            }}
+                            className={`bg-slate-50 border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                              isDraggingContractPdf ? 'bg-indigo-50/80 border-indigo-500 ring-2 ring-indigo-400/50 scale-[1.01]' : 'border-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="block text-[9.5px] font-extrabold text-slate-700 uppercase tracking-wide">📄 Documento del Contrato</span>
+                              {isDraggingContractPdf && (
+                                <span className="text-[8px] font-extrabold text-indigo-700 uppercase tracking-wider animate-pulse">¡Suela el archivo!</span>
+                              )}
+                            </div>
                             
                             {contractFormPdfUrl ? (
                               <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-xs gap-2">
@@ -13942,32 +13998,31 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   type="file"
                                   id="contract-pdf-input"
                                   accept="application/pdf,image/*"
-                                  onChange={async (e) => {
+                                  onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    try {
-                                      setIsUploadingContractPdf(true);
-                                      setUploadContractPdfProgress(0);
-                                      const url = await uploadFileToCloudinary(file, (p) => setUploadContractPdfProgress(p));
-                                      setContractFormPdfUrl(url);
-                                    } catch (err: any) {
-                                      alert(err.message || 'Error al subir el archivo del contrato a Cloudinary');
-                                    } finally {
-                                      setIsUploadingContractPdf(false);
-                                    }
+                                    if (file) handleUploadContractFile(file);
                                   }}
                                   className="hidden"
                                 />
                                 <label
                                   htmlFor="contract-pdf-input"
-                                  className="w-full bg-white hover:bg-slate-100 text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border border-dashed border-indigo-300 flex items-center justify-center gap-2 cursor-pointer transition-all shadow-2xs active:scale-[0.99]"
+                                  className={`w-full text-slate-700 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs ${
+                                    isDraggingContractPdf
+                                      ? 'border-indigo-500 bg-white text-indigo-900 shadow-md'
+                                      : 'border-indigo-300/80 bg-white hover:bg-slate-100/80 hover:border-indigo-400'
+                                  }`}
                                 >
                                   {isUploadingContractPdf ? (
-                                    <span className="text-amber-600 font-bold animate-pulse">Subiendo PDF... ({uploadContractPdfProgress}%)</span>
+                                    <span className="text-amber-600 font-bold animate-pulse py-1">Subiendo Contrato... ({uploadContractPdfProgress}%)</span>
                                   ) : (
                                     <>
-                                      <Upload className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                                      <span>Adjuntar Contrato PDF</span>
+                                      <div className="flex items-center gap-1.5">
+                                        <Upload className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                                        <span>{isDraggingContractPdf ? '¡Suelte el archivo del contrato aquí!' : 'Adjuntar Contrato PDF'}</span>
+                                      </div>
+                                      <span className="text-[9px] font-normal text-slate-400">
+                                        Arrastra y suelta el archivo aquí o haz clic para buscar
+                                      </span>
                                     </>
                                   )}
                                 </label>
@@ -13976,8 +14031,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
 
                           {/* Cronograma Firmado Upload Card */}
-                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
-                            <span className="block text-[9.5px] font-extrabold text-slate-700 uppercase tracking-wide">📅 Cronograma Firmado</span>
+                          <div 
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsDraggingSchedulePdf(true);
+                            }}
+                            onDragLeave={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsDraggingSchedulePdf(false);
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsDraggingSchedulePdf(false);
+                              const file = e.dataTransfer.files?.[0];
+                              if (file) handleUploadScheduleFile(file);
+                            }}
+                            className={`bg-slate-50 border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                              isDraggingSchedulePdf ? 'bg-purple-50/80 border-purple-500 ring-2 ring-purple-400/50 scale-[1.01]' : 'border-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="block text-[9.5px] font-extrabold text-slate-700 uppercase tracking-wide">📅 Cronograma Firmado</span>
+                              {isDraggingSchedulePdf && (
+                                <span className="text-[8px] font-extrabold text-purple-700 uppercase tracking-wider animate-pulse">¡Suelta el archivo!</span>
+                              )}
+                            </div>
                             
                             {contractFormSchedulePdfUrl ? (
                               <div className="flex items-center justify-between bg-purple-50 border border-purple-200 p-2 rounded-lg text-xs gap-2">
@@ -14000,32 +14081,31 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   type="file"
                                   id="schedule-pdf-input"
                                   accept="application/pdf,image/*"
-                                  onChange={async (e) => {
+                                  onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    try {
-                                      setIsUploadingSchedulePdf(true);
-                                      setUploadSchedulePdfProgress(0);
-                                      const url = await uploadFileToCloudinary(file, (p) => setUploadSchedulePdfProgress(p));
-                                      setContractFormSchedulePdfUrl(url);
-                                    } catch (err: any) {
-                                      alert(err.message || 'Error al subir el cronograma a Cloudinary');
-                                    } finally {
-                                      setIsUploadingSchedulePdf(false);
-                                    }
+                                    if (file) handleUploadScheduleFile(file);
                                   }}
                                   className="hidden"
                                 />
                                 <label
                                   htmlFor="schedule-pdf-input"
-                                  className="w-full bg-white hover:bg-slate-100 text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border border-dashed border-purple-300 flex items-center justify-center gap-2 cursor-pointer transition-all shadow-2xs active:scale-[0.99]"
+                                  className={`w-full text-slate-700 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs ${
+                                    isDraggingSchedulePdf
+                                      ? 'border-purple-500 bg-white text-purple-900 shadow-md'
+                                      : 'border-purple-300/80 bg-white hover:bg-slate-100/80 hover:border-purple-400'
+                                  }`}
                                 >
                                   {isUploadingSchedulePdf ? (
-                                    <span className="text-amber-600 font-bold animate-pulse">Subiendo Cronograma... ({uploadSchedulePdfProgress}%)</span>
+                                    <span className="text-amber-600 font-bold animate-pulse py-1">Subiendo Cronograma... ({uploadSchedulePdfProgress}%)</span>
                                   ) : (
                                     <>
-                                      <Upload className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                                      <span>Adjuntar Cronograma PDF</span>
+                                      <div className="flex items-center gap-1.5">
+                                        <Upload className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                        <span>{isDraggingSchedulePdf ? '¡Suelte el archivo del cronograma aquí!' : 'Adjuntar Cronograma PDF'}</span>
+                                      </div>
+                                      <span className="text-[9px] font-normal text-slate-400">
+                                        Arrastra y suelta el archivo aquí o haz clic para buscar
+                                      </span>
                                     </>
                                   )}
                                 </label>
