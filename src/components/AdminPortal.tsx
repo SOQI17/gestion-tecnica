@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag } from 'lucide-react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
@@ -727,6 +727,7 @@ export default function AdminPortal({
   const [contractSearch, setContractSearch] = useState('');
   const [contractPage, setContractPage] = useState(1);
   const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null>(null);
+  const [contractFilterBrand, setContractFilterBrand] = useState<string>('all');
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isContractImporterOpen, setIsContractImporterOpen] = useState(false);
   const [contractCsvError, setContractCsvError] = useState<string | null>(null);
@@ -6418,6 +6419,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
   const renderContratosTab = () => {
     const renderGarantiasSubView = () => {
+      const availableContractBrands = Array.from(
+        new Set(
+          contracts.flatMap(c => (c.equipmentItems || []).map(e => e.brand?.trim()).filter(Boolean))
+        )
+      ).sort();
+
       const query = contractSearch.toLowerCase().trim();
       const filtered = contracts.filter(con => {
         const client = clients.find(c => c.id === con.clientId);
@@ -6425,10 +6432,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           con.id.toLowerCase().includes(query) ||
           con.type.toLowerCase().includes(query) ||
           (con.coverage || '').toLowerCase().includes(query) ||
-          (client?.name || '').toLowerCase().includes(query)
+          (client?.name || '').toLowerCase().includes(query) ||
+          (con.equipmentItems || []).some(e => (e.brand || '').toLowerCase().includes(query) || (e.name || '').toLowerCase().includes(query))
         );
 
         if (!matchesQuery) return false;
+
+        if (contractFilterBrand !== 'all') {
+          const hasBrand = (con.equipmentItems || []).some(
+            e => (e.brand || '').trim().toLowerCase() === contractFilterBrand.toLowerCase()
+          );
+          if (!hasBrand) return false;
+        }
 
         if (contractFilterExpiration) {
           const expAlert = getContractExpirationAlert(con.endDate, con.status);
@@ -6819,11 +6834,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
         {/* Filter and Search */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 flex-1 max-w-xl">
-            <div className="relative flex-1">
+          <div className="flex flex-wrap items-center gap-2 flex-1">
+            <div className="relative flex-1 min-w-[240px] max-w-md">
               <input
                 type="text"
-                placeholder="Buscar por Nº Contrato, tipo, cobertura, cliente..."
+                placeholder="Buscar por Nº Contrato, tipo, cobertura, cliente, marca..."
                 value={contractSearch}
                 onChange={(e) => {
                   setContractSearch(e.target.value);
@@ -6832,6 +6847,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 shadow-2xs"
               />
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            </div>
+
+            {/* Brand Filter Selector */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-2xs shrink-0">
+              <Tag className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase">Marca:</span>
+              <select
+                value={contractFilterBrand}
+                onChange={(e) => {
+                  setContractFilterBrand(e.target.value);
+                  setContractPage(1);
+                }}
+                className="bg-transparent font-extrabold text-xs text-slate-800 outline-hidden cursor-pointer"
+              >
+                <option value="all">Todas las Marcas ({availableContractBrands.length})</option>
+                {availableContractBrands.map(brand => (
+                  <option key={brand} value={brand}>{brand}</option>
+                ))}
+              </select>
             </div>
 
             {contractFilterExpiration && (
@@ -6846,6 +6880,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   contractFilterExpiration === 'inactivo' ? '🚫 Inactivos' : '🔴 Vencidos'
                 }</span>
                 <span className="bg-indigo-200 text-indigo-900 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black">✕</span>
+              </button>
+            )}
+
+            {contractFilterBrand !== 'all' && (
+              <button
+                onClick={() => setContractFilterBrand('all')}
+                className="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-3 py-1.5 rounded-lg text-3xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs shrink-0 animate-in fade-in zoom-in-95 duration-150"
+              >
+                <span>Marca: {contractFilterBrand}</span>
+                <span className="bg-purple-200 text-purple-900 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black">✕</span>
               </button>
             )}
           </div>
@@ -6863,6 +6907,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <th className="p-3.5">Nº Contrato</th>
                 <th className="p-3.5">Cliente</th>
                 <th className="p-3.5">Tipo de Contrato</th>
+                <th className="p-3.5">Marca Equipo</th>
                 <th className="p-3.5">Fecha Inicio</th>
                 <th className="p-3.5">Fecha Vencimiento</th>
                 <th className="p-3.5">Estado</th>
@@ -6873,7 +6918,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <tbody className="divide-y divide-slate-100 text-slate-750 font-medium">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center p-8 text-slate-400 font-semibold italic">
+                  <td colSpan={9} className="text-center p-8 text-slate-400 font-semibold italic">
                     No se encontraron contratos vigentes o vencidos.
                   </td>
                 </tr>
@@ -6881,6 +6926,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 paginated.map(con => {
                   const client = clients.find(c => c.id === con.clientId);
                   const expAlert = getContractExpirationAlert(con.endDate, con.status);
+                  const brands = Array.from(
+                    new Set((con.equipmentItems || []).map(e => e.brand?.trim()).filter(Boolean))
+                  );
 
                   let rowBg = 'hover:bg-indigo-50/20';
                   if (expAlert?.level === 'urgent_1m') rowBg = 'bg-red-50/40 hover:bg-red-50/60 border-l-4 border-l-red-500';
@@ -6899,6 +6947,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <td className="p-3.5 font-mono font-bold text-slate-900">{con.id}</td>
                       <td className="p-3.5 font-extrabold text-slate-900">{client?.name || `ID: ${con.clientId}`}</td>
                       <td className="p-3.5 font-bold text-indigo-700">{con.type}</td>
+                      <td className="p-3.5 font-bold">
+                        {brands.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {brands.map(b => (
+                              <span key={b} className="text-[9.5px] font-black px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200/80 shadow-2xs">
+                                {b}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 font-mono text-3xs italic">-</span>
+                        )}
+                      </td>
                       <td className="p-3.5 font-mono">{con.startDate}</td>
                       <td className="p-3.5 font-mono font-bold">
                         <div className="flex flex-col gap-1">
@@ -7054,11 +7115,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   onDeleteContract(con.id);
                                 }
                               }}
-                              className="text-rose-600 hover:text-rose-900 hover:bg-rose-50 font-bold px-2 py-1 rounded-md transition-all text-3xs cursor-pointer flex items-center gap-1"
+                              className="p-1.5 text-rose-600 hover:text-rose-800 hover:bg-rose-100/80 rounded-md transition-all cursor-pointer border border-transparent hover:border-rose-200"
                               title="Eliminar contrato (Solo Administrador)"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                              <span>Eliminar</span>
                             </button>
                           )}
                         </div>
