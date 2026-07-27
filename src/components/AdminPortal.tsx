@@ -4430,13 +4430,23 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     const isPendingSchedule = contractFormPendingAdmin || (userRole === 'sales' && contractFormMaintenanceDates.length === 0) || (contractFormFrequency === 'Ninguno' && contractFormMaintenanceDates.length === 0);
 
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isExpiredDate = contractFormEnd && contractFormEnd < todayStr;
+
+    let finalStatus = contractFormStatus;
+    if (isPendingSchedule) {
+      finalStatus = 'Pendiente';
+    } else if (isExpiredDate && contractFormStatus !== 'Inactivo') {
+      finalStatus = 'Vencido';
+    }
+
     const con: Contract = {
       id: contractFormId.trim(),
       clientId: targetClientId,
       type: contractFormType,
       startDate: contractFormStart,
       endDate: contractFormEnd,
-      status: isPendingSchedule ? 'Pendiente' : contractFormStatus,
+      status: finalStatus,
       coverage: contractFormCoverage.trim(),
       equipmentItems: contractFormEquipmentItems,
       maintenanceFrequency: isPendingSchedule ? 'Ninguno' : contractFormFrequency,
@@ -6790,6 +6800,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         {con.status === 'Inactivo' ? (
                           <span className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-200 text-slate-800 border-slate-300">
                             🚫 INACTIVO (No renovado)
+                          </span>
+                        ) : expAlert?.level === 'expired' || con.status === 'Vencido' ? (
+                          <span className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-rose-100 text-rose-800 border-rose-300 font-extrabold">
+                            🔴 VENCIDO
                           </span>
                         ) : (con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0))) ? (
                           <span className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-amber-100 text-amber-950 border-amber-300 animate-pulse">
@@ -13915,9 +13929,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           required
                           value={contractFormEnd}
                           onChange={(e) => {
-                            setContractFormEnd(e.target.value);
+                            const newEndDate = e.target.value;
+                            setContractFormEnd(newEndDate);
+
+                            const todayStr = new Date().toISOString().split('T')[0];
+                            if (newEndDate && newEndDate < todayStr && contractFormStatus !== 'Inactivo') {
+                              setContractFormStatus('Vencido');
+                            } else if (newEndDate && newEndDate >= todayStr && contractFormStatus === 'Vencido') {
+                              setContractFormStatus('Activo');
+                            }
+
                             if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
-                              const generated = generateMaintenanceDates(contractFormStart, e.target.value, contractFormFrequency, contractFormType);
+                              const generated = generateMaintenanceDates(contractFormStart, newEndDate, contractFormFrequency, contractFormType);
                               setContractFormMaintenanceDates(generated);
                               if (generated.length > 0) {
                                 setContractFormQcDate(generated[generated.length - 1]);
