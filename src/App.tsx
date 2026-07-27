@@ -513,6 +513,24 @@ export default function App() {
     }
   };
 
+  const handleDeleteContract = async (contractId: string) => {
+    if (userRole !== 'admin') {
+      alert("Solo el Administrador tiene autorización para eliminar contratos.");
+      return;
+    }
+    setContracts(prev => {
+      const next = prev.filter(c => c.id !== contractId);
+      try { localStorage.setItem('fsm_contracts', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+    try {
+      await deleteDoc(doc(db, 'contracts', contractId));
+      showNotification(`Contrato ${contractId} eliminado por el Administrador.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `contracts/${contractId}`);
+    }
+  };
+
   const handleBulkUploadClients = async (newClients: Client[]) => {
     try {
       showNotification(`Cargando ${newClients.length} clientes en Firestore...`, 'info');
@@ -1126,6 +1144,7 @@ export default function App() {
                 onUpdateEquipment={handleUpdateEquipment}
                 onAddContract={handleAddContract}
                 onUpdateContract={handleUpdateContract}
+                onDeleteContract={handleDeleteContract}
                 onBulkUploadClients={handleBulkUploadClients}
                 onBulkUploadEquipments={handleBulkUploadEquipments}
                 onBulkUploadContracts={handleBulkUploadContracts}

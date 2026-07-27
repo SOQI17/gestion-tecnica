@@ -30,6 +30,7 @@ interface AdminPortalProps {
   onUpdateEquipment?: (eq: Equipment) => void;
   onAddContract?: (con: Contract) => void;
   onUpdateContract?: (con: Contract) => void;
+  onDeleteContract?: (contractId: string) => void;
   onBulkUploadClients?: (clients: Client[]) => void;
   onBulkUploadEquipments?: (equipments: Equipment[]) => void;
   onBulkUploadContracts?: (contracts: Contract[]) => void;
@@ -471,6 +472,7 @@ export default function AdminPortal({
   onUpdateEquipment,
   onAddContract,
   onUpdateContract,
+  onDeleteContract,
   onBulkUploadClients,
   onBulkUploadEquipments,
   onBulkUploadContracts,
@@ -6846,6 +6848,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           >
                             Editar
                           </button>
+                          {userRole === 'admin' && onDeleteContract && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`¿Está seguro de que desea eliminar el contrato "${con.id}"? Esta acción borrará el registro permanentemente.`)) {
+                                  onDeleteContract(con.id);
+                                }
+                              }}
+                              className="text-rose-600 hover:text-rose-900 hover:bg-rose-50 font-bold px-2 py-1 rounded-md transition-all text-3xs cursor-pointer flex items-center gap-1"
+                              title="Eliminar contrato (Solo Administrador)"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Eliminar</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -14221,23 +14238,42 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 font-sans mt-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsContractModalOpen(false);
-                    setEditingContract(null);
-                  }}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
-                >
-                  {editingContract ? 'Guardar Cambios' : 'Crear Registro'}
-                </button>
+              <div className="flex justify-between items-center pt-3 border-t border-slate-100 font-sans mt-3">
+                {editingContract && userRole === 'admin' && onDeleteContract ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(`¿Está seguro de que desea eliminar el contrato "${editingContract.id}"? Esta acción borrará el registro permanentemente.`)) {
+                        onDeleteContract(editingContract.id);
+                        setIsContractModalOpen(false);
+                        setEditingContract(null);
+                      }
+                    }}
+                    className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs px-3 py-2 rounded-lg cursor-pointer transition-colors border border-rose-200 flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-600" />
+                    <span>Eliminar Contrato</span>
+                  </button>
+                ) : <div />}
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsContractModalOpen(false);
+                      setEditingContract(null);
+                    }}
+                    className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
+                  >
+                    {editingContract ? 'Guardar Cambios' : 'Crear Registro'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
