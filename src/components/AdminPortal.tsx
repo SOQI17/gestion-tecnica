@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag } from 'lucide-react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -4441,21 +4441,23 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       finalStatus = 'Vencido';
     }
 
+    const isSalesReadOnly = !!editingContract && userRole === 'sales';
+
     const con: Contract = {
       id: contractFormId.trim(),
-      clientId: targetClientId,
-      type: contractFormType,
-      startDate: contractFormStart,
-      endDate: contractFormEnd,
-      status: finalStatus,
-      coverage: contractFormCoverage.trim(),
-      equipmentItems: contractFormEquipmentItems,
-      maintenanceFrequency: isPendingSchedule ? 'Ninguno' : contractFormFrequency,
-      maintenanceDates: isPendingSchedule ? [] : contractFormMaintenanceDates,
-      qcDate: isPendingSchedule ? undefined : (contractFormQcDate || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : '')),
+      clientId: isSalesReadOnly && editingContract ? editingContract.clientId : targetClientId,
+      type: isSalesReadOnly && editingContract ? editingContract.type : contractFormType,
+      startDate: isSalesReadOnly && editingContract ? editingContract.startDate : contractFormStart,
+      endDate: isSalesReadOnly && editingContract ? editingContract.endDate : contractFormEnd,
+      status: isSalesReadOnly && editingContract ? editingContract.status : finalStatus,
+      coverage: isSalesReadOnly && editingContract ? editingContract.coverage : contractFormCoverage.trim(),
+      equipmentItems: isSalesReadOnly && editingContract ? editingContract.equipmentItems : contractFormEquipmentItems,
+      maintenanceFrequency: isSalesReadOnly && editingContract ? editingContract.maintenanceFrequency : (isPendingSchedule ? 'Ninguno' : contractFormFrequency),
+      maintenanceDates: isSalesReadOnly && editingContract ? editingContract.maintenanceDates : (isPendingSchedule ? [] : contractFormMaintenanceDates),
+      qcDate: isSalesReadOnly && editingContract ? editingContract.qcDate : (isPendingSchedule ? undefined : (contractFormQcDate || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : ''))),
       contractPdfUrl: contractFormPdfUrl.trim() || undefined,
       schedulePdfUrl: contractFormSchedulePdfUrl.trim() || undefined,
-      pendingAdminSchedule: isPendingSchedule
+      pendingAdminSchedule: isSalesReadOnly && editingContract ? editingContract.pendingAdminSchedule : isPendingSchedule
     };
 
     // Auto-register new custom equipments under the selected client
@@ -13895,10 +13897,24 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       )}
 
       {/* Modal Creación / Edición de Contrato */}
-      {isContractModalOpen && (
+      {isContractModalOpen && (() => {
+        const isSalesReadOnly = !!editingContract && userRole === 'sales';
+
+        return (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="contract-form-modal">
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-3xl p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
-                   <form onSubmit={handleSaveContract} className="flex flex-col max-h-[85vh] text-xs">
+            {isSalesReadOnly && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between text-amber-900">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span className="text-xs font-bold">
+                    Modo Solo Lectura (Vendedor): Los datos del contrato no se pueden editar una vez creados. Solo puedes adjuntar o re-subir archivos PDF / Imagen.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveContract} className="flex flex-col max-h-[85vh] text-xs">
               <div className="flex-1 overflow-y-auto pr-3 space-y-4 max-h-[62vh]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Left Side: General Contract details and Client search */}
@@ -13909,11 +13925,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <input
                           type="text"
                           required
-                          disabled={!!editingContract}
+                          disabled={!!editingContract || isSalesReadOnly}
                           value={contractFormId}
                           onChange={(e) => setContractFormId(e.target.value)}
                           placeholder="Ej. CONTRATO-2026-004"
-                          className="w-full bg-slate-55 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
+                            editingContract || isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-55 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          }`}
                         />
                       </div>
 
@@ -13921,6 +13939,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <label className="block text-[10px] font-bold text-slate-500 uppercase">Tipo de Cobertura</label>
                         <select
                           value={contractFormType}
+                          disabled={isSalesReadOnly}
                           onChange={(e) => {
                             const newType = e.target.value as any;
                             setContractFormType(newType);
@@ -13932,7 +13951,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                             }
                           }}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
+                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-bold ${
+                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
+                          }`}
                         >
                           <option value="Garantía extendida/Contrato">Garantía extendida / Contrato</option>
                           <option value="Garantía de compra">Garantía de compra</option>
@@ -13952,6 +13973,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               <input
                                 type="text"
                                 placeholder="Buscar cliente por nombre..."
+                                disabled={isSalesReadOnly}
                                 value={contractClientSearchQuery}
                                 onChange={(e) => {
                                   setContractClientSearchQuery(e.target.value);
@@ -13963,10 +13985,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     setContractFormClientId('');
                                   }
                                 }}
-                                onFocus={() => setIsContractClientDropdownOpen(true)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                                onFocus={() => !isSalesReadOnly && setIsContractClientDropdownOpen(true)}
+                                className={`w-full border border-slate-200 rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all ${
+                                  isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                                }`}
                               />
-                              {contractClientSearchQuery && (
+                              {contractClientSearchQuery && !isSalesReadOnly && (
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -13980,20 +14004,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 </button>
                               )}
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                  setIsCreatingNewClientForContract(true);
-                                  setContractFormClientId('');
-                              }}
-                              className="bg-amber-50 hover:bg-amber-100 text-amber-755 border border-amber-200 px-3 py-2 rounded-lg font-bold text-3xs transition-colors shrink-0 cursor-pointer"
-                            >
-                              + Nuevo Cliente
-                            </button>
+                            {!isSalesReadOnly && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                    setIsCreatingNewClientForContract(true);
+                                    setContractFormClientId('');
+                                }}
+                                className="bg-amber-50 hover:bg-amber-100 text-amber-755 border border-amber-200 px-3 py-2 rounded-lg font-bold text-3xs transition-colors shrink-0 cursor-pointer"
+                              >
+                                + Nuevo Cliente
+                              </button>
+                            )}
                           </div>
 
                           {/* Search Dropdown list */}
-                          {isContractClientDropdownOpen && (
+                          {isContractClientDropdownOpen && !isSalesReadOnly && (
                             <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-30 max-h-40 overflow-y-auto divide-y divide-slate-100">
                               {clients
                                 .filter(c => c.name.toLowerCase().includes(contractClientSearchQuery.toLowerCase()))
@@ -14085,8 +14111,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <label className="block text-[10px] font-bold text-slate-500 uppercase">Estado Contrato</label>
                         <select
                           value={contractFormStatus}
+                          disabled={isSalesReadOnly}
                           onChange={(e) => setContractFormStatus(e.target.value as any)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
+                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-bold ${
+                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
+                          }`}
                         >
                           <option value="Activo">🟢 Activo</option>
                           <option value="Pendiente">🟡 Pendiente (Sin Cronograma)</option>
@@ -14100,6 +14129,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <input
                           type="date"
                           required
+                          disabled={isSalesReadOnly}
                           value={contractFormStart}
                           onChange={(e) => {
                             setContractFormStart(e.target.value);
@@ -14111,7 +14141,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                             }
                           }}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
+                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          }`}
                         />
                       </div>
                     </div>
@@ -14122,6 +14154,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <input
                           type="date"
                           required
+                          disabled={isSalesReadOnly}
                           value={contractFormEnd}
                           onChange={(e) => {
                             const newEndDate = e.target.value;
@@ -14142,7 +14175,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                             }
                           }}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
+                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          }`}
                         />
                       </div>
 
@@ -14150,10 +14185,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <label className="block text-[10px] font-bold text-slate-500 uppercase">Especificaciones</label>
                         <textarea
                           value={contractFormCoverage}
+                          disabled={isSalesReadOnly}
                           onChange={(e) => setContractFormCoverage(e.target.value)}
                           rows={1}
                           placeholder="Límites de repuestos o coberturas..."
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all ${
+                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          }`}
                         />
                       </div>
 
@@ -14307,33 +14345,33 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 />
                                 <label
                                   htmlFor="schedule-pdf-input"
-                                  className={`w-full text-slate-700 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs ${
-                                    isDraggingSchedulePdf
-                                      ? 'border-purple-500 bg-white text-purple-900 shadow-md'
-                                      : 'border-purple-300/80 bg-white hover:bg-slate-100/80 hover:border-purple-400'
-                                  }`}
-                                >
-                                  {isUploadingSchedulePdf ? (
-                                    <span className="text-amber-600 font-bold animate-pulse py-1">Subiendo Cronograma... ({uploadSchedulePdfProgress}%)</span>
-                                  ) : (
-                                    <>
-                                      <div className="flex items-center gap-1.5">
-                                        <Upload className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                                        <span>{isDraggingSchedulePdf ? '¡Suelte el archivo del cronograma aquí!' : 'Adjuntar Cronograma PDF'}</span>
-                                      </div>
-                                      <span className="text-[9px] font-normal text-slate-400">
-                                        Arrastra y suelta el archivo aquí o haz clic para buscar
-                                      </span>
-                                    </>
-                                  )}
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                                   className={`w-full text-slate-700 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs ${
+                                     isDraggingSchedulePdf
+                                       ? 'border-purple-500 bg-white text-purple-900 shadow-md'
+                                       : 'border-purple-300/80 bg-white hover:bg-slate-100/80 hover:border-purple-400'
+                                   }`}
+                                 >
+                                   {isUploadingSchedulePdf ? (
+                                     <span className="text-amber-600 font-bold animate-pulse py-1">Subiendo Cronograma... ({uploadSchedulePdfProgress}%)</span>
+                                   ) : (
+                                     <>
+                                       <div className="flex items-center gap-1.5">
+                                         <Upload className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                         <span>{isDraggingSchedulePdf ? '¡Suelte el archivo del cronograma aquí!' : 'Adjuntar Cronograma PDF'}</span>
+                                       </div>
+                                       <span className="text-[9px] font-normal text-slate-400">
+                                         Arrastra y suelta el archivo aquí o haz clic para buscar
+                                       </span>
+                                     </>
+                                   )}
+                                 </label>
+                               </div>
+                             )}
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
 
                   {/* Right Side: Equipment and Maintenance scheduling */}
                   <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
@@ -14360,7 +14398,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         <span className="font-bold text-slate-800">{eq.name}</span>
                                         <span className="text-[8px] text-slate-400 font-medium block">Marca: {eq.brand || 'N/D'}</span>
                                       </div>
-                                      {!alreadyAdded ? (
+                                      {!alreadyAdded && !isSalesReadOnly ? (
                                         <button
                                           type="button"
                                           onClick={() => {
@@ -14370,9 +14408,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         >
                                           + Agregar
                                         </button>
-                                      ) : (
+                                      ) : alreadyAdded ? (
                                         <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100">Agregado</span>
-                                      )}
+                                      ) : null}
                                     </div>
                                   );
                                 })}
@@ -14383,39 +14421,41 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       )}
 
                       {/* Add Custom / New Equipment to contract */}
-                      <div className="bg-slate-50 border border-slate-205 rounded-xl p-2 space-y-1.5">
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="Nombre Equipo"
-                            value={tempEquipName}
-                            onChange={(e) => setTempEquipName(e.target.value)}
-                            className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Marca"
-                            value={tempEquipBrand}
-                            onChange={(e) => setTempEquipBrand(e.target.value)}
-                            className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (!tempEquipName.trim()) return;
-                              setContractFormEquipmentItems([
-                                ...contractFormEquipmentItems, 
-                                { name: tempEquipName.trim(), brand: tempEquipBrand.trim() || 'N/D' }
-                              ]);
-                              setTempEquipName('');
-                              setTempEquipBrand('');
-                            }}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
-                          >
-                            Agregar
-                          </button>
+                      {!isSalesReadOnly && (
+                        <div className="bg-slate-50 border border-slate-205 rounded-xl p-2 space-y-1.5">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Nombre Equipo"
+                              value={tempEquipName}
+                              onChange={(e) => setTempEquipName(e.target.value)}
+                              className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Marca"
+                              value={tempEquipBrand}
+                              onChange={(e) => setTempEquipBrand(e.target.value)}
+                              className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!tempEquipName.trim()) return;
+                                setContractFormEquipmentItems([
+                                  ...contractFormEquipmentItems, 
+                                  { name: tempEquipName.trim(), brand: tempEquipBrand.trim() || 'N/D' }
+                                ]);
+                                setTempEquipName('');
+                                setTempEquipBrand('');
+                              }}
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
+                            >
+                              Agregar
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* List of currently covered equipments */}
                       <div className="border border-slate-205 rounded-xl divide-y divide-slate-100 max-h-[100px] overflow-y-auto bg-white">
@@ -14425,15 +14465,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               <p className="font-bold text-slate-800 text-[10px] leading-tight">{item.name}</p>
                               <p className="text-[8px] text-slate-400 font-semibold leading-none mt-0.5">Marca: {item.brand}</p>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setContractFormEquipmentItems(contractFormEquipmentItems.filter((_, i) => i !== index));
-                              }}
-                              className="text-red-500 hover:text-red-755 font-black text-2xs p-1 cursor-pointer"
-                            >
-                              ✕
-                            </button>
+                            {!isSalesReadOnly && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setContractFormEquipmentItems(contractFormEquipmentItems.filter((_, i) => i !== index));
+                                }}
+                                className="text-red-500 hover:text-red-755 font-black text-2xs p-1 cursor-pointer"
+                              >
+                                ✕
+                              </button>
+                            )}
                           </div>
                         ))}
                         {contractFormEquipmentItems.length === 0 && (
@@ -14453,6 +14495,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <label className="flex items-start gap-2 cursor-pointer select-none">
                           <input
                             type="checkbox"
+                            disabled={isSalesReadOnly}
                             checked={contractFormPendingAdmin}
                             onChange={(e) => {
                               const isChecked = e.target.checked;
@@ -14463,7 +14506,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormQcDate('');
                               }
                             }}
-                            className="w-4 h-4 mt-0.5 accent-amber-600 rounded cursor-pointer"
+                            className="w-4 h-4 mt-0.5 accent-amber-600 rounded cursor-pointer disabled:cursor-not-allowed"
                           />
                           <div>
                             <span className="font-extrabold text-[10.5px] text-amber-950 block">
@@ -14483,6 +14526,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <label className="block text-[9px] font-bold text-slate-500 uppercase">Frecuencia</label>
                           <select
                             value={contractFormFrequency}
+                            disabled={isSalesReadOnly}
                             onChange={(e) => {
                               const freq = e.target.value as any;
                               setContractFormFrequency(freq);
@@ -14496,7 +14540,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 }
                               }
                             }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-700 cursor-pointer outline-hidden focus:bg-white"
+                            className={`w-full border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-700 outline-hidden ${
+                              isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white cursor-pointer'
+                            }`}
                           >
                             <option value="Ninguno">Ninguno</option>
                             <option value="Mensual">Mensual</option>
@@ -14513,6 +14559,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <label className="block text-[9px] font-bold text-slate-500 uppercase">Frecuencia Acciones</label>
                           <button
                             type="button"
+                            disabled={isSalesReadOnly}
                             onClick={() => {
                               if (contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado') {
                                 alert("Seleccione una frecuencia periódica para autogenerar visitas.");
@@ -14526,7 +14573,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormQcDate('');
                               }
                             }}
-                            className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-1 rounded-lg text-3xs font-extrabold transition-all cursor-pointer"
+                            className={`w-full border px-2 py-1 rounded-lg text-3xs font-extrabold transition-all ${
+                              isSalesReadOnly ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200 cursor-pointer'
+                            }`}
                           >
                             Recalcular Fechas
                           </button>
@@ -14534,36 +14583,38 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
 
                       {/* Add Specific Custom Date */}
-                      <div className="bg-slate-50 border border-slate-205 rounded-xl p-2 space-y-1.5">
-                        <span className="font-bold text-[9px] text-slate-650 block">Agregar Fecha Manual</span>
-                        <div className="flex gap-2">
-                          <input
-                            type="date"
-                            value={tempMaintenanceDate}
-                            onChange={(e) => setTempMaintenanceDate(e.target.value)}
-                            className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-3xs text-slate-700 outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (!tempMaintenanceDate) return;
-                              if (contractFormMaintenanceDates.includes(tempMaintenanceDate)) {
-                                alert("Esta fecha ya está registrada.");
-                                return;
-                              }
-                              const updated = [...contractFormMaintenanceDates, tempMaintenanceDate].sort();
-                              setContractFormMaintenanceDates(updated);
-                              setTempMaintenanceDate('');
-                              if (!contractFormQcDate) {
-                                setContractFormQcDate(updated[updated.length - 1]);
-                              }
-                            }}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
-                          >
-                            Agregar
-                          </button>
+                      {!isSalesReadOnly && (
+                        <div className="bg-slate-50 border border-slate-205 rounded-xl p-2 space-y-1.5">
+                          <span className="font-bold text-[9px] text-slate-650 block">Agregar Fecha Manual</span>
+                          <div className="flex gap-2">
+                            <input
+                              type="date"
+                              value={tempMaintenanceDate}
+                              onChange={(e) => setTempMaintenanceDate(e.target.value)}
+                              className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-3xs text-slate-700 outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!tempMaintenanceDate) return;
+                                if (contractFormMaintenanceDates.includes(tempMaintenanceDate)) {
+                                  alert("Esta fecha ya está registrada.");
+                                  return;
+                                }
+                                const updated = [...contractFormMaintenanceDates, tempMaintenanceDate].sort();
+                                setContractFormMaintenanceDates(updated);
+                                setTempMaintenanceDate('');
+                                if (!contractFormQcDate) {
+                                  setContractFormQcDate(updated[updated.length - 1]);
+                                }
+                              }}
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
+                            >
+                              Agregar
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* List of maintenance dates with interactive Quality Control toggles */}
                       <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-[110px] overflow-y-auto bg-white">
@@ -14582,31 +14633,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <span className="font-mono text-slate-700 text-[10px] font-bold">{fmtDate(date)}</span>
                                 <button
                                   type="button"
+                                  disabled={isSalesReadOnly}
                                   onClick={() => {
                                     setContractFormQcDate(date);
                                   }}
-                                  className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border transition-all cursor-pointer ${
-                                    isQc 
-                                      ? 'bg-violet-600 border-violet-600 text-white shadow-3xs' 
-                                      : 'bg-white hover:bg-slate-100 text-slate-400 border-slate-200'
+                                  className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border transition-all ${
+                                    isSalesReadOnly 
+                                      ? (isQc ? 'bg-violet-400 border-violet-400 text-white cursor-not-allowed' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed')
+                                      : (isQc ? 'bg-violet-600 border-violet-600 text-white shadow-3xs cursor-pointer' : 'bg-white hover:bg-slate-100 text-slate-400 border-slate-200 cursor-pointer')
                                   }`}
                                   title="Marcar esta visita como Control de Calidad"
                                 >
                                   {isQc ? '📋 Control Calidad' : 'Hacer QC'}
                                 </button>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (contractFormQcDate === date) {
-                                    setContractFormQcDate('');
-                                  }
-                                  setContractFormMaintenanceDates(contractFormMaintenanceDates.filter((_, i) => i !== index));
-                                }}
-                                className="text-red-500 hover:text-red-750 font-black text-2xs p-0.5 cursor-pointer"
-                              >
-                                ✕
-                              </button>
+                              {!isSalesReadOnly && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (contractFormQcDate === date) {
+                                      setContractFormQcDate('');
+                                    }
+                                    setContractFormMaintenanceDates(contractFormMaintenanceDates.filter((_, i) => i !== index));
+                                  }}
+                                  className="text-red-500 hover:text-red-750 font-black text-2xs p-0.5 cursor-pointer"
+                                >
+                                  ✕
+                                </button>
+                              )}
                             </div>
                           );
                         })}
@@ -14661,7 +14715,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </form>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Modal Detalles del Contrato */}
       {isContractDetailsModalOpen && selectedContractForDetails && (
