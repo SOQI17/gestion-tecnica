@@ -13827,27 +13827,28 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
 
                       {/* Cloudinary PDF / Image Attachments Section */}
-                      <div className="space-y-3 border-t border-slate-100 pt-3">
+                      <div className="space-y-2.5 border-t border-slate-150 pt-3">
                         <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                           <FileText className="w-3.5 h-3.5 text-indigo-600" />
                           <span>Adjuntos de Contrato y Cronograma (PDF / Imagen)</span>
                         </h4>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {/* Contrato PDF Upload */}
-                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
-                            <span className="block text-[9px] font-bold text-slate-700 uppercase">📄 Documento del Contrato</span>
+                        <div className="flex flex-col gap-2.5">
+                          {/* Contrato PDF Upload Card */}
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
+                            <span className="block text-[9.5px] font-extrabold text-slate-700 uppercase tracking-wide">📄 Documento del Contrato</span>
                             
                             {contractFormPdfUrl ? (
-                              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-[10px]">
-                                <a href={getCleanCloudinaryUrl(contractFormPdfUrl)} target="_blank" rel="noreferrer" className="text-emerald-800 font-extrabold hover:underline truncate flex items-center gap-1">
-                                  <span>📄 Ver Documento</span>
+                              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-xs gap-2">
+                                <a href={getCleanCloudinaryUrl(contractFormPdfUrl)} target="_blank" rel="noreferrer" className="text-emerald-900 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                  <FileText className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                  <span className="truncate">Ver Documento Adjunto</span>
                                   <ExternalLink className="w-3 h-3 text-emerald-600 shrink-0" />
                                 </a>
                                 <button
                                   type="button"
                                   onClick={() => setContractFormPdfUrl('')}
-                                  className="text-rose-600 hover:text-rose-800 font-extrabold text-3xs ml-1 shrink-0 cursor-pointer"
+                                  className="text-rose-600 hover:text-rose-800 hover:bg-rose-100/60 font-bold text-3xs px-2 py-1 rounded transition-colors shrink-0 cursor-pointer border border-rose-200/60"
                                 >
                                   Eliminar
                                 </button>
@@ -13876,13 +13877,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 />
                                 <label
                                   htmlFor="contract-pdf-input"
-                                  className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold text-3xs py-2 px-2.5 rounded-lg border border-slate-250 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                                  className="w-full bg-white hover:bg-slate-100 text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border border-dashed border-indigo-300 flex items-center justify-center gap-2 cursor-pointer transition-all shadow-2xs active:scale-[0.99]"
                                 >
                                   {isUploadingContractPdf ? (
-                                    <span className="text-amber-600 font-bold">Subiendo... ({uploadContractPdfProgress}%)</span>
+                                    <span className="text-amber-600 font-bold animate-pulse">Subiendo PDF... ({uploadContractPdfProgress}%)</span>
                                   ) : (
                                     <>
-                                      <Upload className="w-3.5 h-3.5 text-indigo-600" />
+                                      <Upload className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                                       <span>Adjuntar Contrato PDF</span>
                                     </>
                                   )}
@@ -13891,20 +13892,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             )}
                           </div>
 
-                          {/* Cronograma Firmado Upload */}
-                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
-                            <span className="block text-[9px] font-bold text-slate-700 uppercase">📅 Cronograma Firmado</span>
+                          {/* Cronograma Firmado Upload Card */}
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
+                            <span className="block text-[9.5px] font-extrabold text-slate-700 uppercase tracking-wide">📅 Cronograma Firmado</span>
                             
                             {contractFormSchedulePdfUrl ? (
-                              <div className="flex items-center justify-between bg-purple-50 border border-purple-200 p-2 rounded-lg text-[10px]">
-                                <a href={getCleanCloudinaryUrl(contractFormSchedulePdfUrl)} target="_blank" rel="noreferrer" className="text-purple-900 font-extrabold hover:underline truncate flex items-center gap-1">
-                                  <span>📅 Ver Cronograma</span>
+                              <div className="flex items-center justify-between bg-purple-50 border border-purple-200 p-2 rounded-lg text-xs gap-2">
+                                <a href={getCleanCloudinaryUrl(contractFormSchedulePdfUrl)} target="_blank" rel="noreferrer" className="text-purple-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                  <FileText className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                  <span className="truncate">Ver Cronograma Adjunto</span>
                                   <ExternalLink className="w-3 h-3 text-purple-600 shrink-0" />
                                 </a>
                                 <button
                                   type="button"
                                   onClick={() => setContractFormSchedulePdfUrl('')}
-                                  className="text-rose-600 hover:text-rose-800 font-extrabold text-3xs ml-1 shrink-0 cursor-pointer"
+                                  className="text-rose-600 hover:text-rose-800 hover:bg-rose-100/60 font-bold text-3xs px-2 py-1 rounded transition-colors shrink-0 cursor-pointer border border-rose-200/60"
                                 >
                                   Eliminar
                                 </button>
@@ -13933,13 +13935,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 />
                                 <label
                                   htmlFor="schedule-pdf-input"
-                                  className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold text-3xs py-2 px-2.5 rounded-lg border border-slate-250 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                                  className="w-full bg-white hover:bg-slate-100 text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border border-dashed border-purple-300 flex items-center justify-center gap-2 cursor-pointer transition-all shadow-2xs active:scale-[0.99]"
                                 >
                                   {isUploadingSchedulePdf ? (
-                                    <span className="text-amber-600 font-bold">Subiendo... ({uploadSchedulePdfProgress}%)</span>
+                                    <span className="text-amber-600 font-bold animate-pulse">Subiendo Cronograma... ({uploadSchedulePdfProgress}%)</span>
                                   ) : (
                                     <>
-                                      <Upload className="w-3.5 h-3.5 text-purple-600" />
+                                      <Upload className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                                       <span>Adjuntar Cronograma PDF</span>
                                     </>
                                   )}
