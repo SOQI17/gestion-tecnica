@@ -726,7 +726,7 @@ export default function AdminPortal({
   const [contractsSubTab, setContractsSubTab] = useState<'garantias' | 'ge'>('garantias');
   const [contractSearch, setContractSearch] = useState('');
   const [contractPage, setContractPage] = useState(1);
-  const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | null>(null);
+  const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null>(null);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isContractImporterOpen, setIsContractImporterOpen] = useState(false);
   const [contractCsvError, setContractCsvError] = useState<string | null>(null);
@@ -764,7 +764,7 @@ export default function AdminPortal({
   const [contractFormType, setContractFormType] = useState<'Garantía extendida/Contrato' | 'Garantía de compra' | 'Facturable' | 'Otro'>('Garantía extendida/Contrato');
   const [contractFormStart, setContractFormStart] = useState('');
   const [contractFormEnd, setContractFormEnd] = useState('');
-  const [contractFormStatus, setContractFormStatus] = useState<'Activo' | 'Vencido' | 'Pendiente'>('Activo');
+  const [contractFormStatus, setContractFormStatus] = useState<'Activo' | 'Vencido' | 'Pendiente' | 'Inactivo'>('Activo');
   const [contractFormCoverage, setContractFormCoverage] = useState('');
   const [contractClientSearchQuery, setContractClientSearchQuery] = useState('');
   const [isContractClientDropdownOpen, setIsContractClientDropdownOpen] = useState(false);
@@ -2126,6 +2126,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     onAddWorkOrder(newWO);
     setIsCreatingWO(false);
+
+    // Alert notice if client contract is Inactivo
+    const targetClient = matchedClient || clients.find(c => c.id === finalClientId);
+    const inactiveContract = targetClient ? contracts.find(con => con.clientId === targetClient.id && con.status === 'Inactivo') : null;
+    if (inactiveContract) {
+      alert(`⚠️ AVISO DE CONTRATO INACTIVO (NO RENOVADO):\n\nEl cliente "${targetClient?.name || newWOClientSearch}" tiene su contrato marcado como INACTIVO.\n\nLa Orden de Trabajo ${newWOId} ha sido registrada, pero recuerde que este cliente no cuenta con soporte bajo garantía ni contrato de mantenimiento.`);
+    }
     // Reset form
     setNewWOEquipment('');
     setSelectedWOTags([]);
@@ -6392,6 +6399,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             const isPending = con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0));
             if (!isPending) return false;
           }
+          if (contractFilterExpiration === 'inactivo' && con.status !== 'Inactivo') return false;
         }
 
         return true;
@@ -6536,8 +6544,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             c.pendingAdminSchedule || (c.maintenanceFrequency === 'Ninguno' && (!c.maintenanceDates || c.maintenanceDates.length === 0))
           ).length;
 
+          const inactiveCount = contracts.filter(c => c.status === 'Inactivo').length;
+
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
               {/* Pending Admin Schedule Card */}
               <div 
                 onClick={() => {
@@ -6583,7 +6593,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     🚨
                   </div>
                   <div>
-                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer en 1M</span>
+                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer 1M</span>
                     <span className="text-xs font-black leading-tight">{urgent1m.length} Contratos</span>
                   </div>
                 </div>
@@ -6609,12 +6619,38 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     ⚠️
                   </div>
                   <div>
-                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer en 3M</span>
+                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Por Vencer 3M</span>
                     <span className="text-xs font-black leading-tight">{warning3m.length} Contratos</span>
                   </div>
                 </div>
                 <span className="text-[9px] font-bold underline">
                   {contractFilterExpiration === '3m' ? '✓ Viendo' : 'Filtrar'}
+                </span>
+              </div>
+
+              {/* Inactivos (No Renovados) Card */}
+              <div 
+                onClick={() => {
+                  setContractFilterExpiration(contractFilterExpiration === 'inactivo' ? null : 'inactivo');
+                  setContractPage(1);
+                }}
+                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
+                  contractFilterExpiration === 'inactivo'
+                    ? 'bg-slate-700 text-white border-slate-800 ring-2 ring-slate-400'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-slate-500 text-white flex items-center justify-center font-black text-xs shrink-0">
+                    🚫
+                  </div>
+                  <div>
+                    <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Inactivos</span>
+                    <span className="text-xs font-black leading-tight">{inactiveCount} Contratos</span>
+                  </div>
+                </div>
+                <span className="text-[9px] font-bold underline">
+                  {contractFilterExpiration === 'inactivo' ? '✓ Viendo' : 'Filtrar'}
                 </span>
               </div>
 
@@ -6636,7 +6672,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   </div>
                   <div>
                     <span className="block text-[8px] font-extrabold uppercase tracking-wide opacity-90">Vencidos / Total</span>
-                    <span className="text-xs font-black leading-tight">{expiredCount.length} Vencidos ({contracts.length} Total)</span>
+                    <span className="text-xs font-black leading-tight">{expiredCount.length} Vencidos ({contracts.length})</span>
                   </div>
                 </div>
                 <span className="text-[9px] font-bold underline">
@@ -6721,7 +6757,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </div>
                       </td>
                       <td className="p-3.5">
-                        {con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0)) ? (
+                        {con.status === 'Inactivo' ? (
+                          <span className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-200 text-slate-800 border-slate-300">
+                            🚫 INACTIVO (No renovado)
+                          </span>
+                        ) : (con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0))) ? (
                           <span className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-amber-100 text-amber-950 border-amber-300 animate-pulse">
                             ⏳ PENDIENTE CRONOGRAMA
                           </span>
@@ -10877,6 +10917,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <option key={c.id} value={c.name} />
                       ))}
                     </datalist>
+
+                    {/* Warning banner if selected client has an Inactive contract */}
+                    {(() => {
+                      const matchedClient = clients.find(c => c.name.trim().toLowerCase() === newWOClientSearch.trim().toLowerCase() || c.id === newWOClient);
+                      const inactiveContract = matchedClient ? contracts.find(con => con.clientId === matchedClient.id && con.status === 'Inactivo') : null;
+                      if (!inactiveContract) return null;
+                      return (
+                        <div className="bg-rose-50 border-2 border-rose-300 rounded-xl p-3 flex items-start gap-2.5 shadow-2xs animate-in fade-in zoom-in-95 duration-150 my-2">
+                          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                          <div className="space-y-0.5">
+                            <span className="font-black text-xs text-rose-950 block uppercase tracking-wide">
+                              🚨 AVISO: CONTRATO INACTIVO (NO RENOVADO)
+                            </span>
+                            <p className="text-[11px] text-rose-900 font-bold leading-snug">
+                              El cliente <u>{matchedClient?.name}</u> tiene su contrato registrado como <strong>INACTIVO (No Renovado)</strong>.
+                            </p>
+                            <p className="text-[10px] text-rose-700 font-medium">
+                              ⚠️ Este trabajo o visita no cuenta con soporte ni garantía bajo contrato vigente.
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Engineer Select — Professional searchable dropdown */}
@@ -11451,7 +11514,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[90vh] z-50 border border-slate-150 font-sans"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
                   <div>
                     <span className="text-4xs font-bold font-mono text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100 uppercase tracking-widest">
                       {isEditingWOState ? 'Editar Datos de la Orden' : 'Detalle de la Orden'}
@@ -11480,6 +11543,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <X className="w-5 h-5" />
                   </button>
                 </div>
+
+                {/* Notice if Client has an Inactive Contract */}
+                {(() => {
+                  const clientContract = client ? contracts.find(con => con.clientId === client.id) : null;
+                  if (clientContract?.status !== 'Inactivo') return null;
+                  return (
+                    <div className="bg-rose-50 border-2 border-rose-300 rounded-xl p-3 mb-4 flex items-start gap-2.5 shadow-2xs animate-in fade-in duration-150">
+                      <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-black text-xs text-rose-950 block uppercase tracking-wide">
+                          🚨 AVISO: CLIENTE CON CONTRATO INACTIVO (NO RENOVADO)
+                        </span>
+                        <p className="text-[11px] text-rose-900 font-bold leading-snug mt-0.5">
+                          El contrato de <u>{clientDisplayName}</u> está marcado como <strong>INACTIVO (No renovado)</strong>. Los trabajos agendados no cuentan con amparo ni cobertura de garantía.
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {isEditingWOState ? (
                   /* Form Content when editing */
@@ -13768,7 +13850,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
                         >
                           <option value="Activo">🟢 Activo</option>
-                          <option value="Pendiente">🟡 Pendiente</option>
+                          <option value="Pendiente">🟡 Pendiente (Sin Cronograma)</option>
+                          <option value="Inactivo">🚫 Inactivo (No Renovado)</option>
                           <option value="Vencido">🔴 Vencido</option>
                         </select>
                       </div>

@@ -130,7 +130,7 @@ export interface Contract {
   type: 'Garantía extendida/Contrato' | 'Garantía de compra' | 'Facturable' | 'Otro';
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
-  status: 'Activo' | 'Vencido' | 'Pendiente';
+  status: 'Activo' | 'Vencido' | 'Pendiente' | 'Inactivo';
   coverage?: string;
   equipmentItems?: ContractEquipmentItem[]; // List of equipment covered
   maintenanceFrequency?: 'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno';
