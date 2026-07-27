@@ -5654,24 +5654,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       'ESTADO',
       'DETALLE DE COBERTURA',
       'FRECUENCIA MANTENIMIENTO',
-      'MONTO VALOR ($)',
-      'OBSERVACIONES / EQUIPOS'
+      'EQUIPOS CUBIERTOS'
     ];
 
     const rows = contracts.map(con => {
       const client = clients.find(c => c.id === con.clientId);
-      const equipNames = (con.equipmentItems || []).map(e => `${e.name || ''} ${e.brand || ''} ${e.model || ''}`.trim()).filter(Boolean).join(', ');
+      const equipNames = (con.equipmentItems || []).map(e => `${e.name || ''} ${e.brand || ''}`.trim()).filter(Boolean).join(', ');
       return [
         `"${(con.id || '').replace(/"/g, '""')}"`,
         `"${(client?.name || con.clientId || '').replace(/"/g, '""')}"`,
-        `"${(con.contractType || '').replace(/"/g, '""')}"`,
+        `"${(con.type || '').replace(/"/g, '""')}"`,
         `"${(con.startDate || '').replace(/"/g, '""')}"`,
         `"${(con.endDate || '').replace(/"/g, '""')}"`,
         `"${(con.status || '').replace(/"/g, '""')}"`,
-        `"${(con.coverageDetail || '').replace(/"/g, '""')}"`,
+        `"${(con.coverage || '').replace(/"/g, '""')}"`,
         `"${(con.maintenanceFrequency || '').replace(/"/g, '""')}"`,
-        con.contractValue || 0,
-        `"${(equipNames || con.observaciones || '').replace(/"/g, '""')}"`
+        `"${(equipNames || '').replace(/"/g, '""')}"`
       ].join(';');
     });
 
@@ -5718,15 +5716,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         `"${(c.sid || '').replace(/"/g, '""')}"`,
         `"${(c.modalidad || '').replace(/"/g, '""')}"`,
         `"${(c.equipo || '').replace(/"/g, '""')}"`,
-        `"${(c.equipmentNum || '').replace(/"/g, '""')}"`,
+        `"${String(c.equipmentNum ?? '').replace(/"/g, '""')}"`,
         `"${(c.invoice || '').replace(/"/g, '""')}"`,
         c.invoiceAmount || 0,
-        `"${(c.months || '').replace(/"/g, '""')}"`,
+        `"${String(c.months ?? '').replace(/"/g, '""')}"`,
         `"${(c.invoiceDate || '').replace(/"/g, '""')}"`,
         `"${(c.dueDate || '').replace(/"/g, '""')}"`,
         `"${(c.paymentPeriod || '').replace(/"/g, '""')}"`,
-        `"${(c.monthNum || '').replace(/"/g, '""')}"`,
-        `"${(c.contractNum || '').replace(/"/g, '""')}"`,
+        `"${String(c.monthNum ?? '').replace(/"/g, '""')}"`,
+        `"${String(c.contractNum ?? '').replace(/"/g, '""')}"`,
         `"${(c.observaciones || '').replace(/"/g, '""')}"`
       ].join(';');
     });
