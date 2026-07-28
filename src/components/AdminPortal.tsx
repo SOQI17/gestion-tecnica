@@ -136,11 +136,27 @@ const generateMaintenanceDates = (
 
   const isPurchaseWarranty = contractType === 'Garantía de compra';
 
+  const targetDay = (preferredDay && preferredDay >= 1 && preferredDay <= 31) 
+    ? preferredDay 
+    : start.getDate();
+
   let year = start.getFullYear();
   let month = start.getMonth();
 
   if (preferredMonth && preferredMonth >= 1 && preferredMonth <= 12) {
-    month = preferredMonth - 1;
+    month = preferredMonth - 1; // 0-indexed (e.g. Feb = 1)
+    
+    // Find the first year on or after start where candidate date >= start
+    let daysInM = new Date(year, month + 1, 0).getDate();
+    let cDay = Math.min(targetDay, daysInM);
+    let candidate = new Date(year, month, cDay);
+
+    while (candidate < start) {
+      year++;
+      daysInM = new Date(year, month + 1, 0).getDate();
+      cDay = Math.min(targetDay, daysInM);
+      candidate = new Date(year, month, cDay);
+    }
   } else if (isPurchaseWarranty) {
     month += incrementMonths;
     if (month > 11) {
@@ -149,27 +165,16 @@ const generateMaintenanceDates = (
     }
   }
 
-  const targetDay = (preferredDay && preferredDay >= 1 && preferredDay <= 31) 
-    ? preferredDay 
-    : start.getDate();
-
   let daysInMonth = new Date(year, month + 1, 0).getDate();
   let candidateDay = Math.min(targetDay, daysInMonth);
   let current = new Date(year, month, candidateDay);
 
-  if (preferredMonth && preferredMonth >= 1 && preferredMonth <= 12) {
-    while (current < start) {
-      month += incrementMonths;
-      if (month > 11) {
-        year += Math.floor(month / 12);
-        month = month % 12;
-      }
-      daysInMonth = new Date(year, month + 1, 0).getDate();
-      candidateDay = Math.min(targetDay, daysInMonth);
-      current = new Date(year, month, candidateDay);
-    }
-  } else if (!isPurchaseWarranty && current < start) {
+  if (!preferredMonth && !isPurchaseWarranty && current < start) {
     month += incrementMonths;
+    if (month > 11) {
+      year += Math.floor(month / 12);
+      month = month % 12;
+    }
     daysInMonth = new Date(year, month + 1, 0).getDate();
     candidateDay = Math.min(targetDay, daysInMonth);
     current = new Date(year, month, candidateDay);
@@ -188,6 +193,10 @@ const generateMaintenanceDates = (
     dates.push(entry);
 
     month += incrementMonths;
+    if (month > 11) {
+      year += Math.floor(month / 12);
+      month = month % 12;
+    }
     daysInMonth = new Date(year, month + 1, 0).getDate();
     candidateDay = Math.min(targetDay, daysInMonth);
     current = new Date(year, month, candidateDay);
