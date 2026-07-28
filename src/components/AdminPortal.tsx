@@ -2588,29 +2588,57 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     const getContractCommitmentsForDate = (dateStr: string) => {
       const dayCommitments: { contract: Contract; client: Client | undefined; isQc: boolean; isDone: boolean; woStatus: string | null }[] = [];
+      
       contracts.forEach(con => {
-        if (con.maintenanceDates && con.maintenanceDates.some(d => d.split('|')[0] === dateStr)) {
-          const client = clients.find(c => c.id === con.clientId);
-          
-          // Check if this date has a corresponding work order
-          const matchingWO = workOrders.find(
-            wo => wo.clientId === con.clientId && wo.plannedDate === dateStr
-          );
-          const isDone = matchingWO ? (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado') : false;
-          
-          // Is it the QC date?
-          const isQc = con.qcDate === dateStr || 
-            (!con.qcDate && con.maintenanceDates.some(d => d.split('|')[0] === dateStr && con.maintenanceDates!.indexOf(d) === con.maintenanceDates!.length - 1));
+        if (!con.maintenanceDates || con.maintenanceDates.length === 0) return;
 
-          dayCommitments.push({
-            contract: con,
-            client,
-            isQc,
-            isDone,
-            woStatus: matchingWO ? matchingWO.status : null
+        // Find work orders for this contract's client
+        const clientWOs = workOrders.filter(wo => wo.clientId === con.clientId);
+
+        con.maintenanceDates.forEach((entry, idx) => {
+          const parts = entry.split('|');
+          const contractDate = parts[0];
+          const eqName = parts[1];
+
+          // Check if a work order corresponds to this contract date entry
+          let matchingWO = clientWOs.find(wo => {
+            if (eqName) {
+              return wo.equipmentName.trim().toLowerCase() === eqName.trim().toLowerCase() && 
+                     (wo.plannedDate === contractDate || Math.abs(new Date(wo.plannedDate + 'T00:00:00').getTime() - new Date(contractDate + 'T00:00:00').getTime()) <= 45 * 86400000);
+            }
+            return wo.plannedDate === contractDate;
           });
-        }
+
+          // Fallback: match by index if work orders list matches maintenanceDates length
+          if (!matchingWO && clientWOs.length === con.maintenanceDates.length) {
+            matchingWO = clientWOs[idx];
+          }
+
+          // Determine the effective date where this commitment badge should be displayed
+          const effectiveDate = matchingWO ? matchingWO.plannedDate : contractDate;
+
+          if (effectiveDate === dateStr) {
+            const client = clients.find(c => c.id === con.clientId);
+            const isDone = matchingWO ? (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado') : false;
+            
+            // Is it QC date?
+            const isQc = con.qcDate === contractDate || con.qcDate === effectiveDate || idx === con.maintenanceDates.length - 1;
+
+            // Avoid duplicate badges for the same contract on the same day
+            const alreadyAdded = dayCommitments.some(item => item.contract.id === con.id && item.isQc === isQc);
+            if (!alreadyAdded) {
+              dayCommitments.push({
+                contract: con,
+                client,
+                isQc,
+                isDone,
+                woStatus: matchingWO ? matchingWO.status : null
+              });
+            }
+          }
+        });
       });
+
       return dayCommitments;
     };
 
