@@ -114,7 +114,8 @@ const generateMaintenanceDates = (
   frequency: string, 
   contractType: string,
   preferredDay?: number,
-  targetEquipment?: string
+  targetEquipment?: string,
+  preferredMonth?: number
 ): string[] => {
   if (!startDateStr || !endDateStr || !frequency || frequency === 'Ninguno' || frequency === 'Personalizado') {
     return [];
@@ -138,7 +139,9 @@ const generateMaintenanceDates = (
   let year = start.getFullYear();
   let month = start.getMonth();
 
-  if (isPurchaseWarranty) {
+  if (preferredMonth && preferredMonth >= 1 && preferredMonth <= 12) {
+    month = preferredMonth - 1;
+  } else if (isPurchaseWarranty) {
     month += incrementMonths;
     if (month > 11) {
       year += Math.floor(month / 12);
@@ -154,14 +157,27 @@ const generateMaintenanceDates = (
   let candidateDay = Math.min(targetDay, daysInMonth);
   let current = new Date(year, month, candidateDay);
 
-  if (!isPurchaseWarranty && current < start) {
+  if (preferredMonth && preferredMonth >= 1 && preferredMonth <= 12) {
+    while (current < start) {
+      month += incrementMonths;
+      if (month > 11) {
+        year += Math.floor(month / 12);
+        month = month % 12;
+      }
+      daysInMonth = new Date(year, month + 1, 0).getDate();
+      candidateDay = Math.min(targetDay, daysInMonth);
+      current = new Date(year, month, candidateDay);
+    }
+  } else if (!isPurchaseWarranty && current < start) {
     month += incrementMonths;
     daysInMonth = new Date(year, month + 1, 0).getDate();
     candidateDay = Math.min(targetDay, daysInMonth);
     current = new Date(year, month, candidateDay);
   }
 
-  while (isPurchaseWarranty ? (current <= end) : (current < end)) {
+  let safety = 0;
+  while ((isPurchaseWarranty ? (current <= end) : (current <= end)) && safety < 120) {
+    safety++;
     const yyyy = current.getFullYear();
     const mm = String(current.getMonth() + 1).padStart(2, '0');
     const dd = String(current.getDate()).padStart(2, '0');
@@ -846,6 +862,7 @@ export default function AdminPortal({
   // Maintenance scheduling states
   const [contractFormFrequency, setContractFormFrequency] = useState<'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno'>('Ninguno');
   const [contractFormPreferredDay, setContractFormPreferredDay] = useState<number | ''>('');
+  const [contractFormPreferredMonth, setContractFormPreferredMonth] = useState<number | ''>('');
   const [contractFormSelectedEquipForFreq, setContractFormSelectedEquipForFreq] = useState<string>('all');
   const [contractFormMaintenanceDates, setContractFormMaintenanceDates] = useState<string[]>([]);
   const [tempMaintenanceDate, setTempMaintenanceDate] = useState('');
@@ -14378,7 +14395,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setContractFormStart(newStart);
                             if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
                               const prefDay = typeof contractFormPreferredDay === 'number' ? contractFormPreferredDay : undefined;
-                              const generated = generateMaintenanceDates(newStart, contractFormEnd, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq);
+                              const prefMonth = typeof contractFormPreferredMonth === 'number' ? contractFormPreferredMonth : undefined;
+                              const generated = generateMaintenanceDates(newStart, contractFormEnd, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq, prefMonth);
                               if (contractFormSelectedEquipForFreq === 'all') {
                                 setContractFormMaintenanceDates(generated);
                               } else {
@@ -14417,7 +14435,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                             if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
                               const prefDay = typeof contractFormPreferredDay === 'number' ? contractFormPreferredDay : undefined;
-                              const generated = generateMaintenanceDates(contractFormStart, newEndDate, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq);
+                              const prefMonth = typeof contractFormPreferredMonth === 'number' ? contractFormPreferredMonth : undefined;
+                              const generated = generateMaintenanceDates(contractFormStart, newEndDate, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq, prefMonth);
                               if (contractFormSelectedEquipForFreq === 'all') {
                                 setContractFormMaintenanceDates(generated);
                               } else {
@@ -14849,7 +14868,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
                       
                       <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2.5">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                           {/* Column 1: Target Equipment Selector */}
                           <div className="space-y-1">
                             <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">
@@ -14913,27 +14932,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Column 3: Suggested Day */}
                           <div className="space-y-1">
-                            <div className="flex items-center justify-between">
-                              <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">Día Sugerido</label>
-                              <div className="flex items-center gap-1">
-                                <span className="text-[8px] text-slate-400 font-extrabold">Sugerir:</span>
-                                {[1, 15, 27].map(day => (
-                                  <button
-                                    key={day}
-                                    type="button"
-                                    disabled={isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'}
-                                    onClick={() => setContractFormPreferredDay(day)}
-                                    className={`px-1.5 py-0.2 rounded text-[8px] font-black transition-colors cursor-pointer ${
-                                      contractFormPreferredDay === day
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'bg-slate-200/80 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700'
-                                    }`}
-                                  >
-                                    {day}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
+                            <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">Día Sugerido</label>
                             <input
                               type="number"
                               min={1}
@@ -14951,6 +14950,53 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   : 'bg-white focus:border-indigo-500'
                               }`}
                             />
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="text-[7.5px] text-slate-400 font-extrabold">Sugerir:</span>
+                              {[1, 15, 27].map(day => (
+                                <button
+                                  key={day}
+                                  type="button"
+                                  disabled={isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'}
+                                  onClick={() => setContractFormPreferredDay(day)}
+                                  className={`px-1.5 py-0.2 rounded text-[8px] font-black transition-colors cursor-pointer ${
+                                    contractFormPreferredDay === day
+                                      ? 'bg-indigo-600 text-white'
+                                      : 'bg-slate-200/80 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700'
+                                  }`}
+                                >
+                                  {day}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Column 4: Preferred Starting Month */}
+                          <div className="space-y-1">
+                            <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">Mes Inicial</label>
+                            <select
+                              value={contractFormPreferredMonth}
+                              disabled={isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'}
+                              onChange={(e) => setContractFormPreferredMonth(e.target.value === '' ? '' : Number(e.target.value))}
+                              className={`w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-extrabold text-slate-800 outline-hidden ${
+                                isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'
+                                  ? 'bg-slate-100 cursor-not-allowed opacity-70'
+                                  : 'bg-white focus:border-indigo-500 cursor-pointer shadow-2xs'
+                              }`}
+                            >
+                              <option value="">Auto (Desde Inicio)</option>
+                              <option value={1}>01 - Enero</option>
+                              <option value={2}>02 - Febrero</option>
+                              <option value={3}>03 - Marzo</option>
+                              <option value={4}>04 - Abril</option>
+                              <option value={5}>05 - Mayo</option>
+                              <option value={6}>06 - Junio</option>
+                              <option value={7}>07 - Julio</option>
+                              <option value={8}>08 - Agosto</option>
+                              <option value={9}>09 - Septiembre</option>
+                              <option value={10}>10 - Octubre</option>
+                              <option value={11}>11 - Noviembre</option>
+                              <option value={12}>12 - Diciembre</option>
+                            </select>
                           </div>
                         </div>
 
@@ -14968,7 +15014,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 return;
                               }
                               const prefDay = typeof contractFormPreferredDay === 'number' ? contractFormPreferredDay : undefined;
-                              const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq);
+                              const prefMonth = typeof contractFormPreferredMonth === 'number' ? contractFormPreferredMonth : undefined;
+                              const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq, prefMonth);
                               if (generated.length === 0) {
                                 alert("No se pudieron generar fechas con los parámetros actuales. Verifique que el período del contrato abarque la frecuencia seleccionada.");
                                 return;
