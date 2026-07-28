@@ -839,6 +839,7 @@ export default function AdminPortal({
   const [contractFormSelectedEquipForFreq, setContractFormSelectedEquipForFreq] = useState<string>('all');
   const [contractFormMaintenanceDates, setContractFormMaintenanceDates] = useState<string[]>([]);
   const [tempMaintenanceDate, setTempMaintenanceDate] = useState('');
+  const [tempManualEquipTarget, setTempManualEquipTarget] = useState<string>('');
   const [contractFormQcDate, setContractFormQcDate] = useState('');
   const [contractFormPendingAdmin, setContractFormPendingAdmin] = useState<boolean>(false);
 
@@ -14811,9 +14812,38 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </label>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <div className="space-y-1">
-                          <label className="block text-[9px] font-bold text-slate-500 uppercase">Frecuencia</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                        {/* Column 1: Target Equipment Selector */}
+                        <div className="space-y-1 sm:col-span-1">
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase">
+                            {contractFormEquipmentItems.length > 1 ? '🎯 Aplica a Equipo' : '⚙️ Equipo'}
+                          </label>
+                          <select
+                            value={contractFormSelectedEquipForFreq}
+                            disabled={isSalesReadOnly || contractFormEquipmentItems.length === 0}
+                            onChange={(e) => setContractFormSelectedEquipForFreq(e.target.value)}
+                            className={`w-full border border-slate-200 rounded-lg px-2 py-1.5 text-[10px] font-extrabold text-slate-800 outline-hidden ${
+                              isSalesReadOnly || contractFormEquipmentItems.length === 0
+                                ? 'bg-slate-100 cursor-not-allowed opacity-80'
+                                : 'bg-white focus:border-indigo-500 cursor-pointer shadow-2xs'
+                            }`}
+                          >
+                            <option value="all">
+                              {contractFormEquipmentItems.length === 0
+                                ? 'Todos los equipos'
+                                : `🌐 Todos (${contractFormEquipmentItems.length})`}
+                            </option>
+                            {contractFormEquipmentItems.map((item, idx) => (
+                              <option key={idx} value={item.name}>
+                                ⚙️ {item.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Column 2: Frequency Selector */}
+                        <div className="space-y-1 sm:col-span-1">
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Frecuencia</label>
                           <select
                             value={contractFormFrequency}
                             disabled={isSalesReadOnly}
@@ -14828,19 +14858,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   setContractFormStatus(isExpired ? 'Vencido' : 'Activo');
                                 }
                               }
-                              if (freq !== 'Ninguno' && freq !== 'Personalizado') {
-                                const prefDay = typeof contractFormPreferredDay === 'number' ? contractFormPreferredDay : undefined;
-                                const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, freq, contractFormType, prefDay);
-                                setContractFormMaintenanceDates(generated);
-                                if (generated.length > 0) {
-                                  setContractFormQcDate(generated[generated.length - 1]);
-                                } else {
-                                  setContractFormQcDate('');
-                                }
-                              }
                             }}
                             className={`w-full border border-slate-200 rounded-lg px-2 py-1.5 text-[10px] font-bold text-slate-700 outline-hidden ${
-                              isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white cursor-pointer'
+                              isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-white focus:border-indigo-500 cursor-pointer shadow-2xs'
                             }`}
                           >
                             <option value="Ninguno">Ninguno</option>
@@ -14854,8 +14874,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </select>
                         </div>
 
-                        <div className="space-y-1">
-                          <label className="block text-[9px] font-bold text-slate-500 uppercase">Día Sugerido de Mto</label>
+                        {/* Column 3: Suggested Day */}
+                        <div className="space-y-1 sm:col-span-1">
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Día Sugerido</label>
                           <input
                             type="number"
                             min={1}
@@ -14866,11 +14887,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             onChange={(e) => {
                               const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
                               setContractFormPreferredDay(val);
-                              if (typeof val === 'number' && val >= 1 && val <= 31 && contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
-                                const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency, contractFormType, val);
-                                setContractFormMaintenanceDates(generated);
-                                if (generated.length > 0) setContractFormQcDate(generated[generated.length - 1]);
-                              }
                             }}
                             className={`w-full border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-extrabold text-slate-800 outline-hidden ${
                               isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'
@@ -14878,25 +14894,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 : 'bg-white focus:border-indigo-500'
                             }`}
                           />
-                          <div className="flex items-center gap-1 mt-1">
+                          <div className="flex items-center gap-1 mt-0.5">
                             <span className="text-[7.5px] text-slate-400 font-extrabold">Sugerir:</span>
                             {[1, 15, 27].map(day => (
                               <button
                                 key={day}
                                 type="button"
                                 disabled={isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'}
-                                onClick={() => {
-                                  setContractFormPreferredDay(day);
-                                  if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
-                                    const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency, contractFormType, day);
-                                    setContractFormMaintenanceDates(generated);
-                                    if (generated.length > 0) setContractFormQcDate(generated[generated.length - 1]);
-                                  }
-                                }}
-                                className={`px-1.5 py-0.2 rounded text-[8px] font-black transition-colors cursor-pointer ${
+                                onClick={() => setContractFormPreferredDay(day)}
+                                className={`px-1 py-0.2 rounded text-[7.5px] font-black transition-colors cursor-pointer ${
                                   contractFormPreferredDay === day
                                     ? 'bg-indigo-600 text-white'
-                                    : 'bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700'
+                                    : 'bg-slate-200/70 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700'
                                 }`}
                               >
                                 {day}
@@ -14905,8 +14914,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
                         </div>
 
-                        <div className="space-y-1">
-                          <label className="block text-[9px] font-bold text-slate-500 uppercase">Frecuencia Acciones</label>
+                        {/* Column 4: Recalculate / Generate Button */}
+                        <div className="space-y-1 sm:col-span-1 flex flex-col justify-start">
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Acciones</label>
                           <button
                             type="button"
                             disabled={isSalesReadOnly}
@@ -14936,11 +14946,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormQcDate(generated[generated.length - 1]);
                               }
                             }}
-                            className={`w-full border px-2 py-1 rounded-lg text-3xs font-extrabold transition-all ${
-                              isSalesReadOnly ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200 cursor-pointer'
+                            className={`w-full py-1.5 border rounded-lg text-3xs font-extrabold transition-all shadow-2xs ${
+                              isSalesReadOnly 
+                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' 
+                                : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white border-indigo-600 cursor-pointer active:scale-98'
                             }`}
                           >
-                            Recalcular Fechas
+                            {contractFormSelectedEquipForFreq === 'all'
+                              ? '⚡ Recalcular Fechas'
+                              : `+ Generar Fechas`}
                           </button>
                         </div>
                       </div>
@@ -14956,19 +14970,35 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               onChange={(e) => setTempMaintenanceDate(e.target.value)}
                               className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-3xs text-slate-700 outline-none"
                             />
+                            {contractFormEquipmentItems.length > 0 && (
+                              <select
+                                value={tempManualEquipTarget}
+                                onChange={(e) => setTempManualEquipTarget(e.target.value)}
+                                className="w-36 bg-white border border-slate-200 rounded-lg px-2 py-1 text-3xs font-bold text-slate-700 outline-none cursor-pointer"
+                              >
+                                <option value="">(Todos los equipos)</option>
+                                {contractFormEquipmentItems.map((item, idx) => (
+                                  <option key={idx} value={item.name}>
+                                    ⚙️ {item.name}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
                             <button
                               type="button"
                               onClick={() => {
                                 if (!tempMaintenanceDate) return;
-                                if (contractFormMaintenanceDates.includes(tempMaintenanceDate)) {
+                                const targetEq = tempManualEquipTarget || (contractFormSelectedEquipForFreq !== 'all' ? contractFormSelectedEquipForFreq : '');
+                                const entryToAdd = targetEq ? `${tempMaintenanceDate}|${targetEq}` : tempMaintenanceDate;
+                                if (contractFormMaintenanceDates.includes(entryToAdd)) {
                                   alert("Esta fecha ya está registrada.");
                                   return;
                                 }
-                                const updated = [...contractFormMaintenanceDates, tempMaintenanceDate].sort();
+                                const updated = [...contractFormMaintenanceDates, entryToAdd].sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
                                 setContractFormMaintenanceDates(updated);
                                 setTempMaintenanceDate('');
                                 if (!contractFormQcDate) {
-                                  setContractFormQcDate(updated[updated.length - 1]);
+                                  setContractFormQcDate(tempMaintenanceDate);
                                 }
                               }}
                               className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
