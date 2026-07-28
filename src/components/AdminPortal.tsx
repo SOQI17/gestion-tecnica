@@ -728,6 +728,7 @@ export default function AdminPortal({
   const [contractPage, setContractPage] = useState(1);
   const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null>(null);
   const [contractFilterBrand, setContractFilterBrand] = useState<string>('all');
+  const [contractDateSort, setContractDateSort] = useState<'none' | 'start_asc' | 'start_desc' | 'end_asc' | 'end_desc'>('none');
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isContractImporterOpen, setIsContractImporterOpen] = useState(false);
   const [contractCsvError, setContractCsvError] = useState<string | null>(null);
@@ -6518,9 +6519,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         return true;
       });
 
+      const sorted = [...filtered].sort((a, b) => {
+        if (contractDateSort === 'start_asc') {
+          return (a.startDate || '').localeCompare(b.startDate || '');
+        }
+        if (contractDateSort === 'start_desc') {
+          return (b.startDate || '').localeCompare(a.startDate || '');
+        }
+        if (contractDateSort === 'end_asc') {
+          return (a.endDate || '').localeCompare(b.endDate || '');
+        }
+        if (contractDateSort === 'end_desc') {
+          return (b.endDate || '').localeCompare(a.endDate || '');
+        }
+        return 0;
+      });
+
       const itemsPerPage = 10;
-      const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-      const paginated = filtered.slice((contractPage - 1) * itemsPerPage, contractPage * itemsPerPage);
+      const totalPages = Math.ceil(sorted.length / itemsPerPage) || 1;
+      const paginated = sorted.slice((contractPage - 1) * itemsPerPage, contractPage * itemsPerPage);
 
       return (
         <div className="space-y-6 font-sans">
@@ -6926,6 +6943,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </select>
             </div>
 
+            {/* Date Sort Selector */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-2xs shrink-0">
+              <CalendarIcon className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase">Ordenar por Fecha:</span>
+              <select
+                value={contractDateSort}
+                onChange={(e) => {
+                  setContractDateSort(e.target.value as any);
+                  setContractPage(1);
+                }}
+                className="bg-transparent font-extrabold text-xs text-slate-800 outline-hidden cursor-pointer"
+              >
+                <option value="none">Por Defecto</option>
+                <option value="start_asc">📅 Fecha Inicio: Antiguos → Recientes</option>
+                <option value="start_desc">📅 Fecha Inicio: Recientes → Antiguos</option>
+                <option value="end_asc">⌛ Vencimiento: Próximos a Vencer</option>
+                <option value="end_desc">⌛ Vencimiento: Más Lejanos</option>
+              </select>
+            </div>
+
             {contractFilterExpiration && (
               <button
                 onClick={() => setContractFilterExpiration(null)}
@@ -6950,6 +6987,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <span className="bg-purple-200 text-purple-900 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black">✕</span>
               </button>
             )}
+
+            {contractDateSort !== 'none' && (
+              <button
+                onClick={() => setContractDateSort('none')}
+                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg text-3xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs shrink-0 animate-in fade-in zoom-in-95 duration-150"
+              >
+                <span>Orden: {
+                  contractDateSort === 'start_asc' ? 'Inicio (Antiguos primero)' :
+                  contractDateSort === 'start_desc' ? 'Inicio (Nuevos primero)' :
+                  contractDateSort === 'end_asc' ? 'Vencimiento (Más próximos)' : 'Vencimiento (Más lejanos)'
+                }</span>
+                <span className="bg-emerald-200 text-emerald-900 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black">✕</span>
+              </button>
+            )}
           </div>
 
           <div className="text-[10px] font-bold text-slate-500 bg-slate-100/80 px-2.5 py-1 rounded-lg border border-slate-200/60">
@@ -6961,13 +7012,35 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
           <table className="w-full text-left border-collapse text-[11px] font-sans">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-655 font-extrabold uppercase text-[9px] tracking-wider">
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-655 font-extrabold uppercase text-[9px] tracking-wider select-none">
                 <th className="p-3.5">Nº Contrato</th>
                 <th className="p-3.5">Cliente</th>
                 <th className="p-3.5">Tipo de Contrato</th>
                 <th className="p-3.5">Marca Equipo</th>
-                <th className="p-3.5">Fecha Inicio</th>
-                <th className="p-3.5">Fecha Vencimiento</th>
+                <th
+                  onClick={() => setContractDateSort(s => s === 'start_asc' ? 'start_desc' : 'start_asc')}
+                  className="p-3.5 cursor-pointer hover:bg-slate-100 transition-colors"
+                  title="Clic para ordenar por Fecha Inicio"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Fecha Inicio</span>
+                    <span className="text-indigo-600 font-bold">
+                      {contractDateSort === 'start_asc' ? '▲' : contractDateSort === 'start_desc' ? '▼' : '↕'}
+                    </span>
+                  </div>
+                </th>
+                <th
+                  onClick={() => setContractDateSort(s => s === 'end_asc' ? 'end_desc' : 'end_asc')}
+                  className="p-3.5 cursor-pointer hover:bg-slate-100 transition-colors"
+                  title="Clic para ordenar por Fecha Vencimiento"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Fecha Vencimiento</span>
+                    <span className="text-indigo-600 font-bold">
+                      {contractDateSort === 'end_asc' ? '▲' : contractDateSort === 'end_desc' ? '▼' : '↕'}
+                    </span>
+                  </div>
+                </th>
                 <th className="p-3.5">Estado</th>
                 <th className="p-3.5 font-bold">Detalle de Cobertura</th>
                 <th className="p-3.5 text-right no-print">Acciones</th>
