@@ -10,7 +10,8 @@ const EQUIPMENT_MODALITIES = [
   'SURGERY',
   'PET/CT',
   'CYCLOTRON',
-  'MODULOS DE SINTESIS'
+  'MODULOS DE SINTESIS',
+  'Otros'
 ];
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
