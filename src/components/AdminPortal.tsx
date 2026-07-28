@@ -14812,111 +14812,113 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </label>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2.5">
-                        {/* Column 1: Target Equipment Selector */}
-                        <div className="space-y-1 sm:col-span-1">
-                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase">
-                            {contractFormEquipmentItems.length > 1 ? '🎯 Aplica a Equipo' : '⚙️ Equipo'}
-                          </label>
-                          <select
-                            value={contractFormSelectedEquipForFreq}
-                            disabled={isSalesReadOnly || contractFormEquipmentItems.length === 0}
-                            onChange={(e) => setContractFormSelectedEquipForFreq(e.target.value)}
-                            className={`w-full border border-slate-200 rounded-lg px-2 py-1.5 text-[10px] font-extrabold text-slate-800 outline-hidden ${
-                              isSalesReadOnly || contractFormEquipmentItems.length === 0
-                                ? 'bg-slate-100 cursor-not-allowed opacity-80'
-                                : 'bg-white focus:border-indigo-500 cursor-pointer shadow-2xs'
-                            }`}
-                          >
-                            <option value="all">
-                              {contractFormEquipmentItems.length === 0
-                                ? 'Todos los equipos'
-                                : `🌐 Todos (${contractFormEquipmentItems.length})`}
-                            </option>
-                            {contractFormEquipmentItems.map((item, idx) => (
-                              <option key={idx} value={item.name}>
-                                ⚙️ {item.name}
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                          {/* Column 1: Target Equipment Selector */}
+                          <div className="space-y-1">
+                            <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">
+                              {contractFormEquipmentItems.length > 1 ? '🎯 Aplica a Equipo' : '⚙️ Equipo'}
+                            </label>
+                            <select
+                              value={contractFormSelectedEquipForFreq}
+                              disabled={isSalesReadOnly || contractFormEquipmentItems.length === 0}
+                              onChange={(e) => setContractFormSelectedEquipForFreq(e.target.value)}
+                              className={`w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-slate-800 outline-hidden ${
+                                isSalesReadOnly || contractFormEquipmentItems.length === 0
+                                  ? 'bg-slate-100 cursor-not-allowed opacity-80'
+                                  : 'bg-white focus:border-indigo-500 cursor-pointer shadow-2xs'
+                              }`}
+                            >
+                              <option value="all">
+                                {contractFormEquipmentItems.length === 0
+                                  ? 'Todos los equipos'
+                                  : `🌐 Todos (${contractFormEquipmentItems.length})`}
                               </option>
-                            ))}
-                          </select>
-                        </div>
+                              {contractFormEquipmentItems.map((item, idx) => (
+                                <option key={idx} value={item.name}>
+                                  ⚙️ {item.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
 
-                        {/* Column 2: Frequency Selector */}
-                        <div className="space-y-1 sm:col-span-1">
-                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Frecuencia</label>
-                          <select
-                            value={contractFormFrequency}
-                            disabled={isSalesReadOnly}
-                            onChange={(e) => {
-                              const freq = e.target.value as any;
-                              setContractFormFrequency(freq);
-                              if (freq !== 'Ninguno') {
-                                setContractFormPendingAdmin(false);
-                                if (contractFormStatus === 'Pendiente') {
-                                  const todayStr = new Date().toISOString().split('T')[0];
-                                  const isExpired = contractFormEnd && contractFormEnd < todayStr;
-                                  setContractFormStatus(isExpired ? 'Vencido' : 'Activo');
+                          {/* Column 2: Frequency Selector */}
+                          <div className="space-y-1">
+                            <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">Frecuencia</label>
+                            <select
+                              value={contractFormFrequency}
+                              disabled={isSalesReadOnly}
+                              onChange={(e) => {
+                                const freq = e.target.value as any;
+                                setContractFormFrequency(freq);
+                                if (freq !== 'Ninguno') {
+                                  setContractFormPendingAdmin(false);
+                                  if (contractFormStatus === 'Pendiente') {
+                                    const todayStr = new Date().toISOString().split('T')[0];
+                                    const isExpired = contractFormEnd && contractFormEnd < todayStr;
+                                    setContractFormStatus(isExpired ? 'Vencido' : 'Activo');
+                                  }
                                 }
-                              }
-                            }}
-                            className={`w-full border border-slate-200 rounded-lg px-2 py-1.5 text-[10px] font-bold text-slate-700 outline-hidden ${
-                              isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-white focus:border-indigo-500 cursor-pointer shadow-2xs'
-                            }`}
-                          >
-                            <option value="Ninguno">Ninguno</option>
-                            <option value="Mensual">Mensual</option>
-                            <option value="Bimestral">Bimestral</option>
-                            <option value="Trimestral">Trimestral</option>
-                            <option value="Cuatrimestral">Cuatrimestral</option>
-                            <option value="Semestral">Semestral</option>
-                            <option value="Anual">Anual</option>
-                            <option value="Personalizado">Personalizado (Fechas manuales)</option>
-                          </select>
-                        </div>
+                              }}
+                              className={`w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-700 outline-hidden ${
+                                isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-white focus:border-indigo-500 cursor-pointer shadow-2xs'
+                              }`}
+                            >
+                              <option value="Ninguno">Ninguno</option>
+                              <option value="Mensual">Mensual</option>
+                              <option value="Bimestral">Bimestral</option>
+                              <option value="Trimestral">Trimestral</option>
+                              <option value="Cuatrimestral">Cuatrimestral</option>
+                              <option value="Semestral">Semestral</option>
+                              <option value="Anual">Anual</option>
+                              <option value="Personalizado">Personalizado (Fechas manuales)</option>
+                            </select>
+                          </div>
 
-                        {/* Column 3: Suggested Day */}
-                        <div className="space-y-1 sm:col-span-1">
-                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Día Sugerido</label>
-                          <input
-                            type="number"
-                            min={1}
-                            max={31}
-                            placeholder="Ej. 27"
-                            disabled={isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'}
-                            value={contractFormPreferredDay}
-                            onChange={(e) => {
-                              const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
-                              setContractFormPreferredDay(val);
-                            }}
-                            className={`w-full border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-extrabold text-slate-800 outline-hidden ${
-                              isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'
-                                ? 'bg-slate-100 cursor-not-allowed opacity-70'
-                                : 'bg-white focus:border-indigo-500'
-                            }`}
-                          />
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <span className="text-[7.5px] text-slate-400 font-extrabold">Sugerir:</span>
-                            {[1, 15, 27].map(day => (
-                              <button
-                                key={day}
-                                type="button"
-                                disabled={isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'}
-                                onClick={() => setContractFormPreferredDay(day)}
-                                className={`px-1 py-0.2 rounded text-[7.5px] font-black transition-colors cursor-pointer ${
-                                  contractFormPreferredDay === day
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-slate-200/70 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700'
-                                }`}
-                              >
-                                {day}
-                              </button>
-                            ))}
+                          {/* Column 3: Suggested Day */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">Día Sugerido</label>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[8px] text-slate-400 font-extrabold">Sugerir:</span>
+                                {[1, 15, 27].map(day => (
+                                  <button
+                                    key={day}
+                                    type="button"
+                                    disabled={isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'}
+                                    onClick={() => setContractFormPreferredDay(day)}
+                                    className={`px-1.5 py-0.2 rounded text-[8px] font-black transition-colors cursor-pointer ${
+                                      contractFormPreferredDay === day
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-slate-200/80 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700'
+                                    }`}
+                                  >
+                                    {day}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <input
+                              type="number"
+                              min={1}
+                              max={31}
+                              placeholder="Ej. 27"
+                              disabled={isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'}
+                              value={contractFormPreferredDay}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
+                                setContractFormPreferredDay(val);
+                              }}
+                              className={`w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-slate-800 outline-hidden ${
+                                isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'
+                                  ? 'bg-slate-100 cursor-not-allowed opacity-70'
+                                  : 'bg-white focus:border-indigo-500'
+                              }`}
+                            />
                           </div>
                         </div>
 
-                        {/* Column 4: Recalculate / Generate Button */}
-                        <div className="space-y-1 sm:col-span-1 flex flex-col justify-start">
-                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Acciones</label>
+                        <div className="pt-0.5">
                           <button
                             type="button"
                             disabled={isSalesReadOnly}
@@ -14946,44 +14948,56 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormQcDate(generated[generated.length - 1]);
                               }
                             }}
-                            className={`w-full py-1.5 border rounded-lg text-3xs font-extrabold transition-all shadow-2xs ${
+                            className={`w-full py-2 border rounded-xl text-xs font-black transition-all shadow-xs flex items-center justify-center gap-1.5 ${
                               isSalesReadOnly 
                                 ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' 
                                 : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white border-indigo-600 cursor-pointer active:scale-98'
                             }`}
                           >
-                            {contractFormSelectedEquipForFreq === 'all'
-                              ? '⚡ Recalcular Fechas'
-                              : `+ Generar Fechas`}
+                            <span>
+                              {contractFormSelectedEquipForFreq === 'all'
+                                ? '⚡ Generar / Recalcular Fechas (Todos los Equipos)'
+                                : `+ Generar Fechas para ${contractFormSelectedEquipForFreq}`}
+                            </span>
                           </button>
                         </div>
                       </div>
 
                       {/* Add Specific Custom Date */}
                       {!isSalesReadOnly && (
-                        <div className="bg-slate-50 border border-slate-205 rounded-xl p-2 space-y-1.5">
-                          <span className="font-bold text-[9px] text-slate-650 block">Agregar Fecha Manual</span>
-                          <div className="flex gap-2">
-                            <input
-                              type="date"
-                              value={tempMaintenanceDate}
-                              onChange={(e) => setTempMaintenanceDate(e.target.value)}
-                              className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-3xs text-slate-700 outline-none"
-                            />
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+                          <span className="font-extrabold text-[10px] text-slate-600 uppercase tracking-wider block">
+                            ➕ Agregar Fecha Manual
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div className="space-y-1">
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase">Fecha de Mantenimiento</label>
+                              <input
+                                type="date"
+                                value={tempMaintenanceDate}
+                                onChange={(e) => setTempMaintenanceDate(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden font-mono focus:border-indigo-500"
+                              />
+                            </div>
                             {contractFormEquipmentItems.length > 0 && (
-                              <select
-                                value={tempManualEquipTarget}
-                                onChange={(e) => setTempManualEquipTarget(e.target.value)}
-                                className="w-36 bg-white border border-slate-200 rounded-lg px-2 py-1 text-3xs font-bold text-slate-700 outline-none cursor-pointer"
-                              >
-                                <option value="">(Todos los equipos)</option>
-                                {contractFormEquipmentItems.map((item, idx) => (
-                                  <option key={idx} value={item.name}>
-                                    ⚙️ {item.name}
-                                  </option>
-                                ))}
-                              </select>
+                              <div className="space-y-1">
+                                <label className="block text-[9px] font-bold text-slate-500 uppercase">Para Equipo (Opcional)</label>
+                                <select
+                                  value={tempManualEquipTarget}
+                                  onChange={(e) => setTempManualEquipTarget(e.target.value)}
+                                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-700 outline-hidden focus:border-indigo-500 cursor-pointer"
+                                >
+                                  <option value="">(Todos los equipos)</option>
+                                  {contractFormEquipmentItems.map((item, idx) => (
+                                    <option key={idx} value={item.name}>
+                                      ⚙️ {item.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             )}
+                          </div>
+                          <div className="flex justify-end pt-1">
                             <button
                               type="button"
                               onClick={() => {
@@ -15001,9 +15015,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   setContractFormQcDate(tempMaintenanceDate);
                                 }
                               }}
-                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
+                              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold px-4 py-1.5 rounded-lg text-xs transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1"
                             >
-                              Agregar
+                              <span>+ Agregar Fecha Manual</span>
                             </button>
                           </div>
                         </div>
