@@ -14116,19 +14116,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           }`}
                         />
                         {(() => {
-                          const trimmed = contractFormId.trim();
-                          if (!trimmed) return null;
-                          const existing = contracts.find(c => c.id.toLowerCase() === trimmed.toLowerCase());
-                          if (existing && (!editingContract || editingContract.id.toLowerCase() !== trimmed.toLowerCase())) {
-                            const cliName = clients.find(cl => cl.id === existing.clientId)?.name || existing.clientId;
-                            return (
-                              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-1.5 mt-1 space-y-0.5 animate-in fade-in-50 duration-150">
-                                <p className="text-[8.5px] text-indigo-800 font-extrabold flex items-center gap-1">
-                                  <span>ℹ️ Se registrará como una nueva versión/duplicado de este contrato sin borrar el de "{cliName}".</span>
-                                </p>
-                              </div>
-                            );
-                          }
                           if (editingContract && userRole === 'admin') {
                             return (
                               <p className="text-[8px] text-amber-700 font-semibold leading-tight mt-0.5">⚠ Cambiar el código creará un nuevo registro y eliminará el actual.</p>
