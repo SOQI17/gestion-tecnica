@@ -1050,6 +1050,27 @@ export default function AdminPortal({
     });
   }, [workOrders, engineers, calendarMonth, calendarYear]);
 
+  // Lock body scroll whenever ANY modal or overlay is active
+  const isAnyModalActive = 
+    isContractModalOpen || 
+    isContractDetailsModalOpen ||
+    !!selectedContractForDetails || 
+    isClientModalOpen ||
+    isEquipModalOpen || 
+    isContractGeModalOpen ||
+    isEngMetricsModalOpen ||
+    isCreatingWO;
+
+  useEffect(() => {
+    if (isAnyModalActive) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow || '';
+      };
+    }
+  }, [isAnyModalActive]);
+
   // Active work orders list (switches dynamically during reorganization preview mode)
   const activeWorkOrdersList = React.useMemo(() => {
     return isReorganizePreviewMode && previewWorkOrders ? previewWorkOrders : workOrders;
@@ -14112,7 +14133,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             )}
 
             <form onSubmit={handleSaveContract} className="flex flex-col max-h-[85vh] text-xs">
-              <div className="flex-1 overflow-y-auto pr-3 space-y-4 max-h-[62vh]">
+              <div className="flex-1 overflow-y-auto overscroll-contain pr-3 space-y-4 max-h-[62vh]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Left Side: General Contract details and Client search */}
                   <div className="space-y-3.5">
@@ -15151,7 +15172,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </button>
             </div>
 
-            <div className="space-y-4 text-xs">
+            <div className="space-y-4 text-xs max-h-[75vh] overflow-y-auto overscroll-contain pr-1">
               {/* Expiration Alert Box */}
               {(() => {
                 const exp = getContractExpirationAlert(selectedContractForDetails.endDate, selectedContractForDetails.status);

@@ -272,6 +272,17 @@ export default function EngineerPortal({
     return cleaned.includes('2026') ? cleaned : defaultDate;
   };
 
+  // Lock body scroll when viewing RETE04 modal or profile modal
+  useEffect(() => {
+    if (isViewingRETE04 || isProfileOpen || showImporter) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev || '';
+      };
+    }
+  }, [isViewingRETE04, isProfileOpen, showImporter]);
+
   const parseCSV = (text: string) => {
     const cleanText = text.replace(/^\uFEFF/, '');
     const lines = cleanText.split(/\r?\n/);
