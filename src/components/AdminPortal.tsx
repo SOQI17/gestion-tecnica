@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag } from 'lucide-react';
-import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from '../types';
+
+const EQUIPMENT_MODALITIES = [
+  'CT',
+  'MG',
+  'MR',
+  'BMD',
+  'RX',
+  'SURGERY',
+  'PET/CT',
+  'CYCLOTRON',
+  'MODULOS DE SINTESIS'
+];
+import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl } from '../utils/cloudinary';
@@ -780,9 +792,10 @@ export default function AdminPortal({
   const [newContractClientContactPhone, setNewContractClientContactPhone] = useState('');
 
   // Equipment list in contract
-  const [contractFormEquipmentItems, setContractFormEquipmentItems] = useState<{ name: string; brand: string }[]>([]);
+  const [contractFormEquipmentItems, setContractFormEquipmentItems] = useState<ContractEquipmentItem[]>([]);
   const [tempEquipName, setTempEquipName] = useState('');
   const [tempEquipBrand, setTempEquipBrand] = useState('');
+  const [tempEquipModality, setTempEquipModality] = useState('');
 
   // Maintenance scheduling states
   const [contractFormFrequency, setContractFormFrequency] = useState<'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno'>('Ninguno');
@@ -14607,48 +14620,82 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Add Custom / New Equipment to contract */}
                       {!isSalesReadOnly && (
-                        <div className="bg-slate-50 border border-slate-205 rounded-xl p-2 space-y-1.5">
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              placeholder="Nombre Equipo"
-                              value={tempEquipName}
-                              onChange={(e) => setTempEquipName(e.target.value)}
-                              className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Marca"
-                              value={tempEquipBrand}
-                              onChange={(e) => setTempEquipBrand(e.target.value)}
-                              className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none"
-                            />
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div className="space-y-0.5">
+                              <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Nombre Equipo</label>
+                              <input
+                                type="text"
+                                placeholder="Ej. REVOLUTION MAXIMA"
+                                value={tempEquipName}
+                                onChange={(e) => setTempEquipName(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Marca</label>
+                              <input
+                                type="text"
+                                placeholder="Ej. GE"
+                                value={tempEquipBrand}
+                                onChange={(e) => setTempEquipBrand(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Modalidad</label>
+                              <select
+                                value={tempEquipModality}
+                                onChange={(e) => setTempEquipModality(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-extrabold text-slate-700 outline-hidden focus:border-indigo-500 cursor-pointer"
+                              >
+                                <option value="">-- Modalidad --</option>
+                                {EQUIPMENT_MODALITIES.map(mod => (
+                                  <option key={mod} value={mod}>{mod}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end pt-0.5">
                             <button
                               type="button"
                               onClick={() => {
                                 if (!tempEquipName.trim()) return;
                                 setContractFormEquipmentItems([
                                   ...contractFormEquipmentItems, 
-                                  { name: tempEquipName.trim(), brand: tempEquipBrand.trim() || 'N/D' }
+                                  { 
+                                    name: tempEquipName.trim(), 
+                                    brand: tempEquipBrand.trim() || 'N/D',
+                                    modality: tempEquipModality || undefined
+                                  }
                                 ]);
                                 setTempEquipName('');
                                 setTempEquipBrand('');
+                                setTempEquipModality('');
                               }}
-                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-3xs transition-colors shrink-0 cursor-pointer"
+                              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold px-3 py-1.5 rounded-lg text-3xs transition-all shadow-2xs flex items-center justify-center gap-1 cursor-pointer"
                             >
-                              Agregar
+                              <span>+ Agregar Equipo</span>
                             </button>
                           </div>
                         </div>
                       )}
 
                       {/* List of currently covered equipments */}
-                      <div className="border border-slate-205 rounded-xl divide-y divide-slate-100 max-h-[100px] overflow-y-auto bg-white">
+                      <div className="border border-slate-205 rounded-xl divide-y divide-slate-100 max-h-[120px] overflow-y-auto bg-white">
                         {contractFormEquipmentItems.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between p-1.5 hover:bg-slate-50/50 transition-colors">
-                            <div className="truncate">
-                              <p className="font-bold text-slate-800 text-[10px] leading-tight">{item.name}</p>
-                              <p className="text-[8px] text-slate-400 font-semibold leading-none mt-0.5">Marca: {item.brand}</p>
+                          <div key={index} className="flex items-center justify-between p-2 hover:bg-slate-50/50 transition-colors">
+                            <div className="truncate pr-2">
+                              <p className="font-bold text-slate-800 text-[10.5px] leading-tight">{item.name}</p>
+                              <p className="text-[8.5px] text-slate-500 font-semibold leading-none mt-0.5">
+                                Marca: <span className="font-extrabold text-slate-700">{item.brand}</span>
+                                {item.modality && (
+                                  <span className="ml-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 px-1 py-0.2 rounded font-black text-[7.5px]">
+                                    {item.modality}
+                                  </span>
+                                )}
+                              </p>
                             </div>
                             {!isSalesReadOnly && (
                               <button
@@ -14656,7 +14703,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 onClick={() => {
                                   setContractFormEquipmentItems(contractFormEquipmentItems.filter((_, i) => i !== index));
                                 }}
-                                className="text-red-500 hover:text-red-755 font-black text-2xs p-1 cursor-pointer"
+                                className="text-red-500 hover:text-red-700 font-black text-2xs p-1 cursor-pointer shrink-0"
                               >
                                 ✕
                               </button>
@@ -15008,8 +15055,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <span className="font-extrabold text-[9px] text-slate-500 uppercase tracking-wider block">Equipos Cobertura</span>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedContractForDetails.equipmentItems.map((item, idx) => (
-                      <span key={idx} className="bg-slate-100 text-slate-800 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-bold">
-                        {item.name} ({item.brand})
+                      <span key={idx} className="bg-slate-100 text-slate-800 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-bold flex items-center gap-1">
+                        <span>{item.name} ({item.brand})</span>
+                        {item.modality && (
+                          <span className="bg-indigo-100 text-indigo-800 px-1 py-0.1 rounded text-[7.5px] font-black">
+                            {item.modality}
+                          </span>
+                        )}
                       </span>
                     ))}
                   </div>

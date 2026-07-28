@@ -122,6 +122,7 @@ export interface Equipment {
 export interface ContractEquipmentItem {
   name: string;
   brand: string;
+  modality?: string;
 }
 
 export interface Contract {
