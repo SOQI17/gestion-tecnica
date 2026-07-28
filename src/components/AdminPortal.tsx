@@ -6628,12 +6628,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               )}
               <button
                 onClick={() => {
+                  const today = new Date();
+                  const currentDateStr = today.toISOString().split('T')[0];
+                  const nextYear = new Date(today);
+                  nextYear.setFullYear(nextYear.getFullYear() + 1);
+                  const nextYearStr = nextYear.toISOString().split('T')[0];
+
                   setEditingContract(null);
                   setContractFormId('');
                   setContractFormClientId('');
                   setContractFormType('Garantía extendida/Contrato');
                   setContractFormStart(currentDateStr);
-                  setContractFormEnd(currentDateStr);
+                  setContractFormEnd(nextYearStr);
                   setContractFormStatus('Activo');
                   setContractFormCoverage('');
                   setContractClientSearchQuery('');
@@ -14331,13 +14337,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           disabled={isSalesReadOnly}
                           value={contractFormStart}
                           onChange={(e) => {
-                            setContractFormStart(e.target.value);
+                            const newStart = e.target.value;
+                            setContractFormStart(newStart);
                             if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
-                              const generated = generateMaintenanceDates(e.target.value, contractFormEnd, contractFormFrequency, contractFormType);
-                              setContractFormMaintenanceDates(generated);
-                              if (generated.length > 0) {
-                                setContractFormQcDate(generated[generated.length - 1]);
+                              const prefDay = typeof contractFormPreferredDay === 'number' ? contractFormPreferredDay : undefined;
+                              const generated = generateMaintenanceDates(newStart, contractFormEnd, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq);
+                              if (contractFormSelectedEquipForFreq === 'all') {
+                                setContractFormMaintenanceDates(generated);
+                              } else {
+                                const other = contractFormMaintenanceDates.filter(d => d.split('|')[1] !== contractFormSelectedEquipForFreq);
+                                const merged = [...other, ...generated].sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
+                                setContractFormMaintenanceDates(merged);
                               }
+                              if (generated.length > 0) setContractFormQcDate(generated[generated.length - 1]);
                             }
                           }}
                           className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
@@ -14367,11 +14379,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             }
 
                             if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
-                              const generated = generateMaintenanceDates(contractFormStart, newEndDate, contractFormFrequency, contractFormType);
-                              setContractFormMaintenanceDates(generated);
-                              if (generated.length > 0) {
-                                setContractFormQcDate(generated[generated.length - 1]);
+                              const prefDay = typeof contractFormPreferredDay === 'number' ? contractFormPreferredDay : undefined;
+                              const generated = generateMaintenanceDates(contractFormStart, newEndDate, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq);
+                              if (contractFormSelectedEquipForFreq === 'all') {
+                                setContractFormMaintenanceDates(generated);
+                              } else {
+                                const other = contractFormMaintenanceDates.filter(d => d.split('|')[1] !== contractFormSelectedEquipForFreq);
+                                const merged = [...other, ...generated].sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
+                                setContractFormMaintenanceDates(merged);
                               }
+                              if (generated.length > 0) setContractFormQcDate(generated[generated.length - 1]);
                             }
                           }}
                           className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
@@ -14895,15 +14912,28 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             disabled={isSalesReadOnly}
                             onClick={() => {
                               if (contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado') {
-                                alert("Seleccione una frecuencia periódica para autogenerar visitas.");
+                                alert("Seleccione una frecuencia periódica (ej. Mensual, Trimestral, Semestral, Anual) para autogenerar las visitas.");
                                 return;
                               }
-                              const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency, contractFormType);
-                              setContractFormMaintenanceDates(generated);
+                              if (!contractFormStart || !contractFormEnd || contractFormStart >= contractFormEnd) {
+                                alert("La Fecha Vencimiento debe ser posterior a la Fecha Inicio para poder calcular las fechas de mantenimiento.");
+                                return;
+                              }
+                              const prefDay = typeof contractFormPreferredDay === 'number' ? contractFormPreferredDay : undefined;
+                              const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq);
+                              if (generated.length === 0) {
+                                alert("No se pudieron generar fechas con los parámetros actuales. Verifique que el período del contrato abarque la frecuencia seleccionada.");
+                                return;
+                              }
+                              if (contractFormSelectedEquipForFreq === 'all') {
+                                setContractFormMaintenanceDates(generated);
+                              } else {
+                                const other = contractFormMaintenanceDates.filter(d => d.split('|')[1] !== contractFormSelectedEquipForFreq);
+                                const merged = [...other, ...generated].sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
+                                setContractFormMaintenanceDates(merged);
+                              }
                               if (generated.length > 0) {
                                 setContractFormQcDate(generated[generated.length - 1]);
-                              } else {
-                                setContractFormQcDate('');
                               }
                             }}
                             className={`w-full border px-2 py-1 rounded-lg text-3xs font-extrabold transition-all ${
