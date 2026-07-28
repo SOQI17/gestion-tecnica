@@ -2126,6 +2126,7 @@ export default function AdminPortal({
     if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
     } else if (e.type === "dragleave") {
+      if (e.currentTarget.contains(e.relatedTarget as Node)) return;
       setDragActive(false);
     }
   };
@@ -14563,14 +14564,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <div className="flex flex-col gap-2.5">
                           {/* Contrato PDF Upload Card */}
                           <div 
-                            onDragOver={(e) => {
+                            onDragEnter={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               setIsDraggingContractPdf(true);
                             }}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              e.dataTransfer.dropEffect = 'copy';
+                              if (!isDraggingContractPdf) setIsDraggingContractPdf(true);
+                            }}
                             onDragLeave={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
+                              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
                               setIsDraggingContractPdf(false);
                             }}
                             onDrop={(e) => {
@@ -14584,10 +14592,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               isDraggingContractPdf ? 'bg-indigo-50/80 border-indigo-500 ring-2 ring-indigo-400/50 scale-[1.01]' : 'border-slate-200'
                             }`}
                           >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between pointer-events-none">
                               <span className="block text-[9.5px] font-extrabold text-slate-700 uppercase tracking-wide">📄 Documento del Contrato</span>
                               {isDraggingContractPdf && (
-                                <span className="text-[8px] font-extrabold text-indigo-700 uppercase tracking-wider animate-pulse">¡Suela el archivo!</span>
+                                <span className="text-[8px] font-extrabold text-indigo-700 uppercase tracking-wider animate-pulse">¡Suelta el archivo!</span>
                               )}
                             </div>
                             
@@ -14620,7 +14628,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 />
                                 <label
                                   htmlFor="contract-pdf-input"
-                                  className={`w-full text-slate-700 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs ${
+                                  className={`w-full text-slate-700 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
                                     isDraggingContractPdf
                                       ? 'border-indigo-500 bg-white text-indigo-900 shadow-md'
                                       : 'border-indigo-300/80 bg-white hover:bg-slate-100/80 hover:border-indigo-400'
@@ -14630,11 +14638,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     <span className="text-amber-600 font-bold animate-pulse py-1">Subiendo Contrato... ({uploadContractPdfProgress}%)</span>
                                   ) : (
                                     <>
-                                      <div className="flex items-center gap-1.5">
+                                      <div className="flex items-center gap-1.5 pointer-events-none">
                                         <Upload className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                                         <span>{isDraggingContractPdf ? '¡Suelte el archivo del contrato aquí!' : 'Adjuntar Contrato PDF'}</span>
                                       </div>
-                                      <span className="text-[9px] font-normal text-slate-400">
+                                      <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
                                         Arrastra y suelta el archivo aquí o haz clic para buscar
                                       </span>
                                     </>
@@ -14646,14 +14654,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Cronograma Firmado Upload Card */}
                           <div 
-                            onDragOver={(e) => {
+                            onDragEnter={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               setIsDraggingSchedulePdf(true);
                             }}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              e.dataTransfer.dropEffect = 'copy';
+                              if (!isDraggingSchedulePdf) setIsDraggingSchedulePdf(true);
+                            }}
                             onDragLeave={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
+                              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
                               setIsDraggingSchedulePdf(false);
                             }}
                             onDrop={(e) => {
@@ -14667,7 +14682,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               isDraggingSchedulePdf ? 'bg-purple-50/80 border-purple-500 ring-2 ring-purple-400/50 scale-[1.01]' : 'border-slate-200'
                             }`}
                           >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between pointer-events-none">
                               <span className="block text-[9.5px] font-extrabold text-slate-700 uppercase tracking-wide">📅 Cronograma Firmado</span>
                               {isDraggingSchedulePdf && (
                                 <span className="text-[8px] font-extrabold text-purple-700 uppercase tracking-wider animate-pulse">¡Suelta el archivo!</span>
@@ -14703,26 +14718,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 />
                                 <label
                                   htmlFor="schedule-pdf-input"
-                                   className={`w-full text-slate-700 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs ${
-                                     isDraggingSchedulePdf
-                                       ? 'border-purple-500 bg-white text-purple-900 shadow-md'
-                                       : 'border-purple-300/80 bg-white hover:bg-slate-100/80 hover:border-purple-400'
-                                   }`}
-                                 >
-                                   {isUploadingSchedulePdf ? (
-                                     <span className="text-amber-600 font-bold animate-pulse py-1">Subiendo Cronograma... ({uploadSchedulePdfProgress}%)</span>
-                                   ) : (
-                                     <>
-                                       <div className="flex items-center gap-1.5">
-                                         <Upload className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                                         <span>{isDraggingSchedulePdf ? '¡Suelte el archivo del cronograma aquí!' : 'Adjuntar Cronograma PDF'}</span>
-                                       </div>
-                                       <span className="text-[9px] font-normal text-slate-400">
-                                         Arrastra y suelta el archivo aquí o haz clic para buscar
-                                       </span>
-                                     </>
-                                   )}
-                                 </label>
+                                  className={`w-full text-slate-700 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
+                                    isDraggingSchedulePdf
+                                      ? 'border-purple-500 bg-white text-purple-900 shadow-md'
+                                      : 'border-purple-300/80 bg-white hover:bg-slate-100/80 hover:border-purple-400'
+                                  }`}
+                                >
+                                  {isUploadingSchedulePdf ? (
+                                    <span className="text-amber-600 font-bold animate-pulse py-1">Subiendo Cronograma... ({uploadSchedulePdfProgress}%)</span>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center gap-1.5 pointer-events-none">
+                                        <Upload className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                        <span>{isDraggingSchedulePdf ? '¡Suelte el archivo del cronograma aquí!' : 'Adjuntar Cronograma PDF'}</span>
+                                      </div>
+                                      <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                        Arrastra y suelta el archivo aquí o haz clic para buscar
+                                      </span>
+                                    </>
+                                  )}
+                                </label>
                                </div>
                              )}
                            </div>
