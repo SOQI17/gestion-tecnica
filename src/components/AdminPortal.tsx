@@ -380,7 +380,17 @@ const checkTimeOverlap = (timeStr1: string, timeStr2: string): boolean => {
   return start1 < end2 && start2 < end1;
 };
 
-const getContractExpirationAlert = (endDateStr: string, status?: string) => {
+const getContractExpirationAlert = (endDateStr: string, status?: string, linkedContractId?: string) => {
+  if (linkedContractId && linkedContractId.trim() !== '') {
+    return {
+      level: 'renewed',
+      days: 0,
+      text: '🔄 Renovado (Sucesor Vinculado)',
+      badgeText: 'RENOVADO',
+      colorClass: 'bg-blue-50 text-blue-800 border-blue-200 font-extrabold'
+    };
+  }
+
   if (!endDateStr) return null;
   if (status === 'Vencido' || status === 'Cancelado') {
     return {
@@ -6578,10 +6588,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         }
 
         if (contractFilterExpiration) {
-          const expAlert = getContractExpirationAlert(con.endDate, con.status);
+          const expAlert = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
           if (contractFilterExpiration === '1m' && expAlert?.level !== 'urgent_1m') return false;
           if (contractFilterExpiration === '3m' && expAlert?.level !== 'warning_3m') return false;
-          if (contractFilterExpiration === 'expired' && expAlert?.level !== 'expired' && con.status !== 'Vencido') return false;
+          if (contractFilterExpiration === 'expired' && (expAlert?.level !== 'expired' || (con.linkedContractId && con.linkedContractId.trim() !== ''))) return false;
           if (contractFilterExpiration === 'pending_admin') {
             const isPending = !con.schedulePdfUrl && (con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0)));
             if (!isPending) return false;
@@ -6739,15 +6749,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         {/* Expiration Alert Summary Cards */}
         {(() => {
           const urgent1m = contracts.filter(c => {
-            const alert = getContractExpirationAlert(c.endDate, c.status);
+            const alert = getContractExpirationAlert(c.endDate, c.status, c.linkedContractId);
             return alert?.level === 'urgent_1m';
           });
           const warning3m = contracts.filter(c => {
-            const alert = getContractExpirationAlert(c.endDate, c.status);
+            const alert = getContractExpirationAlert(c.endDate, c.status, c.linkedContractId);
             return alert?.level === 'warning_3m';
           });
           const expiredCount = contracts.filter(c => {
-            const alert = getContractExpirationAlert(c.endDate, c.status);
+            const alert = getContractExpirationAlert(c.endDate, c.status, c.linkedContractId);
             return alert?.level === 'expired';
           });
 
@@ -7137,13 +7147,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               ) : (
                 paginated.map(con => {
                   const client = clients.find(c => c.id === con.clientId);
-                  const expAlert = getContractExpirationAlert(con.endDate, con.status);
+                  const expAlert = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
                   const brands = Array.from(
                     new Set((con.equipmentItems || []).map(e => normalizeBrandName(e.brand)).filter(Boolean))
                   );
 
                   let rowBg = 'hover:bg-indigo-50/20';
-                  if (expAlert?.level === 'urgent_1m') rowBg = 'bg-red-50/40 hover:bg-red-50/60 border-l-4 border-l-red-500';
+                  if (con.linkedContractId && con.linkedContractId.trim() !== '') rowBg = 'bg-blue-50/15 hover:bg-blue-50/30';
+                  else if (expAlert?.level === 'urgent_1m') rowBg = 'bg-red-50/40 hover:bg-red-50/60 border-l-4 border-l-red-500';
                   else if (expAlert?.level === 'warning_3m') rowBg = 'bg-amber-50/30 hover:bg-amber-50/50 border-l-4 border-l-amber-500';
                   else if (expAlert?.level === 'expired') rowBg = 'bg-red-50/20 hover:bg-red-50/40 opacity-75';
 
@@ -7184,7 +7195,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </div>
                       </td>
                       <td className="p-3.5">
-                        {con.status === 'Inactivo' ? (
+                        {con.linkedContractId && con.linkedContractId.trim() !== '' ? (
+                          <span className="text-[8px] font-black px-2 py-0.5 rounded border uppercase tracking-wider bg-blue-100 text-blue-900 border-blue-300 font-extrabold flex items-center gap-1 w-max">
+                            🔄 RENOVADO
+                          </span>
+                        ) : con.status === 'Inactivo' ? (
                           <span className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-200 text-slate-800 border-slate-300">
                             🚫 INACTIVO (No renovado)
                           </span>
@@ -15173,17 +15188,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
 
             <div className="space-y-4 text-xs max-h-[75vh] overflow-y-auto overscroll-contain pr-1">
-              {/* Expiration Alert Box */}
+              {/* Expiration / Renewal Alert Box */}
               {(() => {
-                const exp = getContractExpirationAlert(selectedContractForDetails.endDate, selectedContractForDetails.status);
+                const exp = getContractExpirationAlert(selectedContractForDetails.endDate, selectedContractForDetails.status, selectedContractForDetails.linkedContractId);
                 if (!exp || exp.level === 'ok') return null;
                 return (
                   <div className={`p-2.5 rounded-lg border text-xs font-bold flex items-center justify-between gap-2 ${exp.colorClass}`}>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm">{exp.level === 'urgent_1m' ? '🚨' : exp.level === 'warning_3m' ? '⚠️' : '🔴'}</span>
-                      <span>Alerta de Vencimiento: Este contrato {exp.text}</span>
+                      <span className="text-sm">{exp.level === 'renewed' ? '🔄' : exp.level === 'urgent_1m' ? '🚨' : exp.level === 'warning_3m' ? '⚠️' : '🔴'}</span>
+                      <span>
+                        {exp.level === 'renewed' 
+                          ? `Contrato Renovado: Este contrato cuenta con un contrato sucesor vinculado (${selectedContractForDetails.linkedContractId}).`
+                          : `Alerta de Vencimiento: Este contrato ${exp.text}`}
+                      </span>
                     </div>
-                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/70 font-black">
+                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/80 font-black shadow-2xs">
                       {exp.badgeText}
                     </span>
                   </div>
