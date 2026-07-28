@@ -2518,16 +2518,67 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setIsConfirmingDelete(false);
   };
 
+  const syncContractDatesForMovedWorkOrder = (clientId: string, oldDateStr: string, newDateStr: string, equipmentName?: string) => {
+    if (!oldDateStr || !newDateStr || oldDateStr === newDateStr) return;
+    if (!onUpdateContract) return;
+
+    // Find contract for this client that contains oldDateStr
+    const targetContract = contracts.find(con => {
+      if (con.clientId !== clientId) return false;
+      if (!con.maintenanceDates || con.maintenanceDates.length === 0) return false;
+      return con.maintenanceDates.some(d => d.split('|')[0] === oldDateStr);
+    });
+
+    if (!targetContract || !targetContract.maintenanceDates) return;
+
+    // Replace oldDateStr with newDateStr in maintenanceDates array
+    let foundMatch = false;
+    const updatedDates = targetContract.maintenanceDates.map(entry => {
+      const parts = entry.split('|');
+      const dStr = parts[0];
+      const eqName = parts[1];
+
+      if (!foundMatch && dStr === oldDateStr) {
+        foundMatch = true;
+        return eqName ? `${newDateStr}|${eqName}` : (equipmentName ? `${newDateStr}|${equipmentName}` : newDateStr);
+      }
+      return entry;
+    });
+
+    if (!foundMatch) return;
+
+    // Sort updatedDates chronologically
+    updatedDates.sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
+
+    // Update qcDate if oldDateStr was the qcDate
+    let updatedQcDate = targetContract.qcDate;
+    if (targetContract.qcDate === oldDateStr) {
+      updatedQcDate = newDateStr;
+    }
+
+    const updatedContract: Contract = {
+      ...targetContract,
+      maintenanceDates: updatedDates,
+      qcDate: updatedQcDate
+    };
+
+    onUpdateContract(updatedContract);
+  };
+
   const handleMoveWorkOrder = (woId: string, targetDateStr: string) => {
     const wo = workOrders.find(w => w.id === woId);
     if (!wo) return;
     if (wo.plannedDate === targetDateStr) return; // No change
     
+    const oldDateStr = wo.plannedDate;
+
     const updatedWO: WorkOrder = {
       ...wo,
       plannedDate: targetDateStr
     };
     onUpdateWorkOrder(updatedWO);
+
+    syncContractDatesForMovedWorkOrder(wo.clientId, oldDateStr, targetDateStr, wo.equipmentName);
   };
 
   // Marzo 2026 starts on a Sunday. With standard columns: Lunes, Martes... Domingo:
@@ -12572,6 +12623,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 }
                                 finalWO.clientId = newClientObj.id;
                               }
+                            }
+                            if (infoWO && editedWO && editedWO.plannedDate && infoWO.plannedDate !== editedWO.plannedDate) {
+                              syncContractDatesForMovedWorkOrder(infoWO.clientId, infoWO.plannedDate, editedWO.plannedDate, infoWO.equipmentName);
                             }
                             onUpdateWorkOrder(finalWO);
                             setInfoWO(finalWO);
