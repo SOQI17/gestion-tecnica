@@ -4399,7 +4399,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
   const handleSaveContract = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!contractFormId) return;
+    const targetContractId = contractFormId.trim();
+    if (!targetContractId) return;
+
+    // Check for duplicate Contract ID to prevent accidentally overwriting existing contracts
+    const existingContractWithId = contracts.find(c => c.id.toLowerCase() === targetContractId.toLowerCase());
+    if (existingContractWithId && (!editingContract || editingContract.id.toLowerCase() !== targetContractId.toLowerCase())) {
+      const matchedClient = clients.find(cl => cl.id === existingContractWithId.clientId);
+      const clientName = matchedClient ? matchedClient.name : existingContractWithId.clientId;
+      alert(
+        `⚠️ EL NÚMERO DE CONTRATO "${targetContractId}" YA EXISTE.\n\n` +
+        `Actualmente pertenece al cliente "${clientName}" (${existingContractWithId.status}).\n\n` +
+        `Para no borrar ni sobrescribir el contrato existente, por favor asigne un número único (ej: "${targetContractId}-2026", "${targetContractId}-V2" o "${targetContractId}-B").`
+      );
+      return;
+    }
 
     let targetClientId = contractFormClientId.trim();
 
@@ -13963,9 +13977,30 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : editingContract && userRole === 'admin' ? 'bg-amber-50 focus:bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-400' : 'bg-slate-55 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
                           }`}
                         />
-                        {editingContract && userRole === 'admin' && (
-                          <p className="text-[8px] text-amber-700 font-semibold leading-tight mt-0.5">⚠ Cambiar el código creará un nuevo registro y eliminará el actual.</p>
-                        )}
+                        {(() => {
+                          const trimmed = contractFormId.trim();
+                          if (!trimmed) return null;
+                          const existing = contracts.find(c => c.id.toLowerCase() === trimmed.toLowerCase());
+                          if (existing && (!editingContract || editingContract.id.toLowerCase() !== trimmed.toLowerCase())) {
+                            const cliName = clients.find(cl => cl.id === existing.clientId)?.name || existing.clientId;
+                            return (
+                              <div className="bg-rose-50 border border-rose-200 rounded-lg p-2 mt-1.5 space-y-0.5 animate-in fade-in-50 duration-150">
+                                <p className="text-[9px] text-rose-700 font-extrabold flex items-center gap-1">
+                                  <span>🚫 ¡Nº DE CONTRATO DUPLICADO!</span>
+                                </p>
+                                <p className="text-[8.5px] text-rose-600 font-medium leading-tight">
+                                  Ya existe un contrato con este número asignado a <strong>{cliName}</strong>. Cambia el código (ej: <strong>{trimmed}-2026</strong>) para no borrar el anterior.
+                                </p>
+                              </div>
+                            );
+                          }
+                          if (editingContract && userRole === 'admin') {
+                            return (
+                              <p className="text-[8px] text-amber-700 font-semibold leading-tight mt-0.5">⚠ Cambiar el código creará un nuevo registro y eliminará el actual.</p>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
 
                       <div className="space-y-1">
