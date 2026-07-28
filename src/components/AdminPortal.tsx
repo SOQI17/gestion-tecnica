@@ -799,6 +799,7 @@ export default function AdminPortal({
   const [uploadSchedulePdfProgress, setUploadSchedulePdfProgress] = useState(0);
   const [isDraggingContractPdf, setIsDraggingContractPdf] = useState(false);
   const [isDraggingSchedulePdf, setIsDraggingSchedulePdf] = useState(false);
+  const [contractFormLinkedId, setContractFormLinkedId] = useState(''); // ID del contrato sucesor vinculado
 
   const handleUploadContractFile = async (file: File) => {
     if (!file) return;
@@ -4460,7 +4461,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       qcDate: isSalesReadOnly && editingContract ? editingContract.qcDate : (isPendingSchedule ? undefined : (contractFormQcDate || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : ''))),
       contractPdfUrl: contractFormPdfUrl.trim() || undefined,
       schedulePdfUrl: contractFormSchedulePdfUrl.trim() || undefined,
-      pendingAdminSchedule: isSalesReadOnly && editingContract ? editingContract.pendingAdminSchedule : isPendingSchedule
+      pendingAdminSchedule: isSalesReadOnly && editingContract ? editingContract.pendingAdminSchedule : isPendingSchedule,
+      linkedContractId: contractFormLinkedId.trim() || undefined,
     };
 
     // Auto-register new custom equipments under the selected client
@@ -4512,11 +4514,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     }
 
     if (editingContract) {
-      if (onUpdateContract) onUpdateContract(con);
+      // Admin rename: if the contract ID was changed, delete old doc and create new one
+      const idChanged = userRole === 'admin' && editingContract.id !== con.id;
+      if (idChanged && onDeleteContract && onAddContract) {
+        onDeleteContract(editingContract.id);
+        onAddContract(con);
+      } else if (onUpdateContract) {
+        onUpdateContract(con);
+      }
     } else {
       if (onAddContract) onAddContract(con);
       setContractPage(1); // Reset to page 1 so the new contract is visible
     }
+    setContractFormLinkedId('');
     setIsContractModalOpen(false);
     setEditingContract(null);
   };
@@ -7021,8 +7031,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </span>
                         ) : (
                           <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider ${
-                            con.status === 'Activo' 
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                            con.status === 'Activo'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                               : con.status === 'Pendiente'
                               ? 'bg-amber-50 text-amber-800 border-amber-200'
                               : 'bg-red-50 text-red-800 border-red-200'
@@ -7034,6 +7044,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <td className="p-3.5 max-w-[200px]" title={con.coverage}>
                         <div className="space-y-1">
                           <span className="truncate block font-medium">{con.coverage || '-'}</span>
+                          {con.linkedContractId && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[8px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded cursor-pointer hover:bg-indigo-100 transition-colors"
+                              title={`Contrato sucesor vinculado: ${con.linkedContractId}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const successor = contracts.find(c => c.id === con.linkedContractId);
+                                if (successor) alert(`🔗 Contrato sucesor:\n\nID: ${successor.id}\nCliente: ${clients.find(c => c.id === successor.clientId)?.name || successor.clientId}\nEstado: ${successor.status}\nVigencia: ${successor.startDate} → ${successor.endDate}`);
+                              }}
+                            >
+                              🔗 → {con.linkedContractId}
+                            </span>
+                          )}
                           <div className="flex flex-wrap gap-1">
                             {con.contractPdfUrl && (
                               <a
@@ -7087,6 +7110,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormQcDate(con.qcDate || '');
                                 setContractFormPdfUrl(con.contractPdfUrl || '');
                                 setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
+                                setContractFormLinkedId(con.linkedContractId || '');
                                 setIsContractModalOpen(true);
                               }}
                               className="bg-amber-500 hover:bg-amber-600 text-white font-black text-3xs px-2 py-1 rounded-md transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
@@ -7127,6 +7151,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setContractFormQcDate(con.qcDate || '');
                               setContractFormPdfUrl(con.contractPdfUrl || '');
                               setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
+                              setContractFormLinkedId(con.linkedContractId || '');
                               
                               setIsContractModalOpen(true);
                             }}
@@ -13929,14 +13954,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <input
                           type="text"
                           required
-                          disabled={!!editingContract || isSalesReadOnly}
+                          disabled={isSalesReadOnly}
                           value={contractFormId}
                           onChange={(e) => setContractFormId(e.target.value)}
                           placeholder="Ej. CONTRATO-2026-004"
+                          title={editingContract && userRole === 'admin' ? 'Admin: puedes cambiar el Nº Contrato. Se eliminará el registro anterior y se creará uno nuevo con el nuevo código.' : undefined}
                           className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
-                            editingContract || isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-55 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : editingContract && userRole === 'admin' ? 'bg-amber-50 focus:bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-400' : 'bg-slate-55 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
                           }`}
                         />
+                        {editingContract && userRole === 'admin' && (
+                          <p className="text-[8px] text-amber-700 font-semibold leading-tight mt-0.5">⚠ Cambiar el código creará un nuevo registro y eliminará el actual.</p>
+                        )}
                       </div>
 
                       <div className="space-y-1">
@@ -14198,6 +14227,41 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           }`}
                         />
                       </div>
+
+                      {/* Linked Contract (Successor) - Admin only when editing */}
+                      {editingContract && userRole === 'admin' && (
+                        <div className="space-y-1 bg-indigo-50/60 border border-indigo-200 rounded-xl p-2.5">
+                          <label className="block text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+                            🔗 Contrato Sucesor Vinculado
+                          </label>
+                          <p className="text-[9px] text-indigo-600/80 font-medium leading-tight mb-1.5">
+                            Vincula este contrato (ej. vencido) al nuevo contrato que lo reemplaza para mantener el historial del cliente.
+                          </p>
+                          <select
+                            value={contractFormLinkedId}
+                            onChange={(e) => setContractFormLinkedId(e.target.value)}
+                            className="w-full bg-white border border-indigo-200 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 outline-hidden focus:border-indigo-500 cursor-pointer"
+                          >
+                            <option value="">— Sin vínculo —</option>
+                            {contracts
+                              .filter(c => c.clientId === contractFormClientId && c.id !== editingContract.id)
+                              .sort((a, b) => b.startDate.localeCompare(a.startDate))
+                              .map(c => (
+                                <option key={c.id} value={c.id}>
+                                  {c.id} ({c.status} · {c.startDate?.slice(0,4) ?? '?'}–{c.endDate?.slice(0,4) ?? '?'})
+                                </option>
+                              ))
+                            }
+                          </select>
+                          {contractFormLinkedId && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className="text-[9px] text-indigo-700 font-bold">→ Sucesor:</span>
+                              <span className="text-[9px] font-mono text-indigo-900 bg-indigo-100 px-1.5 py-0.5 rounded">{contractFormLinkedId}</span>
+                              <button type="button" onClick={() => setContractFormLinkedId('')} className="text-rose-500 text-[9px] font-black ml-1 cursor-pointer hover:text-rose-700">✕</button>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Cloudinary PDF / Image Attachments Section */}
                       <div className="space-y-2.5 border-t border-slate-150 pt-3">

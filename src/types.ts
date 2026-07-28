@@ -140,6 +140,7 @@ export interface Contract {
   contractPdfUrl?: string; // Documento del Contrato (PDF o Imagen en Cloudinary)
   schedulePdfUrl?: string; // Cronograma Firmado (PDF o Imagen en Cloudinary)
   pendingAdminSchedule?: boolean; // Indica si fue cargado por vendedor sin cronograma, a la espera de asignación por Admin
+  linkedContractId?: string; // ID del contrato sucesor (siguiente contrato del mismo cliente)
 }
 
 export interface Vacation {
