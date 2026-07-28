@@ -822,6 +822,12 @@ export default function AdminPortal({
       setUploadSchedulePdfProgress(0);
       const url = await uploadFileToCloudinary(file, (p) => setUploadSchedulePdfProgress(p));
       setContractFormSchedulePdfUrl(url);
+      setContractFormPendingAdmin(false);
+      if (contractFormStatus === 'Pendiente') {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const isExpired = contractFormEnd && contractFormEnd < todayStr;
+        setContractFormStatus(isExpired ? 'Vencido' : 'Activo');
+      }
     } catch (err: any) {
       alert(err.message || 'Error al subir el cronograma a Cloudinary');
     } finally {
@@ -4451,8 +4457,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     const isExpiredDate = contractFormEnd && contractFormEnd < todayStr;
 
     let finalStatus = contractFormStatus;
-    // Only override status if user didn't manually set Vencido/Inactivo
-    if (contractFormStatus !== 'Vencido' && contractFormStatus !== 'Inactivo') {
+    if (contractFormStatus === 'Pendiente' && (hasSchedule || !contractFormPendingAdmin)) {
+      finalStatus = isExpiredDate ? 'Vencido' : 'Activo';
+    } else if (contractFormStatus !== 'Vencido' && contractFormStatus !== 'Inactivo') {
       if (isPendingSchedule) {
         finalStatus = 'Pendiente';
       } else if (isExpiredDate) {
@@ -7137,15 +7144,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              const hasScheduleDoc = !!con.schedulePdfUrl || (con.maintenanceDates && con.maintenanceDates.length > 0);
+                              const todayStr = new Date().toISOString().split('T')[0];
+                              const isExpired = con.endDate && con.endDate < todayStr;
+                              const initialStatus = (con.status === 'Pendiente' && hasScheduleDoc) ? (isExpired ? 'Vencido' : 'Activo') : con.status;
+
                               setEditingContract(con);
                               setContractFormId(con.id);
                               setContractFormClientId(con.clientId);
                               setContractFormType(con.type);
                               setContractFormStart(con.startDate);
                               setContractFormEnd(con.endDate);
-                              setContractFormStatus(con.status);
+                              setContractFormStatus(initialStatus);
                               setContractFormCoverage(con.coverage || '');
-                              setContractFormPendingAdmin(!!con.pendingAdminSchedule);
+                              setContractFormPendingAdmin(hasScheduleDoc ? false : !!con.pendingAdminSchedule);
                               
                               // Initialize search, new client, and equipment items
                               const matchedClient = clients.find(c => c.id === con.clientId);
@@ -14608,6 +14620,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormFrequency('Ninguno');
                                 setContractFormMaintenanceDates([]);
                                 setContractFormQcDate('');
+                                setContractFormStatus('Pendiente');
+                              } else if (contractFormStatus === 'Pendiente') {
+                                const todayStr = new Date().toISOString().split('T')[0];
+                                const isExpired = contractFormEnd && contractFormEnd < todayStr;
+                                setContractFormStatus(isExpired ? 'Vencido' : 'Activo');
                               }
                             }}
                             className="w-4 h-4 mt-0.5 accent-amber-600 rounded cursor-pointer disabled:cursor-not-allowed"
