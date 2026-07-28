@@ -841,6 +841,7 @@ export default function AdminPortal({
   const [contractFormStart, setContractFormStart] = useState('');
   const [contractFormEnd, setContractFormEnd] = useState('');
   const [contractFormStatus, setContractFormStatus] = useState<'Activo' | 'Vencido' | 'Pendiente' | 'Inactivo'>('Activo');
+  const [contractFormCity, setContractFormCity] = useState('');
   const [contractFormCoverage, setContractFormCoverage] = useState('');
   const [contractClientSearchQuery, setContractClientSearchQuery] = useState('');
   const [isContractClientDropdownOpen, setIsContractClientDropdownOpen] = useState(false);
@@ -4576,6 +4577,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       startDate: isSalesReadOnly && editingContract ? editingContract.startDate : contractFormStart,
       endDate: isSalesReadOnly && editingContract ? editingContract.endDate : contractFormEnd,
       status: isSalesReadOnly && editingContract ? editingContract.status : finalStatus,
+      city: isSalesReadOnly && editingContract ? editingContract.city : contractFormCity.trim() || undefined,
       coverage: isSalesReadOnly && editingContract ? editingContract.coverage : contractFormCoverage.trim(),
       equipmentItems: isSalesReadOnly && editingContract ? editingContract.equipmentItems : contractFormEquipmentItems,
       maintenanceFrequency: isSalesReadOnly && editingContract ? editingContract.maintenanceFrequency : (isPendingSchedule ? 'Ninguno' : contractFormFrequency),
@@ -6690,6 +6692,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setContractFormStart(currentDateStr);
                   setContractFormEnd(nextYearStr);
                   setContractFormStatus('Activo');
+                  setContractFormCity('');
                   setContractFormCoverage('');
                   setContractClientSearchQuery('');
                   setIsContractClientDropdownOpen(false);
@@ -7185,7 +7188,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       className={`transition-colors cursor-pointer ${rowBg}`}
                     >
                       <td className="p-3.5 font-mono font-bold text-slate-900">{con.id}</td>
-                      <td className="p-3.5 font-extrabold text-slate-900">{client?.name || `ID: ${con.clientId}`}</td>
+                      <td className="p-3.5 font-extrabold text-slate-900">
+                        <div>{client?.name || `ID: ${con.clientId}`}</div>
+                        {con.city && (
+                          <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100 inline-flex items-center gap-0.5 mt-0.5">
+                            📍 {con.city}
+                          </span>
+                        )}
+                      </td>
                       <td className="p-3.5 font-bold text-indigo-700">{con.type}</td>
                       <td className="p-3.5 font-bold">
                         {brands.length > 0 ? (
@@ -7307,6 +7317,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormStart(con.startDate);
                                 setContractFormEnd(con.endDate);
                                 setContractFormStatus(con.status);
+                                setContractFormCity(con.city || '');
                                 setContractFormCoverage(con.coverage || '');
                                 setContractFormPendingAdmin(false);
                                 setContractFormFrequency('Trimestral');
@@ -7341,6 +7352,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setContractFormStart(con.startDate);
                               setContractFormEnd(con.endDate);
                               setContractFormStatus(initialStatus);
+                              setContractFormCity(con.city || '');
                               setContractFormCoverage(con.coverage || '');
                               setContractFormPendingAdmin(hasScheduleDoc ? false : !!con.pendingAdminSchedule);
                               
@@ -14152,7 +14164,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
         return (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="contract-form-modal">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-3xl p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl p-6 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
             {isSalesReadOnly && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between text-amber-900">
                 <div className="flex items-center gap-2">
@@ -14453,6 +14465,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         />
                       </div>
 
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">📍 Ciudad / Ubicación</label>
+                        <input
+                          type="text"
+                          disabled={isSalesReadOnly}
+                          value={contractFormCity}
+                          onChange={(e) => setContractFormCity(e.target.value)}
+                          placeholder="Ej. Quito, Guayaquil, Cuenca..."
+                          list="cities-list"
+                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all ${
+                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          }`}
+                        />
+                        <datalist id="cities-list">
+                          <option value="Quito" />
+                          <option value="Guayaquil" />
+                          <option value="Cuenca" />
+                          <option value="Ambato" />
+                          <option value="Santo Domingo" />
+                          <option value="Machala" />
+                          <option value="Manta" />
+                          <option value="Portoviejo" />
+                          <option value="Loja" />
+                          <option value="Riobamba" />
+                        </datalist>
+                      </div>
+
                       <div className="space-y-1">
                         <label className="block text-[10px] font-bold text-slate-500 uppercase">Especificaciones</label>
                         <textarea
@@ -14466,6 +14506,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           }`}
                         />
                       </div>
+                    </div>
 
                       {/* Linked Contract (Successor) - Admin only when editing */}
                       {editingContract && userRole === 'admin' && (
