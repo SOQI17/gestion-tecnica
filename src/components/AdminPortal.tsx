@@ -113,7 +113,8 @@ const generateMaintenanceDates = (
   endDateStr: string, 
   frequency: string, 
   contractType: string,
-  preferredDay?: number
+  preferredDay?: number,
+  targetEquipment?: string
 ): string[] => {
   if (!startDateStr || !endDateStr || !frequency || frequency === 'Ninguno' || frequency === 'Personalizado') {
     return [];
@@ -164,7 +165,11 @@ const generateMaintenanceDates = (
     const yyyy = current.getFullYear();
     const mm = String(current.getMonth() + 1).padStart(2, '0');
     const dd = String(current.getDate()).padStart(2, '0');
-    dates.push(`${yyyy}-${mm}-${dd}`);
+    const dateOnly = `${yyyy}-${mm}-${dd}`;
+    const entry = (targetEquipment && targetEquipment !== 'all')
+      ? `${dateOnly}|${targetEquipment}`
+      : dateOnly;
+    dates.push(entry);
 
     month += incrementMonths;
     daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -831,6 +836,7 @@ export default function AdminPortal({
   // Maintenance scheduling states
   const [contractFormFrequency, setContractFormFrequency] = useState<'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno'>('Ninguno');
   const [contractFormPreferredDay, setContractFormPreferredDay] = useState<number | ''>('');
+  const [contractFormSelectedEquipForFreq, setContractFormSelectedEquipForFreq] = useState<string>('all');
   const [contractFormMaintenanceDates, setContractFormMaintenanceDates] = useState<string[]>([]);
   const [tempMaintenanceDate, setTempMaintenanceDate] = useState('');
   const [contractFormQcDate, setContractFormQcDate] = useState('');
@@ -2471,7 +2477,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     const getContractCommitmentsForDate = (dateStr: string) => {
       const dayCommitments: { contract: Contract; client: Client | undefined; isQc: boolean; isDone: boolean; woStatus: string | null }[] = [];
       contracts.forEach(con => {
-        if (con.maintenanceDates && con.maintenanceDates.includes(dateStr)) {
+        if (con.maintenanceDates && con.maintenanceDates.some(d => d.split('|')[0] === dateStr)) {
           const client = clients.find(c => c.id === con.clientId);
           
           // Check if this date has a corresponding work order
@@ -2482,7 +2488,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           
           // Is it the QC date?
           const isQc = con.qcDate === dateStr || 
-            (!con.qcDate && con.maintenanceDates.indexOf(dateStr) === con.maintenanceDates.length - 1);
+            (!con.qcDate && con.maintenanceDates.some(d => d.split('|')[0] === dateStr && con.maintenanceDates!.indexOf(d) === con.maintenanceDates!.length - 1));
 
           dayCommitments.push({
             contract: con,
@@ -6642,6 +6648,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setTempEquipName('');
                   setTempEquipBrand('');
                   setContractFormFrequency('Ninguno');
+                  setContractFormPreferredDay('');
+                  setContractFormSelectedEquipForFreq('all');
                   setContractFormMaintenanceDates([]);
                   setTempMaintenanceDate('');
                   setContractFormQcDate('');
@@ -7296,6 +7304,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setContractFormPdfUrl(con.contractPdfUrl || '');
                               setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
                               setContractFormLinkedId(con.linkedContractId || '');
+                              setContractFormSelectedEquipForFreq('all');
 
                               const firstDate = (con.maintenanceDates && con.maintenanceDates.length > 0) ? con.maintenanceDates[0] : con.startDate;
                               if (firstDate) {
@@ -14941,9 +14950,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       )}
 
                       {/* List of maintenance dates with interactive Quality Control toggles */}
-                      <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-[110px] overflow-y-auto bg-white">
-                        {contractFormMaintenanceDates.map((date, index) => {
-                          const isQc = contractFormQcDate === date || (!contractFormQcDate && index === contractFormMaintenanceDates.length - 1);
+                      <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-[140px] overflow-y-auto bg-white">
+                        {contractFormMaintenanceDates.map((rawEntry, index) => {
+                          const [date, specificEquip] = rawEntry.split('|');
+                          const isQc = contractFormQcDate === date || contractFormQcDate === rawEntry || (!contractFormQcDate && index === contractFormMaintenanceDates.length - 1);
                           const fmtDate = (d: string) => {
                             if (!d) return '—';
                             const [y, m, day] = d.split('-');
@@ -14953,8 +14963,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           return (
                             <div key={index} className="flex items-center justify-between px-2.5 py-1.5 hover:bg-slate-50/50 transition-colors">
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-slate-700 text-[10px] font-bold">{fmtDate(date)}</span>
+                              <div className="flex items-center gap-2 flex-wrap pr-1">
+                                <span className="font-mono text-slate-800 text-[10px] font-bold">{fmtDate(date)}</span>
+                                {specificEquip && (
+                                  <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.2 rounded text-[8px] font-extrabold">
+                                    ⚙️ {specificEquip}
+                                  </span>
+                                )}
                                 <button
                                   type="button"
                                   disabled={isSalesReadOnly}
@@ -14975,12 +14990,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    if (contractFormQcDate === date) {
+                                    if (contractFormQcDate === date || contractFormQcDate === rawEntry) {
                                       setContractFormQcDate('');
                                     }
                                     setContractFormMaintenanceDates(contractFormMaintenanceDates.filter((_, i) => i !== index));
                                   }}
-                                  className="text-red-500 hover:text-red-750 font-black text-2xs p-0.5 cursor-pointer"
+                                  className="text-red-500 hover:text-red-700 font-black text-2xs p-1 cursor-pointer shrink-0"
                                 >
                                   ✕
                                 </button>
