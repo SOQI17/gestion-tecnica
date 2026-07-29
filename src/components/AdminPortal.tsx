@@ -16188,13 +16188,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden bg-white max-h-[220px] overflow-y-auto">
                   {selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.length > 0 ? (
                     selectedContractForDetails.maintenanceDates.map((date, idx) => {
+                      const [cleanDate, specificEquipInDate] = date.split('|');
+
                       // Check for matching work order
                       const matchingWO = workOrders.find(
                         wo => isWoMatchingContractDate(wo, selectedContractForDetails, date, contracts)
                       );
 
+                      // Determine equipment name
+                      let targetEqName = specificEquipInDate?.trim() || matchingWO?.equipmentName;
+                      if (!targetEqName && selectedContractForDetails.equipmentItems && selectedContractForDetails.equipmentItems.length > 0) {
+                        if (selectedContractForDetails.equipmentItems.length === 1) {
+                          targetEqName = selectedContractForDetails.equipmentItems[0].name;
+                        } else {
+                          targetEqName = selectedContractForDetails.equipmentItems[idx % selectedContractForDetails.equipmentItems.length]?.name;
+                        }
+                      }
+
+                      // Determine modality
+                      const matchingEqItem = selectedContractForDetails.equipmentItems?.find(item => item.name === targetEqName);
+                      const targetModality = matchingEqItem?.modality;
+
                       // Is it the designated QC date?
-                      const isQc = selectedContractForDetails.qcDate === date || 
+                      const isQc = selectedContractForDetails.qcDate === date || selectedContractForDetails.qcDate === cleanDate || 
                         (!selectedContractForDetails.qcDate && idx === selectedContractForDetails.maintenanceDates!.length - 1);
 
                       const fmtDate = (d: string) => {
@@ -16247,15 +16263,30 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           }`}
                           title={userRole === 'admin' && matchingWO ? "Haga clic para ir directamente a la orden agendada en el calendario" : undefined}
                         >
-                          <div className="space-y-0.5">
-                            <span className={`font-mono text-slate-800 text-[11px] font-bold ${userRole === 'admin' && matchingWO ? 'group-hover:text-indigo-700' : ''} transition-colors`}>{fmtDate(date)}</span>
-                            <div className="flex items-center gap-1.5 mt-0.5">
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className={`font-mono text-slate-800 text-[11px] font-bold ${userRole === 'admin' && matchingWO ? 'group-hover:text-indigo-700' : ''} transition-colors`}>
+                                {fmtDate(cleanDate)}
+                              </span>
+                              {targetEqName && (
+                                <span className="bg-indigo-50 text-indigo-900 border border-indigo-200 px-2 py-0.5 rounded-md text-[9px] font-extrabold flex items-center gap-1 shadow-3xs">
+                                  <Cpu className="w-3 h-3 text-indigo-600 shrink-0" />
+                                  <span>{targetEqName}</span>
+                                  {targetModality && (
+                                    <span className="bg-indigo-600 text-white font-black text-[7.5px] px-1 py-0.1 rounded uppercase">
+                                      {targetModality}
+                                    </span>
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5">
                               {isQc ? (
-                                <span className="bg-violet-105 text-violet-800 border border-violet-200 font-extrabold text-[8px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                <span className="bg-violet-100 text-violet-900 border border-violet-200 font-extrabold text-[8px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
                                   📋 Control de Calidad
                                 </span>
                               ) : (
-                                <span className="bg-indigo-50 text-indigo-850 border border-indigo-150 font-bold text-[8px] px-1.5 py-0.5 rounded">
+                                <span className="bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[8px] px-1.5 py-0.5 rounded">
                                   🛠️ Mantenimiento Preventivo
                                 </span>
                               )}
