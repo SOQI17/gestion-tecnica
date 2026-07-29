@@ -15675,9 +15675,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       }
 
                       return (
-                        <div key={idx} className="flex items-center justify-between p-3 hover:bg-slate-50/50 transition-colors">
+                        <div 
+                          key={idx} 
+                          onClick={() => {
+                            if (matchingWO) {
+                              setIsContractDetailsModalOpen(false);
+                              setSelectedContractForDetails(null);
+                              if (matchingWO.plannedDate) {
+                                const parts = matchingWO.plannedDate.split('-');
+                                if (parts.length === 3) {
+                                  setCalendarYear(Number(parts[0]));
+                                  setCalendarMonth(Number(parts[1]));
+                                  setSelectedDay(Number(parts[2]));
+                                }
+                              }
+                              setActiveAdminTab('agendamiento');
+                              setInfoWO(matchingWO);
+                            }
+                          }}
+                          className={`flex items-center justify-between p-3 transition-colors ${matchingWO ? 'hover:bg-indigo-50/50 cursor-pointer group' : 'hover:bg-slate-50/50'}`}
+                          title={matchingWO ? "Haga clic para ir directamente a la orden agendada en el calendario" : undefined}
+                        >
                           <div className="space-y-0.5">
-                            <span className="font-mono text-slate-800 text-[11px] font-bold">{fmtDate(date)}</span>
+                            <span className="font-mono text-slate-800 text-[11px] font-bold group-hover:text-indigo-700 transition-colors">{fmtDate(date)}</span>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               {isQc ? (
                                 <span className="bg-violet-105 text-violet-800 border border-violet-200 font-extrabold text-[8px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
@@ -15692,13 +15712,40 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <span className={`text-[8.5px] font-extrabold px-2 py-0.5 rounded-full border ${statusClasses}`}>
-                              {statusText}
-                            </span>
+                            {matchingWO ? (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsContractDetailsModalOpen(false);
+                                  setSelectedContractForDetails(null);
+                                  if (matchingWO.plannedDate) {
+                                    const parts = matchingWO.plannedDate.split('-');
+                                    if (parts.length === 3) {
+                                      setCalendarYear(Number(parts[0]));
+                                      setCalendarMonth(Number(parts[1]));
+                                      setSelectedDay(Number(parts[2]));
+                                    }
+                                  }
+                                  setActiveAdminTab('agendamiento');
+                                  setInfoWO(matchingWO);
+                                }}
+                                className={`text-[8.5px] font-extrabold px-2.5 py-1 rounded-full border transition-all cursor-pointer flex items-center gap-1 hover:shadow-xs hover:scale-105 active:scale-95 ${statusClasses}`}
+                                title="Haga clic para ver/editar esta orden directamente en Agendamiento"
+                              >
+                                <span>{statusText}</span>
+                                <span className="text-[9px] font-black opacity-80">↗</span>
+                              </button>
+                            ) : (
+                              <span className={`text-[8.5px] font-extrabold px-2 py-0.5 rounded-full border ${statusClasses}`}>
+                                {statusText}
+                              </span>
+                            )}
                             {!matchingWO && (
                               <button
                                 type="button"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   // Pre-fill creation form and open Create WO modal
                                   setNewWODate(date);
                                   setNewWOClient(selectedContractForDetails.clientId);
