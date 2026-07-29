@@ -711,7 +711,17 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
 
 const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], allContracts: Contract[] = []) => {
   if (!con.maintenanceDates || con.maintenanceDates.length === 0) {
-    return { isCompleted: false, total: 0, done: 0, remaining: 0, hasNoPending: false };
+    return { 
+      isCompleted: false, 
+      total: 0, 
+      done: 0, 
+      remaining: 0, 
+      hasNoPending: false,
+      eqBreakdown: [],
+      modalityBreakdown: [],
+      pendingByModalityText: '',
+      pendingByEquipmentText: ''
+    };
   }
 
   const clientWOs = workOrders.filter(wo => 
@@ -722,8 +732,11 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
   let doneCount = 0;
   const usedWoIds = new Set<string>();
 
-  con.maintenanceDates.forEach((rawEntry) => {
-    const cleanDate = rawEntry.split('|')[0].trim();
+  const eqMap: Record<string, { name: string; modality?: string; total: number; done: number; remaining: number }> = {};
+  const modalityMap: Record<string, { modality: string; total: number; done: number; remaining: number }> = {};
+
+  con.maintenanceDates.forEach((rawEntry, idx) => {
+    const [cleanDate, specificEquipInDate] = rawEntry.split('|');
 
     // 1. Try matching using isWoMatchingContractDate (excluding already claimed WOs)
     let matchingWO = clientWOs.find(wo => !usedWoIds.has(wo.id) && isWoMatchingContractDate(wo, con, rawEntry, allContracts));
@@ -741,11 +754,47 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
       });
     }
 
+    // Determine target equipment name
+    let targetEqName = specificEquipInDate?.trim() || matchingWO?.equipmentName;
+    if (!targetEqName && con.equipmentItems && con.equipmentItems.length > 0) {
+      if (con.equipmentItems.length === 1) {
+        targetEqName = con.equipmentItems[0].name;
+      } else {
+        targetEqName = con.equipmentItems[idx % con.equipmentItems.length]?.name;
+      }
+    }
+
+    // Determine modality
+    const eqItem = con.equipmentItems?.find(item => item.name && targetEqName && (item.name.trim().toLowerCase().includes(targetEqName.trim().toLowerCase()) || targetEqName.trim().toLowerCase().includes(item.name.trim().toLowerCase())));
+    const modality = eqItem?.modality;
+    const eqKey = targetEqName || 'Equipo General';
+
+    if (!eqMap[eqKey]) {
+      eqMap[eqKey] = { name: eqKey, modality, total: 0, done: 0, remaining: 0 };
+    }
+    eqMap[eqKey].total++;
+
+    const modKey = modality || 'Sin Mod';
+    if (!modalityMap[modKey]) {
+      modalityMap[modKey] = { modality: modKey, total: 0, done: 0, remaining: 0 };
+    }
+    modalityMap[modKey].total++;
+
+    let isDone = false;
     if (matchingWO) {
       usedWoIds.add(matchingWO.id);
       if (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado' || matchingWO.status === 'Reportado') {
         doneCount++;
+        isDone = true;
       }
+    }
+
+    if (isDone) {
+      eqMap[eqKey].done++;
+      modalityMap[modKey].done++;
+    } else {
+      eqMap[eqKey].remaining++;
+      modalityMap[modKey].remaining++;
     }
   });
 
@@ -753,12 +802,29 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
   const isAllCompleted = total > 0 && doneCount >= total;
   const remaining = Math.max(0, total - doneCount);
 
+  const eqBreakdown = Object.values(eqMap);
+  const modalityBreakdown = Object.values(modalityMap);
+
+  const pendingByModalityText = modalityBreakdown
+    .filter(m => m.remaining > 0 && m.modality !== 'Sin Mod')
+    .map(m => `${m.remaining} ${m.modality}`)
+    .join(' · ');
+
+  const pendingByEquipmentText = eqBreakdown
+    .filter(e => e.remaining > 0)
+    .map(e => `${e.remaining} ${e.name}${e.modality ? ` (${e.modality})` : ''}`)
+    .join(' · ');
+
   return {
     isCompleted: isAllCompleted,
     total,
     done: doneCount,
     remaining,
-    hasNoPending: isAllCompleted
+    hasNoPending: isAllCompleted,
+    eqBreakdown,
+    modalityBreakdown,
+    pendingByModalityText,
+    pendingByEquipmentText
   };
 };
 
@@ -7701,12 +7767,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 );
                               } else {
                                 return (
-                                  <span 
-                                    className="text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-100 text-slate-700 border-slate-200 flex items-center gap-1 w-max"
-                                    title={`${maintStatus.remaining} mantenimiento(s) pendiente(s) de un total de ${maintStatus.total}`}
-                                  >
-                                    📋 {maintStatus.remaining} MTO{maintStatus.remaining > 1 ? 's' : ''} PENDIENTE{maintStatus.remaining > 1 ? 'S' : ''} ({maintStatus.done}/{maintStatus.total})
-                                  </span>
+                                  <div className="flex flex-col items-start gap-0.5">
+                                    <span 
+                                      className="text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-100 text-slate-700 border-slate-200 flex items-center gap-1 w-max"
+                                      title={`${maintStatus.remaining} mantenimiento(s) pendiente(s): ${maintStatus.pendingByEquipmentText || maintStatus.pendingByModalityText}`}
+                                    >
+                                      📋 {maintStatus.remaining} MTO{maintStatus.remaining > 1 ? 's' : ''} PENDIENTE{maintStatus.remaining > 1 ? 'S' : ''} ({maintStatus.done}/{maintStatus.total})
+                                    </span>
+                                    {maintStatus.pendingByModalityText && (
+                                      <span className="text-[7.5px] font-black text-indigo-900 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded font-mono" title={`Pendientes por equipo:\n${maintStatus.pendingByEquipmentText}`}>
+                                        ({maintStatus.pendingByModalityText})
+                                      </span>
+                                    )}
+                                  </div>
                                 );
                               }
                             }
@@ -16008,24 +16081,40 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     )}
 
                     {maintStatus.total > 0 && (
-                      <div className={`flex items-center justify-between gap-2 text-[11px] ${exp && exp.level !== 'ok' ? 'pt-2 border-t border-slate-200/60' : ''}`}>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">{maintStatus.hasNoPending ? '⚡' : '📋'}</span>
-                          <span>
-                            {maintStatus.hasNoPending ? (
-                              <strong className="text-purple-900 font-extrabold">
-                                Mantenimientos al Día: ¡Se realizaron todos los MTOs ({maintStatus.done}/{maintStatus.total})! No quedan mantenimientos pendientes.
-                              </strong>
-                            ) : (
-                              <span>
-                                <strong>Estado de Mantenimientos:</strong> {maintStatus.done} de {maintStatus.total} realizados · <strong className="text-amber-800">{maintStatus.remaining} {maintStatus.remaining === 1 ? 'MTO pendiente' : 'MTOs pendientes'}</strong>
-                              </span>
-                            )}
+                      <div className={`flex flex-col gap-1.5 text-[11px] ${exp && exp.level !== 'ok' ? 'pt-2 border-t border-slate-200/60' : ''}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{maintStatus.hasNoPending ? '⚡' : '📋'}</span>
+                            <span>
+                              {maintStatus.hasNoPending ? (
+                                <strong className="text-purple-900 font-extrabold">
+                                  Mantenimientos al Día: ¡Se realizaron todos los MTOs ({maintStatus.done}/{maintStatus.total})! No quedan mantenimientos pendientes.
+                                </strong>
+                              ) : (
+                                <span>
+                                  <strong>Estado de Mantenimientos:</strong> {maintStatus.done} de {maintStatus.total} realizados · <strong className="text-amber-800">{maintStatus.remaining} {maintStatus.remaining === 1 ? 'MTO pendiente' : 'MTOs pendientes'}</strong>
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                          <span className={`text-[9px] uppercase px-2 py-0.5 rounded font-black shadow-2xs shrink-0 ${maintStatus.hasNoPending ? 'bg-purple-200 text-purple-950' : 'bg-slate-200 text-slate-800'}`}>
+                            {maintStatus.hasNoPending ? '⚡ 0 PENDIENTES' : `📋 ${maintStatus.remaining} PENDIENTES`}
                           </span>
                         </div>
-                        <span className={`text-[9px] uppercase px-2 py-0.5 rounded font-black shadow-2xs shrink-0 ${maintStatus.hasNoPending ? 'bg-purple-200 text-purple-950' : 'bg-slate-200 text-slate-800'}`}>
-                          {maintStatus.hasNoPending ? '⚡ 0 PENDIENTES' : `📋 ${maintStatus.remaining} PENDIENTES`}
-                        </span>
+
+                        {/* Sectioned breakdown of pending maintenance by equipment */}
+                        {!maintStatus.hasNoPending && maintStatus.eqBreakdown && maintStatus.eqBreakdown.some(e => e.remaining > 0) && (
+                          <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-slate-200/50 pl-6">
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">MTOs faltantes por equipo:</span>
+                            {maintStatus.eqBreakdown.filter(e => e.remaining > 0).map((eq, idx) => (
+                              <span key={idx} className="bg-white text-indigo-950 border border-indigo-200 font-bold text-[9px] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-3xs font-mono">
+                                <span>{eq.name}</span>
+                                {eq.modality && <span className="bg-indigo-600 text-white font-black text-[7.5px] px-1 py-0.1 rounded uppercase">{eq.modality}</span>}
+                                <span className="text-amber-700 font-extrabold ml-0.5">: {eq.remaining} {eq.remaining === 1 ? 'pendiente' : 'pendientes'}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
