@@ -1,16 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag } from 'lucide-react';
 
+export const OFFICIAL_MODALITIES = [
+  { code: 'MR', label: 'MR: Resonancia Magnética' },
+  { code: 'MG', label: 'MG: Mamografía' },
+  { code: 'CT', label: 'CT: Tomografía' },
+  { code: 'BMD', label: 'BMD: Densitometría' },
+  { code: 'Surgery', label: 'Surgery: Arcos en C' },
+  { code: 'RX', label: 'RX: Rayos X (todo tipo)' },
+  { code: 'PETCT', label: 'PETCT: PETCT' },
+  { code: 'Cyclotron', label: 'Cyclotron: Cyclotron' },
+  { code: 'MS', label: 'MS: Módulos de síntesis (Fastlab Tracerlab)' },
+  { code: 'IGM', label: 'IGM: Angiografía' },
+  { code: 'NM', label: 'NM: Medicina Nuclear (gammacámara)' },
+  { code: 'AW', label: 'AW: Estaciones' },
+  { code: 'US', label: 'US: Ultrasonido / Ecografía' },
+  { code: 'Aplicaciones', label: 'Aplicaciones Clínicas' },
+  { code: 'IT', label: 'IT: Tecnologías de la Información' }
+];
+
 const EQUIPMENT_MODALITIES = [
-  'CT',
-  'MG',
   'MR',
+  'MG',
+  'CT',
   'BMD',
+  'Surgery',
   'RX',
-  'SURGERY',
-  'PET/CT',
-  'CYCLOTRON',
-  'MODULOS DE SINTESIS',
+  'PETCT',
+  'Cyclotron',
+  'MS',
+  'IGM',
+  'NM',
+  'AW',
+  'US',
   'Otros'
 ];
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, UserPermissions } from '../types';
@@ -13664,27 +13686,28 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                               🎓 Modalidades y Capacitaciones Acreditadas
                             </label>
-                            <div className="flex flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-lg">
-                              {['GE', 'FE', 'CT', 'MR', 'RX', 'US', 'MAMO', 'Aplicaciones', 'IT'].map(mod => {
-                                const isSelected = editEngSkills.includes(mod);
+                            <div className="flex flex-wrap gap-1.5 p-2.5 bg-white border border-slate-200 rounded-xl">
+                              {OFFICIAL_MODALITIES.map(mod => {
+                                const isSelected = editEngSkills.includes(mod.code);
                                 return (
                                   <button
-                                    key={mod}
+                                    key={mod.code}
                                     type="button"
                                     onClick={() => {
                                       if (isSelected) {
-                                        setEditEngSkills(editEngSkills.filter(s => s !== mod));
+                                        setEditEngSkills(editEngSkills.filter(s => s !== mod.code));
                                       } else {
-                                        setEditEngSkills([...editEngSkills, mod]);
+                                        setEditEngSkills([...editEngSkills, mod.code]);
                                       }
                                     }}
-                                    className={`px-2 py-0.5 rounded text-3xs font-extrabold transition-all cursor-pointer border ${
+                                    title={mod.label}
+                                    className={`px-2.5 py-1 rounded-lg text-3xs font-extrabold transition-all cursor-pointer border flex items-center gap-1 ${
                                       isSelected
                                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-                                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
                                     }`}
                                   >
-                                    {isSelected ? '✓ ' : '+ '}{mod}
+                                    <span>{isSelected ? '✓ ' : '+ '}{mod.code}</span>
                                   </button>
                                 );
                               })}
