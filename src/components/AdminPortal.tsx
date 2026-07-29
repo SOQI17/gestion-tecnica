@@ -4399,16 +4399,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     if (!normInst && !normEq) return null;
 
-    const instTokens = normInst.split(' ').filter(t => t.length > 2 && t !== 'hosp' && t !== 'hospital' && t !== 'clinica' && t !== 'centro');
+    const stopWords = new Set(['hosp', 'hospital', 'clinica', 'clínica', 'centro', 'basico', 'básico', 'general', 'salud', 'subcentro', 'unidad', 'medica', 'médica', 'instituto', 'san', 'santa', 'de', 'del', 'la', 'el', 'los', 'las']);
+    const instTokens = normInst.split(' ').map(t => t.toLowerCase().trim()).filter(t => t.length > 2 && !stopWords.has(t));
 
     // 1. Buscar en registros existentes de mantenimiento
     const matchedRegistries = (maintenanceRegistries || []).filter(reg => {
       const regInst = cleanStr(reg.institutionName);
       if (!regInst) return false;
-      if (regInst === normInst || normInst.includes(regInst) || regInst.includes(normInst)) return true;
+      if (regInst === normInst) return true;
       if (instTokens.length > 0) {
         const matches = instTokens.filter(tok => regInst.includes(tok));
-        if (matches.length >= Math.min(instTokens.length, 1)) return true;
+        if (matches.length === instTokens.length) return true;
       }
       return false;
     });
@@ -4432,7 +4433,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
       if (bestReg) {
         return {
-          institutionName: bestReg.institutionName,
+          institutionName: instNameInput,
           eqBrand: bestReg.eqBrand,
           eqModel: bestReg.eqModel,
           eqSerial: bestReg.eqSerial,
@@ -4447,7 +4448,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     // 2. Buscar en colecciones de clientes / equipos del sistema
     const matchedClient = (clients || []).find(c => {
       const cName = cleanStr(c.name);
-      return cName === normInst || normInst.includes(cName) || cName.includes(normInst);
+      return cName === normInst;
     });
 
     if (matchedClient) {
@@ -4466,7 +4467,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
         if (bestEq) {
           return {
-            institutionName: matchedClient.name,
+            institutionName: instNameInput,
             eqBrand: bestEq.brand || '-',
             eqModel: bestEq.model || bestEq.name || '-',
             eqSerial: bestEq.serialNumber || '-',
@@ -5093,6 +5094,24 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       let tuboSerial = (reg.tuboSerial || '').trim();
       let fecha = (reg.fecha || '').trim();
       let responsable = (reg.responsable || '').trim();
+
+      // If registry is linked to a Work Order, dynamically get the true client name from the Work Order
+      if (reg.workOrderId) {
+        const wo = workOrders.find(w => w.id === reg.workOrderId);
+        if (wo) {
+          const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
+          if (client) {
+            institutionName = client.name;
+          }
+          if (wo.plannedDate && (!fecha || fecha === '-')) {
+            fecha = wo.plannedDate;
+          }
+          if (wo.engineerId && (!responsable || responsable === '-')) {
+            const eng = engineers.find(e => e.id === wo.engineerId);
+            if (eng) responsable = eng.name;
+          }
+        }
+      }
 
       if (institutionName.includes(';')) {
         const parts = institutionName.split(';').map(p => p.trim()).filter(Boolean);
@@ -13005,7 +13024,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       // Buscar coincidencia inteligente en registros/equipos previos
                                       const matchedEq = findBestEquipmentMatch(clientInstName, eqName);
 
-                                      let instName = matchedEq?.institutionName || clientInstName;
+                                      let instName = clientInstName;
                                       let brand    = matchedEq?.eqBrand;
                                       let model    = matchedEq?.eqModel;
                                       let serial   = matchedEq?.eqSerial;
