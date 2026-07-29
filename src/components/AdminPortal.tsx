@@ -14,6 +14,8 @@ export const OFFICIAL_MODALITIES = [
   { code: 'IGM', label: 'IGM: Angiografía' },
   { code: 'NM', label: 'NM: Medicina Nuclear (gammacámara)' },
   { code: 'AW', label: 'AW: Estaciones' },
+  { code: 'IMP', label: 'IMP: Impresoras' },
+  { code: 'DIG', label: 'DIG: Digitalizadores' },
   { code: 'US', label: 'US: Ultrasonido / Ecografía' },
   { code: 'Aplicaciones', label: 'Aplicaciones Clínicas' },
   { code: 'IT', label: 'IT: Tecnologías de la Información' }
@@ -32,6 +34,8 @@ const EQUIPMENT_MODALITIES = [
   'IGM',
   'NM',
   'AW',
+  'IMP',
+  'DIG',
   'US',
   'Otros'
 ];
