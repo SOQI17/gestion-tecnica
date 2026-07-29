@@ -547,7 +547,7 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
     return true;
   }
 
-  // 4. Fuzzy plannedDate match (+/- 45 days)
+  // 4. Tight Fuzzy plannedDate match (+/- 12 days max, and must be closest target date)
   if (wo.plannedDate) {
     const cleanWoDate = wo.plannedDate.split('T')[0].trim();
     const woParts = cleanWoDate.split('-');
@@ -556,7 +556,23 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
       const woTime = new Date(Number(woParts[0]), Number(woParts[1]) - 1, Number(woParts[2])).getTime();
       const conTime = new Date(Number(conParts[0]), Number(conParts[1]) - 1, Number(conParts[2])).getTime();
       if (!isNaN(woTime) && !isNaN(conTime)) {
-        return Math.abs(woTime - conTime) <= 45 * 86400000;
+        const diffDays = Math.abs(woTime - conTime) / 86400000;
+        if (diffDays <= 12) {
+          // Verify cleanTargetDate is the CLOSEST date in con.maintenanceDates for this wo
+          if (con.maintenanceDates && con.maintenanceDates.length > 1) {
+            const isClosest = con.maintenanceDates.every(otherRaw => {
+              const otherClean = otherRaw.split('|')[0].trim();
+              const oParts = otherClean.split('-');
+              if (oParts.length !== 3) return true;
+              const oTime = new Date(Number(oParts[0]), Number(oParts[1]) - 1, Number(oParts[2])).getTime();
+              if (isNaN(oTime)) return true;
+              const oDiff = Math.abs(woTime - oTime) / 86400000;
+              return diffDays <= oDiff;
+            });
+            if (!isClosest) return false;
+          }
+          return true;
+        }
       }
     }
   }
