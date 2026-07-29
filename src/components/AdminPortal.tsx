@@ -15719,7 +15719,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <div 
                           key={idx} 
                           onClick={() => {
-                            if (matchingWO) {
+                            if (userRole === 'admin' && matchingWO) {
                               setIsContractDetailsModalOpen(false);
                               setSelectedContractForDetails(null);
                               if (matchingWO.plannedDate) {
@@ -15734,11 +15734,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setInfoWO(matchingWO);
                             }
                           }}
-                          className={`flex items-center justify-between p-3 transition-colors ${matchingWO ? 'hover:bg-indigo-50/50 cursor-pointer group' : 'hover:bg-slate-50/50'}`}
-                          title={matchingWO ? "Haga clic para ir directamente a la orden agendada en el calendario" : undefined}
+                          className={`flex items-center justify-between p-3 transition-colors ${
+                            userRole === 'admin' && matchingWO 
+                              ? 'hover:bg-indigo-50/50 cursor-pointer group' 
+                              : 'hover:bg-slate-50/50 cursor-default'
+                          }`}
+                          title={userRole === 'admin' && matchingWO ? "Haga clic para ir directamente a la orden agendada en el calendario" : undefined}
                         >
                           <div className="space-y-0.5">
-                            <span className="font-mono text-slate-800 text-[11px] font-bold group-hover:text-indigo-700 transition-colors">{fmtDate(date)}</span>
+                            <span className={`font-mono text-slate-800 text-[11px] font-bold ${userRole === 'admin' && matchingWO ? 'group-hover:text-indigo-700' : ''} transition-colors`}>{fmtDate(date)}</span>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               {isQc ? (
                                 <span className="bg-violet-105 text-violet-800 border border-violet-200 font-extrabold text-[8px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
@@ -15753,7 +15757,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {matchingWO ? (
+                            {userRole === 'admin' && matchingWO ? (
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -15782,7 +15786,24 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 {statusText}
                               </span>
                             )}
-                            {!matchingWO && (
+
+                            {/* Admin Quick Action: Marcar como Realizado */}
+                            {userRole === 'admin' && matchingWO && matchingWO.status !== 'Realizado' && matchingWO.status !== 'Conciliado' && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onUpdateWorkOrderStatus(matchingWO.id, 'Realizado');
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-2.5 py-1 rounded-md text-[9px] transition-colors cursor-pointer shadow-2xs flex items-center gap-1 shrink-0"
+                                title="Marcar esta visita de mantenimiento como Realizada directamente"
+                              >
+                                <span>✓ Marcar Realizado</span>
+                              </button>
+                            )}
+
+                            {/* Admin Quick Action: Agendar */}
+                            {userRole === 'admin' && !matchingWO && (
                               <button
                                 type="button"
                                 onClick={(e) => {
