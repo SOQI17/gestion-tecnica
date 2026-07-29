@@ -4856,25 +4856,32 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     // Auto-schedule work orders for each of the maintenance dates
     if (onAddWorkOrder && con.maintenanceDates && con.maintenanceDates.length > 0) {
-      for (const date of con.maintenanceDates) {
+      for (const rawDate of con.maintenanceDates) {
+        const cleanDate = rawDate.split('|')[0].trim();
+        const eqNameInEntry = rawDate.split('|')[1]?.trim();
+
         const alreadyScheduled = workOrders.some(
-          wo => wo.clientId === targetClientId && wo.plannedDate === date
+          wo => isWoMatchingContractDate(wo, con, rawDate, contracts)
         );
+
         if (!alreadyScheduled) {
-          const isQc = con.qcDate === date || 
-            (!con.qcDate && date === con.maintenanceDates[con.maintenanceDates.length - 1]);
+          const isQc = con.qcDate === rawDate || 
+            (!con.qcDate && rawDate === con.maintenanceDates[con.maintenanceDates.length - 1]);
           
+          const eqName = eqNameInEntry || (con.equipmentItems && con.equipmentItems.length > 0
+            ? con.equipmentItems[0].name
+            : 'Equipos según contrato');
+
           const newWO: WorkOrder = {
-            id: `WO-MTO-${con.id}-${date}`,
+            id: `WO-MTO-${con.id}-${cleanDate}-${Math.floor(Math.random() * 1000)}`,
             clientId: targetClientId,
             engineerId: engineers[0]?.id || 'ENG-001',
-            plannedDate: date,
-            plannedTime: '09:00',
+            plannedDate: cleanDate,
+            plannedTime: '09:00 AM - 11:00 AM',
+            durationDays: 1,
             type: isQc ? 'Inspección' : 'Preventivo',
             status: 'Pendiente',
-            equipmentName: con.equipmentItems && con.equipmentItems.length > 0
-              ? con.equipmentItems.map(eq => `${eq.name} (${eq.brand})`).join(', ')
-              : 'Equipos según contrato',
+            equipmentName: eqName,
             notes: `Mantenimiento preventivo autogenerado bajo Contrato: ${con.id}${isQc ? ' (Visita de Control de Calidad)' : ''}`
           };
           
@@ -15770,7 +15777,53 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               {/* Maintenance Agenda List */}
               <div className="space-y-2">
-                <span className="font-extrabold text-[9px] text-slate-500 uppercase tracking-wider block">Cronograma de Visitas Programadas</span>
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-[9px] text-slate-500 uppercase tracking-wider block">Cronograma de Visitas Programadas</span>
+                  {userRole === 'admin' && onAddWorkOrder && selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.some(d => !workOrders.some(wo => isWoMatchingContractDate(wo, selectedContractForDetails, d, contracts))) && (
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const unagendedDates = (selectedContractForDetails.maintenanceDates || []).filter(rawDate => {
+                          return !workOrders.some(wo => isWoMatchingContractDate(wo, selectedContractForDetails, rawDate, contracts));
+                        });
+
+                        if (unagendedDates.length === 0) return;
+
+                        if (!confirm(`¿Desea agendar automáticamente ${unagendedDates.length} visitas pendientes en el calendario de Agendamiento?`)) return;
+
+                        const defaultEngineer = engineers[0]?.id || 'ENG-001';
+                        for (const rawDate of unagendedDates) {
+                          const cleanDate = rawDate.split('|')[0].trim();
+                          const eqNameInEntry = rawDate.split('|')[1]?.trim();
+                          const eqName = eqNameInEntry || (selectedContractForDetails.equipmentItems && selectedContractForDetails.equipmentItems.length > 0 ? selectedContractForDetails.equipmentItems[0].name : 'Equipos según contrato');
+                          
+                          const woId = `WO-MTO-${selectedContractForDetails.id}-${cleanDate}-${Math.floor(Math.random() * 1000)}`;
+                          const isQc = selectedContractForDetails.qcDate === rawDate;
+
+                          const newWO: WorkOrder = {
+                            id: woId,
+                            clientId: selectedContractForDetails.clientId,
+                            engineerId: defaultEngineer,
+                            plannedDate: cleanDate,
+                            plannedTime: '09:00 AM - 11:00 AM',
+                            durationDays: 1,
+                            type: isQc ? 'Inspección' : 'Preventivo',
+                            status: 'Pendiente',
+                            equipmentName: eqName,
+                            notes: `Mantenimiento preventivo autogenerado bajo Contrato: ${selectedContractForDetails.id}${isQc ? ' (Visita de Control de Calidad)' : ''}`
+                          };
+
+                          await onAddWorkOrder(newWO);
+                        }
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[8.5px] px-2.5 py-1 rounded-md cursor-pointer transition-all flex items-center gap-1 shadow-2xs active:scale-95 shrink-0"
+                      title="Agendar automáticamente todas las visitas sin orden asignada en el calendario"
+                    >
+                      <span>⚡ Auto-Agendar Visitas ({selectedContractForDetails.maintenanceDates.filter(d => !workOrders.some(wo => isWoMatchingContractDate(wo, selectedContractForDetails, d, contracts))).length})</span>
+                    </button>
+                  )}
+                </div>
                 <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden bg-white max-h-[220px] overflow-y-auto">
                   {selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.length > 0 ? (
                     selectedContractForDetails.maintenanceDates.map((date, idx) => {
