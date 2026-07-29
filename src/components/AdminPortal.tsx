@@ -71,41 +71,59 @@ interface AdminPortalProps {
 }
 
 const getEndDateStr = (startDateStr: string, duration: number): string => {
-  if (!startDateStr) return '';
-  const date = new Date(startDateStr + 'T00:00:00');
-  date.setDate(date.getDate() + (duration - 1));
-  return date.toISOString().split('T')[0];
+  if (!startDateStr || typeof startDateStr !== 'string') return '';
+  try {
+    const cleanStr = startDateStr.split('T')[0].trim();
+    if (!cleanStr) return '';
+    const date = new Date(cleanStr + 'T00:00:00');
+    if (isNaN(date.getTime())) return '';
+    date.setDate(date.getDate() + (Math.max(1, duration) - 1));
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  } catch (e) {
+    return '';
+  }
 };
 
 const getDurationFromDates = (startDateStr: string, endDateStr: string): number => {
-  if (!startDateStr || !endDateStr) return 1;
-  const start = new Date(startDateStr + 'T00:00:00');
-  const end = new Date(endDateStr + 'T00:00:00');
-  const diffTime = end.getTime() - start.getTime();
-  if (diffTime < 0) return 1;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  return diffDays;
+  if (!startDateStr || !endDateStr || typeof startDateStr !== 'string' || typeof endDateStr !== 'string') return 1;
+  try {
+    const start = new Date(startDateStr.split('T')[0] + 'T00:00:00');
+    const end = new Date(endDateStr.split('T')[0] + 'T00:00:00');
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 1;
+    const diffTime = end.getTime() - start.getTime();
+    if (diffTime < 0) return 1;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return isNaN(diffDays) ? 1 : diffDays;
+  } catch (e) {
+    return 1;
+  }
 };
 
 const getVacationDuration = (startDateStr: string, endDateStr: string, includeWeekends: boolean = true): number => {
-  if (!startDateStr || !endDateStr) return 1;
-  const start = new Date(startDateStr + 'T00:00:00');
-  const end = new Date(endDateStr + 'T00:00:00');
-  if (start > end) return 1;
-  if (includeWeekends) {
-    const diffTime = end.getTime() - start.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  } else {
-    let count = 0;
-    const cur = new Date(start);
-    while (cur <= end) {
-      const dayOfWeek = cur.getDay(); // 0 = Sunday, 6 = Saturday
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        count++;
+  if (!startDateStr || !endDateStr || typeof startDateStr !== 'string' || typeof endDateStr !== 'string') return 1;
+  try {
+    const start = new Date(startDateStr.split('T')[0] + 'T00:00:00');
+    const end = new Date(endDateStr.split('T')[0] + 'T00:00:00');
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return 1;
+    if (includeWeekends) {
+      const diffTime = end.getTime() - start.getTime();
+      const res = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      return isNaN(res) ? 1 : res;
+    } else {
+      let count = 0;
+      const cur = new Date(start);
+      while (cur <= end) {
+        const dayOfWeek = cur.getDay(); // 0 = Sunday, 6 = Saturday
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          count++;
+        }
+        cur.setDate(cur.getDate() + 1);
       }
-      cur.setDate(cur.getDate() + 1);
+      return count;
     }
-    return count;
+  } catch (e) {
+    return 1;
   }
 };
 
