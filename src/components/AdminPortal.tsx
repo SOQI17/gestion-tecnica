@@ -493,19 +493,32 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[]) =>
     const contractDate = parts[0];
     const eqName = parts[1];
 
-    let matchingWO = clientWOs.find(wo => {
-      if (eqName) {
-        return wo.equipmentName.trim().toLowerCase() === eqName.trim().toLowerCase() && 
-               (wo.plannedDate === contractDate || Math.abs(new Date(wo.plannedDate + 'T00:00:00').getTime() - new Date(contractDate + 'T00:00:00').getTime()) <= 45 * 86400000);
-      }
-      return wo.plannedDate === contractDate;
-    });
+    // 1. Match by plannedDate first (exact date match for this client)
+    let matchingWO = clientWOs.find(wo => wo.plannedDate === contractDate);
 
+    // 2. If not found by exact date, try fuzzy date match (+/- 45 days) combined with equipment
+    if (!matchingWO) {
+      matchingWO = clientWOs.find(wo => {
+        const woTime = new Date(wo.plannedDate + 'T00:00:00').getTime();
+        const conTime = new Date(contractDate + 'T00:00:00').getTime();
+        const isNearDate = Math.abs(woTime - conTime) <= 45 * 86400000;
+
+        if (eqName && wo.equipmentName) {
+          const wEq = wo.equipmentName.toLowerCase();
+          const cEq = eqName.toLowerCase();
+          const eqMatches = wEq.includes(cEq) || cEq.includes(wEq);
+          return isNearDate && eqMatches;
+        }
+        return isNearDate;
+      });
+    }
+
+    // 3. Fallback by index if total client WOs equals total maintenance dates
     if (!matchingWO && clientWOs.length === con.maintenanceDates.length) {
       matchingWO = clientWOs[idx];
     }
 
-    if (matchingWO && (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado')) {
+    if (matchingWO && (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado' || matchingWO.status === 'Reportado')) {
       doneCount++;
     }
   });
@@ -15529,6 +15542,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
                     <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/80 font-black shadow-2xs">
                       {exp.badgeText}
+                    </span>
+                  </div>
+                );
+              })()}
+
+              {/* Maintenance Completion Alert Box */}
+              {(() => {
+                const maintStatus = getContractMaintenanceStatus(selectedContractForDetails, workOrders);
+                if (!maintStatus.hasNoPending) return null;
+                return (
+                  <div className="p-2.5 rounded-lg border text-xs font-bold flex items-center justify-between gap-2 bg-purple-50 text-purple-950 border-purple-300 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">⚡</span>
+                      <span>
+                        <strong>Mantenimientos Completados:</strong> Se han realizado todos los mantenimientos programados ({maintStatus.done}/{maintStatus.total}) de este contrato. No existen mantenimientos pendientes.
+                      </span>
+                    </div>
+                    <span className="text-[9px] uppercase px-2 py-0.5 rounded bg-purple-200 text-purple-900 font-black shadow-2xs shrink-0">
+                      ⚡ SIN MTO PENDIENTE
                     </span>
                   </div>
                 );
