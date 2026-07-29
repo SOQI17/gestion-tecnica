@@ -482,32 +482,31 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
 
 const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[]) => {
   if (!con.maintenanceDates || con.maintenanceDates.length === 0) {
-    return { isCompleted: false, total: 0, done: 0, hasNoPending: false };
+    return { isCompleted: false, total: 0, done: 0, remaining: 0, hasNoPending: false };
   }
 
   const clientWOs = workOrders.filter(wo => wo.clientId === con.clientId);
 
   let doneCount = 0;
-  con.maintenanceDates.forEach((entry, idx) => {
-    const parts = entry.split('|');
-    const contractDate = parts[0];
-    const eqName = parts[1];
+  con.maintenanceDates.forEach((rawEntry, idx) => {
+    const cleanDate = rawEntry.split('|')[0].trim();
+    const eqName = rawEntry.split('|')[1]?.trim();
 
     // 1. Match by plannedDate first (exact date match for this client)
-    let matchingWO = clientWOs.find(wo => wo.plannedDate === contractDate);
+    let matchingWO = clientWOs.find(wo => wo.plannedDate === cleanDate);
 
-    // 2. If not found by exact date, try fuzzy date match (+/- 45 days) combined with equipment
+    // 2. If not found by exact date, try fuzzy date match (+/- 45 days)
     if (!matchingWO) {
       matchingWO = clientWOs.find(wo => {
+        if (!wo.plannedDate) return false;
         const woTime = new Date(wo.plannedDate + 'T00:00:00').getTime();
-        const conTime = new Date(contractDate + 'T00:00:00').getTime();
+        const conTime = new Date(cleanDate + 'T00:00:00').getTime();
         const isNearDate = Math.abs(woTime - conTime) <= 45 * 86400000;
 
         if (eqName && wo.equipmentName) {
           const wEq = wo.equipmentName.toLowerCase();
           const cEq = eqName.toLowerCase();
-          const eqMatches = wEq.includes(cEq) || cEq.includes(wEq);
-          return isNearDate && eqMatches;
+          return isNearDate && (wEq.includes(cEq) || cEq.includes(wEq));
         }
         return isNearDate;
       });
@@ -525,11 +524,13 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[]) =>
 
   const total = con.maintenanceDates.length;
   const isAllCompleted = total > 0 && doneCount >= total;
+  const remaining = Math.max(0, total - doneCount);
 
   return {
     isCompleted: isAllCompleted,
     total,
     done: doneCount,
+    remaining,
     hasNoPending: isAllCompleted
   };
 };
@@ -864,7 +865,7 @@ export default function AdminPortal({
   const [contractsSubTab, setContractsSubTab] = useState<'garantias' | 'ge'>('garantias');
   const [contractSearch, setContractSearch] = useState('');
   const [contractPage, setContractPage] = useState(1);
-  const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | 'completed_mto' | null>(null);
+  const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null>(null);
   const [contractFilterBrand, setContractFilterBrand] = useState<string>('all');
   const [contractDateSort, setContractDateSort] = useState<'none' | 'start_asc' | 'start_desc' | 'end_asc' | 'end_desc'>('none');
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
@@ -6762,10 +6763,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             if (!isPending) return false;
           }
           if (contractFilterExpiration === 'inactivo' && con.status !== 'Inactivo') return false;
-          if (contractFilterExpiration === 'completed_mto') {
-            const maintStatus = getContractMaintenanceStatus(con, workOrders);
-            if (!maintStatus.hasNoPending) return false;
-          }
         }
 
         return true;
@@ -6937,10 +6934,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           ).length;
 
           const inactiveCount = contracts.filter(c => c.status === 'Inactivo').length;
-          const completedMtoCount = contracts.filter(c => getContractMaintenanceStatus(c, workOrders).hasNoPending).length;
 
           return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
               {/* Card 1: TODOS LOS CONTRATOS */}
               <div 
                 onClick={() => {
@@ -7163,44 +7159,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   </span>
                   <span className="text-sm font-black tracking-tight leading-none mt-0.5 block">
                     {expiredCount.length} <span className="text-[10px] font-semibold opacity-80">Contratos</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 7: SIN MTO PENDIENTE */}
-              <div 
-                onClick={() => {
-                  setContractFilterExpiration(contractFilterExpiration === 'completed_mto' ? null : 'completed_mto');
-                  setContractPage(1);
-                }}
-                className={`p-3 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
-                  contractFilterExpiration === 'completed_mto'
-                    ? 'bg-gradient-to-br from-purple-600 to-purple-800 text-white border-purple-700 shadow-md ring-2 ring-purple-500 ring-offset-1 scale-[1.02]'
-                    : completedMtoCount > 0
-                    ? 'bg-purple-50/70 hover:bg-purple-100/80 text-purple-950 border-purple-300/80 shadow-2xs'
-                    : 'bg-white hover:bg-purple-50/30 text-slate-800 border-slate-200 hover:border-purple-300 shadow-2xs'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold ${
-                    contractFilterExpiration === 'completed_mto' ? 'bg-white/20 text-white' : 'bg-purple-200/80 text-purple-800'
-                  }`}>
-                    ⚡
-                  </div>
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-                    contractFilterExpiration === 'completed_mto' ? 'bg-white text-purple-900 shadow-2xs' : 'bg-purple-100/80 text-purple-800'
-                  }`}>
-                    {contractFilterExpiration === 'completed_mto' ? '✓ FILTRADO' : 'SIN MTO'}
-                  </span>
-                </div>
-                <div className="mt-2.5">
-                  <span className={`block text-[9px] font-extrabold uppercase tracking-wider ${
-                    contractFilterExpiration === 'completed_mto' ? 'text-purple-200' : 'text-purple-800/80'
-                  }`}>
-                    Sin MTO Pendiente
-                  </span>
-                  <span className="text-sm font-black tracking-tight leading-none mt-0.5 block">
-                    {completedMtoCount} <span className="text-[10px] font-semibold opacity-80">Contratos</span>
                   </span>
                 </div>
               </div>
@@ -7459,15 +7417,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {(() => {
                             const maintStatus = getContractMaintenanceStatus(con, workOrders);
-                            if (maintStatus.hasNoPending && con.status !== 'Inactivo' && (!con.linkedContractId || con.linkedContractId.trim() === '')) {
-                              return (
-                                <span 
-                                  className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-purple-100 text-purple-950 border-purple-300 font-extrabold flex items-center gap-1 w-max shadow-2xs"
-                                  title={`Todos los ${maintStatus.total} mantenimientos programados de este contrato ya fueron realizados`}
-                                >
-                                  ⚡ SIN MTO PENDIENTE ({maintStatus.done}/{maintStatus.total})
-                                </span>
-                              );
+                            if (maintStatus.total > 0 && con.status !== 'Inactivo' && (!con.linkedContractId || con.linkedContractId.trim() === '')) {
+                              if (maintStatus.hasNoPending) {
+                                return (
+                                  <span 
+                                    className="text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider bg-purple-100 text-purple-950 border-purple-300 font-extrabold flex items-center gap-1 w-max shadow-2xs"
+                                    title={`Todos los ${maintStatus.total} mantenimientos programados de este contrato ya fueron realizados`}
+                                  >
+                                    ⚡ 0 MTOs PENDIENTES ({maintStatus.done}/{maintStatus.total})
+                                  </span>
+                                );
+                              } else {
+                                return (
+                                  <span 
+                                    className="text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-100 text-slate-700 border-slate-200 flex items-center gap-1 w-max"
+                                    title={`${maintStatus.remaining} mantenimiento(s) pendiente(s) de un total de ${maintStatus.total}`}
+                                  >
+                                    📋 {maintStatus.remaining} MTO{maintStatus.remaining > 1 ? 's' : ''} PENDIENTE{maintStatus.remaining > 1 ? 'S' : ''} ({maintStatus.done}/{maintStatus.total})
+                                  </span>
+                                );
+                              }
                             }
                             return null;
                           })()}
@@ -15526,42 +15495,54 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
 
             <div className="space-y-4 text-xs max-h-[75vh] overflow-y-auto overscroll-contain pr-1">
-              {/* Expiration / Renewal Alert Box */}
+              {/* Combined Expiration & MTO Alert Box */}
               {(() => {
                 const exp = getContractExpirationAlert(selectedContractForDetails.endDate, selectedContractForDetails.status, selectedContractForDetails.linkedContractId);
-                if (!exp || exp.level === 'ok') return null;
-                return (
-                  <div className={`p-2.5 rounded-lg border text-xs font-bold flex items-center justify-between gap-2 ${exp.colorClass}`}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">{exp.level === 'renewed' ? '🔄' : exp.level === 'urgent_1m' ? '🚨' : exp.level === 'warning_3m' ? '⚠️' : '🔴'}</span>
-                      <span>
-                        {exp.level === 'renewed' 
-                          ? `Contrato Renovado: Este contrato cuenta con un contrato sucesor vinculado (${selectedContractForDetails.linkedContractId}).`
-                          : `Alerta de Vencimiento: Este contrato ${exp.text}`}
-                      </span>
-                    </div>
-                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/80 font-black shadow-2xs">
-                      {exp.badgeText}
-                    </span>
-                  </div>
-                );
-              })()}
-
-              {/* Maintenance Completion Alert Box */}
-              {(() => {
                 const maintStatus = getContractMaintenanceStatus(selectedContractForDetails, workOrders);
-                if (!maintStatus.hasNoPending) return null;
+                
+                if (!exp && maintStatus.total === 0) return null;
+
+                const alertColorClass = exp?.colorClass || (maintStatus.hasNoPending ? 'bg-purple-50 text-purple-950 border-purple-250' : 'bg-slate-50 text-slate-800 border-slate-200');
+
                 return (
-                  <div className="p-2.5 rounded-lg border text-xs font-bold flex items-center justify-between gap-2 bg-purple-50 text-purple-950 border-purple-300 shadow-2xs">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">⚡</span>
-                      <span>
-                        <strong>Mantenimientos Completados:</strong> Se han realizado todos los mantenimientos programados ({maintStatus.done}/{maintStatus.total}) de este contrato. No existen mantenimientos pendientes.
-                      </span>
-                    </div>
-                    <span className="text-[9px] uppercase px-2 py-0.5 rounded bg-purple-200 text-purple-900 font-black shadow-2xs shrink-0">
-                      ⚡ SIN MTO PENDIENTE
-                    </span>
+                  <div className={`p-3 rounded-xl border text-xs font-bold flex flex-col gap-2 shadow-2xs ${alertColorClass}`}>
+                    {exp && exp.level !== 'ok' && (
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{exp.level === 'renewed' ? '🔄' : exp.level === 'urgent_1m' ? '🚨' : exp.level === 'warning_3m' ? '⚠️' : '🔴'}</span>
+                          <span>
+                            {exp.level === 'renewed' 
+                              ? `Contrato Renovado: Este contrato cuenta con un contrato sucesor vinculado (${selectedContractForDetails.linkedContractId}).`
+                              : `Alerta de Vencimiento: Este contrato ${exp.text}`}
+                          </span>
+                        </div>
+                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/80 font-black shadow-2xs shrink-0">
+                          {exp.badgeText}
+                        </span>
+                      </div>
+                    )}
+
+                    {maintStatus.total > 0 && (
+                      <div className={`flex items-center justify-between gap-2 text-[11px] ${exp && exp.level !== 'ok' ? 'pt-2 border-t border-slate-200/60' : ''}`}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{maintStatus.hasNoPending ? '⚡' : '📋'}</span>
+                          <span>
+                            {maintStatus.hasNoPending ? (
+                              <strong className="text-purple-900 font-extrabold">
+                                Mantenimientos al Día: ¡Se realizaron todos los MTOs ({maintStatus.done}/{maintStatus.total})! No quedan mantenimientos pendientes.
+                              </strong>
+                            ) : (
+                              <span>
+                                <strong>Estado de Mantenimientos:</strong> {maintStatus.done} de {maintStatus.total} realizados · <strong className="text-amber-800">{maintStatus.remaining} {maintStatus.remaining === 1 ? 'MTO pendiente' : 'MTOs pendientes'}</strong>
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <span className={`text-[9px] uppercase px-2 py-0.5 rounded font-black shadow-2xs shrink-0 ${maintStatus.hasNoPending ? 'bg-purple-200 text-purple-950' : 'bg-slate-200 text-slate-800'}`}>
+                          {maintStatus.hasNoPending ? '⚡ 0 PENDIENTES' : `📋 ${maintStatus.remaining} PENDIENTES`}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
@@ -15601,16 +15582,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Estado Mantenimientos</span>
                   {(() => {
                     const maintStatus = getContractMaintenanceStatus(selectedContractForDetails, workOrders);
+                    if (maintStatus.total === 0) {
+                      return <span className="font-bold text-slate-500 text-[10px]">{selectedContractForDetails.maintenanceFrequency || 'Sin agenda'}</span>;
+                    }
                     if (maintStatus.hasNoPending) {
                       return (
-                        <span className="font-extrabold text-purple-700 text-[11px] flex items-center gap-1">
-                          ⚡ Sin MTO Pendiente ({maintStatus.done}/{maintStatus.total})
+                        <span className="font-extrabold text-purple-750 text-[11px] flex items-center gap-1">
+                          ⚡ {maintStatus.done}/{maintStatus.total} Realizados (0 pendientes)
                         </span>
                       );
                     }
                     return (
                       <span className="font-bold text-slate-700 text-[10px]">
-                        {maintStatus.total > 0 ? `📋 ${maintStatus.done}/${maintStatus.total} Realizados` : (selectedContractForDetails.maintenanceFrequency || 'Ninguna')}
+                        📋 {maintStatus.done}/{maintStatus.total} Realizados ({maintStatus.remaining} {maintStatus.remaining === 1 ? 'pendiente' : 'pendientes'})
                       </span>
                     );
                   })()}
