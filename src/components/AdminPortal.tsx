@@ -14571,7 +14571,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         />
                       </div>
 
-                    <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1">
                         <label className="block text-[10px] font-bold text-slate-500 uppercase">📍 Ciudad / Ubicación</label>
                         <input
@@ -14598,7 +14597,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <option value="Riobamba" />
                         </datalist>
                       </div>
+                    </div>
 
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="block text-[10px] font-bold text-slate-500 uppercase">💵 Valor Contrato ($ USD)</label>
                         <input
@@ -14855,7 +14856,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                          </div>
                        </div>
                      </div>
-                   </div>
 
                   {/* Right Side: Equipment and Maintenance scheduling */}
                   <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
