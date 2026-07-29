@@ -13640,11 +13640,42 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   if (editingEngId === eng.id) {
                     return (
                       <div key={eng.id} className="bg-slate-50 border border-indigo-150 rounded-lg p-4 flex flex-col gap-3 shadow-xs animate-in fade-in slide-in-from-top-1 duration-150">
-                        <div className="flex justify-between items-center border-b border-slate-200 pb-2">
-                          <span className="font-extrabold text-[10px] text-indigo-950 uppercase tracking-wider">✏️ Editar Detalles del Técnico</span>
-                          <span className="bg-indigo-100 text-indigo-800 text-[8px] font-extrabold px-1.5 py-0.5 rounded border border-indigo-150 font-mono">
-                            {eng.id}
-                          </span>
+                        <div className="flex flex-wrap justify-between items-center border-b border-slate-200 pb-2.5 gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-[11px] text-indigo-950 uppercase tracking-wider">✏️ Editar Detalles del Técnico</span>
+                            <span className="bg-indigo-100 text-indigo-800 text-[8px] font-extrabold px-1.5 py-0.5 rounded border border-indigo-150 font-mono">
+                              {eng.id}
+                            </span>
+                          </div>
+
+                          {/* Plantillas Rápida de Permisos (AHÍ ARRIBA BIEN VISIBLE) */}
+                          <div className="flex flex-wrap items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
+                            <span className="text-[8.5px] font-black text-slate-400 uppercase tracking-wider px-1">Plantilla Permisos:</span>
+                            <button
+                              type="button"
+                              onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ingeniería'))}
+                              className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
+                              title="Cargar permisos por defecto de Ingeniería"
+                            >
+                              🛠️ Ingeniería
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ventas'))}
+                              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
+                              title="Cargar permisos por defecto de Ventas"
+                            >
+                              ⚡ Ventas
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Admin' as any))}
+                              className="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
+                              title="Cargar todos los permisos de Administrador Total"
+                            >
+                              👑 Admin Total
+                            </button>
+                          </div>
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
