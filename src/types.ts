@@ -41,6 +41,12 @@ export interface UserPermissions {
   canExportData?: boolean;
 }
 
+export interface RoleTemplates {
+  Ingeniería: UserPermissions;
+  Ventas: UserPermissions;
+  Admin: UserPermissions;
+}
+
 export interface Engineer {
   id: string;
   name: string;

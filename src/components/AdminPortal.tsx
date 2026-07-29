@@ -39,101 +39,112 @@ const EQUIPMENT_MODALITIES = [
   'US',
   'Otros'
 ];
-import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, UserPermissions } from '../types';
+import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, UserPermissions, RoleTemplates } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl } from '../utils/cloudinary';
 
-export const getDefaultPermissionsForSpecialty = (specialty: Specialty): UserPermissions => {
-  if (specialty === 'Ventas') {
-    return {
-      canViewWorkOrders: true,
-      canCreateWorkOrders: true,
-      canEditWorkOrders: true,
-      canDeleteWorkOrders: false,
-      canChangeWorkOrderStatus: false,
+export const DEFAULT_GLOBAL_ROLE_TEMPLATES: RoleTemplates = {
+  Ventas: {
+    canViewWorkOrders: true,
+    canCreateWorkOrders: true,
+    canEditWorkOrders: true,
+    canDeleteWorkOrders: false,
+    canChangeWorkOrderStatus: false,
 
-      canViewContracts: true,
-      canCreateContracts: true,
-      canEditContracts: true,
-      canDeleteContracts: false,
-      canViewContractValues: true,
+    canViewContracts: true,
+    canCreateContracts: true,
+    canEditContracts: true,
+    canDeleteContracts: false,
+    canViewContractValues: true,
 
-      canViewReports: true,
-      canCreateReports: false,
-      canApproveReports: false,
-      canExportReportsPdf: true,
+    canViewReports: true,
+    canCreateReports: false,
+    canApproveReports: false,
+    canExportReportsPdf: true,
 
-      canViewClients: true,
-      canEditClients: true,
-      canViewEquipments: true,
-      canEditEquipments: true,
+    canViewClients: true,
+    canEditClients: true,
+    canViewEquipments: true,
+    canEditEquipments: true,
 
-      canViewRegistry: true,
-      canEditRegistry: false,
+    canViewRegistry: true,
+    canEditRegistry: false,
 
-      canManageUsers: false,
-      canViewAuditLogs: false,
-      canExportData: true
-    };
-  } else if (specialty === 'Ingeniería' || specialty === 'Aplicaciones' || specialty === 'IT') {
-    return {
-      canViewWorkOrders: true,
-      canCreateWorkOrders: true,
-      canEditWorkOrders: true,
-      canDeleteWorkOrders: false,
-      canChangeWorkOrderStatus: true,
+    canManageUsers: false,
+    canViewAuditLogs: false,
+    canExportData: true
+  },
+  Ingeniería: {
+    canViewWorkOrders: true,
+    canCreateWorkOrders: true,
+    canEditWorkOrders: true,
+    canDeleteWorkOrders: false,
+    canChangeWorkOrderStatus: true,
 
-      canViewContracts: true,
-      canCreateContracts: true,
-      canEditContracts: true,
-      canDeleteContracts: false,
-      canViewContractValues: false,
+    canViewContracts: true,
+    canCreateContracts: true,
+    canEditContracts: true,
+    canDeleteContracts: false,
+    canViewContractValues: false,
 
-      canViewReports: true,
-      canCreateReports: true,
-      canApproveReports: true,
-      canExportReportsPdf: true,
+    canViewReports: true,
+    canCreateReports: true,
+    canApproveReports: true,
+    canExportReportsPdf: true,
 
-      canViewClients: true,
-      canEditClients: true,
-      canViewEquipments: true,
-      canEditEquipments: true,
+    canViewClients: true,
+    canEditClients: true,
+    canViewEquipments: true,
+    canEditEquipments: true,
 
-      canViewRegistry: true,
-      canEditRegistry: true,
+    canViewRegistry: true,
+    canEditRegistry: true,
 
-      canManageUsers: false,
-      canViewAuditLogs: true,
-      canExportData: true
-    };
-  }
-
-  return {
+    canManageUsers: false,
+    canViewAuditLogs: true,
+    canExportData: true
+  },
+  Admin: {
     canViewWorkOrders: true,
     canCreateWorkOrders: true,
     canEditWorkOrders: true,
     canDeleteWorkOrders: true,
     canChangeWorkOrderStatus: true,
+
     canViewContracts: true,
     canCreateContracts: true,
     canEditContracts: true,
     canDeleteContracts: true,
     canViewContractValues: true,
+
     canViewReports: true,
     canCreateReports: true,
     canApproveReports: true,
     canExportReportsPdf: true,
+
     canViewClients: true,
     canEditClients: true,
     canViewEquipments: true,
     canEditEquipments: true,
+
     canViewRegistry: true,
     canEditRegistry: true,
+
     canManageUsers: true,
     canViewAuditLogs: true,
     canExportData: true
-  };
+  }
+};
+
+export const getDefaultPermissionsForSpecialty = (specialty: Specialty | 'Admin', customTemplates?: RoleTemplates): UserPermissions => {
+  const templates = customTemplates || DEFAULT_GLOBAL_ROLE_TEMPLATES;
+  if (specialty === 'Ventas') {
+    return templates.Ventas;
+  } else if (specialty === 'Ingeniería' || specialty === 'Aplicaciones' || specialty === 'IT') {
+    return templates.Ingeniería;
+  }
+  return templates.Admin;
 };
 
 interface AdminPortalProps {
@@ -958,6 +969,23 @@ export default function AdminPortal({
   const [editEngSpecialty, setEditEngSpecialty] = useState<Specialty>('Ingeniería');
   const [editEngSkills, setEditEngSkills] = useState<string[]>([]);
   const [editEngPermissions, setEditEngPermissions] = useState<UserPermissions>(getDefaultPermissionsForSpecialty('Ingeniería'));
+  
+  // Global Role Templates state (persisted to localStorage)
+  const [globalRoleTemplates, setGlobalRoleTemplates] = useState<RoleTemplates>(() => {
+    try {
+      const saved = localStorage.getItem('orimec_global_role_templates');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Error loading role templates", e);
+    }
+    return DEFAULT_GLOBAL_ROLE_TEMPLATES;
+  });
+
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [activeTemplateTab, setActiveTemplateTab] = useState<'Ingeniería' | 'Ventas' | 'Admin'>('Ventas');
+  const [tempTemplatePermissions, setTempTemplatePermissions] = useState<UserPermissions>(DEFAULT_GLOBAL_ROLE_TEMPLATES.Ventas);
   const [vacFormSearchQuery, setVacFormSearchQuery] = useState('');
   const [vacFormIncludeWeekends, setVacFormIncludeWeekends] = useState(true);
   const [modalVacIncludeWeekends, setModalVacIncludeWeekends] = useState(true);
@@ -13653,27 +13681,39 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             <span className="text-[8.5px] font-black text-slate-400 uppercase tracking-wider px-1">Plantilla Permisos:</span>
                             <button
                               type="button"
-                              onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ingeniería'))}
+                              onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ingeniería', globalRoleTemplates))}
                               className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
-                              title="Cargar permisos por defecto de Ingeniería"
+                              title="Cargar permisos predeterminados de Ingeniería"
                             >
                               🛠️ Ingeniería
                             </button>
                             <button
                               type="button"
-                              onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ventas'))}
+                              onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ventas', globalRoleTemplates))}
                               className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
-                              title="Cargar permisos por defecto de Ventas"
+                              title="Cargar permisos predeterminados de Ventas"
                             >
                               ⚡ Ventas
                             </button>
                             <button
                               type="button"
-                              onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Admin' as any))}
+                              onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Admin' as any, globalRoleTemplates))}
                               className="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
                               title="Cargar todos los permisos de Administrador Total"
                             >
                               👑 Admin Total
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTempTemplatePermissions(globalRoleTemplates.Ventas);
+                                setActiveTemplateTab('Ventas');
+                                setIsTemplateModalOpen(true);
+                              }}
+                              className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1 shadow-2xs ml-1"
+                              title="Editar las plantillas globales y aplicarlas masivamente a todos los usuarios"
+                            >
+                              ⚙️ Configurar Plantillas
                             </button>
                           </div>
                         </div>
@@ -16892,6 +16932,275 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONFIGURACIÓN GLOBAL DE PLANTILLAS DE PERMISOS */}
+      {isTemplateModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            
+            {/* Header */}
+            <div className="bg-slate-900 text-white p-4 sm:p-5 flex justify-between items-center border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-500/20 p-2.5 rounded-xl border border-indigo-400/30 text-indigo-400">
+                  ⚙️
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm sm:text-base tracking-wide flex items-center gap-2">
+                    <span>CONFIGURADOR GLOBAL DE PLANTILLAS DE PERMISOS</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Personaliza los permisos predeterminados para Ventas, Ingeniería y Admin, y aplícalos masivamente a todos los usuarios.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsTemplateModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Tabs Selector */}
+            <div className="bg-slate-100 p-2.5 border-b border-slate-200 flex flex-wrap gap-2 justify-center sm:justify-start">
+              {[
+                { key: 'Ventas', label: '⚡ Plantilla Ventas' },
+                { key: 'Ingeniería', label: '🛠️ Plantilla Ingeniería' },
+                { key: 'Admin', label: '👑 Plantilla Admin Total' },
+              ].map(tab => {
+                const isActive = activeTemplateTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => {
+                      const key = tab.key as 'Ventas' | 'Ingeniería' | 'Admin';
+                      setActiveTemplateTab(key);
+                      setTempTemplatePermissions(globalRoleTemplates[key]);
+                    }}
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer border flex items-center gap-1.5 ${
+                      isActive
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm scale-102'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Checkboxes Grid */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+              <div className="bg-indigo-50/70 border border-indigo-150 p-3 rounded-xl flex items-center justify-between text-xs text-indigo-900 font-medium">
+                <span>Editando permisos predeterminados de la <strong>{activeTemplateTab === 'Ventas' ? 'Plantilla Ventas' : activeTemplateTab === 'Ingeniería' ? 'Plantilla Ingeniería' : 'Plantilla Admin Total'}</strong>:</span>
+                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-extrabold px-2 py-0.5 rounded-full border border-indigo-200">
+                  {engineers.filter(e => activeTemplateTab === 'Ventas' ? e.specialty === 'Ventas' : activeTemplateTab === 'Ingeniería' ? (e.specialty === 'Ingeniería' || e.specialty === 'Aplicaciones' || e.specialty === 'IT') : true).length} Usuario(s) asociados
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* 📅 AGENDAMIENTO Y ÓRDENES */}
+                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-indigo-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📅 Agendamiento y Órdenes</span>
+                  {[
+                    { key: 'canViewWorkOrders', label: 'Ver mapa y calendario de agenda' },
+                    { key: 'canCreateWorkOrders', label: 'Crear / agendar órdenes' },
+                    { key: 'canEditWorkOrders', label: 'Editar / reprogramar órdenes' },
+                    { key: 'canDeleteWorkOrders', label: 'Eliminar órdenes de trabajo' },
+                    { key: 'canChangeWorkOrderStatus', label: 'Marcar estado (Realizado/Pendiente)' },
+                  ].map(perm => (
+                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={!!(tempTemplatePermissions as any)[perm.key]}
+                        onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      />
+                      <span>{perm.label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* 📜 CONTRATOS DE MANTENIMIENTO */}
+                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-amber-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📜 Contratos de Mantenimiento</span>
+                  {[
+                    { key: 'canViewContracts', label: 'Ver contratos y cronogramas' },
+                    { key: 'canCreateContracts', label: 'Crear nuevos contratos' },
+                    { key: 'canEditContracts', label: 'Editar contratos y fechas' },
+                    { key: 'canDeleteContracts', label: 'Eliminar contratos' },
+                    { key: 'canViewContractValues', label: '💰 Ver Valores $ USD del Contrato', highlight: true },
+                  ].map(perm => (
+                    <label key={perm.key} className={`flex items-center gap-2 text-xs font-bold cursor-pointer transition-colors ${perm.highlight ? 'text-emerald-700 font-extrabold' : 'text-slate-700 hover:text-indigo-600'}`}>
+                      <input
+                        type="checkbox"
+                        checked={!!(tempTemplatePermissions as any)[perm.key]}
+                        onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      />
+                      <span>{perm.label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* 📑 INFORMES TÉCNICOS */}
+                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-sky-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📑 Informes Técnicos</span>
+                  {[
+                    { key: 'canViewReports', label: 'Ver informes técnicos' },
+                    { key: 'canCreateReports', label: 'Crear nuevos informes (RE-TE-04)' },
+                    { key: 'canApproveReports', label: 'Aprobar / Validar informes' },
+                    { key: 'canExportReportsPdf', label: 'Descargar e imprimir PDF' },
+                  ].map(perm => (
+                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={!!(tempTemplatePermissions as any)[perm.key]}
+                        onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      />
+                      <span>{perm.label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* 🏢 CLIENTES Y EQUIPOS */}
+                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-emerald-900 uppercase tracking-wider block border-b border-slate-200 pb-1">🏢 Clientes y Equipos</span>
+                  {[
+                    { key: 'canViewClients', label: 'Ver directorio de clientes' },
+                    { key: 'canEditClients', label: 'Crear / Editar clientes' },
+                    { key: 'canViewEquipments', label: 'Ver inventario de equipos' },
+                    { key: 'canEditEquipments', label: 'Crear / Editar equipos' },
+                  ].map(perm => (
+                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={!!(tempTemplatePermissions as any)[perm.key]}
+                        onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      />
+                      <span>{perm.label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* 📂 REGISTRO MTO */}
+                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-pink-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📂 Registro de Mantenimiento</span>
+                  {[
+                    { key: 'canViewRegistry', label: 'Ver Registro de Equipos (Hoja Vida)' },
+                    { key: 'canEditRegistry', label: 'Crear / Importar CSV de Registro' },
+                  ].map(perm => (
+                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={!!(tempTemplatePermissions as any)[perm.key]}
+                        onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      />
+                      <span>{perm.label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* ⚙️ ADMINISTRACIÓN Y REPORTES */}
+                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-purple-900 uppercase tracking-wider block border-b border-slate-200 pb-1">⚙️ Administración del Sistema</span>
+                  {[
+                    { key: 'canManageUsers', label: 'Gestionar usuarios y otorgar permisos' },
+                    { key: 'canViewAuditLogs', label: 'Ver registros de auditoría y cambios' },
+                    { key: 'canExportData', label: 'Exportar reportes a Excel / CSV' },
+                  ].map(perm => (
+                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={!!(tempTemplatePermissions as any)[perm.key]}
+                        onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      />
+                      <span>{perm.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="bg-slate-100 p-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setIsTemplateModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = {
+                      ...globalRoleTemplates,
+                      [activeTemplateTab]: tempTemplatePermissions
+                    };
+                    setGlobalRoleTemplates(updated);
+                    try {
+                      localStorage.setItem('orimec_global_role_templates', JSON.stringify(updated));
+                    } catch (e) {
+                      console.error("Error saving templates", e);
+                    }
+                    alert(`✅ Plantilla '${activeTemplateTab}' guardada exitosamente para futuros usuarios.`);
+                  }}
+                  className="px-4 py-2 text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer shadow-xs"
+                >
+                  💾 Solo Guardar Plantilla
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = {
+                      ...globalRoleTemplates,
+                      [activeTemplateTab]: tempTemplatePermissions
+                    };
+                    setGlobalRoleTemplates(updated);
+                    try {
+                      localStorage.setItem('orimec_global_role_templates', JSON.stringify(updated));
+                    } catch (e) {
+                      console.error("Error saving templates", e);
+                    }
+
+                    const matchingEngineers = engineers.filter(eng => {
+                      if (activeTemplateTab === 'Ventas') return eng.specialty === 'Ventas';
+                      if (activeTemplateTab === 'Ingeniería') return eng.specialty === 'Ingeniería' || eng.specialty === 'Aplicaciones' || eng.specialty === 'IT';
+                      return true;
+                    });
+
+                    let updatedCount = 0;
+                    if (onUpdateEngineer) {
+                      matchingEngineers.forEach(eng => {
+                        onUpdateEngineer({
+                          ...eng,
+                          customPermissions: tempTemplatePermissions
+                        });
+                        updatedCount++;
+                      });
+                    }
+                    alert(`🎉 Plantilla '${activeTemplateTab}' guardada y aplicada masivamente a ${updatedCount} usuario(s) existentes.`);
+                    setIsTemplateModalOpen(false);
+                  }}
+                  className="px-4 py-2 text-xs font-extrabold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors cursor-pointer shadow-md flex items-center gap-1.5"
+                >
+                  <span>🔄 Guardar y Aplicar a Todos ({engineers.filter(e => activeTemplateTab === 'Ventas' ? e.specialty === 'Ventas' : activeTemplateTab === 'Ingeniería' ? (e.specialty === 'Ingeniería' || e.specialty === 'Aplicaciones' || e.specialty === 'IT') : true).length})</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}
