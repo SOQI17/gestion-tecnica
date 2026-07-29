@@ -498,7 +498,7 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
   };
 };
 
-const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate: string) => {
+const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate: string, allContracts: Contract[] = []) => {
   if (!wo || !con || !rawContractDate) return false;
   const cleanTargetDate = rawContractDate.split('|')[0].trim();
   const eqNameInEntry = rawContractDate.split('|')[1]?.trim();
@@ -511,7 +511,6 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
   if (!isSameClient) return false;
 
   // 2. Equipment validation:
-  // If the entry explicitly specifies an equipment name, OR if the contract has covered equipment items
   if (wo.equipmentName) {
     const wEq = wo.equipmentName.trim().toLowerCase();
 
@@ -526,6 +525,20 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
         return wEq.includes(cEq) || cEq.includes(wEq);
       });
       if (!matchesAnyContractEq) return false;
+    } else if (allContracts.length > 0) {
+      // If con has NO equipmentItems specified, check if wo.equipmentName explicitly belongs to ANOTHER contract of the same client
+      const otherContractsOfClient = allContracts.filter(c => 
+        c.id !== con.id && 
+        (c.clientId === con.clientId || (c.clientId && con.clientId && c.clientId.trim().toLowerCase() === con.clientId.trim().toLowerCase()))
+      );
+      const belongsToAnotherContract = otherContractsOfClient.some(otherCon => {
+        return otherCon.equipmentItems && otherCon.equipmentItems.some(item => {
+          if (!item.name) return false;
+          const cEq = item.name.trim().toLowerCase();
+          return wEq.includes(cEq) || cEq.includes(wEq);
+        });
+      });
+      if (belongsToAnotherContract) return false;
     }
   }
 
@@ -551,7 +564,7 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
   return false;
 };
 
-const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[]) => {
+const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], allContracts: Contract[] = []) => {
   if (!con.maintenanceDates || con.maintenanceDates.length === 0) {
     return { isCompleted: false, total: 0, done: 0, remaining: 0, hasNoPending: false };
   }
@@ -568,7 +581,7 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[]) =>
     const cleanDate = rawEntry.split('|')[0].trim();
 
     // 1. Try matching using isWoMatchingContractDate (excluding already claimed WOs)
-    let matchingWO = clientWOs.find(wo => !usedWoIds.has(wo.id) && isWoMatchingContractDate(wo, con, rawEntry));
+    let matchingWO = clientWOs.find(wo => !usedWoIds.has(wo.id) && isWoMatchingContractDate(wo, con, rawEntry, allContracts));
 
     // 2. Fallback: match by plannedDate directly among clientWOs for matching equipment
     if (!matchingWO) {
@@ -15728,7 +15741,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     selectedContractForDetails.maintenanceDates.map((date, idx) => {
                       // Check for matching work order
                       const matchingWO = workOrders.find(
-                        wo => isWoMatchingContractDate(wo, selectedContractForDetails, date) || (wo.clientId === selectedContractForDetails.clientId && wo.plannedDate === date)
+                        wo => isWoMatchingContractDate(wo, selectedContractForDetails, date, contracts)
                       );
 
                       // Is it the designated QC date?
@@ -15831,19 +15844,33 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </span>
                             )}
 
-                            {/* Admin Quick Action: Marcar como Realizado */}
-                            {userRole === 'admin' && matchingWO && matchingWO.status !== 'Realizado' && matchingWO.status !== 'Conciliado' && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onUpdateWorkOrderStatus(matchingWO.id, 'Realizado');
-                                }}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-2.5 py-1 rounded-md text-[9px] transition-colors cursor-pointer shadow-2xs flex items-center gap-1 shrink-0"
-                                title="Marcar esta visita de mantenimiento como Realizada directamente"
-                              >
-                                <span>✓ Marcar Realizado</span>
-                              </button>
+                            {/* Admin Quick Action: Toggle Realizado / Pendiente */}
+                            {userRole === 'admin' && matchingWO && (
+                              matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado' ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onUpdateWorkOrderStatus(matchingWO.id, 'Pendiente');
+                                  }}
+                                  className="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-extrabold px-2.5 py-1 rounded-md text-[9px] transition-colors cursor-pointer shadow-2xs flex items-center gap-1 shrink-0"
+                                  title="Revertir y cambiar esta visita de nuevo a estado Pendiente"
+                                >
+                                  <span>↩ Cambiar a Pendiente</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onUpdateWorkOrderStatus(matchingWO.id, 'Realizado');
+                                  }}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-2.5 py-1 rounded-md text-[9px] transition-colors cursor-pointer shadow-2xs flex items-center gap-1 shrink-0"
+                                  title="Marcar esta visita de mantenimiento como Realizada directamente"
+                                >
+                                  <span>✓ Marcar Realizado</span>
+                                </button>
+                              )
                             )}
 
                             {/* Admin Quick Action: Agendar */}
