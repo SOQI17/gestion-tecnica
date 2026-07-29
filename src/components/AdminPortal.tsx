@@ -480,36 +480,61 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
   };
 };
 
+const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate: string) => {
+  if (!wo || !con || !rawContractDate) return false;
+  const cleanTargetDate = rawContractDate.split('|')[0].trim();
+  const eqName = rawContractDate.split('|')[1]?.trim();
+
+  // 1. Check client match: either wo.clientId equals con.clientId, OR wo.clientId equals client name, OR con.clientId equals client name
+  const isSameClient = 
+    wo.clientId === con.clientId ||
+    (wo.clientId && con.clientId && wo.clientId.trim().toLowerCase() === con.clientId.trim().toLowerCase());
+
+  if (!isSameClient) return false;
+
+  // 2. Exact plannedDate match
+  if (wo.plannedDate === cleanTargetDate || (wo.plannedDate && wo.plannedDate.startsWith(cleanTargetDate))) {
+    return true;
+  }
+
+  // 3. Fuzzy plannedDate match (+/- 45 days)
+  if (wo.plannedDate) {
+    const woTime = new Date(wo.plannedDate + 'T00:00:00').getTime();
+    const conTime = new Date(cleanTargetDate + 'T00:00:00').getTime();
+    if (!isNaN(woTime) && !isNaN(conTime)) {
+      const isNearDate = Math.abs(woTime - conTime) <= 45 * 86400000;
+      if (eqName && wo.equipmentName) {
+        const wEq = wo.equipmentName.toLowerCase();
+        const cEq = eqName.toLowerCase();
+        return isNearDate && (wEq.includes(cEq) || cEq.includes(wEq));
+      }
+      if (isNearDate) return true;
+    }
+  }
+
+  return false;
+};
+
 const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[]) => {
   if (!con.maintenanceDates || con.maintenanceDates.length === 0) {
     return { isCompleted: false, total: 0, done: 0, remaining: 0, hasNoPending: false };
   }
 
-  const clientWOs = workOrders.filter(wo => wo.clientId === con.clientId);
+  const clientWOs = workOrders.filter(wo => 
+    wo.clientId === con.clientId || 
+    (wo.clientId && con.clientId && wo.clientId.trim().toLowerCase() === con.clientId.trim().toLowerCase())
+  );
 
   let doneCount = 0;
   con.maintenanceDates.forEach((rawEntry, idx) => {
     const cleanDate = rawEntry.split('|')[0].trim();
-    const eqName = rawEntry.split('|')[1]?.trim();
 
-    // 1. Match by plannedDate first (exact date match for this client)
-    let matchingWO = clientWOs.find(wo => wo.plannedDate === cleanDate);
+    // 1. Try matching using isWoMatchingContractDate
+    let matchingWO = clientWOs.find(wo => isWoMatchingContractDate(wo, con, rawEntry));
 
-    // 2. If not found by exact date, try fuzzy date match (+/- 45 days)
+    // 2. Fallback: match by plannedDate directly among clientWOs
     if (!matchingWO) {
-      matchingWO = clientWOs.find(wo => {
-        if (!wo.plannedDate) return false;
-        const woTime = new Date(wo.plannedDate + 'T00:00:00').getTime();
-        const conTime = new Date(cleanDate + 'T00:00:00').getTime();
-        const isNearDate = Math.abs(woTime - conTime) <= 45 * 86400000;
-
-        if (eqName && wo.equipmentName) {
-          const wEq = wo.equipmentName.toLowerCase();
-          const cEq = eqName.toLowerCase();
-          return isNearDate && (wEq.includes(cEq) || cEq.includes(wEq));
-        }
-        return isNearDate;
-      });
+      matchingWO = clientWOs.find(wo => wo.plannedDate === cleanDate);
     }
 
     // 3. Fallback by index if total client WOs equals total maintenance dates
@@ -15659,7 +15684,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     selectedContractForDetails.maintenanceDates.map((date, idx) => {
                       // Check for matching work order
                       const matchingWO = workOrders.find(
-                        wo => wo.clientId === selectedContractForDetails.clientId && wo.plannedDate === date
+                        wo => isWoMatchingContractDate(wo, selectedContractForDetails, date) || (wo.clientId === selectedContractForDetails.clientId && wo.plannedDate === date)
                       );
 
                       // Is it the designated QC date?
