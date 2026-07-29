@@ -13,10 +13,102 @@ const EQUIPMENT_MODALITIES = [
   'MODULOS DE SINTESIS',
   'Otros'
 ];
-import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from '../types';
+import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, UserPermissions } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl } from '../utils/cloudinary';
+
+export const getDefaultPermissionsForSpecialty = (specialty: Specialty): UserPermissions => {
+  if (specialty === 'Ventas') {
+    return {
+      canViewWorkOrders: true,
+      canCreateWorkOrders: true,
+      canEditWorkOrders: true,
+      canDeleteWorkOrders: false,
+      canChangeWorkOrderStatus: false,
+
+      canViewContracts: true,
+      canCreateContracts: true,
+      canEditContracts: true,
+      canDeleteContracts: false,
+      canViewContractValues: true,
+
+      canViewReports: true,
+      canCreateReports: false,
+      canApproveReports: false,
+      canExportReportsPdf: true,
+
+      canViewClients: true,
+      canEditClients: true,
+      canViewEquipments: true,
+      canEditEquipments: true,
+
+      canViewRegistry: true,
+      canEditRegistry: false,
+
+      canManageUsers: false,
+      canViewAuditLogs: false,
+      canExportData: true
+    };
+  } else if (specialty === 'Ingeniería' || specialty === 'Aplicaciones' || specialty === 'IT') {
+    return {
+      canViewWorkOrders: true,
+      canCreateWorkOrders: true,
+      canEditWorkOrders: true,
+      canDeleteWorkOrders: false,
+      canChangeWorkOrderStatus: true,
+
+      canViewContracts: true,
+      canCreateContracts: true,
+      canEditContracts: true,
+      canDeleteContracts: false,
+      canViewContractValues: false,
+
+      canViewReports: true,
+      canCreateReports: true,
+      canApproveReports: true,
+      canExportReportsPdf: true,
+
+      canViewClients: true,
+      canEditClients: true,
+      canViewEquipments: true,
+      canEditEquipments: true,
+
+      canViewRegistry: true,
+      canEditRegistry: true,
+
+      canManageUsers: false,
+      canViewAuditLogs: true,
+      canExportData: true
+    };
+  }
+
+  return {
+    canViewWorkOrders: true,
+    canCreateWorkOrders: true,
+    canEditWorkOrders: true,
+    canDeleteWorkOrders: true,
+    canChangeWorkOrderStatus: true,
+    canViewContracts: true,
+    canCreateContracts: true,
+    canEditContracts: true,
+    canDeleteContracts: true,
+    canViewContractValues: true,
+    canViewReports: true,
+    canCreateReports: true,
+    canApproveReports: true,
+    canExportReportsPdf: true,
+    canViewClients: true,
+    canEditClients: true,
+    canViewEquipments: true,
+    canEditEquipments: true,
+    canViewRegistry: true,
+    canEditRegistry: true,
+    canManageUsers: true,
+    canViewAuditLogs: true,
+    canExportData: true
+  };
+};
 
 interface AdminPortalProps {
   userRole?: 'admin' | 'engineer' | 'sales';
@@ -839,6 +931,7 @@ export default function AdminPortal({
   const [editEngEmail, setEditEngEmail] = useState('');
   const [editEngSpecialty, setEditEngSpecialty] = useState<Specialty>('Ingeniería');
   const [editEngSkills, setEditEngSkills] = useState<string[]>([]);
+  const [editEngPermissions, setEditEngPermissions] = useState<UserPermissions>(getDefaultPermissionsForSpecialty('Ingeniería'));
   const [vacFormSearchQuery, setVacFormSearchQuery] = useState('');
   const [vacFormIncludeWeekends, setVacFormIncludeWeekends] = useState(true);
   const [modalVacIncludeWeekends, setModalVacIncludeWeekends] = useState(true);
@@ -3650,7 +3743,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       phone: '+593 999 999 999',
       avatar: '',
       availability: 'Disponible',
-      skills: [newEngSpecialty]
+      skills: [newEngSpecialty],
+      customPermissions: getDefaultPermissionsForSpecialty(newEngSpecialty)
     };
     if (onUpdateEngineer) {
       onUpdateEngineer(newEng);
@@ -13596,6 +13690,173 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               })}
                             </div>
                           </div>
+
+                          {/* 🔒 PERMISOS Y ACCESOS DEL SISTEMA */}
+                          <div className="space-y-2 sm:col-span-3 mt-2 pt-3 border-t border-slate-200">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <span className="font-extrabold text-[10.5px] text-slate-800 flex items-center gap-1.5">
+                                  <span>🔒 Permisos y Accesos del Sistema</span>
+                                </span>
+                                <p className="text-[8.5px] text-slate-500 font-medium">Personaliza qué módulos y acciones puede realizar este usuario.</p>
+                              </div>
+                              
+                              {/* Plantillas Rápida */}
+                              <div className="flex flex-wrap gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ventas'))}
+                                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-extrabold text-[8px] px-2 py-0.5 rounded cursor-pointer transition-colors"
+                                  title="Aplicar permisos por defecto del departamento de Ventas"
+                                >
+                                  ⚡ Plantilla Ventas
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ingeniería'))}
+                                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-[8px] px-2 py-0.5 rounded cursor-pointer transition-colors"
+                                  title="Aplicar permisos por defecto de Ingeniería"
+                                >
+                                  🛠️ Plantilla Ingeniería
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Admin' as any))}
+                                  className="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-extrabold text-[8px] px-2 py-0.5 rounded cursor-pointer transition-colors"
+                                  title="Habilitar todos los permisos de administrador"
+                                >
+                                  👑 Admin Total
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3 bg-white border border-slate-200 rounded-xl">
+                              {/* 📅 AGENDAMIENTO Y ÓRDENES */}
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-indigo-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📅 Agendamiento y Órdenes</span>
+                                {[
+                                  { key: 'canViewWorkOrders', label: 'Ver mapa y calendario de agenda' },
+                                  { key: 'canCreateWorkOrders', label: 'Crear / agendar órdenes' },
+                                  { key: 'canEditWorkOrders', label: 'Editar / reprogramar órdenes' },
+                                  { key: 'canDeleteWorkOrders', label: 'Eliminar órdenes de trabajo' },
+                                  { key: 'canChangeWorkOrderStatus', label: 'Marcar estado (Realizado/Pendiente)' },
+                                ].map(perm => (
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(editEngPermissions as any)[perm.key]}
+                                      onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                    />
+                                    <span>{perm.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+
+                              {/* 📜 CONTRATOS DE MANTENIMIENTO */}
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-amber-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📜 Contratos de Mantenimiento</span>
+                                {[
+                                  { key: 'canViewContracts', label: 'Ver contratos y cronogramas' },
+                                  { key: 'canCreateContracts', label: 'Crear nuevos contratos' },
+                                  { key: 'canEditContracts', label: 'Editar contratos y fechas' },
+                                  { key: 'canDeleteContracts', label: 'Eliminar contratos' },
+                                  { key: 'canViewContractValues', label: '💰 Ver Valores $ USD del Contrato', highlight: true },
+                                ].map(perm => (
+                                  <label key={perm.key} className={`flex items-center gap-1.5 text-[8.5px] font-bold cursor-pointer transition-colors ${perm.highlight ? 'text-emerald-700 font-extrabold' : 'text-slate-700 hover:text-indigo-600'}`}>
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(editEngPermissions as any)[perm.key]}
+                                      onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                    />
+                                    <span>{perm.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+
+                              {/* 📑 INFORMES TÉCNICOS */}
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-sky-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📑 Informes Técnicos</span>
+                                {[
+                                  { key: 'canViewReports', label: 'Ver informes técnicos' },
+                                  { key: 'canCreateReports', label: 'Crear nuevos informes (RE-TE-04)' },
+                                  { key: 'canApproveReports', label: 'Aprobar / Validar informes' },
+                                  { key: 'canExportReportsPdf', label: 'Descargar e imprimir PDF' },
+                                ].map(perm => (
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(editEngPermissions as any)[perm.key]}
+                                      onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                    />
+                                    <span>{perm.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+
+                              {/* 🏢 CLIENTES Y EQUIPOS */}
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-emerald-900 uppercase tracking-wider block border-b border-slate-200 pb-1">🏢 Clientes y Equipos</span>
+                                {[
+                                  { key: 'canViewClients', label: 'Ver directorio de clientes' },
+                                  { key: 'canEditClients', label: 'Crear / Editar clientes' },
+                                  { key: 'canViewEquipments', label: 'Ver inventario de equipos' },
+                                  { key: 'canEditEquipments', label: 'Crear / Editar equipos' },
+                                ].map(perm => (
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(editEngPermissions as any)[perm.key]}
+                                      onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                    />
+                                    <span>{perm.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+
+                              {/* 📂 REGISTRO MTO */}
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-pink-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📂 Registro de Mantenimiento</span>
+                                {[
+                                  { key: 'canViewRegistry', label: 'Ver Registro de Equipos (Hoja Vida)' },
+                                  { key: 'canEditRegistry', label: 'Crear / Importar CSV de Registro' },
+                                ].map(perm => (
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(editEngPermissions as any)[perm.key]}
+                                      onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                    />
+                                    <span>{perm.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+
+                              {/* ⚙️ ADMINISTRACIÓN Y REPORTES */}
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-purple-900 uppercase tracking-wider block border-b border-slate-200 pb-1">⚙️ Administración del Sistema</span>
+                                {[
+                                  { key: 'canManageUsers', label: 'Gestionar usuarios y otorgar permisos' },
+                                  { key: 'canViewAuditLogs', label: 'Ver registros de auditoría y cambios' },
+                                  { key: 'canExportData', label: 'Exportar reportes a Excel / CSV' },
+                                ].map(perm => (
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(editEngPermissions as any)[perm.key]}
+                                      onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                    />
+                                    <span>{perm.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
                         <div className="flex flex-wrap items-center justify-between gap-3 mt-1.5 pt-2 border-t border-slate-200/60">
@@ -13629,7 +13890,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     name: editEngName,
                                     specialty: editEngSpecialty,
                                     email: editEngEmail,
-                                    skills: editEngSkills
+                                    skills: editEngSkills,
+                                    customPermissions: editEngPermissions
                                   });
                                 }
                                 setEditingEngId(null);
@@ -13714,8 +13976,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setEditEngEmail(eng.email || '');
                             setEditEngSpecialty(eng.specialty || 'Ingeniería');
                             setEditEngSkills(eng.skills || ['GE', 'FE']);
+                            setEditEngPermissions(eng.customPermissions || getDefaultPermissionsForSpecialty(eng.specialty || 'Ingeniería'));
                           }}
-                          title="Editar detalles y capacitaciones de este técnico"
+                          title="Editar detalles, capacitaciones y permisos de este usuario"
                           className="p-1.5 rounded-lg border bg-white border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer text-xs"
                         >
                           ✏️

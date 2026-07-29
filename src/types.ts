@@ -4,6 +4,43 @@ export type MaintenanceType = 'Preventivo' | 'Correctivo' | 'Instalación' | 'Ca
 
 export type WorkOrderStatus = 'Pendiente' | 'En Proceso' | 'Realizado' | 'Reportado' | 'Conciliado';
 
+export interface UserPermissions {
+  // 📅 AGENDAMIENTO Y ÓRDEN DE TRABAJO
+  canViewWorkOrders?: boolean;
+  canCreateWorkOrders?: boolean;
+  canEditWorkOrders?: boolean;
+  canDeleteWorkOrders?: boolean;
+  canChangeWorkOrderStatus?: boolean;
+
+  // 📜 CONTRATOS DE MANTENIMIENTO
+  canViewContracts?: boolean;
+  canCreateContracts?: boolean;
+  canEditContracts?: boolean;
+  canDeleteContracts?: boolean;
+  canViewContractValues?: boolean;
+
+  // 📑 INFORMES TÉCNICOS (RE-TE-04 & AUDITORÍA)
+  canViewReports?: boolean;
+  canCreateReports?: boolean;
+  canApproveReports?: boolean;
+  canExportReportsPdf?: boolean;
+
+  // 🏢 CLIENTES Y EQUIPOS
+  canViewClients?: boolean;
+  canEditClients?: boolean;
+  canViewEquipments?: boolean;
+  canEditEquipments?: boolean;
+
+  // 📂 REGISTRO DE MANTENIMIENTO (HOJA DE VIDA DE EQUIPOS)
+  canViewRegistry?: boolean;
+  canEditRegistry?: boolean;
+
+  // ⚙️ ADMINISTRACIÓN Y SISTEMA
+  canManageUsers?: boolean;
+  canViewAuditLogs?: boolean;
+  canExportData?: boolean;
+}
+
 export interface Engineer {
   id: string;
   name: string;
@@ -20,6 +57,7 @@ export interface Engineer {
   standbyVacationsLastYear?: number;
   birthdayVacationDay?: number; // 0 or 1, default 1
   sede?: 'Quito' | 'Guayaquil' | 'Cuenca' | 'Sede Central';
+  customPermissions?: UserPermissions;
 }
 
 export interface Client {
