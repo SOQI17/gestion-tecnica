@@ -764,9 +764,25 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
       }
     }
 
-    // Determine modality
+    // Determine modality (explicit or auto-inferred from equipment name e.g. VCT, CTE, RX, MG, CT)
     const eqItem = con.equipmentItems?.find(item => item.name && targetEqName && (item.name.trim().toLowerCase().includes(targetEqName.trim().toLowerCase()) || targetEqName.trim().toLowerCase().includes(item.name.trim().toLowerCase())));
-    const modality = eqItem?.modality;
+    
+    let modality = eqItem?.modality?.trim();
+    if (!modality && targetEqName) {
+      const cleanEq = targetEqName.trim();
+      if (cleanEq.length <= 6) {
+        modality = cleanEq.toUpperCase();
+      } else {
+        const match = cleanEq.match(/\b(VCT|CTE|CT|MG|RX|US|MRI|RM|ECG|RF|FL|OT)\b/i);
+        if (match) {
+          modality = match[1].toUpperCase();
+        } else {
+          const firstWord = cleanEq.split(' ')[0].toUpperCase();
+          if (firstWord.length <= 5) modality = firstWord;
+        }
+      }
+    }
+
     const eqKey = targetEqName || 'Equipo General';
 
     if (!eqMap[eqKey]) {
@@ -774,7 +790,7 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
     }
     eqMap[eqKey].total++;
 
-    const modKey = modality || 'Sin Mod';
+    const modKey = modality || eqKey;
     if (!modalityMap[modKey]) {
       modalityMap[modKey] = { modality: modKey, total: 0, done: 0, remaining: 0 };
     }
@@ -806,13 +822,13 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
   const modalityBreakdown = Object.values(modalityMap);
 
   const pendingByModalityText = modalityBreakdown
-    .filter(m => m.remaining > 0 && m.modality !== 'Sin Mod')
+    .filter(m => m.remaining > 0)
     .map(m => `${m.remaining} ${m.modality}`)
     .join(' · ');
 
   const pendingByEquipmentText = eqBreakdown
     .filter(e => e.remaining > 0)
-    .map(e => `${e.remaining} ${e.name}${e.modality ? ` (${e.modality})` : ''}`)
+    .map(e => `${e.remaining} ${e.name}${e.modality && e.modality !== e.name ? ` (${e.modality})` : ''}`)
     .join(' · ');
 
   return {
@@ -7774,11 +7790,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     >
                                       📋 {maintStatus.remaining} MTO{maintStatus.remaining > 1 ? 's' : ''} PENDIENTE{maintStatus.remaining > 1 ? 'S' : ''} ({maintStatus.done}/{maintStatus.total})
                                     </span>
-                                    {maintStatus.pendingByModalityText && (
-                                      <span className="text-[7.5px] font-black text-indigo-900 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded font-mono" title={`Pendientes por equipo:\n${maintStatus.pendingByEquipmentText}`}>
-                                        ({maintStatus.pendingByModalityText})
-                                      </span>
-                                    )}
+                                    {(() => {
+                                      const textToShow = maintStatus.pendingByModalityText || maintStatus.pendingByEquipmentText;
+                                      if (!textToShow) return null;
+                                      return (
+                                        <span className="text-[7.5px] font-black text-indigo-900 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded font-mono" title={`Pendientes por equipo:\n${maintStatus.pendingByEquipmentText}`}>
+                                          ({textToShow})
+                                        </span>
+                                      );
+                                    })()}
                                   </div>
                                 );
                               }
