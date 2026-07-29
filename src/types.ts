@@ -133,6 +133,7 @@ export interface Contract {
   endDate: string; // YYYY-MM-DD
   status: 'Activo' | 'Vencido' | 'Pendiente' | 'Inactivo';
   city?: string; // Ciudad del contrato (ej: Quito, Guayaquil, Cuenca)
+  contractValue?: number; // Valor del contrato en USD (opcional)
   coverage?: string;
   equipmentItems?: ContractEquipmentItem[]; // List of equipment covered
   maintenanceFrequency?: 'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno';

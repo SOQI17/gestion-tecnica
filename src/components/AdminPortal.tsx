@@ -852,6 +852,7 @@ export default function AdminPortal({
   const [contractFormEnd, setContractFormEnd] = useState('');
   const [contractFormStatus, setContractFormStatus] = useState<'Activo' | 'Vencido' | 'Pendiente' | 'Inactivo'>('Activo');
   const [contractFormCity, setContractFormCity] = useState('');
+  const [contractFormValue, setContractFormValue] = useState<string>('');
   const [contractFormCoverage, setContractFormCoverage] = useState('');
   const [contractClientSearchQuery, setContractClientSearchQuery] = useState('');
   const [isContractClientDropdownOpen, setIsContractClientDropdownOpen] = useState(false);
@@ -4668,6 +4669,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       endDate: isSalesReadOnly && editingContract ? editingContract.endDate : contractFormEnd,
       status: isSalesReadOnly && editingContract ? editingContract.status : finalStatus,
       city: isSalesReadOnly && editingContract ? editingContract.city : contractFormCity.trim() || undefined,
+      contractValue: isSalesReadOnly && editingContract ? editingContract.contractValue : (contractFormValue.trim() ? parseFloat(contractFormValue) : undefined),
       coverage: isSalesReadOnly && editingContract ? editingContract.coverage : contractFormCoverage.trim(),
       equipmentItems: isSalesReadOnly && editingContract ? editingContract.equipmentItems : contractFormEquipmentItems,
       maintenanceFrequency: isSalesReadOnly && editingContract ? editingContract.maintenanceFrequency : (isPendingSchedule ? 'Ninguno' : contractFormFrequency),
@@ -6783,6 +6785,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setContractFormEnd(nextYearStr);
                   setContractFormStatus('Activo');
                   setContractFormCity('');
+                  setContractFormValue('');
                   setContractFormCoverage('');
                   setContractClientSearchQuery('');
                   setIsContractClientDropdownOpen(false);
@@ -7217,6 +7220,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <th className="p-3.5">Nº Contrato</th>
                 <th className="p-3.5">Cliente</th>
                 <th className="p-3.5">Tipo de Contrato</th>
+                <th className="p-3.5">Valor (USD)</th>
                 <th className="p-3.5">Marca Equipo</th>
                 <th
                   onClick={() => setContractDateSort(s => s === 'start_asc' ? 'start_desc' : 'start_asc')}
@@ -7250,7 +7254,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <tbody className="divide-y divide-slate-100 text-slate-750 font-medium">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center p-8 text-slate-400 font-semibold italic">
+                  <td colSpan={10} className="text-center p-8 text-slate-400 font-semibold italic">
                     No se encontraron contratos vigentes o vencidos.
                   </td>
                 </tr>
@@ -7287,6 +7291,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         )}
                       </td>
                       <td className="p-3.5 font-bold text-indigo-700">{con.type}</td>
+                      <td className="p-3.5 font-bold font-mono text-emerald-700">
+                        {con.contractValue !== undefined && con.contractValue !== null ? (
+                          `$${con.contractValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        ) : (
+                          <span className="text-slate-400 font-normal italic text-3xs">-</span>
+                        )}
+                      </td>
                       <td className="p-3.5 font-bold">
                         {brands.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
@@ -7408,6 +7419,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormEnd(con.endDate);
                                 setContractFormStatus(con.status);
                                 setContractFormCity(con.city || '');
+                                setContractFormValue(con.contractValue !== undefined && con.contractValue !== null ? String(con.contractValue) : '');
                                 setContractFormCoverage(con.coverage || '');
                                 setContractFormPendingAdmin(false);
                                 setContractFormFrequency('Trimestral');
@@ -7443,6 +7455,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setContractFormEnd(con.endDate);
                               setContractFormStatus(initialStatus);
                               setContractFormCity(con.city || '');
+                              setContractFormValue(con.contractValue !== undefined && con.contractValue !== null ? String(con.contractValue) : '');
                               setContractFormCoverage(con.coverage || '');
                               setContractFormPendingAdmin(hasScheduleDoc ? false : !!con.pendingAdminSchedule);
                               
@@ -14558,7 +14571,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         />
                       </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1">
                         <label className="block text-[10px] font-bold text-slate-500 uppercase">📍 Ciudad / Ubicación</label>
                         <input
@@ -14584,6 +14597,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <option value="Loja" />
                           <option value="Riobamba" />
                         </datalist>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">💵 Valor Contrato ($ USD)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          disabled={isSalesReadOnly}
+                          value={contractFormValue}
+                          onChange={(e) => setContractFormValue(e.target.value)}
+                          placeholder="Ej. 15000.00 (Opcional)"
+                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
+                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          }`}
+                        />
                       </div>
 
                       <div className="space-y-1">
@@ -15404,7 +15433,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 );
               })()}
               {/* Header Contract Info card */}
-              <div className="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+              <div className="grid grid-cols-3 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
                 <div>
                   <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Cliente</span>
                   <span className="font-extrabold text-slate-800 text-[11px]">
@@ -15412,8 +15441,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   </span>
                 </div>
                 <div>
+                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Ciudad / Ubicación</span>
+                  <span className="font-extrabold text-slate-800 text-[11px]">
+                    {selectedContractForDetails.city ? `📍 ${selectedContractForDetails.city}` : 'No especificada'}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Valor del Contrato</span>
+                  <span className="font-extrabold text-emerald-700 text-[11px] font-mono">
+                    {selectedContractForDetails.contractValue !== undefined && selectedContractForDetails.contractValue !== null
+                      ? `$ ${selectedContractForDetails.contractValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+                      : 'No especificado'}
+                  </span>
+                </div>
+                <div>
                   <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Tipo Cobertura</span>
-                  <span className="font-bold text-indigo-705 text-[11px]">{selectedContractForDetails.type}</span>
+                  <span className="font-bold text-indigo-700 text-[11px]">{selectedContractForDetails.type}</span>
                 </div>
                 <div>
                   <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Vigencia</span>
