@@ -501,7 +501,7 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
 const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate: string) => {
   if (!wo || !con || !rawContractDate) return false;
   const cleanTargetDate = rawContractDate.split('|')[0].trim();
-  const eqName = rawContractDate.split('|')[1]?.trim();
+  const eqNameInEntry = rawContractDate.split('|')[1]?.trim();
 
   // 1. Check client match: either wo.clientId equals con.clientId, OR wo.clientId equals client name, OR con.clientId equals client name
   const isSameClient = 
@@ -510,23 +510,41 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
 
   if (!isSameClient) return false;
 
-  // 2. Exact plannedDate match
+  // 2. Equipment validation:
+  // If the entry explicitly specifies an equipment name, OR if the contract has covered equipment items
+  if (wo.equipmentName) {
+    const wEq = wo.equipmentName.trim().toLowerCase();
+
+    if (eqNameInEntry) {
+      const eEq = eqNameInEntry.trim().toLowerCase();
+      const matchesEntryEq = wEq.includes(eEq) || eEq.includes(wEq);
+      if (!matchesEntryEq) return false;
+    } else if (con.equipmentItems && con.equipmentItems.length > 0) {
+      const matchesAnyContractEq = con.equipmentItems.some(item => {
+        if (!item.name) return false;
+        const cEq = item.name.trim().toLowerCase();
+        return wEq.includes(cEq) || cEq.includes(wEq);
+      });
+      if (!matchesAnyContractEq) return false;
+    }
+  }
+
+  // 3. Exact plannedDate match
   if (wo.plannedDate === cleanTargetDate || (wo.plannedDate && wo.plannedDate.startsWith(cleanTargetDate))) {
     return true;
   }
 
-  // 3. Fuzzy plannedDate match (+/- 45 days)
+  // 4. Fuzzy plannedDate match (+/- 45 days)
   if (wo.plannedDate) {
-    const woTime = new Date(wo.plannedDate + 'T00:00:00').getTime();
-    const conTime = new Date(cleanTargetDate + 'T00:00:00').getTime();
-    if (!isNaN(woTime) && !isNaN(conTime)) {
-      const isNearDate = Math.abs(woTime - conTime) <= 45 * 86400000;
-      if (eqName && wo.equipmentName) {
-        const wEq = wo.equipmentName.toLowerCase();
-        const cEq = eqName.toLowerCase();
-        return isNearDate && (wEq.includes(cEq) || cEq.includes(wEq));
+    const cleanWoDate = wo.plannedDate.split('T')[0].trim();
+    const woParts = cleanWoDate.split('-');
+    const conParts = cleanTargetDate.split('-');
+    if (woParts.length === 3 && conParts.length === 3) {
+      const woTime = new Date(Number(woParts[0]), Number(woParts[1]) - 1, Number(woParts[2])).getTime();
+      const conTime = new Date(Number(conParts[0]), Number(conParts[1]) - 1, Number(conParts[2])).getTime();
+      if (!isNaN(woTime) && !isNaN(conTime)) {
+        return Math.abs(woTime - conTime) <= 45 * 86400000;
       }
-      if (isNearDate) return true;
     }
   }
 
@@ -544,24 +562,32 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[]) =>
   );
 
   let doneCount = 0;
-  con.maintenanceDates.forEach((rawEntry, idx) => {
+  const usedWoIds = new Set<string>();
+
+  con.maintenanceDates.forEach((rawEntry) => {
     const cleanDate = rawEntry.split('|')[0].trim();
 
-    // 1. Try matching using isWoMatchingContractDate
-    let matchingWO = clientWOs.find(wo => isWoMatchingContractDate(wo, con, rawEntry));
+    // 1. Try matching using isWoMatchingContractDate (excluding already claimed WOs)
+    let matchingWO = clientWOs.find(wo => !usedWoIds.has(wo.id) && isWoMatchingContractDate(wo, con, rawEntry));
 
-    // 2. Fallback: match by plannedDate directly among clientWOs
+    // 2. Fallback: match by plannedDate directly among clientWOs for matching equipment
     if (!matchingWO) {
-      matchingWO = clientWOs.find(wo => wo.plannedDate === cleanDate);
+      matchingWO = clientWOs.find(wo => {
+        if (usedWoIds.has(wo.id)) return false;
+        if (wo.plannedDate !== cleanDate) return false;
+        if (wo.equipmentName && con.equipmentItems && con.equipmentItems.length > 0) {
+          const wEq = wo.equipmentName.trim().toLowerCase();
+          return con.equipmentItems.some(item => item.name && (wEq.includes(item.name.trim().toLowerCase()) || item.name.trim().toLowerCase().includes(wEq)));
+        }
+        return true;
+      });
     }
 
-    // 3. Fallback by index if total client WOs equals total maintenance dates
-    if (!matchingWO && clientWOs.length === con.maintenanceDates.length) {
-      matchingWO = clientWOs[idx];
-    }
-
-    if (matchingWO && (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado' || matchingWO.status === 'Reportado')) {
-      doneCount++;
+    if (matchingWO) {
+      usedWoIds.add(matchingWO.id);
+      if (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado' || matchingWO.status === 'Reportado') {
+        doneCount++;
+      }
     }
   });
 
