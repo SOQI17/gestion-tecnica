@@ -39,7 +39,7 @@ const EQUIPMENT_MODALITIES = [
   'US',
   'Otros'
 ];
-import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, UserPermissions, RoleTemplates } from '../types';
+import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, ECUADOR_HOLIDAYS, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, UserPermissions, RoleTemplates } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl } from '../utils/cloudinary';
@@ -1078,6 +1078,27 @@ export default function AdminPortal({
   const [vacationSubTab, setVacationSubTab] = useState<'saldos' | 'historial'>('saldos');
   const [auditEngId, setAuditEngId] = useState('');
 
+  // Auto-seed Ecuador national holidays if not loaded
+  useEffect(() => {
+    if (activeAdminTab === 'vacaciones' && onAddVacation && vacations) {
+      const hasEcuadorHolidays = vacations.some(v => v.id.startsWith('FERIADO-EC-') || v.notes?.includes('Feriado Nacional'));
+      if (!hasEcuadorHolidays) {
+        ECUADOR_HOLIDAYS.forEach(async (h) => {
+          await onAddVacation({
+            id: h.id,
+            engineerId: 'FERIADO',
+            startDate: h.startDate,
+            endDate: h.endDate,
+            status: 'Aprobado',
+            notes: h.notes,
+            createdAt: new Date().toISOString(),
+            includeWeekends: true
+          });
+        });
+      }
+    }
+  }, [activeAdminTab, vacations, onAddVacation]);
+
   // States for inline editing of engineers
   const [editingEngId, setEditingEngId] = useState<string | null>(null);
   const [editEngName, setEditEngName] = useState('');
@@ -1135,7 +1156,8 @@ export default function AdminPortal({
     if (!engId || !startDate || !duration) return null;
     const end = getEndDateStr(startDate, duration);
     const conflict = (vacations || []).find(v => {
-      if (v.engineerId !== engId || v.status !== 'Aprobado') return false;
+      if (v.status !== 'Aprobado') return false;
+      if (v.engineerId !== engId && v.engineerId !== 'FERIADO' && v.engineerId !== 'ALL') return false;
       return (startDate <= v.endDate && end >= v.startDate);
     });
     return conflict || null;
@@ -3198,10 +3220,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <div className="space-y-1 w-full mt-1.5 flex-1 overflow-y-auto">
               {prevDayVacations.map(v => {
                 const eng = engineers.find(e => e.id === v.engineerId);
+                const isFeriado = v.engineerId === 'FERIADO' || v.notes?.toLowerCase().includes('feriado');
                 return (
-                  <div key={`pv-vac-${v.id}`} className="text-[8.5px] leading-tight p-1 rounded bg-teal-50 border border-teal-150 border-l-4 border-l-teal-500 text-teal-900 font-bold truncate flex items-center gap-1 select-none">
-                    <span>🌴</span>
-                    <span className="truncate">Vac: {getEngineerFullNameNoTitle(eng?.name)}</span>
+                  <div
+                    key={`pv-vac-${v.id}`}
+                    className={`text-[8.5px] leading-tight p-1 rounded border border-l-4 font-bold truncate flex items-center gap-1 select-none ${
+                      isFeriado
+                        ? 'bg-amber-50 border-amber-200 border-l-amber-500 text-amber-900'
+                        : 'bg-teal-50 border-teal-150 border-l-teal-500 text-teal-900'
+                    }`}
+                    title={isFeriado ? `Feriado Ecuador: ${v.notes}` : `Vacaciones: ${eng?.name || 'Técnico'}`}
+                  >
+                    <span>{isFeriado ? '🇪🇨' : '🌴'}</span>
+                    <span className="truncate">{isFeriado ? (v.notes?.replace('Feriado Nacional: ', '') || 'Feriado EC') : `Vac: ${getEngineerFullNameNoTitle(eng?.name)}`}</span>
                   </div>
                 );
               })}
@@ -3382,17 +3413,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           <div className="space-y-1 w-full mt-1.5 flex-1 overflow-y-auto">
             {dayVacations.map(v => {
               const eng = engineers.find(e => e.id === v.engineerId);
+              const isFeriado = v.engineerId === 'FERIADO' || v.notes?.toLowerCase().includes('feriado');
               return (
                 <div
                   key={`vac-${v.id}`}
-                  className="text-[8.5px] leading-tight p-1 rounded bg-teal-50 border border-teal-150 border-l-4 border-l-teal-500 text-teal-900 font-bold truncate flex items-center gap-1 select-none"
-                  title={`Vacaciones: ${eng?.name || 'Técnico'}`}
+                  className={`text-[8.5px] leading-tight p-1 rounded border border-l-4 font-bold truncate flex items-center gap-1 select-none ${
+                    isFeriado
+                      ? 'bg-amber-50 border-amber-200 border-l-amber-500 text-amber-900 font-extrabold'
+                      : 'bg-teal-50 border-teal-150 border-l-teal-500 text-teal-900'
+                  }`}
+                  title={isFeriado ? `Feriado Ecuador: ${v.notes}` : `Vacaciones: ${eng?.name || 'Técnico'}`}
                   onClick={(e) => {
                     e.stopPropagation();
                   }}
                 >
-                  <span>🌴</span>
-                  <span className="truncate">Vac: {getEngineerFullNameNoTitle(eng?.name)}</span>
+                  <span>{isFeriado ? '🇪🇨' : '🌴'}</span>
+                  <span className="truncate">{isFeriado ? (v.notes?.replace('Feriado Nacional: ', '') || 'Feriado EC') : `Vac: ${getEngineerFullNameNoTitle(eng?.name)}`}</span>
                 </div>
               );
             })}
@@ -3642,10 +3678,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <div className="space-y-1 w-full mt-1.5 flex-1 overflow-y-auto">
               {nextDayVacations.map(v => {
                 const eng = engineers.find(e => e.id === v.engineerId);
+                const isFeriado = v.engineerId === 'FERIADO' || v.notes?.toLowerCase().includes('feriado');
                 return (
-                  <div key={`nv-vac-${v.id}`} className="text-[8.5px] leading-tight p-1 rounded bg-teal-50 border border-teal-150 border-l-4 border-l-teal-500 text-teal-900 font-bold truncate flex items-center gap-1 select-none">
-                    <span>🌴</span>
-                    <span className="truncate">Vac: {eng?.name.replace('Ing. ', '').split(' ')[0]}</span>
+                  <div
+                    key={`nv-vac-${v.id}`}
+                    className={`text-[8.5px] leading-tight p-1 rounded border border-l-4 font-bold truncate flex items-center gap-1 select-none ${
+                      isFeriado
+                        ? 'bg-amber-50 border-amber-200 border-l-amber-500 text-amber-900'
+                        : 'bg-teal-50 border-teal-150 border-l-teal-500 text-teal-900'
+                    }`}
+                    title={isFeriado ? `Feriado Ecuador: ${v.notes}` : `Vacaciones: ${eng?.name || 'Técnico'}`}
+                  >
+                    <span>{isFeriado ? '🇪🇨' : '🌴'}</span>
+                    <span className="truncate">{isFeriado ? (v.notes?.replace('Feriado Nacional: ', '') || 'Feriado EC') : `Vac: ${eng?.name?.replace('Ing. ', '').split(' ')[0]}`}</span>
                   </div>
                 );
               })}
@@ -8613,6 +8658,36 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       }
     };
 
+    const handleLoadEcuadorHolidays = async () => {
+      if (!onAddVacation) {
+        alert("Función no disponible.");
+        return;
+      }
+      let addedCount = 0;
+      for (const h of ECUADOR_HOLIDAYS) {
+        const exists = (vacations || []).some(v => v.id === h.id || (v.startDate === h.startDate && v.notes?.includes(h.notes)));
+        if (!exists) {
+          const newVac: Vacation = {
+            id: h.id,
+            engineerId: 'FERIADO',
+            startDate: h.startDate,
+            endDate: h.endDate,
+            status: 'Aprobado',
+            notes: h.notes,
+            createdAt: new Date().toISOString(),
+            includeWeekends: true
+          };
+          await onAddVacation(newVac);
+          addedCount++;
+        }
+      }
+      if (addedCount > 0) {
+        alert(`¡Éxito! Se han registrado automáticamente ${addedCount} feriados nacionales de Ecuador (incluyendo el 10 de Agosto).`);
+      } else {
+        alert("Los feriados nacionales de Ecuador (2025-2026) ya se encuentran cargados en el sistema.");
+      }
+    };
+
     const renderHistorialSubTab = () => {
       return (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-in fade-in duration-200">
@@ -8652,14 +8727,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                   return sortedGroupedKeys.map(engId => {
                     const eng = engineers.find(e => e.id === engId);
+                    const isFeriadoGroup = engId === 'FERIADO';
+                    const title = isFeriadoGroup ? 'Feriados Nacionales de Ecuador 🇪🇨' : (eng?.name || 'Técnico');
+                    const subtitle = isFeriadoGroup ? 'Días feriados obligatorios según calendario oficial' : eng?.specialty;
+                    const emoji = isFeriadoGroup ? '🇪🇨' : (eng ? getEngineerEmoji(eng.id) : '👤');
                     const engVac = grouped[engId].sort((a, b) => b.startDate.localeCompare(a.startDate));
                     return (
-                      <div key={engId} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 hover:shadow-xs transition-all">
+                      <div key={engId} className={`border rounded-xl p-4 space-y-3 hover:shadow-xs transition-all ${isFeriadoGroup ? 'bg-amber-50/60 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-200/60">
-                          <span className="text-base shrink-0">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
+                          <span className="text-base shrink-0">{emoji}</span>
                           <div>
-                            <h4 className="font-extrabold text-slate-900 text-2xs leading-none">{eng?.name || 'Técnico'}</h4>
-                            <p className="text-[10px] text-slate-400 mt-1 font-semibold">{eng?.specialty}</p>
+                            <h4 className="font-extrabold text-slate-900 text-2xs leading-none">{title}</h4>
+                            <p className="text-[10px] text-slate-500 mt-1 font-semibold">{subtitle}</p>
                           </div>
                         </div>
 
@@ -9052,29 +9131,40 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           );
         })()}
 
-        {/* Vacation Sub Tabs Selector */}
-        <div className="flex border-b border-slate-200 mb-6 bg-slate-50/50 p-1.5 rounded-xl gap-2 w-fit">
+        {/* Vacation Sub Tabs Selector & Ecuador Holidays Loader */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="flex border border-slate-200 bg-slate-50/50 p-1.5 rounded-xl gap-2 w-fit">
+            <button
+              type="button"
+              onClick={() => setVacationSubTab('saldos')}
+              className={`px-4 py-1.5 rounded-lg font-extrabold text-2xs tracking-tight transition-all cursor-pointer flex items-center gap-1.5 ${
+                vacationSubTab === 'saldos'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span>📊 Resumen de Saldos</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setVacationSubTab('historial')}
+              className={`px-4 py-1.5 rounded-lg font-extrabold text-2xs tracking-tight transition-all cursor-pointer flex items-center gap-1.5 ${
+                vacationSubTab === 'historial'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span>📋 Historial y Auditoría</span>
+            </button>
+          </div>
+
           <button
             type="button"
-            onClick={() => setVacationSubTab('saldos')}
-            className={`px-4 py-1.5 rounded-lg font-extrabold text-2xs tracking-tight transition-all cursor-pointer flex items-center gap-1.5 ${
-              vacationSubTab === 'saldos'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
+            onClick={handleLoadEcuadorHolidays}
+            className="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-98"
+            title="Cargar automáticamente los feriados nacionales oficiales de Ecuador (ej. 10 de Agosto, Navidad, Carnaval, Año Nuevo)"
           >
-            <span>📊 Resumen de Saldos</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setVacationSubTab('historial')}
-            className={`px-4 py-1.5 rounded-lg font-extrabold text-2xs tracking-tight transition-all cursor-pointer flex items-center gap-1.5 ${
-              vacationSubTab === 'historial'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <span>📋 Historial y Auditoría</span>
+            <span>🇪🇨 Auto-Cargar Feriados de Ecuador (2025-2026)</span>
           </button>
         </div>
 

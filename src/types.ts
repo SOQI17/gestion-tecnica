@@ -219,6 +219,30 @@ export interface Vacation {
   includeWeekends?: boolean;
 }
 
+export const ECUADOR_HOLIDAYS = [
+  // 2025
+  { id: 'FERIADO-EC-2025-01-01', startDate: '2025-01-01', endDate: '2025-01-01', notes: 'Feriado Nacional: Año Nuevo 🇪🇨' },
+  { id: 'FERIADO-EC-2025-03-03', startDate: '2025-03-03', endDate: '2025-03-04', notes: 'Feriado Nacional: Carnaval 🇪🇨' },
+  { id: 'FERIADO-EC-2025-04-18', startDate: '2025-04-18', endDate: '2025-04-18', notes: 'Feriado Nacional: Viernes Santo 🇪🇨' },
+  { id: 'FERIADO-EC-2025-05-02', startDate: '2025-05-02', endDate: '2025-05-02', notes: 'Feriado Nacional: Día del Trabajo (Traslado) 🇪🇨' },
+  { id: 'FERIADO-EC-2025-05-23', startDate: '2025-05-23', endDate: '2025-05-23', notes: 'Feriado Nacional: Batalla de Pichincha (Traslado) 🇪🇨' },
+  { id: 'FERIADO-EC-2025-08-11', startDate: '2025-08-11', endDate: '2025-08-11', notes: 'Feriado Nacional: Primer Grito de Independencia (Traslado 10 de Agosto) 🇪🇨' },
+  { id: 'FERIADO-EC-2025-10-10', startDate: '2025-10-10', endDate: '2025-10-10', notes: 'Feriado Nacional: Independencia de Guayaquil (Traslado) 🇪🇨' },
+  { id: 'FERIADO-EC-2025-11-02', startDate: '2025-11-02', endDate: '2025-11-04', notes: 'Feriado Nacional: Día de los Difuntos e Independencia de Cuenca 🇪🇨' },
+  { id: 'FERIADO-EC-2025-12-25', startDate: '2025-12-25', endDate: '2025-12-25', notes: 'Feriado Nacional: Navidad 🇪🇨' },
+
+  // 2026
+  { id: 'FERIADO-EC-2026-01-01', startDate: '2026-01-01', endDate: '2026-01-01', notes: 'Feriado Nacional: Año Nuevo 🇪🇨' },
+  { id: 'FERIADO-EC-2026-02-16', startDate: '2026-02-16', endDate: '2026-02-17', notes: 'Feriado Nacional: Carnaval 🇪🇨' },
+  { id: 'FERIADO-EC-2026-04-03', startDate: '2026-04-03', endDate: '2026-04-03', notes: 'Feriado Nacional: Viernes Santo 🇪🇨' },
+  { id: 'FERIADO-EC-2026-05-01', startDate: '2026-05-01', endDate: '2026-05-01', notes: 'Feriado Nacional: Día del Trabajo 🇪🇨' },
+  { id: 'FERIADO-EC-2026-05-25', startDate: '2026-05-25', endDate: '2026-05-25', notes: 'Feriado Nacional: Batalla de Pichincha (Traslado) 🇪🇨' },
+  { id: 'FERIADO-EC-2026-08-10', startDate: '2026-08-10', endDate: '2026-08-10', notes: 'Feriado Nacional: Primer Grito de Independencia (10 de Agosto) 🇪🇨' },
+  { id: 'FERIADO-EC-2026-10-09', startDate: '2026-10-09', endDate: '2026-10-09', notes: 'Feriado Nacional: Independencia de Guayaquil 🇪🇨' },
+  { id: 'FERIADO-EC-2026-11-02', startDate: '2026-11-02', endDate: '2026-11-03', notes: 'Feriado Nacional: Día de los Difuntos e Independencia de Cuenca 🇪🇨' },
+  { id: 'FERIADO-EC-2026-12-25', startDate: '2026-12-25', endDate: '2026-12-25', notes: 'Feriado Nacional: Navidad 🇪🇨' }
+];
+
 export interface EngineerPermission {
   id: string;
   engineerId: string;
