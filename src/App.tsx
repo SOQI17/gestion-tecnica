@@ -1098,7 +1098,6 @@ export default function App() {
                   <nav className="flex bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/60" id="nav-container-tabs">
                     {[
                       { id: 'admin', label: 'Administración', icon: CalendarDays },
-                      { id: 'sales', label: 'Vendedor Portal', icon: Briefcase },
                       { id: 'engineer', label: 'Ingeniero Portal', icon: Smartphone },
                     ].map(tab => {
                       const Icon = tab.icon;
