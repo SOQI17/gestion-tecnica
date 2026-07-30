@@ -73,9 +73,23 @@ export default function App() {
     const unsubAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const targetEmail = firebaseUser.email?.trim().toLowerCase() || '';
-        const matchedEng = engineers.find(eng => eng.email.trim().toLowerCase() === targetEmail) || 
-                           masterEngineers.find(eng => eng.email.trim().toLowerCase() === targetEmail);
+        let matchedEng = engineers.find(eng => eng.email && eng.email.trim().toLowerCase() === targetEmail) || 
+                         masterEngineers.find(eng => eng.email && eng.email.trim().toLowerCase() === targetEmail);
         
+        if (!matchedEng) {
+          try {
+            const engsSnap = await getDocs(collection(db, 'engineers'));
+            engsSnap.forEach(docSnap => {
+              const engData = docSnap.data() as Engineer;
+              if (engData.email && engData.email.trim().toLowerCase() === targetEmail) {
+                matchedEng = engData;
+              }
+            });
+          } catch (e) {
+            console.warn("Error fetching engineers collection in auth state change:", e);
+          }
+        }
+
         let expectedRole: 'admin' | 'engineer' | 'sales' = 'sales';
         let expectedEngId: string | undefined;
 
@@ -99,7 +113,7 @@ export default function App() {
           if (userDoc.exists()) {
             const userData = userDoc.data() as AppUser;
             // Overwrite if old Firestore role mismatched expected role (e.g. sales user saved previously as engineer)
-            if (userData.role !== expectedRole) {
+            if (userData.role !== expectedRole || (expectedRole === 'engineer' && userData.engineerId !== expectedEngId)) {
               const updatedProfile: AppUser = {
                 uid: firebaseUser.uid,
                 email: targetEmail,
@@ -825,6 +839,35 @@ export default function App() {
   const handleUpdateEngineer = async (updatedEng: Engineer) => {
     try {
       await setDoc(doc(db, 'engineers', updatedEng.id), cleanUndefined(updatedEng));
+
+      // Sincronizar automáticamente el rol en la colección 'users' si el usuario ya existe en Firestore
+      const targetEmail = (updatedEng.email || '').trim().toLowerCase();
+      if (targetEmail) {
+        const specLower = (updatedEng.specialty || '').toLowerCase();
+        const isVentas = specLower.includes('ventas') || specLower.includes('vendedor') || specLower.includes('comercial');
+        const expectedRole: 'admin' | 'engineer' | 'sales' = (targetEmail === 'alexis.guerra@orimec.com.ec')
+          ? 'admin'
+          : (isVentas ? 'sales' : 'engineer');
+
+        try {
+          const usersSnap = await getDocs(collection(db, 'users'));
+          usersSnap.forEach(async (uDoc) => {
+            const uData = uDoc.data() as AppUser;
+            if (uData.email && uData.email.trim().toLowerCase() === targetEmail) {
+              if (uData.role !== expectedRole || (expectedRole === 'engineer' && uData.engineerId !== updatedEng.id)) {
+                await setDoc(doc(db, 'users', uDoc.id), {
+                  ...uData,
+                  role: expectedRole,
+                  ...(expectedRole === 'engineer' ? { engineerId: updatedEng.id } : {})
+                });
+              }
+            }
+          });
+        } catch (e) {
+          console.warn("No se pudo sincronizar usuario en colección users:", e);
+        }
+      }
+
       showNotification(`¡Técnico ${updatedEng.name} guardado con éxito!`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `engineers/${updatedEng.id}`);

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Layers, Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, User, Shield, ArrowRight, Briefcase, Activity } from 'lucide-react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { Engineer, AppUser } from '../types';
+import { masterEngineers } from '../mockData';
 
 interface LoginProps {
   engineers: Engineer[];
@@ -51,8 +52,24 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
       return;
     }
 
-    // Role detection by email
-    const matchedEngineer = engineers.find(eng => cleanEmail(eng.email) === targetEmail);
+    // Role detection by email: check local engineers, masterEngineers, or query Firestore directly
+    let matchedEngineer: Engineer | undefined = engineers.find(eng => eng.email && cleanEmail(eng.email) === targetEmail) ||
+                                              masterEngineers.find(eng => eng.email && cleanEmail(eng.email) === targetEmail);
+
+    if (!matchedEngineer) {
+      try {
+        const engSnap = await getDocs(collection(db, 'engineers'));
+        engSnap.forEach(d => {
+          const data = d.data() as Engineer;
+          if (data.email && cleanEmail(data.email) === targetEmail) {
+            matchedEngineer = data;
+          }
+        });
+      } catch (err) {
+        console.warn("Could not query engineers collection directly in Login:", err);
+      }
+    }
+
     let role: 'admin' | 'engineer' | 'sales' = 'sales';
 
     if (targetEmail === 'alexis.guerra@orimec.com.ec') {
