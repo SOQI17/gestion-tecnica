@@ -194,6 +194,10 @@ export interface Contract {
   createdAt?: string;
   contractPdfUrl?: string; // Documento del Contrato (PDF o Imagen en Cloudinary)
   schedulePdfUrl?: string; // Cronograma Firmado (PDF o Imagen en Cloudinary)
+  isNewEquipment?: boolean; // Marca si el contrato aplica para Equipo Nuevo
+  serviceRecordPdfUrl?: string; // Documento Service Record (SR)
+  caPdfUrl?: string; // Documento Certificate of Acceptance (CA)
+  podPdfUrl?: string; // Documento Proof of Delivery (POD)
   pendingAdminSchedule?: boolean; // Indica si fue cargado por vendedor sin cronograma, a la espera de asignación por Admin
   linkedContractId?: string; // ID del contrato sucesor (siguiente contrato del mismo cliente)
 }

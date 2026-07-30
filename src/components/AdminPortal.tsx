@@ -1301,12 +1301,28 @@ export default function AdminPortal({
   // Cloudinary Contract Attachments States
   const [contractFormPdfUrl, setContractFormPdfUrl] = useState('');
   const [contractFormSchedulePdfUrl, setContractFormSchedulePdfUrl] = useState('');
+  const [contractFormIsNewEquipment, setContractFormIsNewEquipment] = useState(false);
+  const [contractFormSrPdfUrl, setContractFormSrPdfUrl] = useState('');
+  const [contractFormCaPdfUrl, setContractFormCaPdfUrl] = useState('');
+  const [contractFormPodPdfUrl, setContractFormPodPdfUrl] = useState('');
+
   const [isUploadingContractPdf, setIsUploadingContractPdf] = useState(false);
   const [uploadContractPdfProgress, setUploadContractPdfProgress] = useState(0);
   const [isUploadingSchedulePdf, setIsUploadingSchedulePdf] = useState(false);
   const [uploadSchedulePdfProgress, setUploadSchedulePdfProgress] = useState(0);
+  const [isUploadingSrPdf, setIsUploadingSrPdf] = useState(false);
+  const [uploadSrPdfProgress, setUploadSrPdfProgress] = useState(0);
+  const [isUploadingCaPdf, setIsUploadingCaPdf] = useState(false);
+  const [uploadCaPdfProgress, setUploadCaPdfProgress] = useState(0);
+  const [isUploadingPodPdf, setIsUploadingPodPdf] = useState(false);
+  const [uploadPodPdfProgress, setUploadPodPdfProgress] = useState(0);
+
   const [isDraggingContractPdf, setIsDraggingContractPdf] = useState(false);
   const [isDraggingSchedulePdf, setIsDraggingSchedulePdf] = useState(false);
+  const [isDraggingSrPdf, setIsDraggingSrPdf] = useState(false);
+  const [isDraggingCaPdf, setIsDraggingCaPdf] = useState(false);
+  const [isDraggingPodPdf, setIsDraggingPodPdf] = useState(false);
+
   const [contractFormLinkedId, setContractFormLinkedId] = useState(''); // ID del contrato sucesor vinculado
 
   const handleUploadContractFile = async (file: File) => {
@@ -1340,6 +1356,48 @@ export default function AdminPortal({
       alert(err.message || 'Error al subir el cronograma a Cloudinary');
     } finally {
       setIsUploadingSchedulePdf(false);
+    }
+  };
+
+  const handleUploadSrFile = async (file: File) => {
+    if (!file) return;
+    try {
+      setIsUploadingSrPdf(true);
+      setUploadSrPdfProgress(0);
+      const url = await uploadFileToCloudinary(file, (p) => setUploadSrPdfProgress(p));
+      setContractFormSrPdfUrl(url);
+    } catch (err: any) {
+      alert(err.message || 'Error al subir el Service Record (SR) a Cloudinary');
+    } finally {
+      setIsUploadingSrPdf(false);
+    }
+  };
+
+  const handleUploadCaFile = async (file: File) => {
+    if (!file) return;
+    try {
+      setIsUploadingCaPdf(true);
+      setUploadCaPdfProgress(0);
+      const url = await uploadFileToCloudinary(file, (p) => setUploadCaPdfProgress(p));
+      setContractFormCaPdfUrl(url);
+    } catch (err: any) {
+      alert(err.message || 'Error al subir el Certificate of Acceptance (CA) a Cloudinary');
+    } finally {
+      setIsUploadingCaPdf(false);
+    }
+  };
+
+  const handleUploadPodFile = async (file: File) => {
+    if (!file) return;
+    try {
+      setIsUploadingPodPdf(true);
+      setUploadPodPdfProgress(0);
+      const url = await uploadFileToCloudinary(file, (p) => setUploadPodPdfProgress(p));
+      setContractFormPodPdfUrl(url);
+    } catch (err: any) {
+      alert(err.message || 'Error al subir el Proof of Delivery (POD) a Cloudinary');
+    } finally {
+      setIsUploadingPodPdf(false);
     }
   };
 
@@ -5095,6 +5153,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       qcDate: isSalesReadOnly && editingContract ? editingContract.qcDate : (isPendingSchedule ? undefined : (contractFormQcDate || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : ''))),
       contractPdfUrl: contractFormPdfUrl.trim() || undefined,
       schedulePdfUrl: contractFormSchedulePdfUrl.trim() || undefined,
+      isNewEquipment: contractFormIsNewEquipment,
+      serviceRecordPdfUrl: contractFormIsNewEquipment ? (contractFormSrPdfUrl.trim() || undefined) : undefined,
+      caPdfUrl: contractFormIsNewEquipment ? (contractFormCaPdfUrl.trim() || undefined) : undefined,
+      podPdfUrl: contractFormIsNewEquipment ? (contractFormPodPdfUrl.trim() || undefined) : undefined,
       pendingAdminSchedule: isSalesReadOnly && editingContract ? editingContract.pendingAdminSchedule : (hasSchedule ? false : isPendingSchedule),
       linkedContractId: contractFormLinkedId.trim() || undefined,
     };
@@ -7249,6 +7311,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setContractFormQcDate('');
                   setContractFormPdfUrl('');
                   setContractFormSchedulePdfUrl('');
+                  setContractFormIsNewEquipment(false);
+                  setContractFormSrPdfUrl('');
+                  setContractFormCaPdfUrl('');
+                  setContractFormPodPdfUrl('');
                   setContractFormPendingAdmin(userRole === 'sales');
                   setIsContractModalOpen(true);
                 }}
@@ -7858,6 +7924,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             </span>
                           )}
                           <div className="flex flex-wrap gap-1">
+                            {con.isNewEquipment && (
+                              <span className="inline-flex items-center gap-1 text-[8px] font-extrabold bg-amber-100 text-amber-950 border border-amber-300 px-1.5 py-0.5 rounded" title="Contrato para Equipo Nuevo">
+                                ✨ Equipo Nuevo
+                              </span>
+                            )}
                             {con.contractPdfUrl && (
                               <a
                                 href={getCleanCloudinaryUrl(con.contractPdfUrl)}
@@ -7881,6 +7952,45 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 title="Ver Cronograma PDF / Imagen"
                               >
                                 📅 Cronograma
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                            {con.serviceRecordPdfUrl && (
+                              <a
+                                href={getCleanCloudinaryUrl(con.serviceRecordPdfUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[8px] font-extrabold bg-amber-50 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded hover:bg-amber-100 transition-colors"
+                                title="Ver Service Record (SR)"
+                              >
+                                🛠️ SR
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                            {con.caPdfUrl && (
+                              <a
+                                href={getCleanCloudinaryUrl(con.caPdfUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[8px] font-extrabold bg-teal-50 text-teal-900 border border-teal-200 px-1.5 py-0.5 rounded hover:bg-teal-100 transition-colors"
+                                title="Ver Certificate of Acceptance (CA)"
+                              >
+                                📜 CA
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                            {con.podPdfUrl && (
+                              <a
+                                href={getCleanCloudinaryUrl(con.podPdfUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[8px] font-extrabold bg-sky-50 text-sky-900 border border-sky-200 px-1.5 py-0.5 rounded hover:bg-sky-100 transition-colors"
+                                title="Ver Proof of Delivery (POD)"
+                              >
+                                📦 POD
                                 <ExternalLink className="w-2.5 h-2.5" />
                               </a>
                             )}
@@ -7912,6 +8022,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormQcDate(con.qcDate || '');
                                 setContractFormPdfUrl(con.contractPdfUrl || '');
                                 setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
+                                setContractFormIsNewEquipment(!!con.isNewEquipment);
+                                setContractFormSrPdfUrl(con.serviceRecordPdfUrl || '');
+                                setContractFormCaPdfUrl(con.caPdfUrl || '');
+                                setContractFormPodPdfUrl(con.podPdfUrl || '');
                                 setContractFormLinkedId(con.linkedContractId || '');
                                 setIsContractModalOpen(true);
                               }}
@@ -7960,6 +8074,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setContractFormQcDate(con.qcDate || '');
                               setContractFormPdfUrl(con.contractPdfUrl || '');
                               setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
+                              setContractFormIsNewEquipment(!!con.isNewEquipment);
+                              setContractFormSrPdfUrl(con.serviceRecordPdfUrl || '');
+                              setContractFormCaPdfUrl(con.caPdfUrl || '');
+                              setContractFormPodPdfUrl(con.podPdfUrl || '');
                               setContractFormLinkedId(con.linkedContractId || '');
                               setContractFormSelectedEquipForFreq('all');
 
@@ -15385,6 +15503,24 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
                     </div>
 
+                    {/* Casilla de Selección: Equipo Nuevo */}
+                    <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-2.5 flex items-center justify-between shadow-2xs">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="contract-is-new-equipment-check"
+                          checked={contractFormIsNewEquipment}
+                          onChange={(e) => setContractFormIsNewEquipment(e.target.checked)}
+                          className="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500 cursor-pointer"
+                        />
+                        <label htmlFor="contract-is-new-equipment-check" className="text-xs font-extrabold text-amber-950 cursor-pointer select-none flex items-center gap-1.5">
+                          <span>✨ Equipo Nuevo</span>
+                          <span className="bg-amber-200 text-amber-900 text-[8px] font-black px-1.5 py-0.2 rounded uppercase">Garantía / Entrega</span>
+                        </label>
+                      </div>
+                      <span className="text-[9px] text-amber-800/80 font-semibold">Adjuntos opcionales (SR, CA, POD)</span>
+                    </div>
+
                       {/* Linked Contract (Successor) - Admin only when editing */}
                       {editingContract && userRole === 'admin' && (
                         <div className="space-y-1 bg-indigo-50/60 border border-indigo-200 rounded-xl p-2.5">
@@ -15517,6 +15653,111 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
                             )}
                           </div>
+
+                          {/* Adjuntos Opcionales para Equipo Nuevo: SR, CA, POD */}
+                          {contractFormIsNewEquipment && (
+                            <div className="space-y-2.5 pt-2 border-t border-amber-200/60 bg-amber-50/40 p-2.5 rounded-xl">
+                              <span className="block text-[9px] font-extrabold text-amber-900 uppercase tracking-wider">
+                                ✨ Adjuntos de Equipo Nuevo (Opcionales)
+                              </span>
+
+                              {/* Service Record (SR) Upload Card */}
+                              <div className="bg-white border border-amber-200 rounded-xl p-2.5 space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="block text-[9.5px] font-extrabold text-amber-950 uppercase tracking-wide">🛠️ Service Record (SR)</span>
+                                  <span className="text-[8px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                </div>
+                                {contractFormSrPdfUrl ? (
+                                  <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-2 rounded-lg text-xs gap-2">
+                                    <a href={getCleanCloudinaryUrl(contractFormSrPdfUrl)} target="_blank" rel="noreferrer" className="text-amber-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                      <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                      <span className="truncate">Ver Service Record (SR)</span>
+                                      <ExternalLink className="w-3 h-3 text-amber-600 shrink-0" />
+                                    </a>
+                                    <button type="button" onClick={() => setContractFormSrPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <input type="file" id="sr-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadSrFile(file); }} className="hidden" />
+                                    <label htmlFor="sr-pdf-input" className="w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed border-amber-300 bg-amber-50/30 hover:bg-amber-50 flex items-center justify-center gap-1.5 cursor-pointer transition-all">
+                                      {isUploadingSrPdf ? (
+                                        <span className="text-amber-600 font-bold animate-pulse">Subiendo SR... ({uploadSrPdfProgress}%)</span>
+                                      ) : (
+                                        <>
+                                          <Upload className="w-3.5 h-3.5 text-amber-600" />
+                                          <span>Adjuntar Service Record (SR)</span>
+                                        </>
+                                      )}
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Certificate of Acceptance (CA) Upload Card */}
+                              <div className="bg-white border border-teal-200 rounded-xl p-2.5 space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="block text-[9.5px] font-extrabold text-teal-950 uppercase tracking-wide">📜 Certificate of Acceptance (CA)</span>
+                                  <span className="text-[8px] font-bold text-teal-700 bg-teal-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                </div>
+                                {contractFormCaPdfUrl ? (
+                                  <div className="flex items-center justify-between bg-teal-50 border border-teal-200 p-2 rounded-lg text-xs gap-2">
+                                    <a href={getCleanCloudinaryUrl(contractFormCaPdfUrl)} target="_blank" rel="noreferrer" className="text-teal-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                      <FileText className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                      <span className="truncate">Ver Certificate of Acceptance (CA)</span>
+                                      <ExternalLink className="w-3 h-3 text-teal-600 shrink-0" />
+                                    </a>
+                                    <button type="button" onClick={() => setContractFormCaPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <input type="file" id="ca-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadCaFile(file); }} className="hidden" />
+                                    <label htmlFor="ca-pdf-input" className="w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed border-teal-300 bg-teal-50/30 hover:bg-teal-50 flex items-center justify-center gap-1.5 cursor-pointer transition-all">
+                                      {isUploadingCaPdf ? (
+                                        <span className="text-teal-600 font-bold animate-pulse">Subiendo CA... ({uploadCaPdfProgress}%)</span>
+                                      ) : (
+                                        <>
+                                          <Upload className="w-3.5 h-3.5 text-teal-600" />
+                                          <span>Adjuntar Certificate of Acceptance (CA)</span>
+                                        </>
+                                      )}
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Proof of Delivery (POD) Upload Card */}
+                              <div className="bg-white border border-sky-200 rounded-xl p-2.5 space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="block text-[9.5px] font-extrabold text-sky-950 uppercase tracking-wide">📦 Proof of Delivery (POD)</span>
+                                  <span className="text-[8px] font-bold text-sky-700 bg-sky-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                </div>
+                                {contractFormPodPdfUrl ? (
+                                  <div className="flex items-center justify-between bg-sky-50 border border-sky-200 p-2 rounded-lg text-xs gap-2">
+                                    <a href={getCleanCloudinaryUrl(contractFormPodPdfUrl)} target="_blank" rel="noreferrer" className="text-sky-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                      <FileText className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                      <span className="truncate">Ver Proof of Delivery (POD)</span>
+                                      <ExternalLink className="w-3 h-3 text-sky-600 shrink-0" />
+                                    </a>
+                                    <button type="button" onClick={() => setContractFormPodPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <input type="file" id="pod-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadPodFile(file); }} className="hidden" />
+                                    <label htmlFor="pod-pdf-input" className="w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed border-sky-300 bg-sky-50/30 hover:bg-sky-50 flex items-center justify-center gap-1.5 cursor-pointer transition-all">
+                                      {isUploadingPodPdf ? (
+                                        <span className="text-sky-600 font-bold animate-pulse">Subiendo POD... ({uploadPodPdfProgress}%)</span>
+                                      ) : (
+                                        <>
+                                          <Upload className="w-3.5 h-3.5 text-sky-600" />
+                                          <span>Adjuntar Proof of Delivery (POD)</span>
+                                        </>
+                                      )}
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
 
                           {/* Cronograma Firmado Upload Card */}
                           <div 
@@ -16289,7 +16530,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </div>
 
               {/* Cloudinary Document Badges in Contract Details Modal */}
-              {(selectedContractForDetails.contractPdfUrl || selectedContractForDetails.schedulePdfUrl) && (
+              {(selectedContractForDetails.contractPdfUrl || selectedContractForDetails.schedulePdfUrl || selectedContractForDetails.serviceRecordPdfUrl || selectedContractForDetails.caPdfUrl || selectedContractForDetails.podPdfUrl) && (
                 <div className="bg-indigo-50/60 border border-indigo-150 rounded-xl p-3 space-y-2">
                   <span className="font-extrabold text-[9px] text-indigo-900 uppercase tracking-wider block">Documentos Adjuntos en la Nube (Cloudinary)</span>
                   <div className="flex flex-wrap gap-2">
@@ -16312,6 +16553,39 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-colors"
                       >
                         📅 Abrir Cronograma Firmado (PDF)
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                    {selectedContractForDetails.serviceRecordPdfUrl && (
+                      <a
+                        href={getCleanCloudinaryUrl(selectedContractForDetails.serviceRecordPdfUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-colors"
+                      >
+                        🛠️ Service Record (SR)
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                    {selectedContractForDetails.caPdfUrl && (
+                      <a
+                        href={getCleanCloudinaryUrl(selectedContractForDetails.caPdfUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-colors"
+                      >
+                        📜 Certificate of Acceptance (CA)
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                    {selectedContractForDetails.podPdfUrl && (
+                      <a
+                        href={getCleanCloudinaryUrl(selectedContractForDetails.podPdfUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-colors"
+                      >
+                        📦 Proof of Delivery (POD)
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     )}
