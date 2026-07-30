@@ -1104,6 +1104,8 @@ export default function AdminPortal({
   const [editEngName, setEditEngName] = useState('');
   const [editEngEmail, setEditEngEmail] = useState('');
   const [editEngSpecialty, setEditEngSpecialty] = useState<Specialty>('Ingeniería');
+  const [editEngSede, setEditEngSede] = useState<'Quito' | 'Guayaquil' | 'Cuenca' | 'Sede Central'>('Quito');
+  const [newEngSede, setNewEngSede] = useState<'Quito' | 'Guayaquil' | 'Cuenca' | 'Sede Central'>('Quito');
   const [editEngSkills, setEditEngSkills] = useState<string[]>([]);
   const [editEngPermissions, setEditEngPermissions] = useState<UserPermissions>(getDefaultPermissionsForSpecialty('Ingeniería'));
   
@@ -1814,13 +1816,25 @@ export default function AdminPortal({
 
         // Scoring algorithm:
         // +100 for matching modality/training
-        // +30 for matching city/sede
+        // +40 for matching city/sede/sector (Quito/Guayaquil/Cuenca & surroundings)
         // -15 per current work order load to balance workload
         let score = 0;
         if (hasMatchingModality || hasScheduledTraining) score += 100;
         else score += 10;
 
-        if (eng.sede && eng.sede.toLowerCase() === clientCity.toLowerCase()) score += 30;
+        const engSede = (eng.sede || 'Quito').toLowerCase();
+        const clientCityLower = clientCity.toLowerCase();
+        
+        // Exact or regional match for Sede/Sector
+        if (
+          engSede === clientCityLower ||
+          (engSede === 'quito' && (clientCityLower.includes('quito') || clientCityLower.includes('sierra') || clientCityLower.includes('pichincha') || clientCityLower.includes('ambato') || clientCityLower.includes('ibarra') || clientCityLower.includes('latacunga'))) ||
+          (engSede === 'guayaquil' && (clientCityLower.includes('guayaquil') || clientCityLower.includes('costa') || clientCityLower.includes('guayas') || clientCityLower.includes('samborondon') || clientCityLower.includes('daule') || clientCityLower.includes('duran') || clientCityLower.includes('manta') || clientCityLower.includes('machala'))) ||
+          (engSede === 'cuenca' && (clientCityLower.includes('cuenca') || clientCityLower.includes('sur') || clientCityLower.includes('azuay') || clientCityLower.includes('loja'))) ||
+          engSede === 'sede central'
+        ) {
+          score += 40; // High priority score for matching geographical sector/sede
+        }
 
         const currentLoad = engWorkload.get(eng.id) || 0;
         score -= (currentLoad * 15);
@@ -4139,6 +4153,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       avatar: '',
       availability: 'Disponible',
       skills: [newEngSpecialty],
+      sede: newEngSede,
       customPermissions: getDefaultPermissionsForSpecialty(newEngSpecialty)
     };
     if (onUpdateEngineer) {
@@ -14120,7 +14135,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             {isAddingNewEng && (
               <div className="bg-slate-50 p-4 border-b border-slate-100 space-y-3">
                 <h4 className="text-2xs font-extrabold text-slate-700 uppercase tracking-wider">Nuevo Registro de Técnico</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
                     <input
@@ -14142,6 +14157,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <option value="Aplicaciones">Aplicaciones</option>
                       <option value="Ventas">Ventas</option>
                       <option value="IT">IT</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sede / Sector (Cobertura)</label>
+                    <select
+                      value={newEngSede}
+                      onChange={(e) => setNewEngSede(e.target.value as any)}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value="Quito">📍 Quito (Sierra / Alrededores)</option>
+                      <option value="Guayaquil">📍 Guayaquil (Costa / Alrededores)</option>
+                      <option value="Cuenca">📍 Cuenca (Sur / Alrededores)</option>
+                      <option value="Sede Central">🏢 Sede Central (Nacional)</option>
                     </select>
                   </div>
                 </div>
@@ -14230,7 +14258,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                           {/* Nombre */}
                           <div className="space-y-1">
                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Nombre Completo</label>
@@ -14257,6 +14285,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             </select>
                           </div>
 
+                          {/* Sede / Sector */}
+                          <div className="space-y-1">
+                            <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Sede / Sector (Cobertura)</label>
+                            <select
+                              value={editEngSede}
+                              onChange={e => setEditEngSede(e.target.value as any)}
+                              className="w-full text-3xs p-2 rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 outline-hidden"
+                            >
+                              <option value="Quito">📍 Quito (Sierra / Alrededores)</option>
+                              <option value="Guayaquil">📍 Guayaquil (Costa / Alrededores)</option>
+                              <option value="Cuenca">📍 Cuenca (Sur / Alrededores)</option>
+                              <option value="Sede Central">🏢 Sede Central (Nacional)</option>
+                            </select>
+                          </div>
+
                           {/* Correo */}
                           <div className="space-y-1">
                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Correo Electrónico</label>
@@ -14269,7 +14312,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
 
                           {/* Modalidades y Capacitaciones Acreditadas */}
-                          <div className="space-y-1 sm:col-span-3">
+                          <div className="space-y-1 sm:col-span-4">
                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                               🎓 Modalidades y Capacitaciones Acreditadas
                             </label>
@@ -14538,6 +14581,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     name: editEngName,
                                     specialty: editEngSpecialty,
                                     email: editEngEmail,
+                                    sede: editEngSede,
                                     skills: editEngSkills,
                                     customPermissions: editEngPermissions
                                   });
@@ -14560,8 +14604,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <div className="flex items-center gap-3">
                         <div className="text-2xl">{getEngineerEmoji(eng.id)}</div>
                         <div>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-extrabold text-xs text-slate-800">{eng.name}</span>
+                            <span className="bg-sky-50 text-sky-800 border border-sky-200 text-[8px] font-extrabold px-1.5 py-0.2 rounded flex items-center gap-0.5">
+                              📍 Sede: {eng.sede || 'Quito'}
+                            </span>
                             {isMaster && (
                               <span className="bg-slate-100 text-slate-600 border border-slate-200 text-[8px] font-extrabold px-1 py-0.2 rounded uppercase">
                                 Base
@@ -14623,6 +14670,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setEditEngName(eng.name);
                             setEditEngEmail(eng.email || '');
                             setEditEngSpecialty(eng.specialty || 'Ingeniería');
+                            setEditEngSede(eng.sede || 'Quito');
                             setEditEngSkills(eng.skills || ['GE', 'FE']);
                             setEditEngPermissions(eng.customPermissions || getDefaultPermissionsForSpecialty(eng.specialty || 'Ingeniería'));
                           }}
