@@ -1455,6 +1455,7 @@ export default function AdminPortal({
   const [isCreatingWO, setIsCreatingWO] = useState(false);
   const [newWOClient, setNewWOClient] = useState(clients[0]?.id || '');
   const [newWOClientSearch, setNewWOClientSearch] = useState('');
+  const [newWOCity, setNewWOCity] = useState<string>('Quito');
   const [newWOEngineer, setNewWOEngineer] = useState(engineers[0]?.id || '');
   const [woEngDropdownOpen, setWoEngDropdownOpen] = useState(false);
   const [woEngSearchQuery, setWoEngSearchQuery] = useState('');
@@ -1735,6 +1736,67 @@ export default function AdminPortal({
     return null;
   };
 
+  // High-precision City and Sector detector for Clients, Contracts, and Work Orders
+  const getCityForClientOrWO = (clientIdOrSearch: string, clientList: Client[], contractList: Contract[], woNotes?: string): string => {
+    if (!clientIdOrSearch) return 'Quito';
+    
+    const matchedClient = clientList.find(cl => 
+      cl.id === clientIdOrSearch || 
+      cl.name.trim().toLowerCase() === clientIdOrSearch.trim().toLowerCase()
+    );
+
+    if (matchedClient?.city) {
+      const cLower = matchedClient.city.toLowerCase();
+      if (cLower.includes('guayaquil') || cLower.includes('duran') || cLower.includes('samborondon') || cLower.includes('manta') || cLower.includes('machala') || cLower.includes('costa')) return 'Guayaquil';
+      if (cLower.includes('cuenca') || cLower.includes('azuay') || cLower.includes('loja') || cLower.includes('sur')) return 'Cuenca';
+      if (cLower.includes('quito') || cLower.includes('pichincha') || cLower.includes('sierra') || cLower.includes('ambato')) return 'Quito';
+      return matchedClient.city;
+    }
+
+    if (matchedClient) {
+      const clientContracts = contractList.filter(con => con.clientId === matchedClient.id);
+      for (const con of clientContracts) {
+        if (con.city) {
+          const cLower = con.city.toLowerCase();
+          if (cLower.includes('guayaquil') || cLower.includes('duran') || cLower.includes('samborondon') || cLower.includes('manta') || cLower.includes('machala') || cLower.includes('costa')) return 'Guayaquil';
+          if (cLower.includes('cuenca') || cLower.includes('azuay') || cLower.includes('loja') || cLower.includes('sur')) return 'Cuenca';
+          if (cLower.includes('quito') || cLower.includes('pichincha') || cLower.includes('sierra') || cLower.includes('ambato')) return 'Quito';
+          return con.city;
+        }
+      }
+    }
+
+    const txt = `${matchedClient ? matchedClient.name + ' ' + matchedClient.address + ' ' + matchedClient.industry : clientIdOrSearch} ${woNotes || ''}`.toLowerCase();
+
+    if (
+      txt.includes('guayaquil') || txt.includes('gye') || txt.includes('samborondón') || txt.includes('samborondon') || 
+      txt.includes('daule') || txt.includes('durán') || txt.includes('duran') || txt.includes('manta') || 
+      txt.includes('portoviejo') || txt.includes('machala') || txt.includes('babahoyo') || txt.includes('milagro') || 
+      txt.includes('quevedo') || txt.includes('esmeraldas') || txt.includes('salinas') || txt.includes('santa elena') || 
+      txt.includes('el oro') || txt.includes('manabi') || txt.includes('manabí') || txt.includes('guayas') || txt.includes('costa')
+    ) {
+      return 'Guayaquil';
+    }
+
+    if (
+      txt.includes('cuenca') || txt.includes('cue') || txt.includes('azuay') || txt.includes('loja') || 
+      txt.includes('cañar') || txt.includes('canar') || txt.includes('macas') || txt.includes('zamora') || txt.includes('sur')
+    ) {
+      return 'Cuenca';
+    }
+
+    if (
+      txt.includes('quito') || txt.includes('uio') || txt.includes('pichincha') || txt.includes('ambato') || 
+      txt.includes('ibarra') || txt.includes('latacunga') || txt.includes('riobamba') || txt.includes('tulcan') || 
+      txt.includes('tulcán') || txt.includes('santo domingo') || txt.includes('tumbaco') || txt.includes('cumbaya') || 
+      txt.includes('cumbayá') || txt.includes('sierra')
+    ) {
+      return 'Quito';
+    }
+
+    return 'Quito';
+  };
+
   // Professional Reorganize Agenda Handler (by Specialization, accredited Modalities & Sede)
   const handleSmartReorganize = () => {
     const currentMonthPrefix = `${calendarYear}-${calendarMonth.toString().padStart(2, '0')}`;
@@ -1754,13 +1816,8 @@ export default function AdminPortal({
       if (wo.engineerId) engWorkload.set(wo.engineerId, (engWorkload.get(wo.engineerId) || 0) + 1);
     });
 
-    const getCity = (clientId: string): string => {
-      const c = clients.find(cl => cl.id === clientId || cl.name.toLowerCase() === clientId.toLowerCase());
-      if (!c) return 'Quito';
-      const txt = `${c.name} ${c.address} ${c.industry}`.toLowerCase();
-      if (txt.includes('guayaquil') || txt.includes('samborondon') || txt.includes('daule') || txt.includes('durán') || txt.includes('duran')) return 'Guayaquil';
-      if (txt.includes('cuenca') || txt.includes('azuay')) return 'Cuenca';
-      return 'Quito';
+    const getCity = (clientId: string, woNotes?: string): string => {
+      return getCityForClientOrWO(clientId, clients, contracts, woNotes);
     };
 
     // Helper to determine required modality/skills for a work order
@@ -1793,7 +1850,7 @@ export default function AdminPortal({
     let reCount = 0;
 
     pendingMonthWOs.forEach(wo => {
-      const clientCity = getCity(wo.clientId);
+      const clientCity = getCity(wo.clientId, wo.notes);
       const reqMods = getRequiredModalities(wo);
 
       let bestEngId = wo.engineerId;
@@ -2835,7 +2892,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         industry: 'Industrial',
         contactName: 'Contacto por registrar',
         contactPhone: '',
-        installedEquipments: selectedWOTags.length > 0 ? selectedWOTags : [newWOEquipment]
+        installedEquipments: selectedWOTags.length > 0 ? selectedWOTags : [newWOEquipment],
+        city: newWOCity
       };
       if (onAddClient) {
         onAddClient(newClientObj);
@@ -2860,6 +2918,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       if (!confirmSave) return;
     }
 
+    const finalNotes = newWONotes
+      ? (newWONotes.includes('[Ciudad:') ? newWONotes : `[Ciudad: ${newWOCity}] ${newWONotes}`)
+      : `[Ciudad: ${newWOCity}]`;
+
     const newWO: WorkOrder = {
       id: newWOId,
       clientId: finalClientId,
@@ -2871,7 +2933,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       type: newWOType,
       status: 'Pendiente',
       equipmentName: selectedWOTags.length > 0 ? selectedWOTags.join(', ') : newWOEquipment,
-      notes: newWONotes,
+      notes: finalNotes,
       durationDays: newWODurationDays
     };
 
@@ -5200,6 +5262,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       industry: clientFormCity.trim(),
       contactName: clientFormContact.trim(),
       contactPhone: clientFormPhone.trim(),
+      city: clientFormCity.trim() || undefined,
       installedEquipments: editingClient?.installedEquipments || []
     };
     if (onAddClient) {
@@ -12391,6 +12454,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setNewWOEquipment(matchedClient.installedEquipments[0]);
                           }
                         }
+                        const autoCity = getCityForClientOrWO(val, clients, contracts);
+                        setNewWOCity(autoCity);
                       }}
                       className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
                       placeholder="Escribe el nombre del cliente o selecciónalo..."
@@ -12401,6 +12466,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <option key={c.id} value={c.name} />
                       ))}
                     </datalist>
+
+                    {/* 1.1 Ciudad / Sede de Atención */}
+                    <div className="mt-2 space-y-1">
+                      <label className="block text-2xs font-bold text-slate-500 uppercase flex items-center justify-between">
+                        <span>1.1 Ciudad / Sede de Atención (Sector)</span>
+                        <span className="text-[10px] text-indigo-600 font-semibold lowercase">
+                          (Se usa para reagendamiento inteligente)
+                        </span>
+                      </label>
+                      <select
+                        value={newWOCity}
+                        onChange={e => setNewWOCity(e.target.value)}
+                        className="w-full p-2.5 rounded-lg border border-indigo-200 bg-indigo-50/40 font-extrabold text-xs text-indigo-950 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
+                      >
+                        <option value="Quito">📍 Quito (Sierra / Alrededores)</option>
+                        <option value="Guayaquil">📍 Guayaquil (Costa / Alrededores)</option>
+                        <option value="Cuenca">📍 Cuenca (Sur / Alrededores)</option>
+                        <option value="Sede Central">🏢 Sede Central (Nacional)</option>
+                      </select>
+                    </div>
 
                     {/* Warning banner if selected client has an Inactive contract */}
                     {(() => {

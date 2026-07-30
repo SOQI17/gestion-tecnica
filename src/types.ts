@@ -82,6 +82,7 @@ export interface Client {
   contactName: string;
   contactPhone: string;
   installedEquipments: string[];
+  city?: string;
   coordinates?: { lat: number; lng: number };
 }
 
