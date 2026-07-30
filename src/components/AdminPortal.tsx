@@ -1646,6 +1646,7 @@ export default function AdminPortal({
       mapByDate.get(d)!.push(wo);
     });
 
+    // 1. Time overlap between 2 work orders for the same engineer on the same day
     mapByDate.forEach((dayWOs, date) => {
       const mapEng = new Map<string, WorkOrder[]>();
       dayWOs.forEach(wo => {
@@ -1671,8 +1672,66 @@ export default function AdminPortal({
       });
     });
 
+    // 2. Overlap between work order and engineer vacation or feriado
+    activeWorkOrdersList.forEach(wo => {
+      if (wo.status === 'Conciliado') return;
+      const date = wo.plannedDate;
+      if (!date) return;
+      const assignedEngs = [wo.engineerId, ...(wo.supportEngineerIds || (wo.supportEngineerId ? [wo.supportEngineerId] : []))].filter(Boolean);
+
+      (vacations || []).forEach(v => {
+        if (v.status !== 'Aprobado') return;
+        if (date >= v.startDate && date <= v.endDate) {
+          const isFeriado = v.engineerId === 'FERIADO' || v.notes?.toLowerCase().includes('feriado');
+          if (isFeriado || assignedEngs.includes(v.engineerId)) {
+            confWOs.add(wo.id);
+            confDates.add(date);
+          }
+        }
+      });
+    });
+
     return { conflictingWOIds: confWOs, conflictingDates: confDates };
-  }, [activeWorkOrdersList, engineers]);
+  }, [activeWorkOrdersList, engineers, vacations]);
+
+  const getWoConflictDetails = (wo: Partial<WorkOrder>) => {
+    if (!wo.plannedDate || wo.status === 'Conciliado') return null;
+    const date = wo.plannedDate;
+    const woDuration = wo.durationDays || 1;
+    const woEndDate = getEndDateStr(date, woDuration);
+    const assignedEngs = [wo.engineerId, ...(wo.supportEngineerIds || (wo.supportEngineerId ? [wo.supportEngineerId] : []))].filter(Boolean) as string[];
+
+    // 1. Check Feriado & Vacation Overlaps
+    const matchingVacations = (vacations || []).filter(v => 
+      v.status === 'Aprobado' && date <= v.endDate && woEndDate >= v.startDate
+    );
+
+    const feriadoVac = matchingVacations.find(v => v.engineerId === 'FERIADO' || v.notes?.toLowerCase().includes('feriado'));
+    if (feriadoVac) {
+      return { type: 'feriado', label: `Feriado Nacional: ${feriadoVac.notes?.replace('Feriado Nacional: ', '') || 'Día Festivo'}` };
+    }
+
+    const engVac = matchingVacations.find(v => assignedEngs.includes(v.engineerId));
+    if (engVac) {
+      const eng = engineers.find(e => e.id === engVac.engineerId);
+      return { type: 'vacation', label: `Técnico en Vacaciones (${getEngineerFullNameNoTitle(eng?.name)})` };
+    }
+
+    // 2. Check Work Order Schedule Overlap
+    const sameDaySameEngWOs = activeWorkOrdersList.filter(otherWo => {
+      if (otherWo.id === wo.id || otherWo.status === 'Conciliado' || otherWo.plannedDate !== date) return false;
+      const otherEngs = [otherWo.engineerId, ...(otherWo.supportEngineerIds || (otherWo.supportEngineerId ? [otherWo.supportEngineerId] : []))].filter(Boolean);
+      const sharesEng = assignedEngs.some(eId => otherEngs.includes(eId));
+      if (!sharesEng) return false;
+      return checkTimeOverlap(wo.plannedTime || '', otherWo.plannedTime || '');
+    });
+
+    if (sameDaySameEngWOs.length > 0) {
+      return { type: 'schedule', label: 'Cruce de Horarios (Mismo Técnico/Horario)' };
+    }
+
+    return null;
+  };
 
   // Professional Reorganize Agenda Handler (by Specialization, accredited Modalities & Sede)
   const handleSmartReorganize = () => {
@@ -2778,6 +2837,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     }
     const newWOId = `WO-2026-0${nextNum}`;
 
+    const conflicts = getCreationFormConflicts();
+    if (conflicts.length > 0) {
+      const conflictList = conflicts.map(c => `• ${c.engineer.name}: Vacaciones / Feriado del ${c.vacation.startDate} al ${c.vacation.endDate}`).join('\n');
+      const confirmSave = window.confirm(
+        `⚠️ ALERTA DE CONFLICTO - TÉCNICO EN VACACIONES / FERIADO:\n\n${conflictList}\n\n¿Está seguro de registrar esta Orden de Trabajo en las fechas seleccionadas?`
+      );
+      if (!confirmSave) return;
+    }
+
     const newWO: WorkOrder = {
       id: newWOId,
       clientId: finalClientId,
@@ -3088,6 +3156,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     if (!wo) return;
     if (wo.plannedDate === targetDateStr) return; // No change
     
+    // Check for conflicts (Vacation, Feriado or Schedule overlap)
+    const conflictDetail = getWoConflictDetails({ ...wo, plannedDate: targetDateStr });
+    if (conflictDetail) {
+      const confirmMove = window.confirm(
+        `⚠️ ALERTA DE CONFLICTO:\n\n${conflictDetail.label}\nFecha destino: ${targetDateStr}.\n\n¿Está seguro de que desea mover esta Orden de Trabajo a esta fecha con conflicto?`
+      );
+      if (!confirmMove) return;
+    }
+
     const oldDateStr = wo.plannedDate;
 
     const updatedWO: WorkOrder = {
@@ -3523,7 +3600,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               const isHighlighted = matchesQuery && matchesEng && matchesConflict;
               const hasHighlightActive = !!highlightedEngineerId || !!searchQuery || filterOnlyConflicting;
 
-              const isConflicting = conflictingWOIds.has(wo.id);
+              const conflictDetail = getWoConflictDetails(wo);
+              const isConflicting = conflictingWOIds.has(wo.id) || !!conflictDetail;
               const isReassigned = reassignedWOIds.has(wo.id);
 
               const engColor = eng ? getEngineerColorClasses(eng.id) : null;
@@ -3534,8 +3612,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               let ringStyle = '';
 
               if (isConflicting) {
-                cardStyle += ' border-2 border-amber-500 bg-amber-50/95';
-                ringStyle += ' ring-2 ring-amber-500 shadow-md animate-pulse z-10';
+                if (conflictDetail?.type === 'vacation' || conflictDetail?.type === 'feriado') {
+                  cardStyle += ' border-2 border-red-600 bg-red-50/95';
+                  ringStyle += ' ring-2 ring-red-500 shadow-md animate-pulse z-10';
+                } else {
+                  cardStyle += ' border-2 border-amber-500 bg-amber-50/95';
+                  ringStyle += ' ring-2 ring-amber-500 shadow-md animate-pulse z-10';
+                }
               }
 
               if (hasHighlightActive) {
@@ -3568,7 +3651,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     e.dataTransfer.effectAllowed = "move";
                   }}
                   className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium leading-normal cursor-pointer hover:shadow-sm select-none ${cardStyle} ${ringStyle}`}
-                  title={`${clientDisplayName} - ${wo.equipmentName} ${wo.plannedTime ? `(${wo.plannedTime})` : ''} (${eng?.name || ''}${supportNamesStr ? ` [Apoyo: ${supportNamesStr}]` : ''})`}
+                  title={`${clientDisplayName} - ${wo.equipmentName} ${wo.plannedTime ? `(${wo.plannedTime})` : ''} (${eng?.name || ''}${supportNamesStr ? ` [Apoyo: ${supportNamesStr}]` : ''})${conflictDetail ? ` - ⚠️ ${conflictDetail.label}` : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setInfoWO(wo);
@@ -3576,12 +3659,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 >
                   <div className="flex items-center justify-between font-black truncate text-slate-900 leading-none mb-0.5">
                     <span className="truncate">{clientDisplayName}</span>
-                    {isConflicting && (
-                      <span className="bg-amber-500 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded animate-pulse shrink-0 ml-1">
-                        ⚠️ CRUZADO
+                    {conflictDetail && (
+                      <span className={`font-extrabold text-[7.5px] px-1 py-0.5 rounded animate-pulse shrink-0 ml-1 ${
+                        conflictDetail.type === 'vacation' || conflictDetail.type === 'feriado'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-amber-500 text-white'
+                      }`}>
+                        ⚠️ {conflictDetail.type === 'vacation' ? 'VACACIONES' : conflictDetail.type === 'feriado' ? 'FERIADO' : 'CRUZADO'}
                       </span>
                     )}
-                    {isReassigned && !isConflicting && (
+                    {isReassigned && !conflictDetail && (
                       <span className="bg-purple-600 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1">
                         ✨ REASIGNADO
                       </span>
@@ -8640,6 +8727,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       }
 
       const eng = engineers.find(e => e.id === targetEngId);
+
+      // Check for work order schedule conflicts
+      if (schedulingConflicts.length > 0) {
+        const confirmVac = window.confirm(
+          `⚠️ ALERTA DE CRUCE DE TRABAJO Y VACACIONES:\n\nEl técnico ${eng?.name || ''} tiene ${schedulingConflicts.length} orden(es) de trabajo asignadas durante estas fechas.\n\n¿Desea registrar las vacaciones de todas formas?`
+        );
+        if (!confirmVac) return;
+      }
+
+      // Check for existing overlapping approved vacations for the same technician
+      const overlappingVac = (vacations || []).find(v => 
+        v.engineerId === targetEngId && v.status === 'Aprobado' &&
+        (vacFormStart <= v.endDate && vacFormEnd >= v.startDate)
+      );
+      if (overlappingVac) {
+        const confirmOverlap = window.confirm(
+          `⚠️ ALERTA DE VACACIONES CRUZADAS / DUPLICADAS:\n\nEl técnico ${eng?.name || ''} ya cuenta con vacaciones aprobadas del ${overlappingVac.startDate} al ${overlappingVac.endDate}.\n\n¿Desea registrar estas vacaciones de todos modos?`
+        );
+        if (!confirmOverlap) return;
+      }
 
       const newVac: Vacation = {
         id: 'VAC-' + Date.now(),
