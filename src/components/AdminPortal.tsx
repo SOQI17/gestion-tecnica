@@ -1286,6 +1286,8 @@ export default function AdminPortal({
   const [tempEquipName, setTempEquipName] = useState('');
   const [tempEquipBrand, setTempEquipBrand] = useState('');
   const [tempEquipModality, setTempEquipModality] = useState('');
+  const [tempEquipSerial, setTempEquipSerial] = useState('');
+  const [tempEquipGon, setTempEquipGon] = useState('');
 
   // Maintenance scheduling states
   const [contractFormFrequency, setContractFormFrequency] = useState<'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno'>('Ninguno');
@@ -7304,6 +7306,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setContractFormEquipmentItems([]);
                   setTempEquipName('');
                   setTempEquipBrand('');
+                  setTempEquipModality('');
+                  setTempEquipSerial('');
+                  setTempEquipGon('');
                   setContractFormFrequency('Ninguno');
                   setContractFormPreferredDay('');
                   setContractFormSelectedEquipForFreq('all');
@@ -15673,10 +15678,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   {contractFormEquipmentItems.map((item, eqIdx) => (
                                     <div key={eqIdx} className="bg-white border border-amber-200 rounded-xl p-2.5 space-y-2 shadow-2xs">
                                       <div className="flex items-center justify-between border-b border-amber-100 pb-1">
-                                        <span className="text-[10px] font-extrabold text-amber-950 flex items-center gap-1.5 truncate">
+                                        <span className="text-[10px] font-extrabold text-amber-950 flex flex-wrap items-center gap-1.5 truncate">
                                           <span>🖥️ {item.name}</span>
                                           <span className="text-[8px] font-semibold text-slate-500">({item.brand})</span>
                                           {item.modality && <span className="bg-indigo-100 text-indigo-800 text-[7.5px] font-black px-1 rounded">{item.modality}</span>}
+                                          {item.serial && <span className="bg-slate-100 text-slate-700 font-mono text-[7.5px] px-1 rounded">S/N: {item.serial}</span>}
+                                          {item.gon && <span className="bg-purple-100 text-purple-800 font-mono text-[7.5px] px-1 rounded">GON: {item.gon}</span>}
                                         </span>
                                       </div>
 
@@ -16329,7 +16336,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         <button
                                           type="button"
                                           onClick={() => {
-                                            setContractFormEquipmentItems([...contractFormEquipmentItems, { name: eq.name, brand: eq.brand || 'N/D' }]);
+                                            setContractFormEquipmentItems([...contractFormEquipmentItems, { name: eq.name, brand: eq.brand || 'N/D', serial: eq.serialNumber || undefined }]);
                                           }}
                                           className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold px-1 py-0.5 rounded text-[8px] cursor-pointer"
                                         >
@@ -16386,6 +16393,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             </div>
                           </div>
 
+                          {/* Optional Fields: Serial & GON */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5 border-t border-slate-200/60">
+                            <div className="space-y-0.5">
+                              <label className="block text-[9px] font-extrabold text-slate-500 uppercase flex items-center justify-between">
+                                <span>Serial (Opcional)</span>
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Ej. SN-98765432"
+                                value={tempEquipSerial}
+                                onChange={(e) => setTempEquipSerial(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 font-mono outline-hidden focus:border-indigo-500"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="block text-[9px] font-extrabold text-slate-500 uppercase flex items-center justify-between">
+                                <span>GON (Opcional)</span>
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Ej. GON-12345"
+                                value={tempEquipGon}
+                                onChange={(e) => setTempEquipGon(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 font-mono outline-hidden focus:border-indigo-500"
+                              />
+                            </div>
+                          </div>
+
                           <div className="flex justify-end pt-0.5">
                             <button
                               type="button"
@@ -16396,12 +16431,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   { 
                                     name: tempEquipName.trim(), 
                                     brand: tempEquipBrand.trim() || 'N/D',
-                                    modality: tempEquipModality || undefined
+                                    modality: tempEquipModality || undefined,
+                                    serial: tempEquipSerial.trim() || undefined,
+                                    gon: tempEquipGon.trim() || undefined,
                                   }
                                 ]);
                                 setTempEquipName('');
                                 setTempEquipBrand('');
                                 setTempEquipModality('');
+                                setTempEquipSerial('');
+                                setTempEquipGon('');
                               }}
                               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold px-3 py-1.5 rounded-lg text-3xs transition-all shadow-2xs flex items-center justify-center gap-1 cursor-pointer"
                             >
@@ -16412,19 +16451,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       )}
 
                       {/* List of currently covered equipments */}
-                      <div className="border border-slate-205 rounded-xl divide-y divide-slate-100 max-h-[120px] overflow-y-auto bg-white">
+                      <div className="border border-slate-205 rounded-xl divide-y divide-slate-100 max-h-[140px] overflow-y-auto bg-white">
                         {contractFormEquipmentItems.map((item, index) => (
                           <div key={index} className="flex items-center justify-between p-2 hover:bg-slate-50/50 transition-colors">
-                            <div className="truncate pr-2">
+                            <div className="truncate pr-2 space-y-0.5">
                               <p className="font-bold text-slate-800 text-[10.5px] leading-tight">{item.name}</p>
-                              <p className="text-[8.5px] text-slate-500 font-semibold leading-none mt-0.5">
-                                Marca: <span className="font-extrabold text-slate-700">{item.brand}</span>
+                              <div className="flex flex-wrap items-center gap-1 text-[8.5px] text-slate-500 font-semibold leading-none">
+                                <span>Marca: <span className="font-extrabold text-slate-700">{item.brand}</span></span>
                                 {item.modality && (
-                                  <span className="ml-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 px-1 py-0.2 rounded font-black text-[7.5px]">
+                                  <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1 py-0.2 rounded font-black text-[7.5px]">
                                     {item.modality}
                                   </span>
                                 )}
-                              </p>
+                                {item.serial && (
+                                  <span className="bg-slate-100 text-slate-700 border border-slate-200 px-1 py-0.2 rounded font-mono text-[7.5px]">
+                                    S/N: {item.serial}
+                                  </span>
+                                )}
+                                {item.gon && (
+                                  <span className="bg-purple-50 text-purple-750 border border-purple-200 px-1 py-0.2 rounded font-mono text-[7.5px]">
+                                    GON: {item.gon}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             {!isSalesReadOnly && (
                               <button
@@ -17048,12 +17097,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <div className="space-y-1.5">
                     {selectedContractForDetails.equipmentItems.map((item, idx) => (
                       <div key={idx} className="bg-slate-50 border border-slate-200 p-2 rounded-xl flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
                           <span className="font-extrabold text-slate-800 text-xs">🖥️ {item.name}</span>
                           <span className="text-[9px] text-slate-500 font-semibold">({item.brand})</span>
                           {item.modality && (
                             <span className="bg-indigo-100 text-indigo-800 px-1.5 py-0.2 rounded text-[7.5px] font-black">
                               {item.modality}
+                            </span>
+                          )}
+                          {item.serial && (
+                            <span className="bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.2 rounded font-mono text-[7.5px] font-bold">
+                              S/N: {item.serial}
+                            </span>
+                          )}
+                          {item.gon && (
+                            <span className="bg-purple-50 text-purple-750 border border-purple-200 px-1.5 py-0.2 rounded font-mono text-[7.5px] font-bold">
+                              GON: {item.gon}
                             </span>
                           )}
                         </div>

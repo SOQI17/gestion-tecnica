@@ -175,6 +175,8 @@ export interface ContractEquipmentItem {
   name: string;
   brand: string;
   modality?: string;
+  serial?: string; // Número de serie del equipo (opcional)
+  gon?: string; // Código GON (opcional)
   serviceRecordPdfUrl?: string; // Documento Service Record (SR) específico del equipo
   caPdfUrl?: string; // Documento Certificate of Acceptance (CA) específico del equipo
   podPdfUrl?: string; // Documento Proof of Delivery (POD) específico del equipo
