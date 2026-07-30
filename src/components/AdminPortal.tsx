@@ -1322,6 +1322,7 @@ export default function AdminPortal({
   const [isDraggingSrPdf, setIsDraggingSrPdf] = useState(false);
   const [isDraggingCaPdf, setIsDraggingCaPdf] = useState(false);
   const [isDraggingPodPdf, setIsDraggingPodPdf] = useState(false);
+  const [draggingEqAttachKey, setDraggingEqAttachKey] = useState<string | null>(null);
 
   const [contractFormLinkedId, setContractFormLinkedId] = useState(''); // ID del contrato sucesor vinculado
 
@@ -15679,21 +15680,56 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         </span>
                                       </div>
 
-                                      <div className="grid grid-cols-1 gap-1.5">
+                                      <div className="grid grid-cols-1 gap-2">
                                         {/* SR per equipment */}
-                                        <div className="space-y-1">
+                                        <div 
+                                          onDragEnter={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setDraggingEqAttachKey(`${eqIdx}-sr`);
+                                          }}
+                                          onDragOver={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            e.dataTransfer.dropEffect = 'copy';
+                                            if (draggingEqAttachKey !== `${eqIdx}-sr`) setDraggingEqAttachKey(`${eqIdx}-sr`);
+                                          }}
+                                          onDragLeave={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                                            setDraggingEqAttachKey(null);
+                                          }}
+                                          onDrop={async (e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setDraggingEqAttachKey(null);
+                                            const file = e.dataTransfer.files?.[0];
+                                            if (file) {
+                                              try {
+                                                const url = await uploadFileToCloudinary(file);
+                                                const updated = [...contractFormEquipmentItems];
+                                                updated[eqIdx] = { ...updated[eqIdx], serviceRecordPdfUrl: url };
+                                                setContractFormEquipmentItems(updated);
+                                              } catch (err: any) {
+                                                alert(err.message || 'Error al subir el SR');
+                                              }
+                                            }
+                                          }}
+                                          className="space-y-1"
+                                        >
                                           {item.serviceRecordPdfUrl ? (
-                                            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-1.5 rounded-lg text-3xs gap-2">
-                                              <a href={getCleanCloudinaryUrl(item.serviceRecordPdfUrl)} target="_blank" rel="noreferrer" className="text-amber-950 font-bold hover:underline truncate flex items-center gap-1 min-w-0">
-                                                <FileText className="w-3 h-3 text-amber-600 shrink-0" />
-                                                <span className="truncate">🛠️ SR: Ver Documento</span>
-                                                <ExternalLink className="w-2.5 h-2.5 text-amber-600 shrink-0" />
+                                            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-2 rounded-xl text-3xs gap-2">
+                                              <a href={getCleanCloudinaryUrl(item.serviceRecordPdfUrl)} target="_blank" rel="noreferrer" className="text-amber-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                                <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                                <span className="truncate">🛠️ Service Record (SR) — {item.name}</span>
+                                                <ExternalLink className="w-3 h-3 text-amber-600 shrink-0" />
                                               </a>
                                               <button type="button" onClick={() => {
                                                 const updated = [...contractFormEquipmentItems];
                                                 updated[eqIdx] = { ...updated[eqIdx], serviceRecordPdfUrl: undefined };
                                                 setContractFormEquipmentItems(updated);
-                                              }} className="text-rose-600 font-bold text-[8px] px-1.5 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                              }} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
                                             </div>
                                           ) : (
                                             <div>
@@ -15716,31 +15752,80 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                                   }
                                                 }}
                                               />
-                                              <label htmlFor={`sr-file-${eqIdx}`} className="w-full text-slate-700 font-extrabold text-[9px] py-1.5 px-2.5 rounded-lg border border-dashed border-amber-300 bg-amber-50/20 hover:bg-amber-50 flex items-center justify-between cursor-pointer transition-all">
-                                                <span className="flex items-center gap-1 truncate">
-                                                  <Upload className="w-3 h-3 text-amber-600 shrink-0" />
-                                                  <span className="truncate">🛠️ Service Record (SR) — {item.name}</span>
+                                              <label
+                                                htmlFor={`sr-file-${eqIdx}`}
+                                                className={`w-full text-slate-700 font-extrabold text-[9.5px] py-2 px-3 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
+                                                  draggingEqAttachKey === `${eqIdx}-sr`
+                                                    ? 'border-amber-500 bg-amber-100/90 text-amber-950 shadow-md scale-[1.01]'
+                                                    : 'border-amber-300/80 bg-amber-50/30 hover:bg-amber-50 hover:border-amber-400'
+                                                }`}
+                                              >
+                                                <div className="flex items-center justify-between w-full pointer-events-none">
+                                                  <span className="flex items-center gap-1.5 truncate font-extrabold text-amber-950">
+                                                    <Upload className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                                    <span className="truncate">🛠️ Service Record (SR) — {item.name}</span>
+                                                  </span>
+                                                  <span className="text-[7.5px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded shrink-0">
+                                                    {draggingEqAttachKey === `${eqIdx}-sr` ? '¡Suelta el SR aquí!' : 'Subir SR / Arrastrar'}
+                                                  </span>
+                                                </div>
+                                                <span className="text-[8.5px] font-normal text-slate-400 pointer-events-none">
+                                                  Arrastra y suelta el archivo aquí o haz clic para buscar
                                                 </span>
-                                                <span className="text-[7.5px] font-bold text-amber-700 bg-amber-100 px-1 py-0.2 rounded shrink-0">Subir SR</span>
                                               </label>
                                             </div>
                                           )}
                                         </div>
 
                                         {/* CA per equipment */}
-                                        <div className="space-y-1">
+                                        <div 
+                                          onDragEnter={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setDraggingEqAttachKey(`${eqIdx}-ca`);
+                                          }}
+                                          onDragOver={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            e.dataTransfer.dropEffect = 'copy';
+                                            if (draggingEqAttachKey !== `${eqIdx}-ca`) setDraggingEqAttachKey(`${eqIdx}-ca`);
+                                          }}
+                                          onDragLeave={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                                            setDraggingEqAttachKey(null);
+                                          }}
+                                          onDrop={async (e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setDraggingEqAttachKey(null);
+                                            const file = e.dataTransfer.files?.[0];
+                                            if (file) {
+                                              try {
+                                                const url = await uploadFileToCloudinary(file);
+                                                const updated = [...contractFormEquipmentItems];
+                                                updated[eqIdx] = { ...updated[eqIdx], caPdfUrl: url };
+                                                setContractFormEquipmentItems(updated);
+                                              } catch (err: any) {
+                                                alert(err.message || 'Error al subir el CA');
+                                              }
+                                            }
+                                          }}
+                                          className="space-y-1"
+                                        >
                                           {item.caPdfUrl ? (
-                                            <div className="flex items-center justify-between bg-teal-50 border border-teal-200 p-1.5 rounded-lg text-3xs gap-2">
-                                              <a href={getCleanCloudinaryUrl(item.caPdfUrl)} target="_blank" rel="noreferrer" className="text-teal-950 font-bold hover:underline truncate flex items-center gap-1 min-w-0">
-                                                <FileText className="w-3 h-3 text-teal-600 shrink-0" />
-                                                <span className="truncate">📜 CA: Ver Documento</span>
-                                                <ExternalLink className="w-2.5 h-2.5 text-teal-600 shrink-0" />
+                                            <div className="flex items-center justify-between bg-teal-50 border border-teal-200 p-2 rounded-xl text-3xs gap-2">
+                                              <a href={getCleanCloudinaryUrl(item.caPdfUrl)} target="_blank" rel="noreferrer" className="text-teal-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                                <FileText className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                                <span className="truncate">📜 Certificate of Acceptance (CA) — {item.name}</span>
+                                                <ExternalLink className="w-3 h-3 text-teal-600 shrink-0" />
                                               </a>
                                               <button type="button" onClick={() => {
                                                 const updated = [...contractFormEquipmentItems];
                                                 updated[eqIdx] = { ...updated[eqIdx], caPdfUrl: undefined };
                                                 setContractFormEquipmentItems(updated);
-                                              }} className="text-rose-600 font-bold text-[8px] px-1.5 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                              }} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
                                             </div>
                                           ) : (
                                             <div>
@@ -15763,31 +15848,80 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                                   }
                                                 }}
                                               />
-                                              <label htmlFor={`ca-file-${eqIdx}`} className="w-full text-slate-700 font-extrabold text-[9px] py-1.5 px-2.5 rounded-lg border border-dashed border-teal-300 bg-teal-50/20 hover:bg-teal-50 flex items-center justify-between cursor-pointer transition-all">
-                                                <span className="flex items-center gap-1 truncate">
-                                                  <Upload className="w-3 h-3 text-teal-600 shrink-0" />
-                                                  <span className="truncate">📜 Certificate of Acceptance (CA) — {item.name}</span>
+                                              <label
+                                                htmlFor={`ca-file-${eqIdx}`}
+                                                className={`w-full text-slate-700 font-extrabold text-[9.5px] py-2 px-3 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
+                                                  draggingEqAttachKey === `${eqIdx}-ca`
+                                                    ? 'border-teal-500 bg-teal-100/90 text-teal-950 shadow-md scale-[1.01]'
+                                                    : 'border-teal-300/80 bg-teal-50/30 hover:bg-teal-50 hover:border-teal-400'
+                                                }`}
+                                              >
+                                                <div className="flex items-center justify-between w-full pointer-events-none">
+                                                  <span className="flex items-center gap-1.5 truncate font-extrabold text-teal-950">
+                                                    <Upload className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                                    <span className="truncate">📜 Certificate of Acceptance (CA) — {item.name}</span>
+                                                  </span>
+                                                  <span className="text-[7.5px] font-bold text-teal-800 bg-teal-100 px-1.5 py-0.2 rounded shrink-0">
+                                                    {draggingEqAttachKey === `${eqIdx}-ca` ? '¡Suelta el CA aquí!' : 'Subir CA / Arrastrar'}
+                                                  </span>
+                                                </div>
+                                                <span className="text-[8.5px] font-normal text-slate-400 pointer-events-none">
+                                                  Arrastra y suelta el archivo aquí o haz clic para buscar
                                                 </span>
-                                                <span className="text-[7.5px] font-bold text-teal-700 bg-teal-100 px-1 py-0.2 rounded shrink-0">Subir CA</span>
                                               </label>
                                             </div>
                                           )}
                                         </div>
 
                                         {/* POD per equipment */}
-                                        <div className="space-y-1">
+                                        <div 
+                                          onDragEnter={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setDraggingEqAttachKey(`${eqIdx}-pod`);
+                                          }}
+                                          onDragOver={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            e.dataTransfer.dropEffect = 'copy';
+                                            if (draggingEqAttachKey !== `${eqIdx}-pod`) setDraggingEqAttachKey(`${eqIdx}-pod`);
+                                          }}
+                                          onDragLeave={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                                            setDraggingEqAttachKey(null);
+                                          }}
+                                          onDrop={async (e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setDraggingEqAttachKey(null);
+                                            const file = e.dataTransfer.files?.[0];
+                                            if (file) {
+                                              try {
+                                                const url = await uploadFileToCloudinary(file);
+                                                const updated = [...contractFormEquipmentItems];
+                                                updated[eqIdx] = { ...updated[eqIdx], podPdfUrl: url };
+                                                setContractFormEquipmentItems(updated);
+                                              } catch (err: any) {
+                                                alert(err.message || 'Error al subir el POD');
+                                              }
+                                            }
+                                          }}
+                                          className="space-y-1"
+                                        >
                                           {item.podPdfUrl ? (
-                                            <div className="flex items-center justify-between bg-sky-50 border border-sky-200 p-1.5 rounded-lg text-3xs gap-2">
-                                              <a href={getCleanCloudinaryUrl(item.podPdfUrl)} target="_blank" rel="noreferrer" className="text-sky-950 font-bold hover:underline truncate flex items-center gap-1 min-w-0">
-                                                <FileText className="w-3 h-3 text-sky-600 shrink-0" />
-                                                <span className="truncate">📦 POD: Ver Documento</span>
-                                                <ExternalLink className="w-2.5 h-2.5 text-sky-600 shrink-0" />
+                                            <div className="flex items-center justify-between bg-sky-50 border border-sky-200 p-2 rounded-xl text-3xs gap-2">
+                                              <a href={getCleanCloudinaryUrl(item.podPdfUrl)} target="_blank" rel="noreferrer" className="text-sky-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                                <FileText className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                                <span className="truncate">📦 Proof of Delivery (POD) — {item.name}</span>
+                                                <ExternalLink className="w-3 h-3 text-sky-600 shrink-0" />
                                               </a>
                                               <button type="button" onClick={() => {
                                                 const updated = [...contractFormEquipmentItems];
                                                 updated[eqIdx] = { ...updated[eqIdx], podPdfUrl: undefined };
                                                 setContractFormEquipmentItems(updated);
-                                              }} className="text-rose-600 font-bold text-[8px] px-1.5 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                              }} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
                                             </div>
                                           ) : (
                                             <div>
@@ -15810,12 +15944,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                                   }
                                                 }}
                                               />
-                                              <label htmlFor={`pod-file-${eqIdx}`} className="w-full text-slate-700 font-extrabold text-[9px] py-1.5 px-2.5 rounded-lg border border-dashed border-sky-300 bg-sky-50/20 hover:bg-sky-50 flex items-center justify-between cursor-pointer transition-all">
-                                                <span className="flex items-center gap-1 truncate">
-                                                  <Upload className="w-3 h-3 text-sky-600 shrink-0" />
-                                                  <span className="truncate">📦 Proof of Delivery (POD) — {item.name}</span>
+                                              <label
+                                                htmlFor={`pod-file-${eqIdx}`}
+                                                className={`w-full text-slate-700 font-extrabold text-[9.5px] py-2 px-3 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
+                                                  draggingEqAttachKey === `${eqIdx}-pod`
+                                                    ? 'border-sky-500 bg-sky-100/90 text-sky-950 shadow-md scale-[1.01]'
+                                                    : 'border-sky-300/80 bg-sky-50/30 hover:bg-sky-50 hover:border-sky-400'
+                                                }`}
+                                              >
+                                                <div className="flex items-center justify-between w-full pointer-events-none">
+                                                  <span className="flex items-center gap-1.5 truncate font-extrabold text-sky-950">
+                                                    <Upload className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                                    <span className="truncate">📦 Proof of Delivery (POD) — {item.name}</span>
+                                                  </span>
+                                                  <span className="text-[7.5px] font-bold text-sky-800 bg-sky-100 px-1.5 py-0.2 rounded shrink-0">
+                                                    {draggingEqAttachKey === `${eqIdx}-pod` ? '¡Suelta el POD aquí!' : 'Subir POD / Arrastrar'}
+                                                  </span>
+                                                </div>
+                                                <span className="text-[8.5px] font-normal text-slate-400 pointer-events-none">
+                                                  Arrastra y suelta el archivo aquí o haz clic para buscar
                                                 </span>
-                                                <span className="text-[7.5px] font-bold text-sky-700 bg-sky-100 px-1 py-0.2 rounded shrink-0">Subir POD</span>
                                               </label>
                                             </div>
                                           )}
