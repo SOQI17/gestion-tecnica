@@ -35,6 +35,14 @@ export interface UserPermissions {
   canViewRegistry?: boolean;
   canEditRegistry?: boolean;
 
+  // 🌴 VACACIONES Y PERMISOS DE PERSONAL
+  canViewVacations?: boolean;
+  canManageVacations?: boolean;
+
+  // 📚 CAPACITACIONES Y ENTRENAMIENTOS
+  canViewTrainings?: boolean;
+  canManageTrainings?: boolean;
+
   // ⚙️ ADMINISTRACIÓN Y SISTEMA
   canManageUsers?: boolean;
   canViewAuditLogs?: boolean;

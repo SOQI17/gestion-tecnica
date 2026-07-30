@@ -71,6 +71,12 @@ export const DEFAULT_GLOBAL_ROLE_TEMPLATES: RoleTemplates = {
     canViewRegistry: true,
     canEditRegistry: false,
 
+    canViewVacations: false,
+    canManageVacations: false,
+
+    canViewTrainings: false,
+    canManageTrainings: false,
+
     canManageUsers: false,
     canViewAuditLogs: false,
     canExportData: true
@@ -101,6 +107,12 @@ export const DEFAULT_GLOBAL_ROLE_TEMPLATES: RoleTemplates = {
     canViewRegistry: true,
     canEditRegistry: true,
 
+    canViewVacations: true,
+    canManageVacations: true,
+
+    canViewTrainings: true,
+    canManageTrainings: true,
+
     canManageUsers: false,
     canViewAuditLogs: true,
     canExportData: true
@@ -130,6 +142,12 @@ export const DEFAULT_GLOBAL_ROLE_TEMPLATES: RoleTemplates = {
 
     canViewRegistry: true,
     canEditRegistry: true,
+
+    canViewVacations: true,
+    canManageVacations: true,
+
+    canViewTrainings: true,
+    canManageTrainings: true,
 
     canManageUsers: true,
     canViewAuditLogs: true,
@@ -9905,7 +9923,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
             const visibleAdminTabs = userRole === 'sales'
               ? allAdminTabs.filter(t => t.id === 'clientes' || t.id === 'contratos')
-              : allAdminTabs;
+              : allAdminTabs.filter(t => {
+                  if (t.id === 'agendamiento' || t.id === 'cronograma') return effectivePermissions.canViewWorkOrders !== false;
+                  if (t.id === 'clientes') return effectivePermissions.canViewClients !== false;
+                  if (t.id === 'equipos') return effectivePermissions.canViewEquipments !== false;
+                  if (t.id === 'registro') return effectivePermissions.canViewRegistry !== false;
+                  if (t.id === 'contratos') return effectivePermissions.canViewContracts !== false;
+                  if (t.id === 'vacaciones') return effectivePermissions.canViewVacations !== false;
+                  if (t.id === 'capacitaciones') return effectivePermissions.canViewTrainings !== false;
+                  return true;
+                });
 
             return visibleAdminTabs.map(tab => {
               const Icon = tab.icon;
@@ -14055,9 +14082,47 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 ))}
                               </div>
 
+                              {/* 🌴 VACACIONES Y PERMISOS */}
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-teal-900 uppercase tracking-wider block border-b border-slate-200 pb-1">🌴 Vacaciones y Permisos</span>
+                                {[
+                                  { key: 'canViewVacations', label: 'Ver módulo de vacaciones del personal' },
+                                  { key: 'canManageVacations', label: 'Solicitar / Aprobar / Editar vacaciones' },
+                                ].map(perm => (
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(editEngPermissions as any)[perm.key]}
+                                      onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                    />
+                                    <span>{perm.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+
+                              {/* 📚 CAPACITACIONES Y ENTRENAMIENTOS */}
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-purple-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📚 Capacitaciones y Cursos</span>
+                                {[
+                                  { key: 'canViewTrainings', label: 'Ver módulo de capacitaciones y cursos' },
+                                  { key: 'canManageTrainings', label: 'Programar / Editar / Eliminar cursos' },
+                                ].map(perm => (
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(editEngPermissions as any)[perm.key]}
+                                      onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
+                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                    />
+                                    <span>{perm.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+
                               {/* ⚙️ ADMINISTRACIÓN Y REPORTES */}
                               <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
-                                <span className="font-extrabold text-[9px] text-purple-900 uppercase tracking-wider block border-b border-slate-200 pb-1">⚙️ Administración del Sistema</span>
+                                <span className="font-extrabold text-[9px] text-slate-900 uppercase tracking-wider block border-b border-slate-200 pb-1">⚙️ Administración del Sistema</span>
                                 {[
                                   { key: 'canManageUsers', label: 'Gestionar usuarios y otorgar permisos' },
                                   { key: 'canViewAuditLogs', label: 'Ver registros de auditoría y cambios' },
