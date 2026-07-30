@@ -3224,10 +3224,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 return (
                   <div
                     key={`pv-vac-${v.id}`}
-                    className={`text-[8.5px] leading-tight p-1 rounded font-black truncate flex items-center gap-1 select-none opacity-85 ${
+                    className={`text-[8.5px] leading-tight p-1 rounded font-bold truncate flex items-center gap-1 select-none opacity-85 ${
                       isFeriado
-                        ? 'bg-red-600 text-white border border-red-700'
-                        : 'bg-rose-600 text-white border border-rose-700'
+                        ? 'bg-red-600 text-white border border-red-700 font-black'
+                        : 'bg-teal-50 border-teal-200 border-l-4 border-l-teal-500 text-teal-900'
                     }`}
                     title={isFeriado ? `Feriado Ecuador: ${v.notes}` : `Vacaciones: ${eng?.name || 'Técnico'}`}
                   >
@@ -3353,8 +3353,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       const dayVacations = (vacations || []).filter(v => {
         return v.status === 'Aprobado' && dateStr >= v.startDate && dateStr <= v.endDate;
       });
-      const hasVacationOrFeriado = dayVacations.length > 0;
       const hasFeriado = dayVacations.some(v => v.engineerId === 'FERIADO' || v.notes?.toLowerCase().includes('feriado'));
+      const hasEngineerVacation = dayVacations.some(v => v.engineerId !== 'FERIADO' && !v.notes?.toLowerCase().includes('feriado'));
       const isSelected = selectedDay === day;
 
       calendarDays.push(
@@ -3403,8 +3403,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               ? 'bg-indigo-50/40 text-slate-900 scale-[1.01]'
               : hasFeriado
               ? 'bg-red-50/60 hover:bg-red-50/90 text-slate-900 border-red-200/80'
-              : hasVacationOrFeriado
-              ? 'bg-rose-50/50 hover:bg-rose-50/80 text-slate-900 border-rose-200/60'
+              : hasEngineerVacation
+              ? 'bg-teal-50/40 hover:bg-teal-50/70 text-slate-900 border-teal-200/60'
               : 'bg-white hover:bg-slate-50/60 text-slate-800'
           }`}
         >
@@ -3412,8 +3412,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <span className={`font-mono text-xs font-black transition-all ${
               hasFeriado
                 ? 'bg-red-600 text-white font-mono font-black px-1.5 py-0.5 rounded-md text-[11px] shadow-2xs'
-                : hasVacationOrFeriado
-                ? 'bg-rose-600 text-white font-mono font-black px-1.5 py-0.5 rounded-md text-[11px] shadow-2xs'
+                : hasEngineerVacation
+                ? 'bg-teal-600 text-white font-mono font-black px-1.5 py-0.5 rounded-md text-[11px] shadow-2xs'
                 : 'text-slate-800'
             }`}>{day}</span>
             {dayOrders.length > 0 && (
@@ -3429,10 +3429,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               return (
                 <div
                   key={`vac-${v.id}`}
-                  className={`text-[9px] leading-tight p-1.5 rounded-md border font-black truncate flex items-center gap-1.5 select-none shadow-2xs transition-transform hover:scale-[1.01] ${
+                  className={`text-[9px] leading-tight p-1.5 rounded-md border font-bold truncate flex items-center gap-1.5 select-none transition-transform hover:scale-[1.01] ${
                     isFeriado
-                      ? 'bg-red-600 text-white border-red-700 font-black tracking-tight'
-                      : 'bg-rose-600 text-white border-rose-700 font-black tracking-tight'
+                      ? 'bg-red-600 text-white border-red-700 font-black tracking-tight shadow-2xs'
+                      : 'bg-teal-50 border-teal-200 border-l-4 border-l-teal-500 text-teal-900 font-bold'
                   }`}
                   title={isFeriado ? `Feriado Ecuador: ${v.notes}` : `Vacaciones: ${eng?.name || 'Técnico'}`}
                   onClick={(e) => {
@@ -3694,10 +3694,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 return (
                   <div
                     key={`nv-vac-${v.id}`}
-                    className={`text-[8.5px] leading-tight p-1 rounded font-black truncate flex items-center gap-1 select-none opacity-85 ${
+                    className={`text-[8.5px] leading-tight p-1 rounded font-bold truncate flex items-center gap-1 select-none opacity-85 ${
                       isFeriado
-                        ? 'bg-red-600 text-white border border-red-700'
-                        : 'bg-rose-600 text-white border border-rose-700'
+                        ? 'bg-red-600 text-white border border-red-700 font-black'
+                        : 'bg-teal-50 border-teal-200 border-l-4 border-l-teal-500 text-teal-900'
                     }`}
                     title={isFeriado ? `Feriado Ecuador: ${v.notes}` : `Vacaciones: ${eng?.name || 'Técnico'}`}
                   >
