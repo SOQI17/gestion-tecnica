@@ -15654,240 +15654,408 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             )}
                           </div>
 
-                          {/* Adjuntos Opcionales para Equipo Nuevo: SR, CA, POD */}
+                          {/* Adjuntos Opcionales para Equipo Nuevo: SR, CA, POD (General y Por Equipo) */}
                           {contractFormIsNewEquipment && (
-                            <div className="space-y-2.5 pt-2 border-t border-amber-200/60 bg-amber-50/40 p-2.5 rounded-xl">
-                              <span className="block text-[9px] font-extrabold text-amber-900 uppercase tracking-wider">
-                                ✨ Adjuntos de Equipo Nuevo (Opcionales - Arrastra y Suelta)
-                              </span>
-
-                              {/* Service Record (SR) Upload Card */}
-                              <div 
-                                onDragEnter={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setIsDraggingSrPdf(true);
-                                }}
-                                onDragOver={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  e.dataTransfer.dropEffect = 'copy';
-                                  if (!isDraggingSrPdf) setIsDraggingSrPdf(true);
-                                }}
-                                onDragLeave={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-                                  setIsDraggingSrPdf(false);
-                                }}
-                                onDrop={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setIsDraggingSrPdf(false);
-                                  const file = e.dataTransfer.files?.[0];
-                                  if (file) handleUploadSrFile(file);
-                                }}
-                                className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
-                                  isDraggingSrPdf ? 'bg-amber-100/90 border-amber-500 ring-2 ring-amber-400/50 scale-[1.01]' : 'border-amber-200'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between pointer-events-none">
-                                  <span className="block text-[9.5px] font-extrabold text-amber-950 uppercase tracking-wide">🛠️ Service Record (SR)</span>
-                                  {isDraggingSrPdf ? (
-                                    <span className="text-[8px] font-extrabold text-amber-800 uppercase tracking-wider animate-pulse">¡Suelta el SR aquí!</span>
-                                  ) : (
-                                    <span className="text-[8px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded">Opcional</span>
-                                  )}
-                                </div>
-                                {contractFormSrPdfUrl ? (
-                                  <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-2 rounded-lg text-xs gap-2">
-                                    <a href={getCleanCloudinaryUrl(contractFormSrPdfUrl)} target="_blank" rel="noreferrer" className="text-amber-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                      <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                      <span className="truncate">Ver Service Record (SR)</span>
-                                      <ExternalLink className="w-3 h-3 text-amber-600 shrink-0" />
-                                    </a>
-                                    <button type="button" onClick={() => setContractFormSrPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
-                                  </div>
-                                ) : (
-                                  <div>
-                                    <input type="file" id="sr-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadSrFile(file); }} className="hidden" />
-                                    <label
-                                      htmlFor="sr-pdf-input"
-                                      className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
-                                        isDraggingSrPdf
-                                          ? 'border-amber-500 bg-amber-50 text-amber-950 shadow-md'
-                                          : 'border-amber-300 bg-amber-50/30 hover:bg-amber-50 hover:border-amber-400'
-                                      }`}
-                                    >
-                                      {isUploadingSrPdf ? (
-                                        <span className="text-amber-600 font-bold animate-pulse">Subiendo SR... ({uploadSrPdfProgress}%)</span>
-                                      ) : (
-                                        <>
-                                          <div className="flex items-center gap-1.5 pointer-events-none">
-                                            <Upload className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                            <span>{isDraggingSrPdf ? '¡Suelte el Service Record aquí!' : 'Adjuntar Service Record (SR)'}</span>
-                                          </div>
-                                          <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
-                                            Arrastra y suelta el archivo aquí o haz clic para buscar
-                                          </span>
-                                        </>
-                                      )}
-                                    </label>
-                                  </div>
-                                )}
+                            <div className="space-y-3 pt-2 border-t border-amber-200/60 bg-amber-50/40 p-2.5 rounded-xl">
+                              <div className="flex items-center justify-between">
+                                <span className="block text-[9px] font-extrabold text-amber-900 uppercase tracking-wider">
+                                  ✨ Adjuntos de Equipo Nuevo (SR, CA, POD)
+                                </span>
+                                <span className="text-[8px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded">
+                                  {contractFormEquipmentItems.length > 0 ? `Por Equipo (${contractFormEquipmentItems.length})` : 'General del Contrato'}
+                                </span>
                               </div>
 
-                              {/* Certificate of Acceptance (CA) Upload Card */}
-                              <div 
-                                onDragEnter={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setIsDraggingCaPdf(true);
-                                }}
-                                onDragOver={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  e.dataTransfer.dropEffect = 'copy';
-                                  if (!isDraggingCaPdf) setIsDraggingCaPdf(true);
-                                }}
-                                onDragLeave={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-                                  setIsDraggingCaPdf(false);
-                                }}
-                                onDrop={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setIsDraggingCaPdf(false);
-                                  const file = e.dataTransfer.files?.[0];
-                                  if (file) handleUploadCaFile(file);
-                                }}
-                                className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
-                                  isDraggingCaPdf ? 'bg-teal-100/90 border-teal-500 ring-2 ring-teal-400/50 scale-[1.01]' : 'border-teal-200'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between pointer-events-none">
-                                  <span className="block text-[9.5px] font-extrabold text-teal-950 uppercase tracking-wide">📜 Certificate of Acceptance (CA)</span>
-                                  {isDraggingCaPdf ? (
-                                    <span className="text-[8px] font-extrabold text-teal-800 uppercase tracking-wider animate-pulse">¡Suelta el CA aquí!</span>
-                                  ) : (
-                                    <span className="text-[8px] font-bold text-teal-700 bg-teal-100 px-1.5 py-0.2 rounded">Opcional</span>
-                                  )}
-                                </div>
-                                {contractFormCaPdfUrl ? (
-                                  <div className="flex items-center justify-between bg-teal-50 border border-teal-200 p-2 rounded-lg text-xs gap-2">
-                                    <a href={getCleanCloudinaryUrl(contractFormCaPdfUrl)} target="_blank" rel="noreferrer" className="text-teal-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                      <FileText className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                                      <span className="truncate">Ver Certificate of Acceptance (CA)</span>
-                                      <ExternalLink className="w-3 h-3 text-teal-600 shrink-0" />
-                                    </a>
-                                    <button type="button" onClick={() => setContractFormCaPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
-                                  </div>
-                                ) : (
-                                  <div>
-                                    <input type="file" id="ca-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadCaFile(file); }} className="hidden" />
-                                    <label
-                                      htmlFor="ca-pdf-input"
-                                      className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
-                                        isDraggingCaPdf
-                                          ? 'border-teal-500 bg-teal-50 text-teal-950 shadow-md'
-                                          : 'border-teal-300 bg-teal-50/30 hover:bg-teal-50 hover:border-teal-400'
-                                      }`}
-                                    >
-                                      {isUploadingCaPdf ? (
-                                        <span className="text-teal-600 font-bold animate-pulse">Subiendo CA... ({uploadCaPdfProgress}%)</span>
-                                      ) : (
-                                        <>
-                                          <div className="flex items-center gap-1.5 pointer-events-none">
-                                            <Upload className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                                            <span>{isDraggingCaPdf ? '¡Suelte el CA aquí!' : 'Adjuntar Certificate of Acceptance (CA)'}</span>
-                                          </div>
-                                          <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
-                                            Arrastra y suelta el archivo aquí o haz clic para buscar
-                                          </span>
-                                        </>
-                                      )}
-                                    </label>
-                                  </div>
-                                )}
-                              </div>
+                              {/* PER-EQUIPMENT ATTACHMENTS IF EQUIPMENTS ARE ADDED TO CONTRACT */}
+                              {contractFormEquipmentItems.length > 0 ? (
+                                <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                                  {contractFormEquipmentItems.map((item, eqIdx) => (
+                                    <div key={eqIdx} className="bg-white border border-amber-200 rounded-xl p-2.5 space-y-2 shadow-2xs">
+                                      <div className="flex items-center justify-between border-b border-amber-100 pb-1">
+                                        <span className="text-[10px] font-extrabold text-amber-950 flex items-center gap-1.5 truncate">
+                                          <span>🖥️ {item.name}</span>
+                                          <span className="text-[8px] font-semibold text-slate-500">({item.brand})</span>
+                                          {item.modality && <span className="bg-indigo-100 text-indigo-800 text-[7.5px] font-black px-1 rounded">{item.modality}</span>}
+                                        </span>
+                                      </div>
 
-                              {/* Proof of Delivery (POD) Upload Card */}
-                              <div 
-                                onDragEnter={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setIsDraggingPodPdf(true);
-                                }}
-                                onDragOver={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  e.dataTransfer.dropEffect = 'copy';
-                                  if (!isDraggingPodPdf) setIsDraggingPodPdf(true);
-                                }}
-                                onDragLeave={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-                                  setIsDraggingPodPdf(false);
-                                }}
-                                onDrop={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setIsDraggingPodPdf(false);
-                                  const file = e.dataTransfer.files?.[0];
-                                  if (file) handleUploadPodFile(file);
-                                }}
-                                className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
-                                  isDraggingPodPdf ? 'bg-sky-100/90 border-sky-500 ring-2 ring-sky-400/50 scale-[1.01]' : 'border-sky-200'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between pointer-events-none">
-                                  <span className="block text-[9.5px] font-extrabold text-sky-950 uppercase tracking-wide">📦 Proof of Delivery (POD)</span>
-                                  {isDraggingPodPdf ? (
-                                    <span className="text-[8px] font-extrabold text-sky-800 uppercase tracking-wider animate-pulse">¡Suelta el POD aquí!</span>
-                                  ) : (
-                                    <span className="text-[8px] font-bold text-sky-700 bg-sky-100 px-1.5 py-0.2 rounded">Opcional</span>
-                                  )}
+                                      <div className="grid grid-cols-1 gap-1.5">
+                                        {/* SR per equipment */}
+                                        <div className="space-y-1">
+                                          {item.serviceRecordPdfUrl ? (
+                                            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-1.5 rounded-lg text-3xs gap-2">
+                                              <a href={getCleanCloudinaryUrl(item.serviceRecordPdfUrl)} target="_blank" rel="noreferrer" className="text-amber-950 font-bold hover:underline truncate flex items-center gap-1 min-w-0">
+                                                <FileText className="w-3 h-3 text-amber-600 shrink-0" />
+                                                <span className="truncate">🛠️ SR: Ver Documento</span>
+                                                <ExternalLink className="w-2.5 h-2.5 text-amber-600 shrink-0" />
+                                              </a>
+                                              <button type="button" onClick={() => {
+                                                const updated = [...contractFormEquipmentItems];
+                                                updated[eqIdx] = { ...updated[eqIdx], serviceRecordPdfUrl: undefined };
+                                                setContractFormEquipmentItems(updated);
+                                              }} className="text-rose-600 font-bold text-[8px] px-1.5 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                            </div>
+                                          ) : (
+                                            <div>
+                                              <input
+                                                type="file"
+                                                id={`sr-file-${eqIdx}`}
+                                                accept="application/pdf,image/*"
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                  const file = e.target.files?.[0];
+                                                  if (file) {
+                                                    try {
+                                                      const url = await uploadFileToCloudinary(file);
+                                                      const updated = [...contractFormEquipmentItems];
+                                                      updated[eqIdx] = { ...updated[eqIdx], serviceRecordPdfUrl: url };
+                                                      setContractFormEquipmentItems(updated);
+                                                    } catch (err: any) {
+                                                      alert(err.message || 'Error al subir el SR');
+                                                    }
+                                                  }
+                                                }}
+                                              />
+                                              <label htmlFor={`sr-file-${eqIdx}`} className="w-full text-slate-700 font-extrabold text-[9px] py-1.5 px-2.5 rounded-lg border border-dashed border-amber-300 bg-amber-50/20 hover:bg-amber-50 flex items-center justify-between cursor-pointer transition-all">
+                                                <span className="flex items-center gap-1 truncate">
+                                                  <Upload className="w-3 h-3 text-amber-600 shrink-0" />
+                                                  <span className="truncate">🛠️ Service Record (SR) — {item.name}</span>
+                                                </span>
+                                                <span className="text-[7.5px] font-bold text-amber-700 bg-amber-100 px-1 py-0.2 rounded shrink-0">Subir SR</span>
+                                              </label>
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        {/* CA per equipment */}
+                                        <div className="space-y-1">
+                                          {item.caPdfUrl ? (
+                                            <div className="flex items-center justify-between bg-teal-50 border border-teal-200 p-1.5 rounded-lg text-3xs gap-2">
+                                              <a href={getCleanCloudinaryUrl(item.caPdfUrl)} target="_blank" rel="noreferrer" className="text-teal-950 font-bold hover:underline truncate flex items-center gap-1 min-w-0">
+                                                <FileText className="w-3 h-3 text-teal-600 shrink-0" />
+                                                <span className="truncate">📜 CA: Ver Documento</span>
+                                                <ExternalLink className="w-2.5 h-2.5 text-teal-600 shrink-0" />
+                                              </a>
+                                              <button type="button" onClick={() => {
+                                                const updated = [...contractFormEquipmentItems];
+                                                updated[eqIdx] = { ...updated[eqIdx], caPdfUrl: undefined };
+                                                setContractFormEquipmentItems(updated);
+                                              }} className="text-rose-600 font-bold text-[8px] px-1.5 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                            </div>
+                                          ) : (
+                                            <div>
+                                              <input
+                                                type="file"
+                                                id={`ca-file-${eqIdx}`}
+                                                accept="application/pdf,image/*"
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                  const file = e.target.files?.[0];
+                                                  if (file) {
+                                                    try {
+                                                      const url = await uploadFileToCloudinary(file);
+                                                      const updated = [...contractFormEquipmentItems];
+                                                      updated[eqIdx] = { ...updated[eqIdx], caPdfUrl: url };
+                                                      setContractFormEquipmentItems(updated);
+                                                    } catch (err: any) {
+                                                      alert(err.message || 'Error al subir el CA');
+                                                    }
+                                                  }
+                                                }}
+                                              />
+                                              <label htmlFor={`ca-file-${eqIdx}`} className="w-full text-slate-700 font-extrabold text-[9px] py-1.5 px-2.5 rounded-lg border border-dashed border-teal-300 bg-teal-50/20 hover:bg-teal-50 flex items-center justify-between cursor-pointer transition-all">
+                                                <span className="flex items-center gap-1 truncate">
+                                                  <Upload className="w-3 h-3 text-teal-600 shrink-0" />
+                                                  <span className="truncate">📜 Certificate of Acceptance (CA) — {item.name}</span>
+                                                </span>
+                                                <span className="text-[7.5px] font-bold text-teal-700 bg-teal-100 px-1 py-0.2 rounded shrink-0">Subir CA</span>
+                                              </label>
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        {/* POD per equipment */}
+                                        <div className="space-y-1">
+                                          {item.podPdfUrl ? (
+                                            <div className="flex items-center justify-between bg-sky-50 border border-sky-200 p-1.5 rounded-lg text-3xs gap-2">
+                                              <a href={getCleanCloudinaryUrl(item.podPdfUrl)} target="_blank" rel="noreferrer" className="text-sky-950 font-bold hover:underline truncate flex items-center gap-1 min-w-0">
+                                                <FileText className="w-3 h-3 text-sky-600 shrink-0" />
+                                                <span className="truncate">📦 POD: Ver Documento</span>
+                                                <ExternalLink className="w-2.5 h-2.5 text-sky-600 shrink-0" />
+                                              </a>
+                                              <button type="button" onClick={() => {
+                                                const updated = [...contractFormEquipmentItems];
+                                                updated[eqIdx] = { ...updated[eqIdx], podPdfUrl: undefined };
+                                                setContractFormEquipmentItems(updated);
+                                              }} className="text-rose-600 font-bold text-[8px] px-1.5 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                            </div>
+                                          ) : (
+                                            <div>
+                                              <input
+                                                type="file"
+                                                id={`pod-file-${eqIdx}`}
+                                                accept="application/pdf,image/*"
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                  const file = e.target.files?.[0];
+                                                  if (file) {
+                                                    try {
+                                                      const url = await uploadFileToCloudinary(file);
+                                                      const updated = [...contractFormEquipmentItems];
+                                                      updated[eqIdx] = { ...updated[eqIdx], podPdfUrl: url };
+                                                      setContractFormEquipmentItems(updated);
+                                                    } catch (err: any) {
+                                                      alert(err.message || 'Error al subir el POD');
+                                                    }
+                                                  }
+                                                }}
+                                              />
+                                              <label htmlFor={`pod-file-${eqIdx}`} className="w-full text-slate-700 font-extrabold text-[9px] py-1.5 px-2.5 rounded-lg border border-dashed border-sky-300 bg-sky-50/20 hover:bg-sky-50 flex items-center justify-between cursor-pointer transition-all">
+                                                <span className="flex items-center gap-1 truncate">
+                                                  <Upload className="w-3 h-3 text-sky-600 shrink-0" />
+                                                  <span className="truncate">📦 Proof of Delivery (POD) — {item.name}</span>
+                                                </span>
+                                                <span className="text-[7.5px] font-bold text-sky-700 bg-sky-100 px-1 py-0.2 rounded shrink-0">Subir POD</span>
+                                              </label>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
-                                {contractFormPodPdfUrl ? (
-                                  <div className="flex items-center justify-between bg-sky-50 border border-sky-200 p-2 rounded-lg text-xs gap-2">
-                                    <a href={getCleanCloudinaryUrl(contractFormPodPdfUrl)} target="_blank" rel="noreferrer" className="text-sky-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                      <FileText className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                                      <span className="truncate">Ver Proof of Delivery (POD)</span>
-                                      <ExternalLink className="w-3 h-3 text-sky-600 shrink-0" />
-                                    </a>
-                                    <button type="button" onClick={() => setContractFormPodPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
-                                  </div>
-                                ) : (
-                                  <div>
-                                    <input type="file" id="pod-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadPodFile(file); }} className="hidden" />
-                                    <label
-                                      htmlFor="pod-pdf-input"
-                                      className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
-                                        isDraggingPodPdf
-                                          ? 'border-sky-500 bg-sky-50 text-sky-950 shadow-md'
-                                          : 'border-sky-300 bg-sky-50/30 hover:bg-sky-50 hover:border-sky-400'
-                                      }`}
-                                    >
-                                      {isUploadingPodPdf ? (
-                                        <span className="text-sky-600 font-bold animate-pulse">Subiendo POD... ({uploadPodPdfProgress}%)</span>
+                              ) : (
+                                /* GENERAL CONTRACT ATTACHMENTS IF NO EQUIPMENTS LISTED YET */
+                                <div className="space-y-2">
+                                  {/* Service Record (SR) Upload Card */}
+                                  <div 
+                                    onDragEnter={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setIsDraggingSrPdf(true);
+                                    }}
+                                    onDragOver={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      e.dataTransfer.dropEffect = 'copy';
+                                      if (!isDraggingSrPdf) setIsDraggingSrPdf(true);
+                                    }}
+                                    onDragLeave={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                                      setIsDraggingSrPdf(false);
+                                    }}
+                                    onDrop={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setIsDraggingSrPdf(false);
+                                      const file = e.dataTransfer.files?.[0];
+                                      if (file) handleUploadSrFile(file);
+                                    }}
+                                    className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                                      isDraggingSrPdf ? 'bg-amber-100/90 border-amber-500 ring-2 ring-amber-400/50 scale-[1.01]' : 'border-amber-200'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between pointer-events-none">
+                                      <span className="block text-[9.5px] font-extrabold text-amber-950 uppercase tracking-wide">🛠️ Service Record (SR General)</span>
+                                      {isDraggingSrPdf ? (
+                                        <span className="text-[8px] font-extrabold text-amber-800 uppercase tracking-wider animate-pulse">¡Suelta el SR aquí!</span>
                                       ) : (
-                                        <>
-                                          <div className="flex items-center gap-1.5 pointer-events-none">
-                                            <Upload className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                                            <span>{isDraggingPodPdf ? '¡Suelte el POD aquí!' : 'Adjuntar Proof of Delivery (POD)'}</span>
-                                          </div>
-                                          <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
-                                            Arrastra y suelta el archivo aquí o haz clic para buscar
-                                          </span>
-                                        </>
+                                        <span className="text-[8px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded">Opcional</span>
                                       )}
-                                    </label>
+                                    </div>
+                                    {contractFormSrPdfUrl ? (
+                                      <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-2 rounded-lg text-xs gap-2">
+                                        <a href={getCleanCloudinaryUrl(contractFormSrPdfUrl)} target="_blank" rel="noreferrer" className="text-amber-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                          <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                          <span className="truncate">Ver Service Record (SR)</span>
+                                          <ExternalLink className="w-3 h-3 text-amber-600 shrink-0" />
+                                        </a>
+                                        <button type="button" onClick={() => setContractFormSrPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <input type="file" id="sr-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadSrFile(file); }} className="hidden" />
+                                        <label
+                                          htmlFor="sr-pdf-input"
+                                          className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
+                                            isDraggingSrPdf
+                                              ? 'border-amber-500 bg-amber-50 text-amber-950 shadow-md'
+                                              : 'border-amber-300 bg-amber-50/30 hover:bg-amber-50 hover:border-amber-400'
+                                          }`}
+                                        >
+                                          {isUploadingSrPdf ? (
+                                            <span className="text-amber-600 font-bold animate-pulse">Subiendo SR... ({uploadSrPdfProgress}%)</span>
+                                          ) : (
+                                            <>
+                                              <div className="flex items-center gap-1.5 pointer-events-none">
+                                                <Upload className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                                <span>{isDraggingSrPdf ? '¡Suelte el Service Record aquí!' : 'Adjuntar Service Record (SR)'}</span>
+                                              </div>
+                                              <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                                Arrastra y suelta el archivo aquí o haz clic para buscar
+                                              </span>
+                                            </>
+                                          )}
+                                        </label>
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
+
+                                  {/* Certificate of Acceptance (CA) Upload Card */}
+                                  <div 
+                                    onDragEnter={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setIsDraggingCaPdf(true);
+                                    }}
+                                    onDragOver={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      e.dataTransfer.dropEffect = 'copy';
+                                      if (!isDraggingCaPdf) setIsDraggingCaPdf(true);
+                                    }}
+                                    onDragLeave={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                                      setIsDraggingCaPdf(false);
+                                    }}
+                                    onDrop={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setIsDraggingCaPdf(false);
+                                      const file = e.dataTransfer.files?.[0];
+                                      if (file) handleUploadCaFile(file);
+                                    }}
+                                    className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                                      isDraggingCaPdf ? 'bg-teal-100/90 border-teal-500 ring-2 ring-teal-400/50 scale-[1.01]' : 'border-teal-200'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between pointer-events-none">
+                                      <span className="block text-[9.5px] font-extrabold text-teal-950 uppercase tracking-wide">📜 Certificate of Acceptance (CA General)</span>
+                                      {isDraggingCaPdf ? (
+                                        <span className="text-[8px] font-extrabold text-teal-800 uppercase tracking-wider animate-pulse">¡Suelta el CA aquí!</span>
+                                      ) : (
+                                        <span className="text-[8px] font-bold text-teal-700 bg-teal-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                      )}
+                                    </div>
+                                    {contractFormCaPdfUrl ? (
+                                      <div className="flex items-center justify-between bg-teal-50 border border-teal-200 p-2 rounded-lg text-xs gap-2">
+                                        <a href={getCleanCloudinaryUrl(contractFormCaPdfUrl)} target="_blank" rel="noreferrer" className="text-teal-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                          <FileText className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                          <span className="truncate">Ver Certificate of Acceptance (CA)</span>
+                                          <ExternalLink className="w-3 h-3 text-teal-600 shrink-0" />
+                                        </a>
+                                        <button type="button" onClick={() => setContractFormCaPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <input type="file" id="ca-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadCaFile(file); }} className="hidden" />
+                                        <label
+                                          htmlFor="ca-pdf-input"
+                                          className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
+                                            isDraggingCaPdf
+                                              ? 'border-teal-500 bg-teal-50 text-teal-950 shadow-md'
+                                              : 'border-teal-300 bg-teal-50/30 hover:bg-teal-50 hover:border-teal-400'
+                                          }`}
+                                        >
+                                          {isUploadingCaPdf ? (
+                                            <span className="text-teal-600 font-bold animate-pulse">Subiendo CA... ({uploadCaPdfProgress}%)</span>
+                                          ) : (
+                                            <>
+                                              <div className="flex items-center gap-1.5 pointer-events-none">
+                                                <Upload className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                                <span>{isDraggingCaPdf ? '¡Suelte el CA aquí!' : 'Adjuntar Certificate of Acceptance (CA)'}</span>
+                                              </div>
+                                              <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                                Arrastra y suelta el archivo aquí o haz clic para buscar
+                                              </span>
+                                            </>
+                                          )}
+                                        </label>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Proof of Delivery (POD) Upload Card */}
+                                  <div 
+                                    onDragEnter={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setIsDraggingPodPdf(true);
+                                    }}
+                                    onDragOver={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      e.dataTransfer.dropEffect = 'copy';
+                                      if (!isDraggingPodPdf) setIsDraggingPodPdf(true);
+                                    }}
+                                    onDragLeave={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                                      setIsDraggingPodPdf(false);
+                                    }}
+                                    onDrop={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setIsDraggingPodPdf(false);
+                                      const file = e.dataTransfer.files?.[0];
+                                      if (file) handleUploadPodFile(file);
+                                    }}
+                                    className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                                      isDraggingPodPdf ? 'bg-sky-100/90 border-sky-500 ring-2 ring-sky-400/50 scale-[1.01]' : 'border-sky-200'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between pointer-events-none">
+                                      <span className="block text-[9.5px] font-extrabold text-sky-950 uppercase tracking-wide">📦 Proof of Delivery (POD General)</span>
+                                      {isDraggingPodPdf ? (
+                                        <span className="text-[8px] font-extrabold text-sky-800 uppercase tracking-wider animate-pulse">¡Suelta el POD aquí!</span>
+                                      ) : (
+                                        <span className="text-[8px] font-bold text-sky-700 bg-sky-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                      )}
+                                    </div>
+                                    {contractFormPodPdfUrl ? (
+                                      <div className="flex items-center justify-between bg-sky-50 border border-sky-200 p-2 rounded-lg text-xs gap-2">
+                                        <a href={getCleanCloudinaryUrl(contractFormPodPdfUrl)} target="_blank" rel="noreferrer" className="text-sky-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                          <FileText className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                          <span className="truncate">Ver Proof of Delivery (POD)</span>
+                                          <ExternalLink className="w-3 h-3 text-sky-600 shrink-0" />
+                                        </a>
+                                        <button type="button" onClick={() => setContractFormPodPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <input type="file" id="pod-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadPodFile(file); }} className="hidden" />
+                                        <label
+                                          htmlFor="pod-pdf-input"
+                                          className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
+                                            isDraggingPodPdf
+                                              ? 'border-sky-500 bg-sky-50 text-sky-950 shadow-md'
+                                              : 'border-sky-300 bg-sky-50/30 hover:bg-sky-50 hover:border-sky-400'
+                                          }`}
+                                        >
+                                          {isUploadingPodPdf ? (
+                                            <span className="text-sky-600 font-bold animate-pulse">Subiendo POD... ({uploadPodPdfProgress}%)</span>
+                                          ) : (
+                                            <>
+                                              <div className="flex items-center gap-1.5 pointer-events-none">
+                                                <Upload className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                                <span>{isDraggingPodPdf ? '¡Suelte el POD aquí!' : 'Adjuntar Proof of Delivery (POD)'}</span>
+                                              </div>
+                                              <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                                Arrastra y suelta el archivo aquí o haz clic para buscar
+                                              </span>
+                                            </>
+                                          )}
+                                        </label>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
 
@@ -16727,18 +16895,41 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               {/* Covered Equipments */}
               {selectedContractForDetails.equipmentItems && selectedContractForDetails.equipmentItems.length > 0 && (
-                <div className="space-y-1.5">
-                  <span className="font-extrabold text-[9px] text-slate-500 uppercase tracking-wider block">Equipos Cobertura</span>
-                  <div className="flex flex-wrap gap-1.5">
+                <div className="space-y-2">
+                  <span className="font-extrabold text-[9px] text-slate-500 uppercase tracking-wider block">Equipos Cobertura y Adjuntos de Entrega</span>
+                  <div className="space-y-1.5">
                     {selectedContractForDetails.equipmentItems.map((item, idx) => (
-                      <span key={idx} className="bg-slate-100 text-slate-800 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-bold flex items-center gap-1">
-                        <span>{item.name} ({item.brand})</span>
-                        {item.modality && (
-                          <span className="bg-indigo-100 text-indigo-800 px-1 py-0.1 rounded text-[7.5px] font-black">
-                            {item.modality}
-                          </span>
-                        )}
-                      </span>
+                      <div key={idx} className="bg-slate-50 border border-slate-200 p-2 rounded-xl flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-slate-800 text-xs">🖥️ {item.name}</span>
+                          <span className="text-[9px] text-slate-500 font-semibold">({item.brand})</span>
+                          {item.modality && (
+                            <span className="bg-indigo-100 text-indigo-800 px-1.5 py-0.2 rounded text-[7.5px] font-black">
+                              {item.modality}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {item.serviceRecordPdfUrl && (
+                            <a href={getCleanCloudinaryUrl(item.serviceRecordPdfUrl)} target="_blank" rel="noreferrer" className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[8px] px-2 py-0.5 rounded flex items-center gap-1">
+                              🛠️ SR
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          )}
+                          {item.caPdfUrl && (
+                            <a href={getCleanCloudinaryUrl(item.caPdfUrl)} target="_blank" rel="noreferrer" className="bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-[8px] px-2 py-0.5 rounded flex items-center gap-1">
+                              📜 CA
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          )}
+                          {item.podPdfUrl && (
+                            <a href={getCleanCloudinaryUrl(item.podPdfUrl)} target="_blank" rel="noreferrer" className="bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-[8px] px-2 py-0.5 rounded flex items-center gap-1">
+                              📦 POD
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

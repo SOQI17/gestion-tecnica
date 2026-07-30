@@ -175,6 +175,9 @@ export interface ContractEquipmentItem {
   name: string;
   brand: string;
   modality?: string;
+  serviceRecordPdfUrl?: string; // Documento Service Record (SR) específico del equipo
+  caPdfUrl?: string; // Documento Certificate of Acceptance (CA) específico del equipo
+  podPdfUrl?: string; // Documento Proof of Delivery (POD) específico del equipo
 }
 
 export interface Contract {
