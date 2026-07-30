@@ -15658,14 +15658,46 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           {contractFormIsNewEquipment && (
                             <div className="space-y-2.5 pt-2 border-t border-amber-200/60 bg-amber-50/40 p-2.5 rounded-xl">
                               <span className="block text-[9px] font-extrabold text-amber-900 uppercase tracking-wider">
-                                ✨ Adjuntos de Equipo Nuevo (Opcionales)
+                                ✨ Adjuntos de Equipo Nuevo (Opcionales - Arrastra y Suelta)
                               </span>
 
                               {/* Service Record (SR) Upload Card */}
-                              <div className="bg-white border border-amber-200 rounded-xl p-2.5 space-y-1.5">
-                                <div className="flex items-center justify-between">
+                              <div 
+                                onDragEnter={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setIsDraggingSrPdf(true);
+                                }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.dataTransfer.dropEffect = 'copy';
+                                  if (!isDraggingSrPdf) setIsDraggingSrPdf(true);
+                                }}
+                                onDragLeave={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                                  setIsDraggingSrPdf(false);
+                                }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setIsDraggingSrPdf(false);
+                                  const file = e.dataTransfer.files?.[0];
+                                  if (file) handleUploadSrFile(file);
+                                }}
+                                className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                                  isDraggingSrPdf ? 'bg-amber-100/90 border-amber-500 ring-2 ring-amber-400/50 scale-[1.01]' : 'border-amber-200'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between pointer-events-none">
                                   <span className="block text-[9.5px] font-extrabold text-amber-950 uppercase tracking-wide">🛠️ Service Record (SR)</span>
-                                  <span className="text-[8px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                  {isDraggingSrPdf ? (
+                                    <span className="text-[8px] font-extrabold text-amber-800 uppercase tracking-wider animate-pulse">¡Suelta el SR aquí!</span>
+                                  ) : (
+                                    <span className="text-[8px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                  )}
                                 </div>
                                 {contractFormSrPdfUrl ? (
                                   <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-2 rounded-lg text-xs gap-2">
@@ -15679,13 +15711,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 ) : (
                                   <div>
                                     <input type="file" id="sr-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadSrFile(file); }} className="hidden" />
-                                    <label htmlFor="sr-pdf-input" className="w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed border-amber-300 bg-amber-50/30 hover:bg-amber-50 flex items-center justify-center gap-1.5 cursor-pointer transition-all">
+                                    <label
+                                      htmlFor="sr-pdf-input"
+                                      className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
+                                        isDraggingSrPdf
+                                          ? 'border-amber-500 bg-amber-50 text-amber-950 shadow-md'
+                                          : 'border-amber-300 bg-amber-50/30 hover:bg-amber-50 hover:border-amber-400'
+                                      }`}
+                                    >
                                       {isUploadingSrPdf ? (
                                         <span className="text-amber-600 font-bold animate-pulse">Subiendo SR... ({uploadSrPdfProgress}%)</span>
                                       ) : (
                                         <>
-                                          <Upload className="w-3.5 h-3.5 text-amber-600" />
-                                          <span>Adjuntar Service Record (SR)</span>
+                                          <div className="flex items-center gap-1.5 pointer-events-none">
+                                            <Upload className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                            <span>{isDraggingSrPdf ? '¡Suelte el Service Record aquí!' : 'Adjuntar Service Record (SR)'}</span>
+                                          </div>
+                                          <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                            Arrastra y suelta el archivo aquí o haz clic para buscar
+                                          </span>
                                         </>
                                       )}
                                     </label>
@@ -15694,10 +15738,42 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
 
                               {/* Certificate of Acceptance (CA) Upload Card */}
-                              <div className="bg-white border border-teal-200 rounded-xl p-2.5 space-y-1.5">
-                                <div className="flex items-center justify-between">
+                              <div 
+                                onDragEnter={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setIsDraggingCaPdf(true);
+                                }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.dataTransfer.dropEffect = 'copy';
+                                  if (!isDraggingCaPdf) setIsDraggingCaPdf(true);
+                                }}
+                                onDragLeave={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                                  setIsDraggingCaPdf(false);
+                                }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setIsDraggingCaPdf(false);
+                                  const file = e.dataTransfer.files?.[0];
+                                  if (file) handleUploadCaFile(file);
+                                }}
+                                className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                                  isDraggingCaPdf ? 'bg-teal-100/90 border-teal-500 ring-2 ring-teal-400/50 scale-[1.01]' : 'border-teal-200'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between pointer-events-none">
                                   <span className="block text-[9.5px] font-extrabold text-teal-950 uppercase tracking-wide">📜 Certificate of Acceptance (CA)</span>
-                                  <span className="text-[8px] font-bold text-teal-700 bg-teal-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                  {isDraggingCaPdf ? (
+                                    <span className="text-[8px] font-extrabold text-teal-800 uppercase tracking-wider animate-pulse">¡Suelta el CA aquí!</span>
+                                  ) : (
+                                    <span className="text-[8px] font-bold text-teal-700 bg-teal-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                  )}
                                 </div>
                                 {contractFormCaPdfUrl ? (
                                   <div className="flex items-center justify-between bg-teal-50 border border-teal-200 p-2 rounded-lg text-xs gap-2">
@@ -15711,13 +15787,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 ) : (
                                   <div>
                                     <input type="file" id="ca-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadCaFile(file); }} className="hidden" />
-                                    <label htmlFor="ca-pdf-input" className="w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed border-teal-300 bg-teal-50/30 hover:bg-teal-50 flex items-center justify-center gap-1.5 cursor-pointer transition-all">
+                                    <label
+                                      htmlFor="ca-pdf-input"
+                                      className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
+                                        isDraggingCaPdf
+                                          ? 'border-teal-500 bg-teal-50 text-teal-950 shadow-md'
+                                          : 'border-teal-300 bg-teal-50/30 hover:bg-teal-50 hover:border-teal-400'
+                                      }`}
+                                    >
                                       {isUploadingCaPdf ? (
                                         <span className="text-teal-600 font-bold animate-pulse">Subiendo CA... ({uploadCaPdfProgress}%)</span>
                                       ) : (
                                         <>
-                                          <Upload className="w-3.5 h-3.5 text-teal-600" />
-                                          <span>Adjuntar Certificate of Acceptance (CA)</span>
+                                          <div className="flex items-center gap-1.5 pointer-events-none">
+                                            <Upload className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                            <span>{isDraggingCaPdf ? '¡Suelte el CA aquí!' : 'Adjuntar Certificate of Acceptance (CA)'}</span>
+                                          </div>
+                                          <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                            Arrastra y suelta el archivo aquí o haz clic para buscar
+                                          </span>
                                         </>
                                       )}
                                     </label>
@@ -15726,10 +15814,42 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
 
                               {/* Proof of Delivery (POD) Upload Card */}
-                              <div className="bg-white border border-sky-200 rounded-xl p-2.5 space-y-1.5">
-                                <div className="flex items-center justify-between">
+                              <div 
+                                onDragEnter={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setIsDraggingPodPdf(true);
+                                }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.dataTransfer.dropEffect = 'copy';
+                                  if (!isDraggingPodPdf) setIsDraggingPodPdf(true);
+                                }}
+                                onDragLeave={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                                  setIsDraggingPodPdf(false);
+                                }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setIsDraggingPodPdf(false);
+                                  const file = e.dataTransfer.files?.[0];
+                                  if (file) handleUploadPodFile(file);
+                                }}
+                                className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                                  isDraggingPodPdf ? 'bg-sky-100/90 border-sky-500 ring-2 ring-sky-400/50 scale-[1.01]' : 'border-sky-200'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between pointer-events-none">
                                   <span className="block text-[9.5px] font-extrabold text-sky-950 uppercase tracking-wide">📦 Proof of Delivery (POD)</span>
-                                  <span className="text-[8px] font-bold text-sky-700 bg-sky-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                  {isDraggingPodPdf ? (
+                                    <span className="text-[8px] font-extrabold text-sky-800 uppercase tracking-wider animate-pulse">¡Suelta el POD aquí!</span>
+                                  ) : (
+                                    <span className="text-[8px] font-bold text-sky-700 bg-sky-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                  )}
                                 </div>
                                 {contractFormPodPdfUrl ? (
                                   <div className="flex items-center justify-between bg-sky-50 border border-sky-200 p-2 rounded-lg text-xs gap-2">
@@ -15743,13 +15863,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 ) : (
                                   <div>
                                     <input type="file" id="pod-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadPodFile(file); }} className="hidden" />
-                                    <label htmlFor="pod-pdf-input" className="w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed border-sky-300 bg-sky-50/30 hover:bg-sky-50 flex items-center justify-center gap-1.5 cursor-pointer transition-all">
+                                    <label
+                                      htmlFor="pod-pdf-input"
+                                      className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
+                                        isDraggingPodPdf
+                                          ? 'border-sky-500 bg-sky-50 text-sky-950 shadow-md'
+                                          : 'border-sky-300 bg-sky-50/30 hover:bg-sky-50 hover:border-sky-400'
+                                      }`}
+                                    >
                                       {isUploadingPodPdf ? (
                                         <span className="text-sky-600 font-bold animate-pulse">Subiendo POD... ({uploadPodPdfProgress}%)</span>
                                       ) : (
                                         <>
-                                          <Upload className="w-3.5 h-3.5 text-sky-600" />
-                                          <span>Adjuntar Proof of Delivery (POD)</span>
+                                          <div className="flex items-center gap-1.5 pointer-events-none">
+                                            <Upload className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                            <span>{isDraggingPodPdf ? '¡Suelte el POD aquí!' : 'Adjuntar Proof of Delivery (POD)'}</span>
+                                          </div>
+                                          <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                            Arrastra y suelta el archivo aquí o haz clic para buscar
+                                          </span>
                                         </>
                                       )}
                                     </label>
