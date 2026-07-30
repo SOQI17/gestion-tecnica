@@ -1096,10 +1096,14 @@ export default function App() {
                   )}
 
                   <nav className="flex bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/60" id="nav-container-tabs">
-                    {[
+                    {(currentUser.role === 'admin' || isDemoMode ? [
+                      { id: 'admin', label: 'Administración', icon: CalendarDays },
+                      { id: 'sales', label: 'Vendedor Portal', icon: Briefcase },
+                      { id: 'engineer', label: 'Ingeniero Portal', icon: Smartphone },
+                    ] : [
                       { id: 'admin', label: 'Administración', icon: CalendarDays },
                       { id: 'engineer', label: 'Ingeniero Portal', icon: Smartphone },
-                    ].map(tab => {
+                    ]).map(tab => {
                       const Icon = tab.icon;
                       const isActive = activeTab === tab.id;
                       return (
@@ -1185,6 +1189,12 @@ export default function App() {
             {(activeTab === 'admin' || activeTab === 'sales') && (
               <AdminPortal
                 userRole={activeTab === 'sales' ? 'sales' : currentUser.role}
+                currentUserEmail={currentUser.email}
+                currentUserPermissions={(() => {
+                  const matchedCurrentEng = engineers.find(e => e.id === currentUser.engineerId) ||
+                                           engineers.find(e => e.email && e.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase());
+                  return matchedCurrentEng?.customPermissions;
+                })()}
                 engineers={engineers}
                 clients={clients}
                 workOrders={workOrders}

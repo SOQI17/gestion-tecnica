@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag } from 'lucide-react';
 
 export const OFFICIAL_MODALITIES = [
@@ -149,6 +149,8 @@ export const getDefaultPermissionsForSpecialty = (specialty: Specialty | 'Admin'
 
 interface AdminPortalProps {
   userRole?: 'admin' | 'engineer' | 'sales';
+  currentUserEmail?: string;
+  currentUserPermissions?: UserPermissions;
   engineers: Engineer[];
   clients: Client[];
   workOrders: WorkOrder[];
@@ -210,7 +212,7 @@ const getEndDateStr = (startDateStr: string, duration: number): string => {
     if (isNaN(date.getTime())) return '';
     return date.toISOString().split('T')[0];
   } catch (e) {
-    return '';
+    return startDateStr;
   }
 };
 
@@ -897,6 +899,8 @@ const getEngineerHexColor = (engineerId: string): string => {
 
 export default function AdminPortal({
   userRole = 'admin',
+  currentUserEmail,
+  currentUserPermissions,
   engineers,
   clients,
   workOrders,
@@ -946,6 +950,18 @@ export default function AdminPortal({
   onDeleteContractGE,
   onBulkUploadContractsGE
 }: AdminPortalProps) {
+  const effectivePermissions: UserPermissions = useMemo(() => {
+    if (userRole === 'admin' && !currentUserPermissions) {
+      return DEFAULT_GLOBAL_ROLE_TEMPLATES.Admin;
+    }
+    const matchedEng = currentUserPermissions 
+      ? undefined 
+      : engineers.find(e => currentUserEmail && e.email && e.email.trim().toLowerCase() === currentUserEmail.trim().toLowerCase());
+
+    const perms = currentUserPermissions || matchedEng?.customPermissions || getDefaultPermissionsForSpecialty(matchedEng?.specialty || (userRole === 'sales' ? 'Ventas' : 'Ingeniería'));
+    return perms;
+  }, [userRole, currentUserEmail, currentUserPermissions, engineers]);
+
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1; // 1-indexed (1-12)
@@ -10018,42 +10034,46 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             {/* Scheduler Action Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-4 shadow-2xs no-print">
               <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  id="btn-toggle-importer"
-                  onClick={() => setIsImporterOpen(!isImporterOpen)}
-                  className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
-                    isImporterOpen 
-                      ? 'bg-amber-600 hover:bg-amber-700 text-white border-amber-600' 
-                      : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                  }`}
-                >
-                  <Database className="w-3.5 h-3.5" />
-                  <span>{isImporterOpen ? 'Ocultar Ingestor CSV' : '📥 Alimentar Historial (CSV)'}</span>
-                </button>
-                <button
-                  id="btn-create-order"
-                  onClick={() => {
-                    setNewWOClient('');
-                    setNewWOClientSearch('');
-                    setNewWOEquipment('');
-                    setNewWONotes('');
-                    setNewWOSupportEngineers([]);
-                    setNewWOSupportEngineer('');
-                    setNewWOType('Preventivo');
-                    setNewWOTimeStart('09:00');
-                    setNewWOTimeEnd('11:00');
-                    setNewWODurationDays(1);
-                    setNewWODate(currentDateStr);
-                    setWoEngDropdownOpen(false);
-                    setWoEngSearchQuery('');
-                    setIsCreatingWO(true);
-                  }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer border border-indigo-600"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Asignar Mantenimiento</span>
-                </button>
+                {effectivePermissions.canCreateWorkOrders !== false && (
+                  <button
+                    type="button"
+                    id="btn-toggle-importer"
+                    onClick={() => setIsImporterOpen(!isImporterOpen)}
+                    className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
+                      isImporterOpen 
+                        ? 'bg-amber-600 hover:bg-amber-700 text-white border-amber-600' 
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <Database className="w-3.5 h-3.5" />
+                    <span>{isImporterOpen ? 'Ocultar Ingestor CSV' : '📥 Alimentar Historial (CSV)'}</span>
+                  </button>
+                )}
+                {effectivePermissions.canCreateWorkOrders !== false && (
+                  <button
+                    id="btn-create-order"
+                    onClick={() => {
+                      setNewWOClient('');
+                      setNewWOClientSearch('');
+                      setNewWOEquipment('');
+                      setNewWONotes('');
+                      setNewWOSupportEngineers([]);
+                      setNewWOSupportEngineer('');
+                      setNewWOType('Preventivo');
+                      setNewWOTimeStart('09:00');
+                      setNewWOTimeEnd('11:00');
+                      setNewWODurationDays(1);
+                      setNewWODate(currentDateStr);
+                      setWoEngDropdownOpen(false);
+                      setWoEngSearchQuery('');
+                      setIsCreatingWO(true);
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer border border-indigo-600"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Asignar Mantenimiento</span>
+                  </button>
+                )}
               </div>
               
               <div className="flex flex-wrap items-center gap-2">
@@ -10077,15 +10097,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <span>Descargar Excel</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleSmartReorganize}
-                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-                  title="Reorganizar agenda inteligentemente según carga horaria e ingenieros por ciudad"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                  <span>Reorganizar Agenda</span>
-                </button>
+                {effectivePermissions.canEditWorkOrders !== false && (
+                  <button
+                    type="button"
+                    onClick={handleSmartReorganize}
+                    className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                    title="Reorganizar agenda inteligentemente según carga horaria e ingenieros por ciudad"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Reorganizar Agenda</span>
+                  </button>
+                )}
 
                 <button
                   type="button"
@@ -10120,20 +10142,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <span>Reportar Mes</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsResetModalOpen(true)}
-                  disabled={currentMonthWOs.length === 0}
-                  className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
-                    currentMonthWOs.length === 0
-                      ? 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                      : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200 hover:border-red-300'
-                  }`}
-                  title="Eliminar todas las agendas de este mes con confirmación"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Vaciar Mes</span>
-                </button>
+                {effectivePermissions.canDeleteWorkOrders !== false && (
+                  <button
+                    type="button"
+                    onClick={() => setIsResetModalOpen(true)}
+                    disabled={currentMonthWOs.length === 0}
+                    className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
+                      currentMonthWOs.length === 0
+                        ? 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                        : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200 hover:border-red-300'
+                    }`}
+                    title="Eliminar todas las agendas de este mes con confirmación"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Vaciar Mes</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -13364,49 +13388,53 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                     {/* Footer buttons */}
                     <div className="mt-6 border-t border-slate-100 pt-4 flex justify-end gap-3">
-                      {isConfirmingDelete ? (
-                        <div className="flex items-center gap-1.5 border border-rose-200 bg-rose-50/70 p-1 rounded-lg mr-auto">
-                          <span className="text-3xs font-extrabold text-rose-800 px-1">¿Eliminar orden?</span>
+                      {effectivePermissions.canDeleteWorkOrders !== false && (
+                        isConfirmingDelete ? (
+                          <div className="flex items-center gap-1.5 border border-rose-200 bg-rose-50/70 p-1 rounded-lg mr-auto">
+                            <span className="text-3xs font-extrabold text-rose-800 px-1">¿Eliminar orden?</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onDeleteWorkOrders && infoWO) {
+                                  onDeleteWorkOrders([infoWO.id]);
+                                  handleCloseInfoModal();
+                                }
+                              }}
+                              className="bg-rose-600 hover:bg-rose-700 text-white font-black text-3xs px-2.5 py-1 rounded-md cursor-pointer transition-colors"
+                            >
+                              Sí, Eliminar 🗑️
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setIsConfirmingDelete(false)}
+                              className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-3xs px-2.5 py-1 rounded-md cursor-pointer transition-colors"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
                           <button
                             type="button"
-                            onClick={() => {
-                              if (onDeleteWorkOrders && infoWO) {
-                                onDeleteWorkOrders([infoWO.id]);
-                                handleCloseInfoModal();
-                              }
-                            }}
-                            className="bg-rose-600 hover:bg-rose-700 text-white font-black text-3xs px-2.5 py-1 rounded-md cursor-pointer transition-colors"
+                            onClick={() => setIsConfirmingDelete(true)}
+                            className="bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-2xs px-3.5 py-2 rounded-lg border border-rose-200 cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs mr-auto"
+                            title="Eliminar esta orden de trabajo"
                           >
-                            Sí, Eliminar 🗑️
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Eliminar</span>
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => setIsConfirmingDelete(false)}
-                            className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-3xs px-2.5 py-1 rounded-md cursor-pointer transition-colors"
-                          >
-                            No
-                          </button>
-                        </div>
-                      ) : (
+                        )
+                      )}
+                      {effectivePermissions.canEditWorkOrders !== false && (
                         <button
-                          type="button"
-                          onClick={() => setIsConfirmingDelete(true)}
-                          className="bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-2xs px-3.5 py-2 rounded-lg border border-rose-200 cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs mr-auto"
-                          title="Eliminar esta orden de trabajo"
+                          onClick={() => {
+                            setEditedWO({ ...infoWO });
+                            setIsEditingWOState(true);
+                          }}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-2xs px-4 py-2 rounded-lg cursor-pointer transition-colors"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Eliminar</span>
+                          Editar Datos
                         </button>
                       )}
-                      <button
-                        onClick={() => {
-                          setEditedWO({ ...infoWO });
-                          setIsEditingWOState(true);
-                        }}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-2xs px-4 py-2 rounded-lg cursor-pointer transition-colors"
-                      >
-                        Editar Datos
-                      </button>
                       <button
                         onClick={handleCloseInfoModal}
                         className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-2xs px-4 py-2 rounded-lg cursor-pointer transition-colors"
