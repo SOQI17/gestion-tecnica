@@ -195,7 +195,8 @@ export interface Contract {
   equipmentItems?: ContractEquipmentItem[]; // List of equipment covered
   maintenanceFrequency?: 'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno';
   maintenanceDates?: string[]; // Scheduled dates for maintenance
-  qcDate?: string; // Quality control date
+  qcDate?: string; // Quality control date (fallback / primer QC)
+  qcDates?: string[]; // Quality control dates (per-equipment or multiple QC visits)
   createdAt?: string;
   contractPdfUrl?: string; // Documento del Contrato (PDF o Imagen en Cloudinary)
   schedulePdfUrl?: string; // Cronograma Firmado (PDF o Imagen en Cloudinary)

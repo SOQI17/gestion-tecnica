@@ -1298,7 +1298,25 @@ export default function AdminPortal({
   const [tempMaintenanceDate, setTempMaintenanceDate] = useState('');
   const [tempManualEquipTarget, setTempManualEquipTarget] = useState<string>('');
   const [contractFormQcDate, setContractFormQcDate] = useState('');
+  const [contractFormQcDates, setContractFormQcDates] = useState<string[]>([]);
   const [contractFormPendingAdmin, setContractFormPendingAdmin] = useState<boolean>(false);
+
+  // Helper to compute default QC dates (1 QC date per equipment)
+  const computeDefaultQcDates = (allDates: string[]): string[] => {
+    const byEq: Record<string, string[]> = {};
+    allDates.forEach(d => {
+      const eq = d.split('|')[1] || 'general';
+      if (!byEq[eq]) byEq[eq] = [];
+      byEq[eq].push(d);
+    });
+    const qcs: string[] = [];
+    Object.values(byEq).forEach(dateList => {
+      if (dateList.length > 0) {
+        qcs.push(dateList[dateList.length - 1]);
+      }
+    });
+    return qcs;
+  };
 
   // Cloudinary Contract Attachments States
   const [contractFormPdfUrl, setContractFormPdfUrl] = useState('');
@@ -3100,7 +3118,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             const isDone = matchingWO ? (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado') : false;
             
             // Is it QC date?
-            const isQc = con.qcDate === contractDate || con.qcDate === effectiveDate || idx === con.maintenanceDates.length - 1;
+            const isQc = (con.qcDates && con.qcDates.some(qd => qd === contractDate || qd === effectiveDate || qd.startsWith(contractDate) || qd.startsWith(effectiveDate))) ||
+              con.qcDate === contractDate || con.qcDate === effectiveDate ||
+              (!con.qcDate && (!con.qcDates || con.qcDates.length === 0) && idx === con.maintenanceDates.length - 1);
 
             // Avoid duplicate badges for the same contract on the same day
             const alreadyAdded = dayCommitments.some(item => item.contract.id === con.id && item.isQc === isQc);
@@ -5153,7 +5173,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       equipmentItems: isSalesReadOnly && editingContract ? editingContract.equipmentItems : contractFormEquipmentItems,
       maintenanceFrequency: isSalesReadOnly && editingContract ? editingContract.maintenanceFrequency : (isPendingSchedule ? 'Ninguno' : contractFormFrequency),
       maintenanceDates: isSalesReadOnly && editingContract ? editingContract.maintenanceDates : (isPendingSchedule ? [] : contractFormMaintenanceDates),
-      qcDate: isSalesReadOnly && editingContract ? editingContract.qcDate : (isPendingSchedule ? undefined : (contractFormQcDate || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : ''))),
+      qcDate: isSalesReadOnly && editingContract ? editingContract.qcDate : (isPendingSchedule ? undefined : (contractFormQcDate || (contractFormQcDates[0] || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : '')))),
+      qcDates: isSalesReadOnly && editingContract ? editingContract.qcDates : (isPendingSchedule ? [] : (contractFormQcDates.length > 0 ? contractFormQcDates : computeDefaultQcDates(contractFormMaintenanceDates))),
       contractPdfUrl: contractFormPdfUrl.trim() || undefined,
       schedulePdfUrl: contractFormSchedulePdfUrl.trim() || undefined,
       isNewEquipment: contractFormIsNewEquipment,
@@ -5174,7 +5195,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             name: item.name,
             brand: item.brand,
             model: 'N/D',
-            serialNumber: 'CONTRATO-TEMP',
+            serialNumber: item.serial || 'CONTRATO-TEMP',
             clientId: targetClientId,
             status: 'Operativo'
           };
@@ -5185,6 +5206,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     // Auto-schedule work orders for each of the maintenance dates
     if (onAddWorkOrder && con.maintenanceDates && con.maintenanceDates.length > 0) {
+      const activeQcDates = (con.qcDates && con.qcDates.length > 0) ? con.qcDates : (con.qcDate ? [con.qcDate] : computeDefaultQcDates(con.maintenanceDates));
+
       for (const rawDate of con.maintenanceDates) {
         const cleanDate = rawDate.split('|')[0].trim();
         const eqNameInEntry = rawDate.split('|')[1]?.trim();
@@ -5194,8 +5217,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         );
 
         if (!alreadyScheduled) {
-          const isQc = con.qcDate === rawDate || 
-            (!con.qcDate && rawDate === con.maintenanceDates[con.maintenanceDates.length - 1]);
+          const isQc = activeQcDates.some(qd => {
+            const [qDate, qEq] = qd.split('|');
+            if (eqNameInEntry && qEq) {
+              return qDate === cleanDate && qEq === eqNameInEntry;
+            }
+            return qd === rawDate || qd === cleanDate || qDate === cleanDate;
+          });
           
           const eqName = eqNameInEntry || (con.equipmentItems && con.equipmentItems.length > 0
             ? con.equipmentItems[0].name
@@ -7315,6 +7343,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setContractFormMaintenanceDates([]);
                   setTempMaintenanceDate('');
                   setContractFormQcDate('');
+                  setContractFormQcDates([]);
                   setContractFormPdfUrl('');
                   setContractFormSchedulePdfUrl('');
                   setContractFormIsNewEquipment(false);
@@ -8026,6 +8055,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormEquipmentItems(con.equipmentItems || []);
                                 setContractFormMaintenanceDates(con.maintenanceDates || []);
                                 setContractFormQcDate(con.qcDate || '');
+                                setContractFormQcDates(con.qcDates || (con.qcDate ? [con.qcDate] : []));
                                 setContractFormPdfUrl(con.contractPdfUrl || '');
                                 setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
                                 setContractFormIsNewEquipment(!!con.isNewEquipment);
@@ -8078,6 +8108,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setContractFormMaintenanceDates(con.maintenanceDates || []);
                               setTempMaintenanceDate('');
                               setContractFormQcDate(con.qcDate || '');
+                              setContractFormQcDates(con.qcDates || (con.qcDate ? [con.qcDate] : []));
                               setContractFormPdfUrl(con.contractPdfUrl || '');
                               setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
                               setContractFormIsNewEquipment(!!con.isNewEquipment);
@@ -15395,12 +15426,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               const generated = generateMaintenanceDates(newStart, contractFormEnd, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq, prefMonth);
                               if (contractFormSelectedEquipForFreq === 'all') {
                                 setContractFormMaintenanceDates(generated);
+                                const autoQcs = computeDefaultQcDates(generated);
+                                setContractFormQcDates(autoQcs);
+                                if (autoQcs.length > 0) setContractFormQcDate(autoQcs[0].split('|')[0]);
                               } else {
                                 const other = contractFormMaintenanceDates.filter(d => d.split('|')[1] !== contractFormSelectedEquipForFreq);
                                 const merged = [...other, ...generated].sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
                                 setContractFormMaintenanceDates(merged);
+                                const autoQcs = computeDefaultQcDates(merged);
+                                setContractFormQcDates(autoQcs);
+                                if (autoQcs.length > 0) setContractFormQcDate(autoQcs[0].split('|')[0]);
                               }
-                              if (generated.length > 0) setContractFormQcDate(generated[generated.length - 1]);
                             }
                           }}
                           className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
@@ -15435,12 +15471,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               const generated = generateMaintenanceDates(contractFormStart, newEndDate, contractFormFrequency, contractFormType, prefDay, contractFormSelectedEquipForFreq, prefMonth);
                               if (contractFormSelectedEquipForFreq === 'all') {
                                 setContractFormMaintenanceDates(generated);
+                                const autoQcs = computeDefaultQcDates(generated);
+                                setContractFormQcDates(autoQcs);
+                                if (autoQcs.length > 0) setContractFormQcDate(autoQcs[0].split('|')[0]);
                               } else {
                                 const other = contractFormMaintenanceDates.filter(d => d.split('|')[1] !== contractFormSelectedEquipForFreq);
                                 const merged = [...other, ...generated].sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
                                 setContractFormMaintenanceDates(merged);
+                                const autoQcs = computeDefaultQcDates(merged);
+                                setContractFormQcDates(autoQcs);
+                                if (autoQcs.length > 0) setContractFormQcDate(autoQcs[0].split('|')[0]);
                               }
-                              if (generated.length > 0) setContractFormQcDate(generated[generated.length - 1]);
                             }
                           }}
                           className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
@@ -16691,13 +16732,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                               if (contractFormSelectedEquipForFreq === 'all') {
                                 setContractFormMaintenanceDates(generated);
+                                const autoQcs = computeDefaultQcDates(generated);
+                                setContractFormQcDates(autoQcs);
+                                if (autoQcs.length > 0) setContractFormQcDate(autoQcs[0].split('|')[0]);
                               } else {
                                 const other = contractFormMaintenanceDates.filter(d => d.split('|')[1] !== contractFormSelectedEquipForFreq);
                                 const merged = [...other, ...generated].sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
                                 setContractFormMaintenanceDates(merged);
-                              }
-                              if (generated.length > 0) {
-                                setContractFormQcDate(generated[generated.length - 1]);
+                                const autoQcs = computeDefaultQcDates(merged);
+                                setContractFormQcDates(autoQcs);
+                                if (autoQcs.length > 0) setContractFormQcDate(autoQcs[0].split('|')[0]);
                               }
                             }}
                             className={`w-full py-2 border rounded-xl text-xs font-black transition-all shadow-xs flex items-center justify-center gap-1.5 ${
@@ -16763,7 +16807,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 const updated = [...contractFormMaintenanceDates, entryToAdd].sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
                                 setContractFormMaintenanceDates(updated);
                                 setTempMaintenanceDate('');
-                                if (!contractFormQcDate) {
+                                if (contractFormQcDates.length === 0) {
+                                  setContractFormQcDates([entryToAdd]);
                                   setContractFormQcDate(tempMaintenanceDate);
                                 }
                               }}
@@ -16777,58 +16822,86 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* List of maintenance dates with interactive Quality Control toggles */}
                       <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-[140px] overflow-y-auto bg-white">
-                        {contractFormMaintenanceDates.map((rawEntry, index) => {
-                          const [date, specificEquip] = rawEntry.split('|');
-                          const isQc = contractFormQcDate === date || contractFormQcDate === rawEntry || (!contractFormQcDate && index === contractFormMaintenanceDates.length - 1);
-                          const fmtDate = (d: string) => {
-                            if (!d) return '—';
-                            const [y, m, day] = d.split('-');
-                            const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-                            return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
-                          };
+                        {(() => {
+                          const currentQcs = contractFormQcDates.length > 0 ? contractFormQcDates : computeDefaultQcDates(contractFormMaintenanceDates);
 
-                          return (
-                            <div key={index} className="flex items-center justify-between px-2.5 py-1.5 hover:bg-slate-50/50 transition-colors">
-                              <div className="flex items-center gap-2 flex-wrap pr-1">
-                                <span className="font-mono text-slate-800 text-[10px] font-bold">{fmtDate(date)}</span>
-                                {specificEquip && (
-                                  <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.2 rounded text-[8px] font-extrabold">
-                                    ⚙️ {specificEquip}
-                                  </span>
+                          return contractFormMaintenanceDates.map((rawEntry, index) => {
+                            const [date, specificEquip] = rawEntry.split('|');
+                            const isQc = currentQcs.some(qd => {
+                              const [qDate, qEq] = qd.split('|');
+                              if (specificEquip && qEq) {
+                                return qDate === date && qEq === specificEquip;
+                              }
+                              return qd === rawEntry || qd === date || qDate === date;
+                            });
+                            const fmtDate = (d: string) => {
+                              if (!d) return '—';
+                              const [y, m, day] = d.split('-');
+                              const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+                              return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+                            };
+
+                            return (
+                              <div key={index} className="flex items-center justify-between px-2.5 py-1.5 hover:bg-slate-50/50 transition-colors">
+                                <div className="flex items-center gap-2 flex-wrap pr-1">
+                                  <span className="font-mono text-slate-800 text-[10px] font-bold">{fmtDate(date)}</span>
+                                  {specificEquip && (
+                                    <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.2 rounded text-[8px] font-extrabold">
+                                      ⚙️ {specificEquip}
+                                    </span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    disabled={isSalesReadOnly}
+                                    onClick={() => {
+                                      if (isQc) {
+                                        const next = currentQcs.filter(qd => {
+                                          const [qDate, qEq] = qd.split('|');
+                                          if (specificEquip && qEq) {
+                                            return !(qDate === date && qEq === specificEquip);
+                                          }
+                                          return qd !== rawEntry && qd !== date && qDate !== date;
+                                        });
+                                        setContractFormQcDates(next);
+                                      } else {
+                                        let next = currentQcs.filter(qd => {
+                                          const [_, qEq] = qd.split('|');
+                                          if (specificEquip && qEq) {
+                                            return qEq !== specificEquip;
+                                          }
+                                          return true;
+                                        });
+                                        next.push(rawEntry);
+                                        setContractFormQcDates(next);
+                                        setContractFormQcDate(date);
+                                      }
+                                    }}
+                                    className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border transition-all ${
+                                      isSalesReadOnly 
+                                        ? (isQc ? 'bg-violet-400 border-violet-400 text-white cursor-not-allowed' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed')
+                                        : (isQc ? 'bg-violet-600 border-violet-600 text-white shadow-3xs cursor-pointer' : 'bg-white hover:bg-slate-100 text-slate-400 border-slate-200 cursor-pointer')
+                                    }`}
+                                    title="Marcar esta visita como Control de Calidad"
+                                  >
+                                    {isQc ? '📋 Control Calidad' : 'Hacer QC'}
+                                  </button>
+                                </div>
+                                {!isSalesReadOnly && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setContractFormQcDates(currentQcs.filter(qd => qd !== rawEntry && qd !== date));
+                                      setContractFormMaintenanceDates(contractFormMaintenanceDates.filter((_, i) => i !== index));
+                                    }}
+                                    className="text-red-500 hover:text-red-700 font-black text-2xs p-1 cursor-pointer shrink-0"
+                                  >
+                                    ✕
+                                  </button>
                                 )}
-                                <button
-                                  type="button"
-                                  disabled={isSalesReadOnly}
-                                  onClick={() => {
-                                    setContractFormQcDate(date);
-                                  }}
-                                  className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border transition-all ${
-                                    isSalesReadOnly 
-                                      ? (isQc ? 'bg-violet-400 border-violet-400 text-white cursor-not-allowed' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed')
-                                      : (isQc ? 'bg-violet-600 border-violet-600 text-white shadow-3xs cursor-pointer' : 'bg-white hover:bg-slate-100 text-slate-400 border-slate-200 cursor-pointer')
-                                  }`}
-                                  title="Marcar esta visita como Control de Calidad"
-                                >
-                                  {isQc ? '📋 Control Calidad' : 'Hacer QC'}
-                                </button>
                               </div>
-                              {!isSalesReadOnly && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (contractFormQcDate === date || contractFormQcDate === rawEntry) {
-                                      setContractFormQcDate('');
-                                    }
-                                    setContractFormMaintenanceDates(contractFormMaintenanceDates.filter((_, i) => i !== index));
-                                  }}
-                                  className="text-red-500 hover:text-red-700 font-black text-2xs p-1 cursor-pointer shrink-0"
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </div>
-                          );
-                        })}
+                            );
+                          });
+                        })()}
                         {contractFormMaintenanceDates.length === 0 && (
                           <div className="p-3 text-center text-slate-400 italic text-[9px]">
                             Ninguna visita de mantenimiento programada.
@@ -17166,7 +17239,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           const eqName = eqNameInEntry || (selectedContractForDetails.equipmentItems && selectedContractForDetails.equipmentItems.length > 0 ? selectedContractForDetails.equipmentItems[0].name : 'Equipos según contrato');
                           
                           const woId = `WO-MTO-${selectedContractForDetails.id}-${cleanDate}-${Math.floor(Math.random() * 1000)}`;
-                          const isQc = selectedContractForDetails.qcDate === rawDate;
+                          const activeQcDates = (selectedContractForDetails.qcDates && selectedContractForDetails.qcDates.length > 0)
+                            ? selectedContractForDetails.qcDates
+                            : (selectedContractForDetails.qcDate ? [selectedContractForDetails.qcDate] : computeDefaultQcDates(selectedContractForDetails.maintenanceDates || []));
+
+                          const isQc = activeQcDates.some(qd => {
+                            const [qDate, qEq] = qd.split('|');
+                            if (eqNameInEntry && qEq) {
+                              return qDate === cleanDate && qEq === eqNameInEntry;
+                            }
+                            return qd === rawDate || qd === cleanDate || qDate === cleanDate;
+                          });
 
                           const newWO: WorkOrder = {
                             id: woId,
@@ -17216,8 +17299,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       const targetModality = matchingEqItem?.modality;
 
                       // Is it the designated QC date?
-                      const isQc = selectedContractForDetails.qcDate === date || selectedContractForDetails.qcDate === cleanDate || 
-                        (!selectedContractForDetails.qcDate && idx === selectedContractForDetails.maintenanceDates!.length - 1);
+                      const activeQcDatesDetails = (selectedContractForDetails.qcDates && selectedContractForDetails.qcDates.length > 0)
+                        ? selectedContractForDetails.qcDates
+                        : (selectedContractForDetails.qcDate ? [selectedContractForDetails.qcDate] : computeDefaultQcDates(selectedContractForDetails.maintenanceDates || []));
+
+                      const isQc = activeQcDatesDetails.some(qd => {
+                        const [qDate, qEq] = qd.split('|');
+                        if (specificEquipInDate && qEq) {
+                          return qDate === cleanDate && qEq === specificEquipInDate;
+                        }
+                        return qd === date || qd === cleanDate || qDate === cleanDate;
+                      });
 
                       const fmtDate = (d: string) => {
                         if (!d) return '—';
