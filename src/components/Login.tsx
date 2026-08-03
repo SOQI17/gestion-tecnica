@@ -87,17 +87,35 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
     }
 
     try {
+      // Check if there is an existing pre-assigned user profile in Firestore
+      let existingUserProfile: AppUser | null = null;
+      try {
+        const usersSnap = await getDocs(collection(db, 'users'));
+        usersSnap.forEach(uDoc => {
+          const uData = uDoc.data() as AppUser;
+          if (uData.email && cleanEmail(uData.email) === targetEmail) {
+            existingUserProfile = { ...uData, uid: uDoc.id };
+          }
+        });
+      } catch (err) {
+        console.warn("Could not query users collection in Login:", err);
+      }
+
       if (isSignUp) {
         // Register in Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, targetEmail, password);
         const firebaseUser = userCredential.user;
 
-        // Store role profile in Firestore
+        // Determine role: prioritize existing pre-assigned profile, then master admin, then matched engineer
+        const finalRole = existingUserProfile?.role || (targetEmail === 'alexis.guerra@orimec.com.ec' ? 'admin' : role);
+        const finalEngId = existingUserProfile?.engineerId || (finalRole === 'engineer' ? matchedEngineer?.id : undefined);
+
         const userProfile: AppUser = {
           uid: firebaseUser.uid,
           email: targetEmail,
-          role,
-          ...(role === 'engineer' && { engineerId: matchedEngineer?.id })
+          name: existingUserProfile?.name,
+          role: finalRole,
+          ...(finalEngId ? { engineerId: finalEngId } : {})
         };
 
         await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
@@ -111,25 +129,34 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
           const fetchedProfile = userDoc.data() as AppUser;
-          if (fetchedProfile.role !== role) {
-            const correctedProfile: AppUser = {
+          // Respect existing role in Firestore; only default if undefined
+          const effectiveRole = (targetEmail === 'alexis.guerra@orimec.com.ec') ? 'admin' : (fetchedProfile.role || role);
+          const effectiveEngId = fetchedProfile.engineerId || (effectiveRole === 'engineer' ? matchedEngineer?.id : undefined);
+          
+          if (fetchedProfile.role !== effectiveRole || (effectiveRole === 'engineer' && fetchedProfile.engineerId !== effectiveEngId)) {
+            const updatedProfile: AppUser = {
+              ...fetchedProfile,
               uid: firebaseUser.uid,
               email: targetEmail,
-              role,
-              ...(role === 'engineer' && { engineerId: matchedEngineer?.id })
+              role: effectiveRole,
+              ...(effectiveEngId ? { engineerId: effectiveEngId } : {})
             };
-            await setDoc(doc(db, 'users', firebaseUser.uid), correctedProfile);
-            onLoginSuccess(correctedProfile, false);
+            await setDoc(doc(db, 'users', firebaseUser.uid), updatedProfile);
+            onLoginSuccess(updatedProfile, false);
           } else {
             onLoginSuccess(fetchedProfile, false);
           }
         } else {
-          // If auth worked but firestore profile doesn't exist, create it dynamically
+          // If auth worked but direct uid profile doesn't exist, check pre-assigned or default
+          const finalRole = existingUserProfile?.role || (targetEmail === 'alexis.guerra@orimec.com.ec' ? 'admin' : role);
+          const finalEngId = existingUserProfile?.engineerId || (finalRole === 'engineer' ? matchedEngineer?.id : undefined);
+
           const userProfile: AppUser = {
             uid: firebaseUser.uid,
             email: targetEmail,
-            role,
-            ...(role === 'engineer' && { engineerId: matchedEngineer?.id })
+            name: existingUserProfile?.name,
+            role: finalRole,
+            ...(finalEngId ? { engineerId: finalEngId } : {})
           };
           await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
           onLoginSuccess(userProfile, false);

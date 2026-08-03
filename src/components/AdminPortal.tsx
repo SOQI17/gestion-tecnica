@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag, UserPlus, Mail, Lock, Shield, Phone, MapPin, KeyRound } from 'lucide-react';
 
 export const OFFICIAL_MODALITIES = [
   { code: 'MR', label: 'MR: Resonancia Magnética' },
@@ -39,7 +39,7 @@ const EQUIPMENT_MODALITIES = [
   'US',
   'Otros'
 ];
-import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, ECUADOR_HOLIDAYS, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, UserPermissions, RoleTemplates } from '../types';
+import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, ECUADOR_HOLIDAYS, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, UserPermissions, RoleTemplates, AppUser } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl } from '../utils/cloudinary';
@@ -217,6 +217,17 @@ interface AdminPortalProps {
   onUpdateContractGE?: (cGE: ContractGE) => void;
   onDeleteContractGE?: (id: string) => void;
   onBulkUploadContractsGE?: (cGEs: ContractGE[]) => void;
+  allRegisteredUsers?: AppUser[];
+  onUpdateUserRole?: (uid: string, role: 'admin' | 'engineer' | 'sales', engineerId?: string) => void;
+  onRegisterNewUser?: (data: {
+    name: string;
+    email: string;
+    password?: string;
+    role: 'admin' | 'engineer' | 'sales';
+    specialty?: Specialty;
+    sede?: string;
+    phone?: string;
+  }) => Promise<void> | void;
 }
 
 const getEndDateStr = (startDateStr: string, duration: number): string => {
@@ -966,7 +977,10 @@ export default function AdminPortal({
   onAddContractGE,
   onUpdateContractGE,
   onDeleteContractGE,
-  onBulkUploadContractsGE
+  onBulkUploadContractsGE,
+  allRegisteredUsers,
+  onUpdateUserRole,
+  onRegisterNewUser
 }: AdminPortalProps) {
   const effectivePermissions: UserPermissions = useMemo(() => {
     if (userRole === 'admin' && !currentUserPermissions) {
@@ -1060,6 +1074,9 @@ export default function AdminPortal({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [draggedOverDay, setDraggedOverDay] = useState<string | null>(null);
   const [highlightedEngineerId, setHighlightedEngineerId] = useState<string | null>(null);
+  // Pending user assignment states (keyed by uid)
+  const [pendingUserRoles, setPendingUserRoles] = useState<Record<string, 'engineer' | 'sales' | 'admin'>>({});
+  const [pendingUserEngIds, setPendingUserEngIds] = useState<Record<string, string>>();
 
   // Main Admin Tab state
   const [activeAdminTab, setActiveAdminTab] = useState<'agendamiento' | 'clientes' | 'equipos' | 'registro' | 'contratos' | 'cronograma' | 'vacaciones' | 'capacitaciones'>(
@@ -1543,10 +1560,16 @@ export default function AdminPortal({
 
   // States for Engineers Management Modal
   const [isEngsModalOpen, setIsEngsModalOpen] = useState(false);
+  const [engModalTab, setEngModalTab] = useState<'engineers' | 'users'>('engineers');
   const [engSearchQuery, setEngSearchQuery] = useState('');
   const [isAddingNewEng, setIsAddingNewEng] = useState(false);
   const [newEngName, setNewEngName] = useState('');
+  const [newEngEmail, setNewEngEmail] = useState('');
+  const [newEngPassword, setNewEngPassword] = useState('');
+  const [newEngRole, setNewEngRole] = useState<'engineer' | 'admin' | 'sales'>('engineer');
   const [newEngSpecialty, setNewEngSpecialty] = useState<Specialty>('Ingeniería');
+  const [newEngPhone, setNewEngPhone] = useState('');
+  const [isRegisteringUser, setIsRegisteringUser] = useState(false);
   const [engToDelete, setEngToDelete] = useState<Engineer | null>(null);
 
   // States for resetting the selected month's schedule
@@ -4218,29 +4241,63 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
   };
 
   // Helper handlers for managing engineers list and status
-  const handleCreateNewEngineer = () => {
-    if (!newEngName.trim()) {
-      alert("Por favor ingrese el nombre del técnico.");
+  const handleCreateNewEngineer = async () => {
+    if (!newEngName.trim() && !newEngEmail.trim()) {
+      alert("Por favor ingrese al menos el nombre o correo electrónico del usuario/técnico.");
       return;
     }
-    const newId = `ENG-DYN-${100 + engineers.length}-${Math.floor(Math.random() * 105)}`;
-    const newEng: Engineer = {
-      id: newId,
-      name: newEngName.trim(),
-      specialty: newEngSpecialty,
-      email: `${newEngName.toLowerCase().replace(/[^a-z0-9]/g, '')}@orimec.com`,
-      phone: '+593 999 999 999',
-      avatar: '',
-      availability: 'Disponible',
-      skills: [newEngSpecialty],
-      sede: newEngSede,
-      customPermissions: getDefaultPermissionsForSpecialty(newEngSpecialty)
-    };
-    if (onUpdateEngineer) {
-      onUpdateEngineer(newEng);
+
+    setIsRegisteringUser(true);
+    try {
+      const email = newEngEmail.trim().toLowerCase() || `${newEngName.toLowerCase().replace(/[^a-z0-9]/g, '')}@orimec.com.ec`;
+      const name = newEngName.trim() || email.split('@')[0].toUpperCase().replace(/[._]/g, ' ');
+
+      if (onRegisterNewUser) {
+        await onRegisterNewUser({
+          name,
+          email,
+          password: newEngPassword.trim() || undefined,
+          role: newEngRole,
+          specialty: newEngRole === 'engineer' ? newEngSpecialty : undefined,
+          sede: newEngSede,
+          phone: newEngPhone.trim() || '+593 999 999 999'
+        });
+      } else {
+        const newId = `ENG-DYN-${100 + engineers.length}-${Math.floor(Math.random() * 105)}`;
+        const newEng: Engineer = {
+          id: newId,
+          name,
+          specialty: newEngSpecialty,
+          email,
+          phone: newEngPhone.trim() || '+593 999 999 999',
+          avatar: '',
+          availability: 'Disponible',
+          skills: [newEngSpecialty],
+          sede: newEngSede,
+          customPermissions: getDefaultPermissionsForSpecialty(newEngSpecialty)
+        };
+        if (onUpdateEngineer) {
+          onUpdateEngineer(newEng);
+        }
+      }
+
+      if (newEngRole === 'engineer') {
+        setEngModalTab('engineers');
+      } else {
+        setEngModalTab('users');
+      }
+
+      setNewEngName('');
+      setNewEngEmail('');
+      setNewEngPassword('');
+      setNewEngPhone('');
+      setIsAddingNewEng(false);
+    } catch (e: any) {
+      console.error("Error registrando nuevo usuario:", e);
+      alert(`Error al registrar: ${e?.message || 'Ocurrió un problema'}`);
+    } finally {
+      setIsRegisteringUser(false);
     }
-    setNewEngName('');
-    setIsAddingNewEng(false);
   };
 
   const handleUpdateEngAvailability = (eng: Engineer, availability: 'Disponible' | 'En Campo' | 'Inactivo') => {
@@ -14193,11 +14250,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             
             {/* Modal Header */}
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <div className="flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-indigo-600" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                  <UserCheck className="w-4 h-4" />
+                </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider">Gestión de Ingenieros y Técnicos</h3>
-                  <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Administra los técnicos activos, estados de disponibilidad y elimina duplicados.</p>
+                  <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider">Gestión de Técnicos y Usuarios del Sistema</h3>
+                  <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Administra técnicos, disponibilidad, roles de acceso y credenciales de usuarios.</p>
                 </div>
               </div>
               <button
@@ -14205,102 +14264,233 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setIsEngsModalOpen(false);
                   setIsAddingNewEng(false);
                 }}
-                className="p-1 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
+                className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
+            {/* Navigation Tabs */}
+            <div className="flex border-b border-slate-200 bg-slate-100/75 px-4 pt-2 gap-2">
+              <button
+                onClick={() => setEngModalTab('engineers')}
+                className={`px-4 py-2 text-xs font-extrabold rounded-t-lg transition-all flex items-center gap-2 cursor-pointer border-t border-x ${
+                  engModalTab === 'engineers'
+                    ? 'bg-white text-indigo-700 border-slate-200 -mb-px shadow-2xs font-black'
+                    : 'bg-transparent text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-200/50'
+                }`}
+              >
+                <span>🛠️ Técnicos & Cuadrilla</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  engModalTab === 'engineers' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {engineers.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setEngModalTab('users')}
+                className={`px-4 py-2 text-xs font-extrabold rounded-t-lg transition-all flex items-center gap-2 cursor-pointer border-t border-x ${
+                  engModalTab === 'users'
+                    ? 'bg-white text-amber-700 border-slate-200 -mb-px shadow-2xs font-black'
+                    : 'bg-transparent text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-200/50'
+                }`}
+              >
+                <span>👥 Todos los Usuarios Registrados</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  engModalTab === 'users' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {(allRegisteredUsers || []).length}
+                </span>
+              </button>
+            </div>
+
             {/* Search and Quick Filters */}
-            <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 bg-white">
+            <div className="p-3.5 border-b border-slate-100 flex flex-col sm:flex-row gap-3 bg-white">
               <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="Buscar técnico por nombre o especialidad..."
+                  placeholder={engModalTab === 'engineers' ? "Buscar técnico por nombre o especialidad..." : "Buscar usuario por correo, nombre o rol..."}
                   value={engSearchQuery}
                   onChange={(e) => setEngSearchQuery(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 pl-8 text-xs font-semibold text-slate-755 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                 />
-                <span className="absolute left-3 top-2.5 text-slate-400 text-3xs">🔍</span>
+                <span className="absolute left-3 top-2 text-slate-400 text-3xs">🔍</span>
               </div>
               
               {/* Quick Add Form button */}
               <button
                 onClick={() => setIsAddingNewEng(!isAddingNewEng)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm hover:shadow-md cursor-pointer whitespace-nowrap"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Registrar Técnico</span>
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Registrar Usuario / Técnico</span>
               </button>
             </div>
 
-            {/* Add New Engineer Inline Panel */}
+            {/* Add New User / Engineer Inline Panel */}
             {isAddingNewEng && (
-              <div className="bg-slate-50 p-4 border-b border-slate-100 space-y-3">
-                <h4 className="text-2xs font-extrabold text-slate-700 uppercase tracking-wider">Nuevo Registro de Técnico</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="bg-gradient-to-br from-indigo-50/70 via-slate-50 to-indigo-50/40 p-4 border-b border-indigo-100/80 space-y-3.5 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-extrabold text-xs shadow-xs">
+                      <UserPlus className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                        Registrar Nuevo Usuario & Asignar Rol
+                      </h4>
+                      <p className="text-[10px] text-slate-500 font-medium">
+                        Crea la cuenta en el sistema, asígnale su rol (Admin, Técnico o Ventas) y sincronízala con Firebase.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100/80 px-2.5 py-0.5 rounded-full border border-indigo-200">
+                    Nuevo Perfil
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
+                    <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                      Nombre Completo <span className="text-rose-500">*</span>
+                    </label>
                     <input
                       type="text"
-                      placeholder="Ej. Ing. Juan Pérez"
+                      placeholder="Ej. Ing. Juan Pérez o Gerencia Técnica"
                       value={newEngName}
                       onChange={(e) => setNewEngName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                     />
                   </div>
+
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Especialidad</label>
+                    <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                      Correo Electrónico (Login) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="ej: usuario@orimec.com.ec"
+                      value={newEngEmail}
+                      onChange={(e) => setNewEngEmail(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                      Contraseña Inicial (opcional)
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="Mínimo 6 caracteres"
+                      value={newEngPassword}
+                      onChange={(e) => setNewEngPassword(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                      Rol en el Sistema
+                    </label>
                     <select
-                      value={newEngSpecialty}
-                      onChange={(e) => setNewEngSpecialty(e.target.value as Specialty)}
-                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      value={newEngRole}
+                      onChange={(e) => setNewEngRole(e.target.value as 'engineer' | 'admin' | 'sales')}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                     >
-                      <option value="Ingeniería">Ingeniería</option>
-                      <option value="Aplicaciones">Aplicaciones</option>
-                      <option value="Ventas">Ventas</option>
-                      <option value="IT">IT</option>
+                      <option value="engineer">🛠️ Ingeniero / Técnico (FSM & Órdenes)</option>
+                      <option value="admin">👑 Administrador (Acceso Total)</option>
+                      <option value="sales">💼 Ventas / Comercial (Cotizaciones & Clientes)</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sede / Sector (Cobertura)</label>
-                    <select
-                      value={newEngSede}
-                      onChange={(e) => setNewEngSede(e.target.value as any)}
-                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                    >
-                      <option value="Quito">📍 Quito (Sierra / Alrededores)</option>
-                      <option value="Guayaquil">📍 Guayaquil (Costa / Alrededores)</option>
-                      <option value="Cuenca">📍 Cuenca (Sur / Alrededores)</option>
-                      <option value="Sede Central">🏢 Sede Central (Nacional)</option>
-                    </select>
-                  </div>
+
+                  {newEngRole === 'engineer' && (
+                    <>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                          Especialidad
+                        </label>
+                        <select
+                          value={newEngSpecialty}
+                          onChange={(e) => setNewEngSpecialty(e.target.value as Specialty)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                        >
+                          <option value="Mecánica">Mecánica</option>
+                          <option value="Electricidad">Electricidad</option>
+                          <option value="Electrónica">Electrónica</option>
+                          <option value="Control y Automatización">Control y Automatización</option>
+                          <option value="Ingeniería">Ingeniería General</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                          Sede Asignada
+                        </label>
+                        <select
+                          value={newEngSede}
+                          onChange={(e) => setNewEngSede(e.target.value as any)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                        >
+                          <option value="Quito">Quito</option>
+                          <option value="Guayaquil">Guayaquil</option>
+                          <option value="Cuenca">Cuenca</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                          Teléfono de Contacto
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej: +593 99 999 9999"
+                          value={newEngPhone}
+                          onChange={(e) => setNewEngPhone(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="flex justify-end gap-2 mt-2">
-                  <button
-                    onClick={() => setIsAddingNewEng(false)}
-                    className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleCreateNewEngineer}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                  >
-                    Guardar Registro
-                  </button>
+
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                  <span className="text-[10px] text-slate-500 font-semibold italic">
+                    {newEngPassword ? '🔑 Se creará cuenta con correo y contraseña.' : 'ℹ️ Si el usuario ya se registró, se sincronizará su perfil.'}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNewEng(false)}
+                      disabled={isRegisteringUser}
+                      className="px-3.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCreateNewEngineer}
+                      disabled={isRegisteringUser}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-1.5 rounded-lg transition-all shadow-xs hover:shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>{isRegisteringUser ? 'Registrando...' : '✓ Guardar y Registrar Usuario'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Engineer List Scrollable Area */}
+            {/* Modal Body depending on Tab */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2.5 bg-slate-50/50">
-              {filteredEngineersForList.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 font-semibold text-xs">
-                  No se encontraron técnicos registrados.
-                </div>
-              ) : (
-                filteredEngineersForList.map(eng => {
+              {engModalTab === 'engineers' ? (
+                filteredEngineersForList.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400 font-semibold text-xs">
+                    No se encontraron técnicos registrados con ese criterio de búsqueda.
+                  </div>
+                ) : (
+                  filteredEngineersForList.map(eng => {
                   const isMaster = eng.id.startsWith('ENG-0');
                   const engActiveOrders = workOrders.filter(wo => {
                     const dateObj = new Date(wo.plannedDate + 'T00:00:00');
@@ -14817,6 +15007,152 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
                   );
                 })
+              )) : (
+                /* TAB 2: TODOS LOS USUARIOS REGISTRADOS EN FIREBASE */
+                (() => {
+                  const q = engSearchQuery.trim().toLowerCase();
+                  const filteredUsers = (allRegisteredUsers || []).filter(u => {
+                    if (!q) return true;
+                    return (
+                      (u.name && u.name.toLowerCase().includes(q)) ||
+                      (u.email && u.email.toLowerCase().includes(q)) ||
+                      (u.role && u.role.toLowerCase().includes(q)) ||
+                      (u.uid && u.uid.toLowerCase().includes(q))
+                    );
+                  });
+
+                  if (filteredUsers.length === 0) {
+                    return (
+                      <div className="space-y-3 py-6">
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center space-y-2">
+                          <p className="text-xs font-extrabold text-amber-800">
+                            {engSearchQuery ? 'No se encontraron usuarios con ese filtro de búsqueda.' : 'No hay usuarios registrados actualmente en Firestore.'}
+                          </p>
+                          <p className="text-[10px] text-slate-600 font-medium max-w-md mx-auto">
+                            Puedes registrar un nuevo usuario haciendo clic en el botón superior <span className="font-bold text-indigo-700">"Registrar Usuario / Técnico"</span>.
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between px-1 text-[11px] text-slate-600 font-bold">
+                        <span>Listado de Cuentas y Accesos en Firebase ({filteredUsers.length})</span>
+                        <span className="text-[9px] text-slate-400">Sincronizado en tiempo real</span>
+                      </div>
+
+                      {filteredUsers.map(user => {
+                        const isSelf = user.email && currentUserEmail && user.email.toLowerCase() === currentUserEmail.toLowerCase();
+                        const linkedEng = engineers.find(e =>
+                          (e.email && user.email && e.email.toLowerCase() === user.email.toLowerCase()) ||
+                          (user.engineerId && e.id === user.engineerId)
+                        );
+                        const curRole = pendingUserRoles[user.uid] || (user.role as any) || 'engineer';
+                        const curEngId = (pendingUserEngIds || {})[user.uid] || user.engineerId || '';
+
+                        return (
+                          <div
+                            key={user.uid}
+                            className={`border rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all ${
+                              isSelf
+                                ? 'bg-indigo-50/70 border-indigo-300 ring-1 ring-indigo-200 shadow-xs'
+                                : linkedEng
+                                ? 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
+                                : 'bg-amber-50/50 border-amber-200 shadow-2xs'
+                            }`}
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-extrabold text-xs text-slate-800 flex items-center gap-1">
+                                  ✉️ {user.email || '(sin email)'}
+                                </span>
+                                {user.name && (
+                                  <span className="text-slate-600 font-semibold text-xs">
+                                    • {user.name}
+                                  </span>
+                                )}
+                                {isSelf && (
+                                  <span className="bg-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-2xs">
+                                    (Tu cuenta actual)
+                                  </span>
+                                )}
+                                <span className="bg-slate-100 text-slate-500 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded">
+                                  {user.uid.slice(0, 10)}...
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 flex-wrap text-[10px]">
+                                <span className="text-slate-500 font-semibold">Rol Asignado:</span>
+                                <span className={`font-black uppercase px-2 py-0.5 rounded text-[9px] border ${
+                                  user.role === 'admin'
+                                    ? 'bg-purple-100 text-purple-800 border-purple-200'
+                                    : user.role === 'engineer'
+                                    ? 'bg-indigo-100 text-indigo-800 border-indigo-200'
+                                    : user.role === 'sales'
+                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                    : 'bg-amber-100 text-amber-800 border-amber-200'
+                                }`}>
+                                  {user.role === 'admin' ? '👑 Administrador' : user.role === 'engineer' ? '🛠️ Ingeniero/Técnico' : user.role === 'sales' ? '💼 Ventas/Comercial' : '⚠️ Sin Asignar'}
+                                </span>
+
+                                {linkedEng ? (
+                                  <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
+                                    ✓ Técnico Vinculado: <span className="font-black">{linkedEng.name}</span> ({linkedEng.id})
+                                  </span>
+                                ) : (
+                                  user.role === 'engineer' && (
+                                    <span className="bg-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded border border-amber-300">
+                                      ⚠ Sin perfil de técnico vinculado
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
+                              <select
+                                value={curRole}
+                                onChange={e => setPendingUserRoles(prev => ({ ...prev, [user.uid]: e.target.value as any }))}
+                                className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-400 shadow-2xs"
+                              >
+                                <option value="engineer">🛠️ Ingeniero/Técnico</option>
+                                <option value="sales">💼 Vendedor / Comercial</option>
+                                <option value="admin">👑 Administrador</option>
+                              </select>
+
+                              {curRole === 'engineer' && (
+                                <select
+                                  value={curEngId}
+                                  onChange={e => setPendingUserEngIds(prev => ({ ...(prev || {}), [user.uid]: e.target.value }))}
+                                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-400 shadow-2xs max-w-[180px]"
+                                >
+                                  <option value="">-- Vincular Técnico --</option>
+                                  {engineers.map(e => (
+                                    <option key={e.id} value={e.id}>{e.name} ({e.id})</option>
+                                  ))}
+                                </select>
+                              )}
+
+                              <button
+                                onClick={() => {
+                                  if (onUpdateUserRole) {
+                                    onUpdateUserRole(user.uid, curRole, curEngId || undefined);
+                                  }
+                                }}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg transition-all cursor-pointer shadow-xs hover:shadow whitespace-nowrap flex items-center gap-1"
+                              >
+                                <Check className="w-3 h-3" />
+                                <span>Guardar Rol</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()
               )}
             </div>
 

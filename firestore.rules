@@ -67,5 +67,9 @@ service cloud.firestore {
     match /contractsGE/{contractGeId} {
       allow read, write: if true;
     }
+    // 15. Reglas para Perfiles de Usuarios Registrados (Users)
+    match /users/{userId} {
+      allow read, write: if true;
+    }
   }
 }

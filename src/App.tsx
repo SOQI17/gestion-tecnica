@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
-import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE } from './types';
-import AdminPortal from './components/AdminPortal';
+import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty } from './types';
+import AdminPortal, { getDefaultPermissionsForSpecialty } from './components/AdminPortal';
 import EngineerPortal from './components/EngineerPortal';
 import Login from './components/Login';
-import { db, auth, handleFirestoreError, OperationType } from './firebase';
+import { db, auth, handleFirestoreError, OperationType, registerFirebaseUserSecondary } from './firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, getDocs, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { AppUser } from './types';
+
 
 const cleanUndefined = (obj: any): any => {
   if (obj === null || typeof obj !== 'object') {
@@ -53,6 +53,8 @@ export default function App() {
       return [];
     }
   });
+
+  const [allRegisteredUsers, setAllRegisteredUsers] = useState<AppUser[]>([]);
 
   const [dbLoading, setDbLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -112,33 +114,61 @@ export default function App() {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data() as AppUser;
-            // Overwrite if old Firestore role mismatched expected role (e.g. sales user saved previously as engineer)
-            if (userData.role !== expectedRole || (expectedRole === 'engineer' && userData.engineerId !== expectedEngId)) {
+            // Preservar el rol guardado en Firestore (e.g. admin asignado por panel o engineer vinculado)
+            const effectiveRole: 'admin' | 'engineer' | 'sales' = (targetEmail === 'alexis.guerra@orimec.com.ec')
+              ? 'admin'
+              : (userData.role || expectedRole);
+            const effectiveEngId = userData.engineerId || expectedEngId;
+
+            if (userData.role !== effectiveRole || (effectiveRole === 'engineer' && userData.engineerId !== effectiveEngId)) {
               const updatedProfile: AppUser = {
                 uid: firebaseUser.uid,
                 email: targetEmail,
-                role: expectedRole,
-                ...(expectedEngId ? { engineerId: expectedEngId } : {})
+                name: userData.name,
+                role: effectiveRole,
+                ...(effectiveEngId ? { engineerId: effectiveEngId } : {})
               };
-              await setDoc(doc(db, 'users', firebaseUser.uid), updatedProfile);
+              await setDoc(doc(db, 'users', firebaseUser.uid), cleanUndefined(updatedProfile));
               setCurrentUser(updatedProfile);
-              setActiveTab(expectedRole);
+              setActiveTab(effectiveRole);
             } else {
               setCurrentUser(userData);
               setActiveTab(userData.role);
             }
           } else {
+            // Verificar si el usuario fue registrado previamente con ID personalizado o por email
+            let preAssignedRole = expectedRole;
+            let preAssignedEngId = expectedEngId;
+            let preAssignedName: string | undefined;
+
+            try {
+              const usersSnap = await getDocs(collection(db, 'users'));
+              usersSnap.forEach(uDoc => {
+                const uData = uDoc.data() as AppUser;
+                if (uData.email && uData.email.trim().toLowerCase() === targetEmail) {
+                  if (uData.role) preAssignedRole = uData.role;
+                  if (uData.engineerId) preAssignedEngId = uData.engineerId;
+                  if (uData.name) preAssignedName = uData.name;
+                }
+              });
+            } catch (err) {
+              console.warn("No se pudo buscar registro previo por email:", err);
+            }
+
+            const effectiveRole = (targetEmail === 'alexis.guerra@orimec.com.ec') ? 'admin' : preAssignedRole;
+
             // Auto-crear perfil en Firestore si es nuevo
             const newProfile: AppUser = {
               uid: firebaseUser.uid,
               email: targetEmail,
-              role: expectedRole,
-              ...(expectedEngId ? { engineerId: expectedEngId } : {})
+              name: preAssignedName,
+              role: effectiveRole,
+              ...(preAssignedEngId ? { engineerId: preAssignedEngId } : {})
             };
 
-            await setDoc(doc(db, 'users', firebaseUser.uid), newProfile);
+            await setDoc(doc(db, 'users', firebaseUser.uid), cleanUndefined(newProfile));
             setCurrentUser(newProfile);
-            setActiveTab(expectedRole);
+            setActiveTab(effectiveRole);
           }
           setDbError(null);
         } catch (e: any) {
@@ -349,6 +379,20 @@ export default function App() {
       console.warn("Error leyendo contratos con GE de Firestore:", error);
     });
 
+    // 12. Suscribirse a la Colección de Usuarios Registrados
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const list: AppUser[] = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data && data.email) {
+          list.push({ uid: docSnap.id, ...data } as AppUser);
+        }
+      });
+      setAllRegisteredUsers(list);
+    }, (error) => {
+      console.warn("Error leyendo usuarios de Firestore:", error);
+    });
+
     return () => {
       unsubEngineers();
       unsubClients();
@@ -361,6 +405,7 @@ export default function App() {
       unsubRegistries();
       unsubScheduledTrainings();
       unsubContractsGE();
+      unsubUsers();
     };
   }, []);
 
@@ -839,27 +884,33 @@ export default function App() {
   const handleUpdateEngineer = async (updatedEng: Engineer) => {
     try {
       await setDoc(doc(db, 'engineers', updatedEng.id), cleanUndefined(updatedEng));
+      setEngineers(prev => {
+        const idx = prev.findIndex(e => e.id === updatedEng.id);
+        if (idx >= 0) {
+          const copy = [...prev];
+          copy[idx] = updatedEng;
+          return copy;
+        }
+        return [...prev, updatedEng];
+      });
 
-      // Sincronizar automáticamente el rol en la colección 'users' si el usuario ya existe en Firestore
+      // Sincronizar automáticamente el técnico en la colección 'users' si el usuario ya existe en Firestore
       const targetEmail = (updatedEng.email || '').trim().toLowerCase();
       if (targetEmail) {
-        const specLower = (updatedEng.specialty || '').toLowerCase();
-        const isVentas = specLower.includes('ventas') || specLower.includes('vendedor') || specLower.includes('comercial');
-        const expectedRole: 'admin' | 'engineer' | 'sales' = (targetEmail === 'alexis.guerra@orimec.com.ec')
-          ? 'admin'
-          : (isVentas ? 'sales' : 'engineer');
-
         try {
           const usersSnap = await getDocs(collection(db, 'users'));
           usersSnap.forEach(async (uDoc) => {
             const uData = uDoc.data() as AppUser;
             if (uData.email && uData.email.trim().toLowerCase() === targetEmail) {
-              if (uData.role !== expectedRole || (expectedRole === 'engineer' && uData.engineerId !== updatedEng.id)) {
-                await setDoc(doc(db, 'users', uDoc.id), {
+              const keepRole = uData.role || 'engineer';
+              if (uData.engineerId !== updatedEng.id) {
+                const updatedU: AppUser = {
                   ...uData,
-                  role: expectedRole,
-                  ...(expectedRole === 'engineer' ? { engineerId: updatedEng.id } : {})
-                });
+                  role: keepRole,
+                  engineerId: updatedEng.id
+                };
+                await setDoc(doc(db, 'users', uDoc.id), cleanUndefined(updatedU));
+                setAllRegisteredUsers(prev => prev.map(u => u.uid === uDoc.id ? updatedU : u));
               }
             }
           });
@@ -877,9 +928,120 @@ export default function App() {
   const handleDeleteEngineer = async (engId: string) => {
     try {
       await deleteDoc(doc(db, 'engineers', engId));
+      setEngineers(prev => prev.filter(e => e.id !== engId));
       showNotification(`¡Técnico eliminado con éxito de Firestore!`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `engineers/${engId}`);
+    }
+  };
+
+  const handleRegisterNewUser = async (data: {
+    name: string;
+    email: string;
+    password?: string;
+    role: 'admin' | 'engineer' | 'sales';
+    specialty?: Specialty;
+    sede?: string;
+    phone?: string;
+  }) => {
+    const cleanEmail = data.email.trim().toLowerCase();
+    if (!cleanEmail) {
+      showNotification('Por favor ingrese un correo válido.', 'warning');
+      return;
+    }
+
+    try {
+      let uid = '';
+      // 1. Verificar si ya existe en allRegisteredUsers o consultando Firestore
+      const existingUser = allRegisteredUsers.find(u => u.email && u.email.trim().toLowerCase() === cleanEmail);
+      if (existingUser) {
+        uid = existingUser.uid;
+      }
+
+      if (!uid) {
+        try {
+          const usersSnap = await getDocs(collection(db, 'users'));
+          usersSnap.forEach(uDoc => {
+            const uData = uDoc.data() as AppUser;
+            if (uData.email && uData.email.trim().toLowerCase() === cleanEmail) {
+              uid = uDoc.id;
+            }
+          });
+        } catch (e) {
+          console.warn("Error buscando usuario previo en users collection:", e);
+        }
+      }
+
+      // 2. Si se especificó contraseña de al menos 6 caracteres, crear en Firebase Auth sin cerrar sesión admin
+      if (data.password && data.password.length >= 6) {
+        try {
+          const createdUid = await registerFirebaseUserSecondary(cleanEmail, data.password);
+          if (createdUid) {
+            uid = createdUid;
+          }
+        } catch (authErr: any) {
+          if (authErr?.code === 'auth/email-already-in-use') {
+            console.log('El correo ya está registrado en Firebase Auth, sincronizando perfil Firestore...');
+          } else {
+            console.warn('Aviso Auth:', authErr);
+            showNotification(`Aviso Auth: ${authErr.message || 'No se pudo crear en Auth, pero se guardará el perfil.'}`, 'warning');
+          }
+        }
+      }
+
+      // 3. Si aún no tenemos UID, usar formato canónico
+      if (!uid) {
+        uid = `USER-${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
+      }
+
+      let engId: string | undefined = undefined;
+      let createdEng: Engineer | undefined = undefined;
+
+      // 4. Si el rol es ingeniero/técnico, crear o vincular en colección 'engineers'
+      if (data.role === 'engineer') {
+        const existingEng = engineers.find(e => e.email && e.email.trim().toLowerCase() === cleanEmail);
+        engId = existingEng ? existingEng.id : `ENG-${100 + engineers.length}-${Math.floor(100 + Math.random() * 900)}`;
+        const spec = data.specialty || 'Ingeniería';
+        createdEng = {
+          id: engId,
+          name: data.name.trim() || cleanEmail.split('@')[0].toUpperCase().replace(/[._]/g, ' '),
+          email: cleanEmail,
+          specialty: spec,
+          sede: (data.sede as any) || 'Quito',
+          phone: data.phone?.trim() || '+593 999 999 999',
+          avatar: '',
+          availability: 'Disponible',
+          skills: [spec],
+          customPermissions: getDefaultPermissionsForSpecialty(spec)
+        };
+        await setDoc(doc(db, 'engineers', engId), cleanUndefined(createdEng));
+        setEngineers(prev => {
+          const filtered = prev.filter(e => e.id !== engId && e.email?.toLowerCase() !== cleanEmail);
+          return [...filtered, createdEng!];
+        });
+      }
+
+      // 5. Guardar en la colección 'users'
+      const userProfile: AppUser = {
+        uid,
+        email: cleanEmail,
+        name: data.name.trim() || undefined,
+        role: data.role,
+        ...(engId ? { engineerId: engId } : {})
+      };
+      await setDoc(doc(db, 'users', uid), cleanUndefined(userProfile));
+
+      // Actualizar estado local inmediatamente
+      setAllRegisteredUsers(prev => {
+        const filtered = prev.filter(u => u.uid !== uid && u.email?.toLowerCase() !== cleanEmail);
+        return [...filtered, userProfile];
+      });
+
+      const roleName = data.role === 'admin' ? 'Administrador' : data.role === 'engineer' ? 'Ingeniero/Técnico' : 'Ventas';
+      showNotification(`¡Usuario ${data.name || cleanEmail} registrado y guardado exitosamente como ${roleName}!`, 'success');
+    } catch (err: any) {
+      console.error("Error al registrar usuario:", err);
+      showNotification(`Error al guardar usuario: ${err?.message || 'Problema de conexión con Firestore'}`, 'warning');
     }
   };
 
@@ -1242,6 +1404,62 @@ export default function App() {
                 onUpdateContractGE={handleUpdateContractGE}
                 onDeleteContractGE={handleDeleteContractGE}
                 onBulkUploadContractsGE={handleBulkUploadContractsGE}
+                allRegisteredUsers={allRegisteredUsers}
+                onRegisterNewUser={handleRegisterNewUser}
+                onUpdateUserRole={async (uid: string, role: 'admin' | 'engineer' | 'sales', engineerId?: string) => {
+                  try {
+                    const existing = allRegisteredUsers.find(u => u.uid === uid) || { uid, email: '' };
+                    const userEmail = (existing.email || '').trim().toLowerCase();
+
+                    let finalEngId = engineerId;
+                    if (role === 'engineer') {
+                      if (!finalEngId && userEmail) {
+                        const matchedEng = engineers.find(e => e.email && e.email.trim().toLowerCase() === userEmail);
+                        if (matchedEng) {
+                          finalEngId = matchedEng.id;
+                        } else {
+                          const newEngId = `ENG-${100 + engineers.length}-${Math.floor(100 + Math.random() * 900)}`;
+                          const autoEng: Engineer = {
+                            id: newEngId,
+                            name: existing.name || userEmail.split('@')[0].toUpperCase().replace(/[._]/g, ' ') || 'NUEVO INGENIERO',
+                            email: userEmail,
+                            specialty: 'Ingeniería',
+                            sede: 'Quito',
+                            phone: '+593 999 999 999',
+                            avatar: '',
+                            availability: 'Disponible',
+                            skills: ['Ingeniería'],
+                            customPermissions: getDefaultPermissionsForSpecialty('Ingeniería')
+                          };
+                          await setDoc(doc(db, 'engineers', newEngId), cleanUndefined(autoEng));
+                          finalEngId = newEngId;
+                        }
+                      }
+                    }
+
+                    const updatedUserDoc: AppUser = {
+                      ...existing,
+                      uid,
+                      role,
+                      ...(finalEngId ? { engineerId: finalEngId } : { engineerId: undefined })
+                    };
+                    await setDoc(doc(db, 'users', uid), cleanUndefined(updatedUserDoc));
+                    setAllRegisteredUsers(prev => {
+                      const idx = prev.findIndex(u => u.uid === uid);
+                      if (idx >= 0) {
+                        const copy = [...prev];
+                        copy[idx] = updatedUserDoc;
+                        return copy;
+                      }
+                      return [...prev, updatedUserDoc];
+                    });
+                    const roleLabel = role === 'admin' ? 'Administrador' : role === 'engineer' ? 'Ingeniero/Técnico' : 'Ventas';
+                    showNotification(`Rol del usuario actualizado a ${roleLabel} con éxito.`, 'success');
+                  } catch (e) {
+                    console.error('Error actualizando rol de usuario:', e);
+                    showNotification('Error al actualizar el rol del usuario.', 'warning');
+                  }
+                }}
               />
             )}
             {activeTab === 'engineer' && (

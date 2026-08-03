@@ -1,5 +1,5 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword, signOut as authSignOut } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Configuración de Firebase provista directamente por el usuario
@@ -16,6 +16,29 @@ export const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+
+/**
+ * Crea un nuevo usuario en Firebase Auth sin cerrar la sesión del usuario actual (Admin).
+ * Utiliza una instancia secundaria efímera de Firebase App.
+ */
+export async function registerFirebaseUserSecondary(email: string, password: string): Promise<string> {
+  const secondaryAppName = `SecondaryApp-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const secondaryApp = initializeApp(firebaseConfig, secondaryAppName);
+  try {
+    const secondaryAuth = getAuth(secondaryApp);
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    const uid = userCredential.user.uid;
+    await authSignOut(secondaryAuth);
+    return uid;
+  } finally {
+    try {
+      await deleteApp(secondaryApp);
+    } catch (e) {
+      console.warn("Error deleting secondary app:", e);
+    }
+  }
+}
+
 
 // Validar Conexión a Firestore según la directiva
 import { doc, getDocFromServer } from 'firebase/firestore';
