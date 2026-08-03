@@ -17896,7 +17896,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         </div>
       )}
 
-      {/* Modal / Vista de Cronograma Oficial en PDF (ORIMEC) */}
+      {/* Modal / Vista de Cronograma Oficial en PDF / Word (ORIMEC) */}
       {isContractSchedulePdfOpen && selectedContractForSchedulePdf && (() => {
         const con = selectedContractForSchedulePdf;
         const clientObj = clients.find(c => c.id === con.clientId);
@@ -17920,6 +17920,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         }
 
         const handlePrintContractSchedule = () => {
+          const sourceEl = document.getElementById('contract-schedule-printable-area-card');
+          if (!sourceEl) return;
+
+          const clone = sourceEl.cloneNode(true) as HTMLElement;
+          clone.id = 'print-schedule-clone';
+          clone.style.cssText = 'display:block;width:100%;position:static;margin:0 auto;padding:20px;background:white;color:black;';
+
+          const printWrap = document.createElement('div');
+          printWrap.id = 'print-schedule-isolation-wrap';
+          printWrap.appendChild(clone);
+          document.body.appendChild(printWrap);
+          document.body.classList.add('is-printing-schedule');
+
           const style = document.createElement('style');
           style.id = 'print-schedule-style';
           style.innerHTML = `
@@ -17928,35 +17941,83 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 size: A4 portrait !important;
                 margin: 8mm 10mm !important;
               }
-              body {
-                background: white !important;
-                color: black !important;
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
-              .no-print, header, footer, button, nav, #root > :not(#contract-schedule-printable-area), #admin-portal-root > :not(#contract-schedule-printable-area) {
+              body.is-printing-schedule > *:not(#print-schedule-isolation-wrap) {
                 display: none !important;
               }
-              #contract-schedule-printable-area {
-                position: absolute;
-                left: 0;
-                top: 0;
+              body.is-printing-schedule #print-schedule-isolation-wrap {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
                 width: 100% !important;
-                height: auto !important;
-                padding: 0 !important;
-                margin: 0 !important;
                 background: white !important;
-                box-shadow: none !important;
-                border: none !important;
               }
               table {
-                page-break-inside: avoid;
+                page-break-inside: avoid !important;
               }
             }
           `;
           document.head.appendChild(style);
-          window.print();
-          setTimeout(() => {
+
+          const cleanup = () => {
             document.getElementById('print-schedule-style')?.remove();
-          }, 1000);
+            document.getElementById('print-schedule-isolation-wrap')?.remove();
+            document.body.classList.remove('is-printing-schedule');
+            window.removeEventListener('afterprint', cleanup);
+          };
+
+          window.addEventListener('afterprint', cleanup);
+          window.print();
+          setTimeout(cleanup, 2500);
+        };
+
+        const handleDownloadWordContractSchedule = () => {
+          const sourceEl = document.getElementById('contract-schedule-printable-area-card');
+          if (!sourceEl) return;
+
+          const htmlContent = `
+            <html xmlns:o='urn:schemas-microsoft-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+              <meta charset='utf-8'>
+              <title>Cronograma de Mantenimiento ORIMEC</title>
+              <style>
+                body { font-family: Arial, sans-serif; font-size: 10.5pt; color: #000000; line-height: 1.4; }
+                h1 { font-size: 18pt; font-weight: bold; color: #0f172a; margin: 0; }
+                h2 { font-size: 11pt; font-weight: bold; color: #0f172a; text-transform: uppercase; margin-top: 10pt; }
+                h3 { font-size: 10pt; font-weight: bold; color: #0f172a; text-transform: uppercase; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 15pt; }
+                th { background-color: #f1f5f9; color: #000000; font-weight: bold; border: 1.5pt solid #000000; padding: 6pt; text-align: center; text-transform: uppercase; font-size: 9.5pt; }
+                td { border: 1pt solid #000000; padding: 6pt; text-align: center; font-size: 9.5pt; }
+                .text-left { text-align: left; }
+                .font-bold { font-weight: bold; }
+                ul { margin-top: 5pt; margin-bottom: 15pt; }
+                li { margin-bottom: 3pt; }
+                .signature-box { border: 1.5pt solid #1e1b4b; background-color: #f5f3ff; padding: 8pt; width: 180pt; margin-top: 10pt; }
+              </style>
+            </head>
+            <body>
+              ${sourceEl.innerHTML}
+            </body>
+            </html>
+          `;
+
+          const blob = new Blob(['\ufeff', htmlContent], {
+            type: 'application/msword;charset=utf-8'
+          });
+
+          const cleanClientName = (clientName || 'Cliente').replace(/[^a-zA-Z0-9_-]/g, '_');
+          const fileName = `Cronograma_Mantenimiento_${cleanClientName}_${con.id}.doc`;
+
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         };
 
         const periodicityVal = con.maintenanceFrequency || 'CUATRIMESTRAL';
@@ -17975,10 +18036,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <div className="flex items-center gap-2">
                   <Printer className="w-5 h-5 text-indigo-600" />
                   <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider">
-                    Cronograma Oficial de Mantenimientos Preventivos (PDF)
+                    Cronograma Oficial de Mantenimientos Preventivos
                   </h4>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {con.equipmentItems && con.equipmentItems.length > 1 && (
                     <select
                       value={selectedEquipmentForSchedulePdf?.name || 'all'}
@@ -18002,10 +18063,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <button
                     type="button"
                     onClick={handlePrintContractSchedule}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2 px-4 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2 px-3.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95"
                   >
                     <Printer className="w-4 h-4" />
-                    Descargar / Imprimir PDF
+                    Descargar PDF
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDownloadWordContractSchedule}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2 px-3.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Descargar Word (.doc)
                   </button>
                   <button
                     type="button"
@@ -18021,9 +18090,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
               </div>
 
-              {/* Printable Document Area */}
-              <div className="p-6 md:p-10 overflow-y-auto flex-1 bg-slate-100/70" id="contract-schedule-printable-area">
-                <div className="bg-white p-8 md:p-12 rounded-xl border border-slate-200 shadow-md font-sans text-slate-900 max-w-[780px] mx-auto text-xs leading-relaxed">
+              {/* Printable / Exportable Document Area */}
+              <div className="p-6 md:p-10 overflow-y-auto flex-1 bg-slate-100/70">
+                <div className="bg-white p-8 md:p-12 rounded-xl border border-slate-200 shadow-md font-sans text-slate-900 max-w-[780px] mx-auto text-xs leading-relaxed" id="contract-schedule-printable-area-card">
                   
                   {/* Header Logo & Title */}
                   <div className="flex flex-col items-center justify-center border-b-2 border-slate-900 pb-5 mb-6 text-center">
