@@ -1342,6 +1342,21 @@ export default function AdminPortal({
     return qcs;
   };
 
+  const formatCronogramaDateMonthYear = (dateEntry: string): string => {
+    if (!dateEntry) return 'Fecha por coordinar';
+    const cleanDate = dateEntry.split('|')[0].trim();
+    const parts = cleanDate.split('-');
+    if (parts.length === 3) {
+      const y = parts[0];
+      const mIdx = parseInt(parts[1], 10) - 1;
+      const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      if (mIdx >= 0 && mIdx < 12) {
+        return `${months[mIdx]} de ${y}`;
+      }
+    }
+    return cleanDate;
+  };
+
   // Cloudinary Contract Attachments States
   const [contractFormPdfUrl, setContractFormPdfUrl] = useState('');
   const [contractFormSchedulePdfUrl, setContractFormSchedulePdfUrl] = useState('');
@@ -1448,6 +1463,9 @@ export default function AdminPortal({
 
   const [selectedContractForDetails, setSelectedContractForDetails] = useState<Contract | null>(null);
   const [isContractDetailsModalOpen, setIsContractDetailsModalOpen] = useState(false);
+  const [selectedContractForSchedulePdf, setSelectedContractForSchedulePdf] = useState<Contract | null>(null);
+  const [selectedEquipmentForSchedulePdf, setSelectedEquipmentForSchedulePdf] = useState<ContractEquipmentItem | null>(null);
+  const [isContractSchedulePdfOpen, setIsContractSchedulePdfOpen] = useState(false);
   const [selectedEngForMetrics, setSelectedEngForMetrics] = useState<Engineer | null>(null);
   const [isEngMetricsModalOpen, setIsEngMetricsModalOpen] = useState(false);
 
@@ -1996,7 +2014,7 @@ export default function AdminPortal({
   const [reportClientSignee, setReportClientSignee] = useState('');
 
   React.useEffect(() => {
-    const isAnyModalOpen = isCreatingWO || isReportingWO || isContractDetailsModalOpen || isEngMetricsModalOpen;
+    const isAnyModalOpen = isCreatingWO || isReportingWO || isContractDetailsModalOpen || isContractSchedulePdfOpen || isEngMetricsModalOpen;
     if (isAnyModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -2005,7 +2023,7 @@ export default function AdminPortal({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isCreatingWO, isReportingWO, isContractDetailsModalOpen, isEngMetricsModalOpen]);
+  }, [isCreatingWO, isReportingWO, isContractDetailsModalOpen, isContractSchedulePdfOpen, isEngMetricsModalOpen]);
 
   // ── Auto-scroll while dragging agenda cards ──────────────────────────────────
   React.useEffect(() => {
@@ -17532,6 +17550,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedContractForSchedulePdf(selectedContractForDetails);
+                              setSelectedEquipmentForSchedulePdf(item);
+                              setIsContractSchedulePdfOpen(true);
+                            }}
+                            className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-[8px] px-2 py-0.5 rounded flex items-center gap-1 cursor-pointer transition-colors"
+                            title="Generar Cronograma en PDF para este equipo"
+                          >
+                            📄 Cronograma PDF
+                          </button>
                           {item.serviceRecordPdfUrl && (
                             <a href={getCleanCloudinaryUrl(item.serviceRecordPdfUrl)} target="_blank" rel="noreferrer" className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[8px] px-2 py-0.5 rounded flex items-center gap-1">
                               🛠️ SR
@@ -17559,9 +17589,24 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               {/* Maintenance Agenda List */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <span className="font-extrabold text-[9px] text-slate-500 uppercase tracking-wider block">Cronograma de Visitas Programadas</span>
-                  {userRole === 'admin' && onAddWorkOrder && selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.some(d => !workOrders.some(wo => isWoMatchingContractDate(wo, selectedContractForDetails, d, contracts))) && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedContractForSchedulePdf(selectedContractForDetails);
+                        setSelectedEquipmentForSchedulePdf(selectedContractForDetails.equipmentItems?.[0] || null);
+                        setIsContractSchedulePdfOpen(true);
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[8.5px] px-2.5 py-1 rounded-md cursor-pointer transition-all flex items-center gap-1 shadow-2xs active:scale-95 shrink-0"
+                      title="Generar e imprimir cronograma oficial en PDF para el cliente"
+                    >
+                      <Printer className="w-3 h-3" />
+                      <span>📄 Descargar Cronograma Oficial (PDF)</span>
+                    </button>
+                    {userRole === 'admin' && onAddWorkOrder && selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.some(d => !workOrders.some(wo => isWoMatchingContractDate(wo, selectedContractForDetails, d, contracts))) && (
                     <button
                       type="button"
                       onClick={async (e) => {
@@ -17615,6 +17660,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <span>⚡ Auto-Agendar Visitas ({selectedContractForDetails.maintenanceDates.filter(d => !workOrders.some(wo => isWoMatchingContractDate(wo, selectedContractForDetails, d, contracts))).length})</span>
                     </button>
                   )}
+                  </div>
                 </div>
                 <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden bg-white max-h-[220px] overflow-y-auto">
                   {selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.length > 0 ? (
@@ -17849,6 +17895,265 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
         </div>
       )}
+
+      {/* Modal / Vista de Cronograma Oficial en PDF (ORIMEC) */}
+      {isContractSchedulePdfOpen && selectedContractForSchedulePdf && (() => {
+        const con = selectedContractForSchedulePdf;
+        const clientObj = clients.find(c => c.id === con.clientId);
+        const clientName = clientObj?.name || con.clientId;
+        
+        // Equipments list to show in Table 1
+        const displayedEquipments = selectedEquipmentForSchedulePdf 
+          ? [selectedEquipmentForSchedulePdf] 
+          : (con.equipmentItems && con.equipmentItems.length > 0 ? con.equipmentItems : [{ name: 'Equipo de Contrato', brand: 'GENERAL ELECTRIC', modality: 'S/N' }]);
+
+        const eqTitleName = selectedEquipmentForSchedulePdf?.name || (con.equipmentItems && con.equipmentItems.length === 1 ? con.equipmentItems[0].name : 'EQUIPOS');
+        const eqModalityName = selectedEquipmentForSchedulePdf?.modality || (con.equipmentItems && con.equipmentItems.length === 1 ? con.equipmentItems[0].modality : '');
+
+        // Dates for Table 2
+        let rawDates = con.maintenanceDates || [];
+        if (selectedEquipmentForSchedulePdf && rawDates.length > 0) {
+          const filterByEq = rawDates.filter(d => d.includes(`|${selectedEquipmentForSchedulePdf.name}`));
+          if (filterByEq.length > 0) {
+            rawDates = filterByEq;
+          }
+        }
+
+        const handlePrintContractSchedule = () => {
+          const style = document.createElement('style');
+          style.id = 'print-schedule-style';
+          style.innerHTML = `
+            @media print {
+              @page {
+                size: A4 portrait !important;
+                margin: 8mm 10mm !important;
+              }
+              body {
+                background: white !important;
+                color: black !important;
+              }
+              .no-print, header, footer, button, nav, #root > :not(#contract-schedule-printable-area), #admin-portal-root > :not(#contract-schedule-printable-area) {
+                display: none !important;
+              }
+              #contract-schedule-printable-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100% !important;
+                height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: white !important;
+                box-shadow: none !important;
+                border: none !important;
+              }
+              table {
+                page-break-inside: avoid;
+              }
+            }
+          `;
+          document.head.appendChild(style);
+          window.print();
+          setTimeout(() => {
+            document.getElementById('print-schedule-style')?.remove();
+          }, 1000);
+        };
+
+        const periodicityVal = con.maintenanceFrequency || 'CUATRIMESTRAL';
+        const periodicityMonths = periodicityVal.toLowerCase().includes('mensual') ? '1' 
+          : periodicityVal.toLowerCase().includes('bimestral') ? '2'
+          : periodicityVal.toLowerCase().includes('trimestral') ? '3'
+          : periodicityVal.toLowerCase().includes('cuatrimestral') ? '4'
+          : periodicityVal.toLowerCase().includes('semestral') ? '6'
+          : periodicityVal.toLowerCase().includes('anual') ? '12' : '4';
+
+        return (
+          <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 overflow-y-auto no-print" id="contract-schedule-pdf-modal">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[92vh]">
+              {/* Modal Header Bar */}
+              <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 bg-slate-50 rounded-t-2xl font-sans shrink-0">
+                <div className="flex items-center gap-2">
+                  <Printer className="w-5 h-5 text-indigo-600" />
+                  <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider">
+                    Cronograma Oficial de Mantenimientos Preventivos (PDF)
+                  </h4>
+                </div>
+                <div className="flex items-center gap-2">
+                  {con.equipmentItems && con.equipmentItems.length > 1 && (
+                    <select
+                      value={selectedEquipmentForSchedulePdf?.name || 'all'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === 'all') {
+                          setSelectedEquipmentForSchedulePdf(null);
+                        } else {
+                          const found = con.equipmentItems?.find(i => i.name === val);
+                          setSelectedEquipmentForSchedulePdf(found || null);
+                        }
+                      }}
+                      className="text-xs border border-slate-300 rounded-lg px-2.5 py-1 font-bold text-indigo-950 bg-white"
+                    >
+                      <option value="all">📋 Todos los Equipos ({con.equipmentItems.length})</option>
+                      {con.equipmentItems.map((eq, i) => (
+                        <option key={i} value={eq.name}>🖥️ {eq.name} ({eq.brand})</option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handlePrintContractSchedule}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2 px-4 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95"
+                  >
+                    <Printer className="w-4 h-4" />
+                    Descargar / Imprimir PDF
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsContractSchedulePdfOpen(false);
+                      setSelectedContractForSchedulePdf(null);
+                      setSelectedEquipmentForSchedulePdf(null);
+                    }}
+                    className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-500 transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Printable Document Area */}
+              <div className="p-6 md:p-10 overflow-y-auto flex-1 bg-slate-100/70" id="contract-schedule-printable-area">
+                <div className="bg-white p-8 md:p-12 rounded-xl border border-slate-200 shadow-md font-sans text-slate-900 max-w-[780px] mx-auto text-xs leading-relaxed">
+                  
+                  {/* Header Logo & Title */}
+                  <div className="flex flex-col items-center justify-center border-b-2 border-slate-900 pb-5 mb-6 text-center">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-black text-xl flex items-center justify-center tracking-tighter shadow-sm">
+                        ORI
+                      </div>
+                      <div className="text-left">
+                        <h1 className="font-black text-2xl tracking-tighter text-slate-950 leading-none">ORIMEC</h1>
+                        <p className="text-[10px] text-slate-600 font-extrabold uppercase tracking-widest mt-0.5">Oriental Medical del Ecuador C.A.</p>
+                      </div>
+                    </div>
+                    <h2 className="font-black text-sm uppercase tracking-widest text-slate-900 mt-3 pt-3 border-t border-slate-300 w-full">
+                      CRONOGRAMA DE MANTENIMIENTOS PREVENTIVOS
+                    </h2>
+                  </div>
+
+                  {/* Client Info */}
+                  <div className="mb-6 font-bold text-xs flex items-center gap-2">
+                    <span className="text-slate-600">Cliente:</span>
+                    <span className="uppercase text-slate-950 font-black text-sm">{clientName}</span>
+                  </div>
+
+                  {/* Tabla 1: Información del Equipo */}
+                  <div className="mb-6 overflow-x-auto">
+                    <table className="w-full border-collapse border-2 border-slate-900 text-center text-xs">
+                      <thead>
+                        <tr className="bg-slate-100 font-black uppercase text-slate-900 border-b-2 border-slate-900">
+                          <th className="border border-slate-900 p-2.5">EQUIPO</th>
+                          <th className="border border-slate-900 p-2.5">MARCA</th>
+                          <th className="border border-slate-900 p-2.5">MODELO</th>
+                          <th className="border border-slate-900 p-2.5">PERIODICIDAD</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {displayedEquipments.map((eq, idx) => (
+                          <tr key={idx} className="font-extrabold uppercase border-b border-slate-900">
+                            <td className="border border-slate-900 p-2.5 text-slate-950">{eq.name}</td>
+                            <td className="border border-slate-900 p-2.5">{eq.brand || 'GENERAL ELECTRIC'}</td>
+                            <td className="border border-slate-900 p-2.5">{eq.modality || eq.serial || 'S/N'}</td>
+                            <td className="border border-slate-900 p-2.5">{periodicityVal.toUpperCase()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Subtítulo Tabla 2 */}
+                  <div className="text-center my-6">
+                    <h3 className="font-black text-xs uppercase tracking-widest border-b border-slate-300 pb-1 inline-block">
+                      CRONOGRAMA {eqModalityName ? eqModalityName.toUpperCase() : eqTitleName.toUpperCase()}
+                    </h3>
+                  </div>
+
+                  {/* Tabla 2: Fechas Propuestas */}
+                  <div className="mb-8 overflow-x-auto">
+                    <table className="w-full border-collapse border-2 border-slate-900 text-center text-xs">
+                      <thead>
+                        <tr className="bg-slate-100 font-black uppercase text-slate-900 border-b-2 border-slate-900">
+                          <th className="border border-slate-900 p-2.5">FECHA</th>
+                          <th className="border border-slate-900 p-2.5">TIEMPO REQUERIDO</th>
+                          <th className="border border-slate-900 p-2.5">TIPO</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rawDates.length > 0 ? (
+                          rawDates.map((dStr, idx) => {
+                            const cleanDate = dStr.split('|')[0].trim();
+                            const formattedDate = formatCronogramaDateMonthYear(cleanDate);
+                            return (
+                              <tr key={idx} className="font-extrabold border-b border-slate-900">
+                                <td className="border border-slate-900 p-2.5 capitalize">{formattedDate}</td>
+                                <td className="border border-slate-900 p-2.5">4 horas</td>
+                                <td className="border border-slate-900 p-2.5 font-black text-slate-950">Preventivo</td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr className="font-bold">
+                            <td colSpan={3} className="border border-slate-900 p-4 italic text-slate-500">
+                              No hay fechas de mantenimiento programadas en este contrato.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Text & Clauses */}
+                  <div className="space-y-3 text-[11px] leading-relaxed mb-12 text-slate-850">
+                    <p className="font-bold italic">
+                      Los horarios serán determinados de manera flexible, sujetos a la disponibilidad y coordinación entre ambas partes.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1 font-semibold text-slate-900">
+                      <li>Plazo de ejecución: 12 meses a partir de la instalación de los equipos o vigencia del contrato.</li>
+                      <li>Fecha de inicio de garantía / contrato: <strong>{con.startDate}</strong>.</li>
+                      <li>Mantenimientos preventivos: cada <strong>{periodicityMonths}</strong> meses.</li>
+                      <li>Mantenimientos correctivos ilimitados bajo demanda.</li>
+                    </ul>
+                  </div>
+
+                  {/* Official Footer Signature Block */}
+                  <div className="pt-6 border-t border-slate-300 flex justify-between items-end">
+                    <div className="space-y-2">
+                      <p className="font-extrabold text-xs text-slate-900">Atentamente,</p>
+
+                      <div className="flex items-center gap-4 pt-4">
+                        {/* Stamp Graphic */}
+                        <div className="border-2 border-indigo-900/50 rounded-xl p-2.5 bg-indigo-50/30 text-indigo-950 font-mono text-[9.5px] leading-snug shadow-2xs">
+                          <p className="font-black text-xs">ORIMEC C.A.</p>
+                          <p className="text-[8.5px] font-bold">RUC: 1791271750001</p>
+                          <p className="font-black text-[9px] mt-1 border-t border-indigo-200 pt-0.5 uppercase">Ing. Soraya Carrasco R.</p>
+                          <p className="text-[8px] font-bold uppercase">GERENCIA TÉCNICA</p>
+                        </div>
+
+                        <div className="text-left font-sans">
+                          <p className="font-black text-slate-950 text-sm">Ing. Soraya Carrasco R.</p>
+                          <p className="font-extrabold text-slate-800 text-xs uppercase tracking-wider">GERENTE TÉCNICA</p>
+                          <p className="font-black text-slate-600 text-xs">ORIMEC C.A.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
       {/* Modal Detalle de Capacitación Programada en Agenda */}
       {infoScheduledTraining && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs h-full w-full z-50 flex items-center justify-center p-4">
