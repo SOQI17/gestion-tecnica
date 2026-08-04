@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { db } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, getDocs } from 'firebase/firestore';
 import { 
@@ -18,6 +18,7 @@ import {
   BookMarked,
   SlidersHorizontal,
   ChevronRight,
+  ChevronLeft,
   TrendingUp,
   Briefcase,
   Layers,
@@ -65,6 +66,7 @@ export default function CapacitacionesPortal({
 }: CapacitacionesPortalProps) {
   // Navigation
   const [activeTab, setActiveTab] = useState<'dashboard' | 'modalidades' | 'importer' | 'rutas' | 'ingenieros' | 'cursos' | 'historial' | 'programacion'>('dashboard');
+  const tabsNavRef = useRef<HTMLDivElement>(null);
 
   // Modalities Tab States
   const [selectedModalityKeyForModal, setSelectedModalityKeyForModal] = useState<string | null>(null);
@@ -1638,10 +1640,33 @@ export default function CapacitacionesPortal({
         </div>
       </nav>
 
-      {/* Main Subheader Navigation Rail */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex overflow-x-auto scrollbar-none space-x-1 py-1">
+      {/* Main Subheader Navigation Rail with Horizontal Scroll & Nav Arrows */}
+      <div className="bg-white border-b border-slate-200 relative">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 flex items-center relative">
+          
+          {/* Scroll Left Button */}
+          <button
+            onClick={() => {
+              if (tabsNavRef.current) {
+                tabsNavRef.current.scrollBy({ left: -220, behavior: 'smooth' });
+              }
+            }}
+            className="flex items-center justify-center w-7 h-7 rounded-full bg-white border border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-50 shadow-md shrink-0 mr-1 z-10 cursor-pointer transition-all"
+            title="Desplazar pestañas a la izquierda"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Scrollable Tabs Container */}
+          <div
+            ref={tabsNavRef}
+            onWheel={(e) => {
+              if (e.deltaY && tabsNavRef.current) {
+                tabsNavRef.current.scrollLeft += e.deltaY * 1.2;
+              }
+            }}
+            className="flex-1 flex overflow-x-auto space-x-1 py-1 scroll-smooth"
+          >
             <button
               id="tab-dashboard"
               onClick={() => setActiveTab('dashboard')}
@@ -1746,6 +1771,20 @@ export default function CapacitacionesPortal({
               Importar Matriz Unpivot
             </button>
           </div>
+
+          {/* Scroll Right Button */}
+          <button
+            onClick={() => {
+              if (tabsNavRef.current) {
+                tabsNavRef.current.scrollBy({ left: 220, behavior: 'smooth' });
+              }
+            }}
+            className="flex items-center justify-center w-7 h-7 rounded-full bg-white border border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-50 shadow-md shrink-0 ml-1 z-10 cursor-pointer transition-all"
+            title="Desplazar pestañas a la derecha"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
         </div>
       </div>
 
