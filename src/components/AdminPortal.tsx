@@ -2048,39 +2048,64 @@ export default function AdminPortal({
     };
   }, [isCreatingWO, isReportingWO, isContractDetailsModalOpen, isContractSchedulePdfOpen, isEngMetricsModalOpen]);
 
-  // ── Auto-scroll while dragging agenda cards ──────────────────────────────────
+  // ── Auto-scroll and Wheel Scroll while dragging agenda cards ─────────────────
   React.useEffect(() => {
-    const ZONE = 120;   // px from the edge to trigger scroll
-    const SPEED = 14;   // max px per animation frame
+    const ZONE = 140;   // px from top/bottom edge to trigger scroll
+    const SPEED = 20;   // max px per animation frame
     let rafId: number | null = null;
     let clientY = 0;
+    let clientX = 0;
     let dragging = false;
 
     const scroll = () => {
       if (!dragging) return;
       const vh = window.innerHeight;
+      const vw = window.innerWidth;
       const distFromTop    = clientY;
       const distFromBottom = vh - clientY;
+      const distFromLeft   = clientX;
+      const distFromRight  = vw - clientX;
 
-      let delta = 0;
+      let deltaY = 0;
       if (distFromTop < ZONE) {
-        // stronger the closer you are to the edge
-        delta = -Math.round(SPEED * (1 - distFromTop / ZONE));
+        deltaY = -Math.round(SPEED * (1 - Math.max(0, distFromTop) / ZONE));
       } else if (distFromBottom < ZONE) {
-        delta = Math.round(SPEED * (1 - distFromBottom / ZONE));
+        deltaY = Math.round(SPEED * (1 - Math.max(0, distFromBottom) / ZONE));
       }
 
-      if (delta !== 0) {
-        window.scrollBy({ top: delta, behavior: 'instant' as ScrollBehavior });
+      let deltaX = 0;
+      if (distFromLeft < ZONE) {
+        deltaX = -Math.round(SPEED * (1 - Math.max(0, distFromLeft) / ZONE));
+      } else if (distFromRight < ZONE) {
+        deltaX = Math.round(SPEED * (1 - Math.max(0, distFromRight) / ZONE));
+      }
+
+      if (deltaY !== 0 || deltaX !== 0) {
+        window.scrollBy({ top: deltaY, left: deltaX, behavior: 'instant' as ScrollBehavior });
       }
       rafId = requestAnimationFrame(scroll);
     };
 
     const onDragOver = (e: DragEvent) => {
       clientY = e.clientY;
+      clientX = e.clientX;
       if (!dragging) {
         dragging = true;
         rafId = requestAnimationFrame(scroll);
+      }
+    };
+
+    // Enables mouse wheel scrolling while dragging an item or holding click
+    const onWheel = (e: WheelEvent) => {
+      if (dragging || e.buttons > 0) {
+        const target = e.target as HTMLElement | null;
+        const scrollable = target?.closest?.('.overflow-y-auto, .overflow-x-auto, .overflow-auto') as HTMLElement | null;
+        if (scrollable) {
+          scrollable.scrollTop += e.deltaY;
+          if (e.deltaX) scrollable.scrollLeft += e.deltaX;
+        } else {
+          window.scrollBy({ top: e.deltaY, left: e.deltaX, behavior: 'instant' as ScrollBehavior });
+        }
       }
     };
 
@@ -2095,11 +2120,13 @@ export default function AdminPortal({
     document.addEventListener('dragover', onDragOver);
     document.addEventListener('dragend',  onDragEnd);
     document.addEventListener('drop',     onDragEnd);
+    window.addEventListener('wheel',      onWheel, { passive: true });
 
     return () => {
       document.removeEventListener('dragover', onDragOver);
       document.removeEventListener('dragend',  onDragEnd);
       document.removeEventListener('drop',     onDragEnd);
+      window.removeEventListener('wheel',      onWheel);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
@@ -3576,15 +3603,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           onDragOver={(e) => {
             e.preventDefault(); // Required to allow drop
           }}
-          onDragEnter={() => {
-            setDraggedOverDay(dateStr);
+          onDragEnter={(e) => {
+            e.preventDefault();
+            (e.currentTarget as HTMLElement).classList.add('bg-indigo-100/70', 'ring-2', 'ring-indigo-400');
           }}
-          onDragLeave={() => {
-            setDraggedOverDay(prev => prev === dateStr ? null : prev);
+          onDragLeave={(e) => {
+            (e.currentTarget as HTMLElement).classList.remove('bg-indigo-100/70', 'ring-2', 'ring-indigo-400');
           }}
           onDrop={(e) => {
             e.preventDefault();
-            setDraggedOverDay(null);
+            (e.currentTarget as HTMLElement).classList.remove('bg-indigo-100/70', 'ring-2', 'ring-indigo-400');
             const woId = e.dataTransfer.getData("text/plain");
             if (woId) {
               handleMoveWorkOrder(woId, dateStr);
@@ -3593,8 +3621,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           className={`cal-day-cell min-h-[115px] p-2 text-left transition-all flex flex-col justify-between cursor-pointer focus:outline-none ${
             isSelected
               ? 'bg-indigo-50/70 text-slate-900 ring-2 ring-indigo-500'
-              : draggedOverDay === dateStr
-              ? 'bg-indigo-50/40 text-slate-900 scale-[1.01]'
               : hasFeriado
               ? 'bg-red-50/60 hover:bg-red-50/90 text-slate-900 border-red-200/80'
               : hasEngineerVacation
