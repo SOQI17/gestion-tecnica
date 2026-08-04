@@ -64,7 +64,12 @@ export default function CapacitacionesPortal({
   onDeleteScheduledTraining
 }: CapacitacionesPortalProps) {
   // Navigation
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'importer' | 'rutas' | 'ingenieros' | 'cursos' | 'historial' | 'programacion'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'modalidades' | 'importer' | 'rutas' | 'ingenieros' | 'cursos' | 'historial' | 'programacion'>('dashboard');
+
+  // Modalities Tab States
+  const [selectedModalityKeyForModal, setSelectedModalityKeyForModal] = useState<string | null>(null);
+  const [selectedModalityLevelFilter, setSelectedModalityLevelFilter] = useState<'ALL' | 3 | 2 | 1 | 0>('ALL');
+  const [modalityModalSearchQuery, setModalityModalSearchQuery] = useState<string>('');
 
   // Programación Form States
   const [isProgModalOpen, setIsProgModalOpen] = useState(false);
@@ -1450,6 +1455,50 @@ export default function CapacitacionesPortal({
     ? obtenerProximoCursoIngeniero(activeRouteIngeniero, cursos, historialList)
     : null;
 
+  // Modalities summary & breakdown for all 14 modalities
+  const modalitiesData = useMemo(() => {
+    return ALL_MODALITIES_LIST.map(mod => {
+      const engineerLevels = engineers.map(eng => {
+        const rec = obtenerProximoCursoIngeniero(eng, cursos, historialList);
+        const lvl = rec.modalityLevels[mod.key] || 0;
+        const completadosMod = rec.completados.filter(c => getModKey(c) === mod.key);
+        const historialMod = completadosMod.map(c => {
+          const hist = historialList.find(h => h.id_ingeniero === eng.id && h.codigo_curso === c.codigo);
+          return {
+            curso: c,
+            fecha: hist?.fecha_completado || 'Fábrica'
+          };
+        });
+
+        return {
+          engineer: eng,
+          level: lvl,
+          completados: completadosMod,
+          historialMod
+        };
+      });
+
+      const level3Engs = engineerLevels.filter(x => x.level === 3);
+      const level2Engs = engineerLevels.filter(x => x.level === 2);
+      const level1Engs = engineerLevels.filter(x => x.level === 1);
+      const level0Engs = engineerLevels.filter(x => x.level === 0);
+
+      const maxLevel = level3Engs.length > 0 ? 3 : level2Engs.length > 0 ? 2 : level1Engs.length > 0 ? 1 : 0;
+      const totalTrained = level3Engs.length + level2Engs.length + level1Engs.length;
+
+      return {
+        mod,
+        maxLevel,
+        engineerLevels,
+        level3Engs,
+        level2Engs,
+        level1Engs,
+        level0Engs,
+        totalTrained
+      };
+    });
+  }, [engineers, cursos, historialList]);
+
   // Pre-resolve catalog matches for all parsed courses using useMemo.
   // This avoids repeating costly getSimilarity matches on every single render.
   const resolvedPdfCourses = useMemo(() => {
@@ -1604,6 +1653,19 @@ export default function CapacitacionesPortal({
             >
               <TrendingUp className="w-4 h-4 text-sky-600" />
               Resumen Corporativo
+            </button>
+
+            <button
+              id="tab-modalidades"
+              onClick={() => setActiveTab('modalidades')}
+              className={`px-4 py-3 text-xs font-semibold tracking-tight transition whitespace-nowrap rounded-md flex items-center gap-1.5 ${
+                activeTab === 'modalidades'
+                  ? 'bg-slate-100 text-[#001f3f]'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Layers className="w-4 h-4 text-cyan-600" />
+              Modalidades
             </button>
 
             <button
@@ -2046,6 +2108,134 @@ service cloud.firestore {
 
                 </div>
 
+              </div>
+            )}
+
+            {/* VIEW: MODALIDADES BIOMÉDICAS */}
+            {activeTab === 'modalidades' && (
+              <div className="space-y-8 animate-fadeIn" id="view-modalidades">
+                
+                {/* Header & Stats Banner */}
+                <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 md:p-8 text-white shadow-xl border border-indigo-900/50">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-cyan-500/30 uppercase tracking-widest font-mono">
+                          Especialización Biomédica
+                        </span>
+                        <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-indigo-500/30 font-mono">
+                          14 Modalidades
+                        </span>
+                      </div>
+                      <h2 className="text-xl md:text-2xl font-black tracking-tight text-white font-display">
+                        Niveles de Especialización por Modalidad
+                      </h2>
+                      <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                        Haz clic sobre cualquier modalidad para consultar en detalle qué ingenieros poseen nivel <span className="text-cyan-400 font-bold">3X (Proficient)</span>, <span className="text-sky-400 font-bold">2X (Advanced)</span>, <span className="text-amber-400 font-bold">1X (Basic)</span> o sin capacitación.
+                      </p>
+                    </div>
+
+                    {/* Top Stats Summary */}
+                    <div className="grid grid-cols-3 gap-3 shrink-0">
+                      <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 text-center">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Total Modalidades</span>
+                        <span className="text-lg font-black text-cyan-400">14</span>
+                      </div>
+                      <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 text-center">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Capacitados</span>
+                        <span className="text-lg font-black text-emerald-400">
+                          {modalitiesData.filter(m => m.totalTrained > 0).length} / 14
+                        </span>
+                      </div>
+                      <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 text-center">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Nivel Máximo (3X)</span>
+                        <span className="text-lg font-black text-amber-400">
+                          {modalitiesData.reduce((acc, m) => acc + m.level3Engs.length, 0)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modalities Card Grid (Dark Theme matching user's uploaded screenshot) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4 md:gap-5">
+                  {modalitiesData.map(({ mod, maxLevel, level3Engs, level2Engs, level1Engs, level0Engs, totalTrained }) => {
+                    const tagText = maxLevel === 3 ? 'XXX' : maxLevel === 2 ? 'XX' : maxLevel === 1 ? 'X' : '0X';
+                    const tagColor = maxLevel === 3 
+                      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40' 
+                      : maxLevel === 2 
+                      ? 'bg-sky-500/20 text-sky-300 border-sky-400/40' 
+                      : maxLevel === 1 
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-400/40' 
+                      : 'bg-slate-800 text-slate-400 border-slate-700';
+
+                    return (
+                      <div
+                        key={mod.key}
+                        onClick={() => {
+                          setSelectedModalityKeyForModal(mod.key);
+                          setSelectedModalityLevelFilter('ALL');
+                          setModalityModalSearchQuery('');
+                        }}
+                        className="group relative bg-[#0D1B2A] hover:bg-[#112236] border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-5 text-white transition-all duration-200 cursor-pointer shadow-lg hover:shadow-cyan-500/10 flex flex-col justify-between"
+                      >
+                        <div>
+                          {/* Header */}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-3 h-3 rounded-full ${mod.dot} shadow-xs shrink-0`} />
+                              <h3 className="text-sm font-black tracking-wide text-white font-display group-hover:text-cyan-300 transition-colors uppercase">
+                                {mod.label}
+                              </h3>
+                            </div>
+                            <span className={`text-[10px] font-black font-mono px-2.5 py-1 rounded-md border tracking-widest ${tagColor}`}>
+                              {tagText}
+                            </span>
+                          </div>
+
+                          {/* Status and Progress Bar */}
+                          <div className="space-y-2 my-3">
+                            <div className="flex justify-between items-center text-[10px] font-mono text-slate-350">
+                              <span>Progreso: {maxLevel}/3 niveles</span>
+                              <span className="text-slate-400">
+                                {maxLevel === 3 ? 'Especialización al máximo' : maxLevel > 0 ? 'En desarrollo de especialidad' : 'Sin nivel alcanzado'}
+                              </span>
+                            </div>
+
+                            {/* 3-segment progress bar */}
+                            <div className="grid grid-cols-3 gap-1.5 h-2.5 bg-slate-900/90 rounded-full p-0.5 border border-slate-800">
+                              <div className={`rounded-full transition-all duration-300 ${maxLevel >= 1 ? 'bg-gradient-to-r from-cyan-500 to-emerald-400' : 'bg-slate-800'}`} />
+                              <div className={`rounded-full transition-all duration-300 ${maxLevel >= 2 ? 'bg-gradient-to-r from-cyan-500 to-emerald-400' : 'bg-slate-800'}`} />
+                              <div className={`rounded-full transition-all duration-300 ${maxLevel >= 3 ? 'bg-gradient-to-r from-cyan-500 to-emerald-400' : 'bg-slate-800'}`} />
+                            </div>
+                          </div>
+
+                          {/* Engineer breakdown counts */}
+                          <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-800/80">
+                            <div className="bg-slate-900/60 rounded-lg p-2 text-center border border-slate-800/60">
+                              <span className="text-[8.5px] font-mono font-bold text-cyan-400 block">3X (Proficient)</span>
+                              <span className="text-xs font-black text-white">{level3Engs.length} <span className="text-[9px] font-normal text-slate-400">ing.</span></span>
+                            </div>
+                            <div className="bg-slate-900/60 rounded-lg p-2 text-center border border-slate-800/60">
+                              <span className="text-[8.5px] font-mono font-bold text-sky-400 block">2X (Advanced)</span>
+                              <span className="text-xs font-black text-white">{level2Engs.length} <span className="text-[9px] font-normal text-slate-400">ing.</span></span>
+                            </div>
+                            <div className="bg-slate-900/60 rounded-lg p-2 text-center border border-slate-800/60">
+                              <span className="text-[8.5px] font-mono font-bold text-amber-400 block">1X (Basic)</span>
+                              <span className="text-xs font-black text-white">{level1Engs.length} <span className="text-[9px] font-normal text-slate-400">ing.</span></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Footer action link */}
+                        <div className="mt-4 pt-3 flex items-center justify-between text-[11px] text-cyan-400 font-semibold group-hover:translate-x-0.5 transition-all">
+                          <span>Ver ingenieros capacitados ({totalTrained})</span>
+                          <ChevronRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -4988,6 +5178,216 @@ service cloud.firestore {
                   id="btn-modality-courses-close"
                   onClick={() => setSelectedRouteModalityForModal(null)}
                   className="text-xs font-bold text-slate-655 hover:text-slate-800 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg px-4 py-2 transition cursor-pointer"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+      {/* Detailed Modality Breakdown Modal Window */}
+      {selectedModalityKeyForModal && (() => {
+        const modKey = selectedModalityKeyForModal;
+        const modData = modalitiesData.find(m => m.mod.key === modKey);
+        if (!modData) return null;
+
+        const { mod, level3Engs, level2Engs, level1Engs, level0Engs, engineerLevels } = modData;
+
+        let filteredLevels = engineerLevels;
+        if (selectedModalityLevelFilter !== 'ALL') {
+          filteredLevels = filteredLevels.filter(x => x.level === selectedModalityLevelFilter);
+        }
+
+        if (modalityModalSearchQuery.trim()) {
+          const q = modalityModalSearchQuery.toLowerCase().trim();
+          filteredLevels = filteredLevels.filter(x => 
+            x.engineer.name.toLowerCase().includes(q) || 
+            (x.engineer.sede || '').toLowerCase().includes(q)
+          );
+        }
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-fadeIn"
+            id="modal-detail-modality-backdrop"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setSelectedModalityKeyForModal(null);
+            }}
+          >
+            <div 
+              className="relative w-full max-w-4xl bg-slate-900 border border-slate-800 text-white shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scaleIn"
+              id="modal-detail-modality-card"
+            >
+              {/* Modal Header */}
+              <div className="bg-[#0B172A] border-b border-slate-800 p-5 md:p-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3.5 h-3.5 rounded-full ${mod.dot} shadow-md`} />
+                  <div>
+                    <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest font-mono">
+                      Detalle por Modalidad Biomédica
+                    </span>
+                    <h3 className="text-lg md:text-xl font-black text-white uppercase font-display flex items-center gap-2">
+                      {mod.label}
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedModalityKeyForModal(null)}
+                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition cursor-pointer"
+                  aria-label="Cerrar modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Filter Toolbar */}
+              <div className="bg-slate-900/90 border-b border-slate-800/80 p-4 flex flex-col md:flex-row items-center justify-between gap-3">
+                {/* Level Filter Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
+                  <button
+                    onClick={() => setSelectedModalityLevelFilter('ALL')}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer whitespace-nowrap ${
+                      selectedModalityLevelFilter === 'ALL'
+                        ? 'bg-cyan-500 text-slate-950 shadow-md font-black'
+                        : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    Todos ({engineerLevels.length})
+                  </button>
+                  <button
+                    onClick={() => setSelectedModalityLevelFilter(3)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                      selectedModalityLevelFilter === 3
+                        ? 'bg-cyan-400 text-slate-950 font-black shadow-md'
+                        : 'bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 border border-cyan-500/30'
+                    }`}
+                  >
+                    <span className="font-mono">XXX</span> Proficient ({level3Engs.length})
+                  </button>
+                  <button
+                    onClick={() => setSelectedModalityLevelFilter(2)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                      selectedModalityLevelFilter === 2
+                        ? 'bg-sky-400 text-slate-950 font-black shadow-md'
+                        : 'bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 border border-sky-500/30'
+                    }`}
+                  >
+                    <span className="font-mono">XX</span> Avanzado ({level2Engs.length})
+                  </button>
+                  <button
+                    onClick={() => setSelectedModalityLevelFilter(1)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                      selectedModalityLevelFilter === 1
+                        ? 'bg-amber-400 text-slate-950 font-black shadow-md'
+                        : 'bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/30'
+                    }`}
+                  >
+                    <span className="font-mono">X</span> Básico ({level1Engs.length})
+                  </button>
+                  <button
+                    onClick={() => setSelectedModalityLevelFilter(0)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                      selectedModalityLevelFilter === 0
+                        ? 'bg-slate-700 text-white font-black shadow-md'
+                        : 'bg-slate-800/50 text-slate-400 hover:bg-slate-800 border border-slate-750'
+                    }`}
+                  >
+                    Sin Nivel ({level0Engs.length})
+                  </button>
+                </div>
+
+                {/* Search Input */}
+                <div className="relative w-full md:w-64">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por ingeniero o sede..."
+                    value={modalityModalSearchQuery}
+                    onChange={(e) => setModalityModalSearchQuery(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Body Engineer List */}
+              <div className="p-6 overflow-y-auto space-y-4 flex-1">
+                {filteredLevels.map(({ engineer, level, completados, historialMod }) => {
+                  const levelBadge = level === 3 
+                    ? { text: 'XXX PROFICIENT', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/50', label: 'Especialización Máxima (3/3 Niveles)' }
+                    : level === 2
+                    ? { text: 'XX AVANZADO', color: 'bg-sky-500/20 text-sky-300 border-sky-400/50', label: 'Nivel Avanzado (2/3 Niveles)' }
+                    : level === 1
+                    ? { text: 'X BÁSICO', color: 'bg-amber-500/20 text-amber-300 border-amber-400/50', label: 'Nivel Básico (1/3 Niveles)' }
+                    : { text: '0X SIN CAPACITAR', color: 'bg-slate-800 text-slate-400 border-slate-700', label: 'Sin Cursos Registrados' };
+
+                  return (
+                    <div 
+                      key={engineer.id}
+                      className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-700 transition"
+                    >
+                      {/* Engineer Information */}
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-600 to-indigo-600 text-white font-extrabold flex items-center justify-center text-sm shadow-md shrink-0">
+                          {engineer.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-xs font-black text-white uppercase tracking-wide">
+                              {engineer.name}
+                            </h4>
+                            <span className="bg-slate-800 text-slate-300 text-[9px] font-extrabold px-2 py-0.5 rounded border border-slate-700">
+                              {engineer.sede || 'Quito'}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 mt-0.5 font-medium">
+                            Especialidad: {engineer.specialty || 'Ingeniería'} • {historialMod.length} curso(s) aprobados en {mod.label}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Level Badge and Courses */}
+                      <div className="flex flex-col md:items-end gap-2">
+                        <span className={`text-[10px] font-black font-mono px-3 py-1 rounded-lg border tracking-wider self-start md:self-end ${levelBadge.color}`}>
+                          {levelBadge.text}
+                        </span>
+
+                        {/* List of Approved Courses in this Modality */}
+                        {historialMod.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5 justify-start md:justify-end max-w-md">
+                            {historialMod.map(({ curso, fecha }) => (
+                              <span 
+                                key={curso.codigo} 
+                                className="bg-slate-900 border border-slate-800 text-slate-300 text-[9.5px] font-mono px-2 py-0.5 rounded flex items-center gap-1"
+                                title={`${curso.titulo} (${fecha})`}
+                              >
+                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
+                                <span className="font-bold text-white">{curso.codigo}</span>
+                                <span className="text-slate-500">({fecha})</span>
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-500 italic">Sin acreditaciones en esta modalidad.</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredLevels.length === 0 && (
+                  <div className="text-center py-12 text-slate-500 text-xs font-mono">
+                    No se encontraron ingenieros que coincidan con la búsqueda o filtro seleccionado.
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="bg-[#0B172A] border-t border-slate-800 p-4 flex justify-between items-center text-xs text-slate-400">
+                <span>Mostrando {filteredLevels.length} de {engineerLevels.length} ingenieros</span>
+                <button
+                  onClick={() => setSelectedModalityKeyForModal(null)}
+                  className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer"
                 >
                   Cerrar
                 </button>
