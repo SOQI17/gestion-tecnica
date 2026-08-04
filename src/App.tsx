@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, startTransition } from 'react';
 import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
 import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty } from './types';
@@ -218,7 +218,7 @@ export default function App() {
         });
       }
       
-      setEngineers(list);
+      startTransition(() => setEngineers(list));
     }, (error) => {
       console.warn("Error leyendo ingenieros de Firestore:", error);
       setDbError("Missing or insufficient permissions en la colección 'engineers'");
@@ -233,7 +233,7 @@ export default function App() {
           list.push(docSnap.data() as Client);
         }
       });
-      setClients(list);
+      startTransition(() => setClients(list));
     }, (error) => {
       console.warn("Error leyendo clientes de Firestore:", error);
       setDbError("Missing or insufficient permissions en la colección 'clients'");
@@ -249,7 +249,7 @@ export default function App() {
         }
       });
       const sorted = list.sort((a, b) => b.id.localeCompare(a.id));
-      setWorkOrders(sorted);
+      startTransition(() => setWorkOrders(sorted));
     }, (error) => {
       console.warn("Error leyendo órdenes de trabajo de Firestore:", error);
       setDbError("Missing or insufficient permissions en la colección 'workOrders'");
@@ -264,8 +264,10 @@ export default function App() {
           list.push(docSnap.data() as TechnicalReport);
         }
       });
-      setReports(list);
-      setDbLoading(false);
+      startTransition(() => {
+        setReports(list);
+        setDbLoading(false);
+      });
     }, (error) => {
       console.warn("Error leyendo reportes de Firestore:", error);
       setDbError("Missing or insufficient permissions en la colección 'reports'");
@@ -280,7 +282,7 @@ export default function App() {
           list.push(docSnap.data() as Equipment);
         }
       });
-      setEquipments(list);
+      startTransition(() => setEquipments(list));
     }, (error) => {
       console.warn("Error leyendo equipos de Firestore:", error);
     });
@@ -293,7 +295,7 @@ export default function App() {
           list.push(docSnap.data() as Contract);
         }
       });
-      setContracts(list);
+      startTransition(() => setContracts(list));
     }, (error) => {
       console.warn("Error leyendo contratos de Firestore:", error);
     });
@@ -306,7 +308,7 @@ export default function App() {
           list.push(docSnap.data() as Vacation);
         }
       });
-      setVacations(list);
+      startTransition(() => setVacations(list));
     }, (error) => {
       console.warn("Error leyendo vacaciones de Firestore:", error);
     });
@@ -319,7 +321,7 @@ export default function App() {
           list.push(docSnap.data() as EngineerPermission);
         }
       });
-      setPermissions(list);
+      startTransition(() => setPermissions(list));
     }, (error) => {
       console.warn("Error leyendo permisos de Firestore:", error);
     });
@@ -332,7 +334,7 @@ export default function App() {
           list.push(docSnap.data() as MaintenanceRegistry);
         }
       });
-      setMaintenanceRegistries(list);
+      startTransition(() => setMaintenanceRegistries(list));
     }, (error) => {
       console.warn("Error leyendo registros de mantenimiento de Firestore:", error);
     });
@@ -357,7 +359,7 @@ export default function App() {
       firestoreList.forEach(item => mergedMap.set(item.id, item));
       const mergedList = Array.from(mergedMap.values());
 
-      setScheduledTrainings(mergedList);
+      startTransition(() => setScheduledTrainings(mergedList));
       try {
         localStorage.setItem('fsm_scheduled_trainings', JSON.stringify(mergedList));
       } catch (e) {}
@@ -373,7 +375,7 @@ export default function App() {
           list.push(docSnap.data() as ContractGE);
         }
       });
-      setContractsGE(list);
+      startTransition(() => setContractsGE(list));
       try { localStorage.setItem('fsm_contracts_ge', JSON.stringify(list)); } catch (e) {}
     }, (error) => {
       console.warn("Error leyendo contratos con GE de Firestore:", error);
@@ -388,7 +390,7 @@ export default function App() {
           list.push({ uid: docSnap.id, ...data } as AppUser);
         }
       });
-      setAllRegisteredUsers(list);
+      startTransition(() => setAllRegisteredUsers(list));
     }, (error) => {
       console.warn("Error leyendo usuarios de Firestore:", error);
     });
@@ -480,32 +482,31 @@ export default function App() {
     }
   };
 
-  const showNotification = (message: string, type: 'success' | 'info' | 'warning' = 'success') => {
+  const showNotification = useCallback((message: string, type: 'success' | 'info' | 'warning' = 'success') => {
     setNotification({ message, type });
     setTimeout(() => {
       setNotification(null);
     }, 6000);
-  };
+  }, []);
 
-  const handleAddClient = async (newClient: Client) => {
+  const handleAddClient = useCallback(async (newClient: Client) => {
     try {
       await setDoc(doc(db, 'clients', newClient.id), cleanUndefined(newClient));
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `clients/${newClient.id}`);
     }
-  };
+  }, []);
 
-  const handleAddWorkOrder = async (newWO: WorkOrder) => {
-
+  const handleAddWorkOrder = useCallback(async (newWO: WorkOrder) => {
     try {
       await setDoc(doc(db, 'workOrders', newWO.id), cleanUndefined(newWO));
       showNotification(`Orden de trabajo ${newWO.id} asignada y guardada con éxito en Firestore.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `workOrders/${newWO.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleImportData = async (
+  const handleImportData = useCallback(async (
     newWOs: WorkOrder[],
     newReps: TechnicalReport[],
     newClients: Client[] = [],
@@ -513,17 +514,12 @@ export default function App() {
   ) => {
     try {
       showNotification(`Guardando datos importados en Firestore...`, 'info');
-      
-      // Save new clients
       for (const cli of newClients) {
         await setDoc(doc(db, 'clients', cli.id), cleanUndefined(cli));
       }
-
-      // Save new engineers
       for (const eng of newEngineers) {
         await setDoc(doc(db, 'engineers', eng.id), cleanUndefined(eng));
       }
-
       for (const wo of newWOs) {
         await setDoc(doc(db, 'workOrders', wo.id), cleanUndefined(wo));
       }
@@ -534,45 +530,45 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'bulk-import');
     }
-  };
+  }, [showNotification]);
 
-  const handleAddEquipment = async (newEquip: Equipment) => {
+  const handleAddEquipment = useCallback(async (newEquip: Equipment) => {
     try {
       await setDoc(doc(db, 'equipments', newEquip.id), cleanUndefined(newEquip));
       showNotification(`Equipo ${newEquip.name} registrado con éxito.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `equipments/${newEquip.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleUpdateEquipment = async (updatedEquip: Equipment) => {
+  const handleUpdateEquipment = useCallback(async (updatedEquip: Equipment) => {
     try {
       await setDoc(doc(db, 'equipments', updatedEquip.id), cleanUndefined(updatedEquip));
       showNotification(`Equipo ${updatedEquip.name} actualizado.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `equipments/${updatedEquip.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleAddContract = async (newContract: Contract) => {
+  const handleAddContract = useCallback(async (newContract: Contract) => {
     try {
       await setDoc(doc(db, 'contracts', newContract.id), cleanUndefined(newContract));
       showNotification(`Contrato ${newContract.id} registrado con éxito.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `contracts/${newContract.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleUpdateContract = async (updatedContract: Contract) => {
+  const handleUpdateContract = useCallback(async (updatedContract: Contract) => {
     try {
       await setDoc(doc(db, 'contracts', updatedContract.id), cleanUndefined(updatedContract));
       showNotification(`Contrato ${updatedContract.id} actualizado.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `contracts/${updatedContract.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleDeleteContract = async (contractId: string) => {
+  const handleDeleteContract = useCallback(async (contractId: string) => {
     const role = currentUser?.role || (activeTab === 'sales' ? 'sales' : 'engineer');
     if (role !== 'admin') {
       alert("Solo el Administrador tiene autorización para eliminar contratos.");
@@ -589,9 +585,9 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `contracts/${contractId}`);
     }
-  };
+  }, [currentUser, activeTab, showNotification]);
 
-  const handleBulkUploadClients = async (newClients: Client[]) => {
+  const handleBulkUploadClients = useCallback(async (newClients: Client[]) => {
     try {
       showNotification(`Cargando ${newClients.length} clientes en Firestore...`, 'info');
       for (const cli of newClients) {
@@ -601,9 +597,9 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'bulk-clients');
     }
-  };
+  }, [showNotification]);
 
-  const handleBulkUploadEquipments = async (newEquips: Equipment[]) => {
+  const handleBulkUploadEquipments = useCallback(async (newEquips: Equipment[]) => {
     try {
       showNotification(`Cargando ${newEquips.length} equipos en Firestore...`, 'info');
       for (const eq of newEquips) {
@@ -613,14 +609,13 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'bulk-equipments');
     }
-  };
+  }, [showNotification]);
 
-  const handleBulkUploadMaintenanceRegistries = async (registries: MaintenanceRegistry[]) => {
+  const handleBulkUploadMaintenanceRegistries = useCallback(async (registries: MaintenanceRegistry[]) => {
     try {
       const BATCH_SIZE = 400;
       const totalBatches = Math.ceil(registries.length / BATCH_SIZE);
       showNotification(`Cargando ${registries.length} registros en ${totalBatches} lote(s)...`, 'info');
-
       for (let b = 0; b < totalBatches; b++) {
         const slice = registries.slice(b * BATCH_SIZE, (b + 1) * BATCH_SIZE);
         const batch = writeBatch(db);
@@ -632,22 +627,18 @@ export default function App() {
           showNotification(`Lote ${b + 1}/${totalBatches} guardado...`, 'info');
         }
       }
-
-      // ── Actualizar el estado local INMEDIATAMENTE (no esperar al onSnapshot) ──
       setMaintenanceRegistries(prev => {
-        // Merge: keep existing records that don't clash, then add all new ones
         const newIds = new Set(registries.map(r => r.id));
         const kept = prev.filter(r => !newIds.has(r.id));
         return [...kept, ...registries];
       });
-
       showNotification(`¡Carga masiva exitosa! Se importaron ${registries.length} registros.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'bulk-maintenance-registries');
     }
-  };
+  }, [showNotification]);
 
-  const handleClearMaintenanceRegistries = async () => {
+  const handleClearMaintenanceRegistries = useCallback(async () => {
     try {
       showNotification("Eliminando registros de la base de datos...", 'info');
       const qSnap = await getDocs(collection(db, 'maintenanceRegistries'));
@@ -663,18 +654,18 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, 'clear-maintenance-registries');
     }
-  };
+  }, [showNotification]);
 
-  const handleAddMaintenanceRegistry = async (reg: MaintenanceRegistry) => {
+  const handleAddMaintenanceRegistry = useCallback(async (reg: MaintenanceRegistry) => {
     try {
       await setDoc(doc(db, 'maintenanceRegistries', reg.id), cleanUndefined(reg));
       showNotification(`Registro de ${reg.institutionName} guardado con éxito.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `maintenanceRegistries/${reg.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleClearEquipments = async () => {
+  const handleClearEquipments = useCallback(async () => {
     try {
       showNotification("Eliminando equipos de la base de datos...", 'info');
       const qSnap = await getDocs(collection(db, 'equipments'));
@@ -685,9 +676,9 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, 'clear-equipments');
     }
-  };
+  }, [showNotification]);
 
-  const handleBulkUploadContracts = async (newContracts: Contract[]) => {
+  const handleBulkUploadContracts = useCallback(async (newContracts: Contract[]) => {
     try {
       showNotification(`Cargando ${newContracts.length} contratos en Firestore...`, 'info');
       for (const con of newContracts) {
@@ -697,18 +688,18 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'bulk-contracts');
     }
-  };
+  }, [showNotification]);
 
-  const handleAddVacation = async (vac: Vacation) => {
+  const handleAddVacation = useCallback(async (vac: Vacation) => {
     try {
       await setDoc(doc(db, 'vacations', vac.id), cleanUndefined(vac));
       showNotification(`Vacaciones registradas correctamente.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `vacations/${vac.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleAddScheduledTraining = async (st: ScheduledTraining) => {
+  const handleAddScheduledTraining = useCallback(async (st: ScheduledTraining) => {
     setScheduledTrainings(prev => {
       const next = [...prev.filter(x => x.id !== st.id), st];
       try { localStorage.setItem('fsm_scheduled_trainings', JSON.stringify(next)); } catch (e) {}
@@ -721,9 +712,9 @@ export default function App() {
       console.error("Error al guardar capacitación programada en Firestore:", error);
       handleFirestoreError(error, OperationType.WRITE, `scheduledTrainings/${st.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleUpdateScheduledTraining = async (st: ScheduledTraining) => {
+  const handleUpdateScheduledTraining = useCallback(async (st: ScheduledTraining) => {
     setScheduledTrainings(prev => {
       const next = prev.map(x => x.id === st.id ? st : x);
       try { localStorage.setItem('fsm_scheduled_trainings', JSON.stringify(next)); } catch (e) {}
@@ -736,9 +727,9 @@ export default function App() {
       console.error("Error al actualizar capacitación programada:", error);
       handleFirestoreError(error, OperationType.UPDATE, `scheduledTrainings/${st.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleDeleteScheduledTraining = async (stId: string) => {
+  const handleDeleteScheduledTraining = useCallback(async (stId: string) => {
     setScheduledTrainings(prev => {
       const next = prev.filter(x => x.id !== stId);
       try { localStorage.setItem('fsm_scheduled_trainings', JSON.stringify(next)); } catch (e) {}
@@ -751,9 +742,9 @@ export default function App() {
       console.error("Error al eliminar capacitación programada:", error);
       handleFirestoreError(error, OperationType.DELETE, `scheduledTrainings/${stId}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleAddContractGE = async (cGE: ContractGE) => {
+  const handleAddContractGE = useCallback(async (cGE: ContractGE) => {
     setContractsGE(prev => {
       const next = [...prev.filter(x => x.id !== cGE.id), cGE];
       try { localStorage.setItem('fsm_contracts_ge', JSON.stringify(next)); } catch (e) {}
@@ -765,9 +756,9 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `contractsGE/${cGE.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleUpdateContractGE = async (cGE: ContractGE) => {
+  const handleUpdateContractGE = useCallback(async (cGE: ContractGE) => {
     setContractsGE(prev => {
       const next = prev.map(x => x.id === cGE.id ? cGE : x);
       try { localStorage.setItem('fsm_contracts_ge', JSON.stringify(next)); } catch (e) {}
@@ -779,9 +770,9 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `contractsGE/${cGE.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleDeleteContractGE = async (id: string) => {
+  const handleDeleteContractGE = useCallback(async (id: string) => {
     setContractsGE(prev => {
       const next = prev.filter(x => x.id !== id);
       try { localStorage.setItem('fsm_contracts_ge', JSON.stringify(next)); } catch (e) {}
@@ -793,14 +784,13 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `contractsGE/${id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleBulkUploadContractsGE = async (cGEs: ContractGE[]) => {
+  const handleBulkUploadContractsGE = useCallback(async (cGEs: ContractGE[]) => {
     try {
       showNotification(`Importando ${cGEs.length} registros de Contratos con GE...`, 'info');
       const BATCH_SIZE = 400;
       const totalBatches = Math.ceil(cGEs.length / BATCH_SIZE);
-
       for (let b = 0; b < totalBatches; b++) {
         const slice = cGEs.slice(b * BATCH_SIZE, (b + 1) * BATCH_SIZE);
         const batch = writeBatch(db);
@@ -809,7 +799,6 @@ export default function App() {
         });
         await batch.commit();
       }
-
       setContractsGE(prev => {
         const newIds = new Set(cGEs.map(x => x.id));
         const kept = prev.filter(x => !newIds.has(x.id));
@@ -817,32 +806,31 @@ export default function App() {
         try { localStorage.setItem('fsm_contracts_ge', JSON.stringify(merged)); } catch (e) {}
         return merged;
       });
-
       showNotification(`¡Carga masiva exitosa! Se importaron ${cGEs.length} registros de Contratos con GE.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'bulk-contracts-ge');
     }
-  };
+  }, [showNotification]);
 
-  const handleUpdateVacation = async (vac: Vacation) => {
+  const handleUpdateVacation = useCallback(async (vac: Vacation) => {
     try {
       await setDoc(doc(db, 'vacations', vac.id), cleanUndefined(vac));
       showNotification(`Estado de vacaciones actualizado.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `vacations/${vac.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleDeleteVacation = async (vacId: string) => {
+  const handleDeleteVacation = useCallback(async (vacId: string) => {
     try {
       await deleteDoc(doc(db, 'vacations', vacId));
       showNotification(`Vacaciones eliminadas correctamente.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `vacations/${vacId}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleAddPermission = async (perm: EngineerPermission) => {
+  const handleAddPermission = useCallback(async (perm: EngineerPermission) => {
     try {
       await setDoc(doc(db, 'permissions', perm.id), cleanUndefined(perm));
       showNotification(`Registro de ${perm.type === 'Permiso' ? 'permiso' : 'compensación'} guardado correctamente.`, 'success');
@@ -851,9 +839,9 @@ export default function App() {
       alert(`⚠️ ERROR EN FIREBASE:\nNo se pudo guardar el registro en la colección 'permissions'.\n\nDetalle: ${error.message || String(error)}\n\nPor favor verifique que las Reglas de Seguridad de Firestore estén actualizadas.`);
       handleFirestoreError(error, OperationType.WRITE, `permissions/${perm.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleDeletePermission = async (permId: string) => {
+  const handleDeletePermission = useCallback(async (permId: string) => {
     try {
       await deleteDoc(doc(db, 'permissions', permId));
       showNotification(`Registro eliminado correctamente.`, 'success');
@@ -862,26 +850,26 @@ export default function App() {
       alert(`⚠️ ERROR EN FIREBASE:\nNo se pudo eliminar el registro en la colección 'permissions'.\n\nDetalle: ${error.message || String(error)}`);
       handleFirestoreError(error, OperationType.DELETE, `permissions/${permId}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleUpdateWorkOrderStatus = async (woId: string, status: WorkOrderStatus) => {
+  const handleUpdateWorkOrderStatus = useCallback(async (woId: string, status: WorkOrderStatus) => {
     try {
       await setDoc(doc(db, 'workOrders', woId), { status }, { merge: true });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `workOrders/${woId}`);
     }
-  };
+  }, []);
 
-  const handleUpdateWorkOrder = async (updatedWO: WorkOrder) => {
+  const handleUpdateWorkOrder = useCallback(async (updatedWO: WorkOrder) => {
     try {
       await setDoc(doc(db, 'workOrders', updatedWO.id), cleanUndefined(updatedWO));
       showNotification(`¡Orden de servicio ${updatedWO.id} actualizada con éxito!`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `workOrders/${updatedWO.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleUpdateEngineer = async (updatedEng: Engineer) => {
+  const handleUpdateEngineer = useCallback(async (updatedEng: Engineer) => {
     try {
       await setDoc(doc(db, 'engineers', updatedEng.id), cleanUndefined(updatedEng));
       setEngineers(prev => {
@@ -893,8 +881,6 @@ export default function App() {
         }
         return [...prev, updatedEng];
       });
-
-      // Sincronizar automáticamente el técnico en la colección 'users' si el usuario ya existe en Firestore
       const targetEmail = (updatedEng.email || '').trim().toLowerCase();
       if (targetEmail) {
         try {
@@ -904,11 +890,7 @@ export default function App() {
             if (uData.email && uData.email.trim().toLowerCase() === targetEmail) {
               const keepRole = uData.role || 'engineer';
               if (uData.engineerId !== updatedEng.id) {
-                const updatedU: AppUser = {
-                  ...uData,
-                  role: keepRole,
-                  engineerId: updatedEng.id
-                };
+                const updatedU: AppUser = { ...uData, role: keepRole, engineerId: updatedEng.id };
                 await setDoc(doc(db, 'users', uDoc.id), cleanUndefined(updatedU));
                 setAllRegisteredUsers(prev => prev.map(u => u.uid === uDoc.id ? updatedU : u));
               }
@@ -918,14 +900,13 @@ export default function App() {
           console.warn("No se pudo sincronizar usuario en colección users:", e);
         }
       }
-
       showNotification(`¡Técnico ${updatedEng.name} guardado con éxito!`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `engineers/${updatedEng.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleDeleteEngineer = async (engId: string) => {
+  const handleDeleteEngineer = useCallback(async (engId: string) => {
     try {
       await deleteDoc(doc(db, 'engineers', engId));
       setEngineers(prev => prev.filter(e => e.id !== engId));
@@ -933,9 +914,9 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `engineers/${engId}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleRegisterNewUser = async (data: {
+  const handleRegisterNewUser = useCallback(async (data: {
     name: string;
     email: string;
     password?: string;
@@ -949,36 +930,23 @@ export default function App() {
       showNotification('Por favor ingrese un correo válido.', 'warning');
       return;
     }
-
     try {
       let uid = '';
-      // 1. Verificar si ya existe en allRegisteredUsers o consultando Firestore
       const existingUser = allRegisteredUsers.find(u => u.email && u.email.trim().toLowerCase() === cleanEmail);
-      if (existingUser) {
-        uid = existingUser.uid;
-      }
-
+      if (existingUser) { uid = existingUser.uid; }
       if (!uid) {
         try {
           const usersSnap = await getDocs(collection(db, 'users'));
           usersSnap.forEach(uDoc => {
             const uData = uDoc.data() as AppUser;
-            if (uData.email && uData.email.trim().toLowerCase() === cleanEmail) {
-              uid = uDoc.id;
-            }
+            if (uData.email && uData.email.trim().toLowerCase() === cleanEmail) { uid = uDoc.id; }
           });
-        } catch (e) {
-          console.warn("Error buscando usuario previo en users collection:", e);
-        }
+        } catch (e) { console.warn("Error buscando usuario previo en users collection:", e); }
       }
-
-      // 2. Si se especificó contraseña de al menos 6 caracteres, crear en Firebase Auth sin cerrar sesión admin
       if (data.password && data.password.length >= 6) {
         try {
           const createdUid = await registerFirebaseUserSecondary(cleanEmail, data.password);
-          if (createdUid) {
-            uid = createdUid;
-          }
+          if (createdUid) { uid = createdUid; }
         } catch (authErr: any) {
           if (authErr?.code === 'auth/email-already-in-use') {
             console.log('El correo ya está registrado en Firebase Auth, sincronizando perfil Firestore...');
@@ -988,16 +956,9 @@ export default function App() {
           }
         }
       }
-
-      // 3. Si aún no tenemos UID, usar formato canónico
-      if (!uid) {
-        uid = `USER-${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
-      }
-
+      if (!uid) { uid = `USER-${cleanEmail.replace(/[^a-z0-9]/g, '_')}`; }
       let engId: string | undefined = undefined;
       let createdEng: Engineer | undefined = undefined;
-
-      // 4. Si el rol es ingeniero/técnico, crear o vincular en colección 'engineers'
       if (data.role === 'engineer') {
         const existingEng = engineers.find(e => e.email && e.email.trim().toLowerCase() === cleanEmail);
         engId = existingEng ? existingEng.id : `ENG-${100 + engineers.length}-${Math.floor(100 + Math.random() * 900)}`;
@@ -1020,8 +981,6 @@ export default function App() {
           return [...filtered, createdEng!];
         });
       }
-
-      // 5. Guardar en la colección 'users'
       const userProfile: AppUser = {
         uid,
         email: cleanEmail,
@@ -1030,22 +989,19 @@ export default function App() {
         ...(engId ? { engineerId: engId } : {})
       };
       await setDoc(doc(db, 'users', uid), cleanUndefined(userProfile));
-
-      // Actualizar estado local inmediatamente
       setAllRegisteredUsers(prev => {
         const filtered = prev.filter(u => u.uid !== uid && u.email?.toLowerCase() !== cleanEmail);
         return [...filtered, userProfile];
       });
-
       const roleName = data.role === 'admin' ? 'Administrador' : data.role === 'engineer' ? 'Ingeniero/Técnico' : 'Ventas';
       showNotification(`¡Usuario ${data.name || cleanEmail} registrado y guardado exitosamente como ${roleName}!`, 'success');
     } catch (err: any) {
       console.error("Error al registrar usuario:", err);
       showNotification(`Error al guardar usuario: ${err?.message || 'Problema de conexión con Firestore'}`, 'warning');
     }
-  };
+  }, [showNotification, allRegisteredUsers, engineers]);
 
-  const handleDeleteWorkOrders = async (woIds: string[]) => {
+  const handleDeleteWorkOrders = useCallback(async (woIds: string[]) => {
     try {
       for (const id of woIds) {
         await deleteDoc(doc(db, 'workOrders', id));
@@ -1054,69 +1010,56 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `workOrders`);
     }
-  };
+  }, [showNotification]);
 
-  const handleMergeEngineers = async (sourceId: string, targetId: string) => {
+  const handleMergeEngineers = useCallback(async (sourceId: string, targetId: string) => {
     try {
-      // 1. Find all work orders where sourceId is engineerId or supportEngineerId
       const sourceWOs = workOrders.filter(wo => wo.engineerId === sourceId || wo.supportEngineerId === sourceId);
-      
-      // 2. Update each work order in Firestore
       for (const wo of sourceWOs) {
         const updates: Partial<WorkOrder> = {};
-        if (wo.engineerId === sourceId) {
-          updates.engineerId = targetId;
-        }
-        if (wo.supportEngineerId === sourceId) {
-          updates.supportEngineerId = targetId;
-        }
+        if (wo.engineerId === sourceId) { updates.engineerId = targetId; }
+        if (wo.supportEngineerId === sourceId) { updates.supportEngineerId = targetId; }
         await setDoc(doc(db, 'workOrders', wo.id), updates, { merge: true });
       }
-      
-      // 3. Delete the source engineer document from Firestore
       await deleteDoc(doc(db, 'engineers', sourceId));
-      
       showNotification(`¡Técnicos fusionados con éxito! Se reasignaron ${sourceWOs.length} órdenes de trabajo.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `engineers/merge`);
     }
-  };
+  }, [showNotification, workOrders]);
 
-  const handleBatchReportWorkOrders = async (
+  const handleBatchReportWorkOrders = useCallback(async (
     newReports: TechnicalReport[],
     woUpdates: { id: string; status: WorkOrderStatus }[]
   ) => {
     try {
       showNotification(`Reportando y guardando reportes de todo el mes...`, 'info');
       const batch = writeBatch(db);
-
       for (const update of woUpdates) {
         const woRef = doc(db, 'workOrders', update.id);
         batch.set(woRef, { status: update.status }, { merge: true });
       }
-
       for (const rep of newReports) {
         const repRef = doc(db, 'reports', rep.id);
         batch.set(repRef, cleanUndefined(rep));
       }
-
       await batch.commit();
       showNotification(`¡Reportes del mes generados con éxito (${newReports.length} órdenes)!`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'batch-report');
     }
-  };
+  }, [showNotification]);
 
-  const handleSubmitTechnicalReport = async (newReport: TechnicalReport) => {
+  const handleSubmitTechnicalReport = useCallback(async (newReport: TechnicalReport) => {
     try {
       await setDoc(doc(db, 'reports', newReport.id), cleanUndefined(newReport));
       showNotification(`¡Reporte técnico ${newReport.id} guardado con éxito en Firestore!`, 'info');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `reports/${newReport.id}`);
     }
-  };
+  }, [showNotification]);
 
-  const handleValidateReport = async (woId: string, state: 'aprobado' | 'rechazado', notes: string) => {
+  const handleValidateReport = useCallback(async (woId: string, state: 'aprobado' | 'rechazado', notes: string) => {
     try {
       const matchedRep = reports.find(r => r.workOrderId === woId);
       if (matchedRep) {
@@ -1127,10 +1070,8 @@ export default function App() {
         };
         await setDoc(doc(db, 'reports', matchedRep.id), updatedRep, { merge: true });
       }
-
       const targetStatus = state === 'aprobado' ? 'Conciliado' : 'En Proceso';
       await setDoc(doc(db, 'workOrders', woId), { status: targetStatus }, { merge: true });
-
       if (state === 'aprobado') {
         showNotification(`Orden ${woId} conciliada y saldada con éxito en Firestore.`, 'success');
       } else {
@@ -1139,16 +1080,78 @@ export default function App() {
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `validate-report/${woId}`);
     }
-  };
+  }, [showNotification, reports]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await signOut(auth);
       setCurrentUser(null);
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
-  };
+  }, []);
+
+  const handleUpdateUserRole = useCallback(async (uid: string, role: 'admin' | 'engineer' | 'sales', engineerId?: string) => {
+    try {
+      const existing = allRegisteredUsers.find(u => u.uid === uid) || { uid, email: '' };
+      const userEmail = (existing.email || '').trim().toLowerCase();
+      let finalEngId = engineerId;
+      if (role === 'engineer') {
+        if (!finalEngId && userEmail) {
+          const matchedEng = engineers.find(e => e.email && e.email.trim().toLowerCase() === userEmail);
+          if (matchedEng) {
+            finalEngId = matchedEng.id;
+          } else {
+            const newEngId = `ENG-${100 + engineers.length}-${Math.floor(100 + Math.random() * 900)}`;
+            const autoEng: Engineer = {
+              id: newEngId,
+              name: existing.name || userEmail.split('@')[0].toUpperCase().replace(/[._]/g, ' ') || 'NUEVO INGENIERO',
+              email: userEmail,
+              specialty: 'Ingeniería',
+              sede: 'Quito',
+              phone: '+593 999 999 999',
+              avatar: '',
+              availability: 'Disponible',
+              skills: ['Ingeniería'],
+              customPermissions: getDefaultPermissionsForSpecialty('Ingeniería')
+            };
+            await setDoc(doc(db, 'engineers', newEngId), cleanUndefined(autoEng));
+            finalEngId = newEngId;
+          }
+        }
+      }
+      const updatedUserDoc: AppUser = {
+        ...existing,
+        uid,
+        role,
+        ...(finalEngId ? { engineerId: finalEngId } : { engineerId: undefined })
+      };
+      await setDoc(doc(db, 'users', uid), cleanUndefined(updatedUserDoc));
+      setAllRegisteredUsers(prev => {
+        const idx = prev.findIndex(u => u.uid === uid);
+        if (idx >= 0) {
+          const copy = [...prev];
+          copy[idx] = updatedUserDoc;
+          return copy;
+        }
+        return [...prev, updatedUserDoc];
+      });
+      const roleLabel = role === 'admin' ? 'Administrador' : role === 'engineer' ? 'Ingeniero/Técnico' : 'Ventas';
+      showNotification(`Rol del usuario actualizado a ${roleLabel} con éxito.`, 'success');
+    } catch (e) {
+      console.error('Error actualizando rol de usuario:', e);
+      showNotification('Error al actualizar el rol del usuario.', 'warning');
+    }
+  }, [showNotification, allRegisteredUsers, engineers]);
+
+  // ── Computed values (memoized to avoid recompute on every render) ──
+  const currentUserPermissions = useMemo(() => {
+    if (!currentUser) return undefined;
+    const matchedCurrentEng =
+      engineers.find(e => e.id === currentUser.engineerId) ||
+      engineers.find(e => e.email && e.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase());
+    return matchedCurrentEng?.customPermissions;
+  }, [engineers, currentUser]);
 
   // Guard: mostrando spinner de autenticación
   if (authLoading) {
@@ -1352,11 +1355,7 @@ export default function App() {
               <AdminPortal
                 userRole={activeTab === 'sales' ? 'sales' : currentUser.role}
                 currentUserEmail={currentUser.email}
-                currentUserPermissions={(() => {
-                  const matchedCurrentEng = engineers.find(e => e.id === currentUser.engineerId) ||
-                                           engineers.find(e => e.email && e.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase());
-                  return matchedCurrentEng?.customPermissions;
-                })()}
+                currentUserPermissions={currentUserPermissions}
                 engineers={engineers}
                 clients={clients}
                 workOrders={workOrders}
@@ -1406,60 +1405,7 @@ export default function App() {
                 onBulkUploadContractsGE={handleBulkUploadContractsGE}
                 allRegisteredUsers={allRegisteredUsers}
                 onRegisterNewUser={handleRegisterNewUser}
-                onUpdateUserRole={async (uid: string, role: 'admin' | 'engineer' | 'sales', engineerId?: string) => {
-                  try {
-                    const existing = allRegisteredUsers.find(u => u.uid === uid) || { uid, email: '' };
-                    const userEmail = (existing.email || '').trim().toLowerCase();
-
-                    let finalEngId = engineerId;
-                    if (role === 'engineer') {
-                      if (!finalEngId && userEmail) {
-                        const matchedEng = engineers.find(e => e.email && e.email.trim().toLowerCase() === userEmail);
-                        if (matchedEng) {
-                          finalEngId = matchedEng.id;
-                        } else {
-                          const newEngId = `ENG-${100 + engineers.length}-${Math.floor(100 + Math.random() * 900)}`;
-                          const autoEng: Engineer = {
-                            id: newEngId,
-                            name: existing.name || userEmail.split('@')[0].toUpperCase().replace(/[._]/g, ' ') || 'NUEVO INGENIERO',
-                            email: userEmail,
-                            specialty: 'Ingeniería',
-                            sede: 'Quito',
-                            phone: '+593 999 999 999',
-                            avatar: '',
-                            availability: 'Disponible',
-                            skills: ['Ingeniería'],
-                            customPermissions: getDefaultPermissionsForSpecialty('Ingeniería')
-                          };
-                          await setDoc(doc(db, 'engineers', newEngId), cleanUndefined(autoEng));
-                          finalEngId = newEngId;
-                        }
-                      }
-                    }
-
-                    const updatedUserDoc: AppUser = {
-                      ...existing,
-                      uid,
-                      role,
-                      ...(finalEngId ? { engineerId: finalEngId } : { engineerId: undefined })
-                    };
-                    await setDoc(doc(db, 'users', uid), cleanUndefined(updatedUserDoc));
-                    setAllRegisteredUsers(prev => {
-                      const idx = prev.findIndex(u => u.uid === uid);
-                      if (idx >= 0) {
-                        const copy = [...prev];
-                        copy[idx] = updatedUserDoc;
-                        return copy;
-                      }
-                      return [...prev, updatedUserDoc];
-                    });
-                    const roleLabel = role === 'admin' ? 'Administrador' : role === 'engineer' ? 'Ingeniero/Técnico' : 'Ventas';
-                    showNotification(`Rol del usuario actualizado a ${roleLabel} con éxito.`, 'success');
-                  } catch (e) {
-                    console.error('Error actualizando rol de usuario:', e);
-                    showNotification('Error al actualizar el rol del usuario.', 'warning');
-                  }
-                }}
+                onUpdateUserRole={handleUpdateUserRole}
               />
             )}
             {activeTab === 'engineer' && (

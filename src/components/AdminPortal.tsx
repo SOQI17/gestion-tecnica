@@ -1513,7 +1513,7 @@ export default function AdminPortal({
   const [newWODurationDays, setNewWODurationDays] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const matchesSearch = (wo: WorkOrder) => {
+  const matchesSearch = React.useCallback((wo: WorkOrder) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase().trim();
     
@@ -1542,7 +1542,7 @@ export default function AdminPortal({
       type.includes(q) ||
       notes.includes(q)
     );
-  };
+  }, [searchQuery, engineers, clients]);
 
   // CSV Import states
   const [isImporterOpen, setIsImporterOpen] = useState(false);
