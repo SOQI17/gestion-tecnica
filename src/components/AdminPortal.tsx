@@ -3438,12 +3438,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 }
               }, 120);
             }}
-            className="cal-day-cell min-h-[115px] p-2 bg-slate-50/60 flex flex-col justify-between cursor-pointer hover:bg-indigo-50/20 transition-colors"
+            className="cal-day-cell min-h-[115px] p-2 bg-slate-100/70 border border-dashed border-slate-200/80 flex flex-col justify-between cursor-pointer hover:bg-indigo-50/30 transition-colors opacity-75 hover:opacity-100"
           >
             <div className="flex justify-between items-center w-full">
-              <span className="font-mono text-xs font-black text-slate-400">{prevDay}</span>
+              <span className="font-mono text-xs font-black text-slate-400 opacity-60">{prevDay}</span>
               {prevDayOrders.length > 0 && (
-                <span className="bg-slate-200 text-slate-500 font-bold text-[8px] px-1 rounded-full">
+                <span className="bg-slate-200 text-slate-500 font-bold text-[8px] px-1 rounded-full opacity-60">
                   {prevDayOrders.length}
                 </span>
               )}
@@ -3455,7 +3455,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 return (
                   <div
                     key={`pv-vac-${v.id}`}
-                    className={`text-[8.5px] leading-tight p-1 rounded font-bold truncate flex items-center gap-1 select-none opacity-85 ${
+                    className={`text-[8.5px] leading-tight p-1 rounded font-bold truncate flex items-center gap-1 select-none opacity-50 hover:opacity-100 transition-opacity ${
                       isFeriado
                         ? 'bg-red-600 text-white border border-red-700 font-black'
                         : 'bg-teal-50 border-teal-200 border-l-4 border-l-teal-500 text-teal-900'
@@ -3474,7 +3474,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <div
                     key={`pv-st-${st.id}`}
                     onClick={(e) => { e.stopPropagation(); setInfoScheduledTraining(st); }}
-                    className="text-[8.5px] leading-tight p-1 rounded bg-purple-50 hover:bg-purple-100 border border-purple-200 border-l-4 border-l-purple-600 text-purple-950 font-bold truncate flex items-center gap-1 select-none cursor-pointer"
+                    className="text-[8.5px] leading-tight p-1 rounded bg-purple-50 hover:bg-purple-100 border border-purple-200 border-l-4 border-l-purple-600 text-purple-950 font-bold truncate flex items-center gap-1 select-none cursor-pointer opacity-50 hover:opacity-100 transition-opacity"
                     title={`Capacitación: ${st.title} (${st.location}) - ${eng?.name || 'Técnico'}`}
                   >
                     <span>🎓</span>
@@ -3498,7 +3498,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       setSelectedContractForDetails(commitment.contract);
                       setIsContractDetailsModalOpen(true);
                     }}
-                    className={`text-[8.5px] leading-tight p-1.5 rounded mb-1 text-left border transition-all cursor-pointer font-bold flex flex-col hover:shadow-xs select-none ${badgeBg}`}
+                    className={`text-[8.5px] leading-tight p-1.5 rounded mb-1 text-left border transition-all cursor-pointer font-bold flex flex-col hover:shadow-xs select-none opacity-50 hover:opacity-100 ${badgeBg}`}
                     title={`Contrato: ${commitment.contract.id} - ${commitment.client?.name || ''}`}
                   >
                     <div className="flex items-center justify-between">
@@ -3531,7 +3531,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 return (
                   <div
                     key={`pv-wo-${wo.id}`}
-                    className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium cursor-pointer hover:shadow-sm select-none ${badgeBg} ${borderLClass}`}
+                    className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium cursor-pointer hover:shadow-sm select-none opacity-45 saturate-50 hover:opacity-100 hover:saturate-100 ${badgeBg} ${borderLClass}`}
                     onClick={e => { e.stopPropagation(); setInfoWO(wo); }}
                     title={`${clientDisplayName} - ${wo.equipmentName}`}
                   >
@@ -3917,12 +3917,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 }
               }, 200);
             }}
-            className="cal-day-cell min-h-[115px] p-2 bg-slate-50/60 flex flex-col justify-between cursor-pointer hover:bg-indigo-50/20 transition-colors"
+            className="cal-day-cell min-h-[115px] p-2 bg-slate-100/70 border border-dashed border-slate-200/80 flex flex-col justify-between cursor-pointer hover:bg-indigo-50/30 transition-colors opacity-75 hover:opacity-100"
           >
             <div className="flex justify-between items-center w-full">
-              <span className="font-mono text-xs font-black text-slate-400">{n}</span>
+              <span className="font-mono text-xs font-black text-slate-400 opacity-60">{n}</span>
               {nextDayOrders.length > 0 && (
-                <span className="bg-slate-200 text-slate-500 font-bold text-[8px] px-1 rounded-full">
+                <span className="bg-slate-200 text-slate-500 font-bold text-[8px] px-1 rounded-full opacity-60">
                   {nextDayOrders.length}
                 </span>
               )}
@@ -3934,7 +3934,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 return (
                   <div
                     key={`nv-vac-${v.id}`}
-                    className={`text-[8.5px] leading-tight p-1 rounded font-bold truncate flex items-center gap-1 select-none opacity-85 ${
+                    className={`text-[8.5px] leading-tight p-1 rounded font-bold truncate flex items-center gap-1 select-none opacity-50 hover:opacity-100 transition-opacity ${
                       isFeriado
                         ? 'bg-red-600 text-white border border-red-700 font-black'
                         : 'bg-teal-50 border-teal-200 border-l-4 border-l-teal-500 text-teal-900'
@@ -3962,7 +3962,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       setSelectedContractForDetails(commitment.contract);
                       setIsContractDetailsModalOpen(true);
                     }}
-                    className={`text-[8.5px] leading-tight p-1.5 rounded mb-1 text-left border transition-all cursor-pointer font-bold flex flex-col hover:shadow-xs select-none ${badgeBg}`}
+                    className={`text-[8.5px] leading-tight p-1.5 rounded mb-1 text-left border transition-all cursor-pointer font-bold flex flex-col hover:shadow-xs select-none opacity-50 hover:opacity-100 ${badgeBg}`}
                     title={`Contrato: ${commitment.contract.id} - ${commitment.client?.name || ''}`}
                   >
                     <div className="flex items-center justify-between">
@@ -3995,7 +3995,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 return (
                   <div
                     key={`nv-wo-${wo.id}`}
-                    className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium cursor-pointer hover:shadow-sm select-none ${badgeBg} ${borderLClass}`}
+                    className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium cursor-pointer hover:shadow-sm select-none opacity-45 saturate-50 hover:opacity-100 hover:saturate-100 ${badgeBg} ${borderLClass}`}
                     onClick={e => { e.stopPropagation(); setInfoWO(wo); }}
                     title={`${clientDisplayName} - ${wo.equipmentName}`}
                   >
