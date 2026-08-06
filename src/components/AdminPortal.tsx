@@ -1676,7 +1676,7 @@ export default function AdminPortal({
     return isReorganizePreviewMode && previewWorkOrders ? previewWorkOrders : workOrders;
   }, [isReorganizePreviewMode, previewWorkOrders, workOrders]);
 
-  // Schedule Conflict Detection
+  // Schedule Conflict Detection (scoped to the currently selected calendar month & year)
   const { conflictingWOIds, conflictingDates } = React.useMemo(() => {
     const confWOs = new Set<string>();
     const confDates = new Set<string>();
@@ -1686,6 +1686,11 @@ export default function AdminPortal({
       if (wo.status === 'Conciliado') return;
       const d = wo.plannedDate;
       if (!d) return;
+
+      // Filter work orders to the selected month & year
+      const dateObj = new Date(d + 'T00:00:00');
+      if (dateObj.getMonth() + 1 !== calendarMonth || dateObj.getFullYear() !== calendarYear) return;
+
       if (!mapByDate.has(d)) mapByDate.set(d, []);
       mapByDate.get(d)!.push(wo);
     });
@@ -1721,6 +1726,11 @@ export default function AdminPortal({
       if (wo.status === 'Conciliado') return;
       const date = wo.plannedDate;
       if (!date) return;
+
+      // Filter work orders to the selected month & year
+      const dateObj = new Date(date + 'T00:00:00');
+      if (dateObj.getMonth() + 1 !== calendarMonth || dateObj.getFullYear() !== calendarYear) return;
+
       const assignedEngs = [wo.engineerId, ...(wo.supportEngineerIds || (wo.supportEngineerId ? [wo.supportEngineerId] : []))].filter(Boolean);
 
       (vacations || []).forEach(v => {
@@ -1736,7 +1746,7 @@ export default function AdminPortal({
     });
 
     return { conflictingWOIds: confWOs, conflictingDates: confDates };
-  }, [activeWorkOrdersList, engineers, vacations]);
+  }, [activeWorkOrdersList, engineers, vacations, calendarMonth, calendarYear]);
 
   const getWoConflictDetails = (wo: Partial<WorkOrder>) => {
     if (!wo.plannedDate || wo.status === 'Conciliado') return null;
