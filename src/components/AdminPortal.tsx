@@ -702,12 +702,15 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
     }
   }
 
+  // 2.5 Explicit contract ID or Notes match check
+  const isExplicitlyForContract = (wo.id && wo.id.includes(con.id)) || (wo.notes && wo.notes.includes(con.id));
+
   // 3. Exact plannedDate match
   if (wo.plannedDate === cleanTargetDate || (wo.plannedDate && wo.plannedDate.startsWith(cleanTargetDate))) {
     return true;
   }
 
-  // 4. Tight Fuzzy plannedDate match (+/- 12 days max, and must be closest target date)
+  // 4. Tight Fuzzy plannedDate match (+/- 14 days max, and must be closest target date for the SAME equipment)
   if (wo.plannedDate) {
     const cleanWoDate = wo.plannedDate.split('T')[0].trim();
     const woParts = cleanWoDate.split('-');
@@ -717,12 +720,25 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
       const conTime = new Date(Number(conParts[0]), Number(conParts[1]) - 1, Number(conParts[2])).getTime();
       if (!isNaN(woTime) && !isNaN(conTime)) {
         const diffDays = Math.abs(woTime - conTime) / 86400000;
-        if (diffDays <= 12) {
-          // Verify cleanTargetDate is the CLOSEST date in con.maintenanceDates for this wo
+        const maxAllowedDiff = isExplicitlyForContract ? 30 : 14;
+        if (diffDays <= maxAllowedDiff) {
+          // Verify cleanTargetDate is the CLOSEST date in con.maintenanceDates for this specific equipment
           if (con.maintenanceDates && con.maintenanceDates.length > 1) {
+            const wEqClean = wo.equipmentName ? wo.equipmentName.trim().toLowerCase() : '';
             const isClosest = con.maintenanceDates.every(otherRaw => {
-              const otherClean = otherRaw.split('|')[0].trim();
-              const oParts = otherClean.split('-');
+              const [otherClean, otherEq] = otherRaw.split('|');
+              const targetEqStr = eqNameInEntry || wEqClean;
+              const otherEqStr = otherEq ? otherEq.trim().toLowerCase() : '';
+
+              // If both entries specify an equipment, do not compare dates across DIFFERENT equipment!
+              if (targetEqStr && otherEqStr) {
+                const tEq = targetEqStr.trim().toLowerCase();
+                if (!tEq.includes(otherEqStr) && !otherEqStr.includes(tEq)) {
+                  return true; // Skip entries for other equipment!
+                }
+              }
+
+              const oParts = otherClean.trim().split('-');
               if (oParts.length !== 3) return true;
               const oTime = new Date(Number(oParts[0]), Number(oParts[1]) - 1, Number(oParts[2])).getTime();
               if (isNaN(oTime)) return true;
