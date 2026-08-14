@@ -860,6 +860,14 @@ export default function App() {
     }
   }, []);
 
+  const handleToggleClientConfirmed = useCallback(async (woId: string, confirmed: boolean) => {
+    try {
+      await setDoc(doc(db, 'workOrders', woId), { clientConfirmed: confirmed }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `workOrders/${woId}`);
+    }
+  }, []);
+
   const handleUpdateWorkOrder = useCallback(async (updatedWO: WorkOrder) => {
     try {
       await setDoc(doc(db, 'workOrders', updatedWO.id), cleanUndefined(updatedWO));
@@ -1406,6 +1414,7 @@ export default function App() {
                 allRegisteredUsers={allRegisteredUsers}
                 onRegisterNewUser={handleRegisterNewUser}
                 onUpdateUserRole={handleUpdateUserRole}
+                onToggleClientConfirmed={handleToggleClientConfirmed}
               />
             )}
             {activeTab === 'engineer' && (

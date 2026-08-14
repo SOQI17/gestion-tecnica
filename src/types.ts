@@ -100,6 +100,7 @@ export interface WorkOrder {
   notes: string;
   durationDays?: number; // duration in days
   isEquipmentDown?: boolean; // indicates if the equipment is down / stopped
+  clientConfirmed?: boolean; // true when client has confirmed the scheduled visit
 }
 
 export interface MaterialUsed {

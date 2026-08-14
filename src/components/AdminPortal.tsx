@@ -228,6 +228,7 @@ interface AdminPortalProps {
     sede?: string;
     phone?: string;
   }) => Promise<void> | void;
+  onToggleClientConfirmed?: (woId: string, confirmed: boolean) => void;
 }
 
 const getEndDateStr = (startDateStr: string, duration: number): string => {
@@ -996,7 +997,8 @@ export default function AdminPortal({
   onBulkUploadContractsGE,
   allRegisteredUsers,
   onUpdateUserRole,
-  onRegisterNewUser
+  onRegisterNewUser,
+  onToggleClientConfirmed
 }: AdminPortalProps) {
   const effectivePermissions: UserPermissions = useMemo(() => {
     if (userRole === 'admin' && !currentUserPermissions) {
@@ -3346,10 +3348,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     syncContractDatesForMovedWorkOrder(wo.clientId, oldDateStr, targetDateStr, wo.equipmentName);
   };
 
-  // Marzo 2026 starts on a Sunday. With standard columns: Lunes, Martes... Domingo:
-  // We insert 6 blank placeholders to slide day 1 into Sunday (column 7).
-  const renderCalendarDays = () => {
-    const calendarDays = [];
+  // Memoized calendar day cells — only recomputes when month/orders/contracts etc. change
+  const calendarDays = useMemo(() => {
+    const days = [];
 
     const getContractCommitmentsForDate = (dateStr: string) => {
       const dayCommitments: { contract: Contract; client: Client | undefined; isQc: boolean; isDone: boolean; woStatus: string | null }[] = [];
@@ -3434,7 +3435,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           v.status === 'Aprobado' && prevDateStr >= v.startDate && prevDateStr <= v.endDate
         );
 
-        calendarDays.push(
+        days.push(
           <div
             key={`prev-${prevDay}`}
             onClick={() => {
@@ -3571,15 +3572,32 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </p>
                     <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-200/40">
                       <span className="text-[7.5px] text-slate-450 font-bold tracking-tight select-none no-print">Detalles / Editar</span>
-                      <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto ${
-                        wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200'
-                        : wo.status === 'Conciliado' ? 'bg-emerald-100/50 text-emerald-805 border-emerald-200'
-                        : wo.status === 'Reportado' ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
-                        : wo.status === 'Realizado' ? 'bg-blue-100/50 text-blue-805 border-blue-200'
-                        : wo.status === 'En Proceso' ? 'bg-sky-100/50 text-sky-850 border-sky-200'
-                        : wo.type === 'Preventivo' ? 'bg-orange-200/70 text-orange-900 border-orange-300'
-                        : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
-                      }`}>{wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}</span>
+                      {userRole === 'admin' && wo.status === 'Pendiente' && !wo.isEquipmentDown ? (
+                        <button
+                          type="button"
+                          onClick={e => { e.stopPropagation(); onToggleClientConfirmed && onToggleClientConfirmed(wo.id, !wo.clientConfirmed); }}
+                          className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto cursor-pointer transition-all duration-200 no-print ${
+                            wo.clientConfirmed
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
+                              : wo.type === 'Preventivo'
+                              ? 'bg-orange-100 text-orange-800 border-orange-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
+                              : 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
+                          }`}
+                          title={wo.clientConfirmed ? 'Click para marcar como Pendiente' : 'Click para confirmar visita con cliente'}
+                        >
+                          {wo.clientConfirmed ? '✓ Confirmado' : 'Pendiente'}
+                        </button>
+                      ) : (
+                        <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto ${
+                          wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200'
+                          : wo.status === 'Conciliado' ? 'bg-emerald-100/50 text-emerald-805 border-emerald-200'
+                          : wo.status === 'Reportado' ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
+                          : wo.status === 'Realizado' ? 'bg-blue-100/50 text-blue-805 border-blue-200'
+                          : wo.status === 'En Proceso' ? 'bg-sky-100/50 text-sky-850 border-sky-200'
+                          : wo.type === 'Preventivo' ? 'bg-orange-200/70 text-orange-900 border-orange-300'
+                          : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
+                        }`}>{wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}</span>
+                      )}
                     </div>
                   </div>
                 );
@@ -3604,7 +3622,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       const hasEngineerVacation = dayVacations.some(v => v.engineerId !== 'FERIADO' && !v.notes?.toLowerCase().includes('feriado'));
       const isSelected = selectedDay === day;
 
-      calendarDays.push(
+      days.push(
         <div
           key={day}
           id={`cal-day-${day}`}
@@ -3871,23 +3889,40 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   {/* Status Indicator */}
                   <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-200/40">
                     <span className="text-[7.5px] text-slate-450 font-bold tracking-tight select-none no-print">Detalles / Editar</span>
-                    <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto print:ml-auto ${
-                      wo.isEquipmentDown
-                        ? 'bg-red-100 text-red-800 border-red-200'
-                        : wo.status === 'Conciliado'
-                        ? 'bg-emerald-100/50 text-emerald-805 border-emerald-200'
-                        : wo.status === 'Reportado'
-                        ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
-                        : wo.status === 'Realizado'
-                        ? 'bg-blue-100/50 text-blue-805 border-blue-200'
-                        : wo.status === 'En Proceso'
-                        ? 'bg-sky-100/50 text-sky-850 border-sky-200'
-                        : wo.type === 'Preventivo'
-                        ? 'bg-orange-200/70 text-orange-900 border-orange-300'
-                        : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
-                    }`}>
-                      {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
-                    </span>
+                    {userRole === 'admin' && wo.status === 'Pendiente' && !wo.isEquipmentDown ? (
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); onToggleClientConfirmed && onToggleClientConfirmed(wo.id, !wo.clientConfirmed); }}
+                        className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto cursor-pointer transition-all duration-200 no-print print:ml-auto ${
+                          wo.clientConfirmed
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
+                            : wo.type === 'Preventivo'
+                            ? 'bg-orange-100 text-orange-800 border-orange-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
+                            : 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
+                        }`}
+                        title={wo.clientConfirmed ? 'Click para marcar como Pendiente' : 'Click para confirmar visita con cliente'}
+                      >
+                        {wo.clientConfirmed ? '✓ Confirmado' : 'Pendiente'}
+                      </button>
+                    ) : (
+                      <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto print:ml-auto ${
+                        wo.isEquipmentDown
+                          ? 'bg-red-100 text-red-800 border-red-200'
+                          : wo.status === 'Conciliado'
+                          ? 'bg-emerald-100/50 text-emerald-805 border-emerald-200'
+                          : wo.status === 'Reportado'
+                          ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
+                          : wo.status === 'Realizado'
+                          ? 'bg-blue-100/50 text-blue-805 border-blue-200'
+                          : wo.status === 'En Proceso'
+                          ? 'bg-sky-100/50 text-sky-850 border-sky-200'
+                          : wo.type === 'Preventivo'
+                          ? 'bg-orange-200/70 text-orange-900 border-orange-300'
+                          : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
+                      }`}>
+                        {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -3914,7 +3949,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           v.status === 'Aprobado' && nextDateStr >= v.startDate && nextDateStr <= v.endDate
         );
 
-        calendarDays.push(
+        days.push(
           <div
             key={`next-${n}`}
             onClick={() => {
@@ -4035,15 +4070,32 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </p>
                     <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-200/40">
                       <span className="text-[7.5px] text-slate-450 font-bold tracking-tight select-none no-print">Detalles / Editar</span>
-                      <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto ${
-                        wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200'
-                        : wo.status === 'Conciliado' ? 'bg-emerald-100/50 text-emerald-805 border-emerald-200'
-                        : wo.status === 'Reportado' ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
-                        : wo.status === 'Realizado' ? 'bg-blue-100/50 text-blue-805 border-blue-200'
-                        : wo.status === 'En Proceso' ? 'bg-sky-100/50 text-sky-850 border-sky-200'
-                        : wo.type === 'Preventivo' ? 'bg-orange-200/70 text-orange-900 border-orange-300'
-                        : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
-                      }`}>{wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}</span>
+                      {userRole === 'admin' && wo.status === 'Pendiente' && !wo.isEquipmentDown ? (
+                        <button
+                          type="button"
+                          onClick={e => { e.stopPropagation(); onToggleClientConfirmed && onToggleClientConfirmed(wo.id, !wo.clientConfirmed); }}
+                          className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto cursor-pointer transition-all duration-200 no-print ${
+                            wo.clientConfirmed
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
+                              : wo.type === 'Preventivo'
+                              ? 'bg-orange-100 text-orange-800 border-orange-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
+                              : 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
+                          }`}
+                          title={wo.clientConfirmed ? 'Click para marcar como Pendiente' : 'Click para confirmar visita con cliente'}
+                        >
+                          {wo.clientConfirmed ? '✓ Confirmado' : 'Pendiente'}
+                        </button>
+                      ) : (
+                        <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto ${
+                          wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200'
+                          : wo.status === 'Conciliado' ? 'bg-emerald-100/50 text-emerald-805 border-emerald-200'
+                          : wo.status === 'Reportado' ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
+                          : wo.status === 'Realizado' ? 'bg-blue-100/50 text-blue-805 border-blue-200'
+                          : wo.status === 'En Proceso' ? 'bg-sky-100/50 text-sky-850 border-sky-200'
+                          : wo.type === 'Preventivo' ? 'bg-orange-200/70 text-orange-900 border-orange-300'
+                          : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
+                        }`}>{wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}</span>
+                      )}
                     </div>
                   </div>
                 );
@@ -4054,8 +4106,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       }
     }
 
-    return calendarDays;
-  };
+    return days;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWorkOrdersList, calendarMonth, calendarYear, contracts, clients, engineers, workOrders, vacations, scheduledTrainings, conflictingWOIds, reassignedWOIds, highlightedEngineerId, searchQuery, filterOnlyConflicting, userRole, onToggleClientConfirmed]);
 
   // Filtered orders for the lists
   const filteredOrders = workOrders.filter(wo => {
@@ -8661,8 +8714,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
         {/* Standalone Calendar Grid split by weeks */}
         {(() => {
-          // renderCalendarDays already includes prev/next month overflow days
-          const paddedDays = renderCalendarDays();
+          const paddedDays = calendarDays;
           const weeks = [];
           for (let i = 0; i < paddedDays.length; i += 7) {
             weeks.push(paddedDays.slice(i, i + 7));
@@ -11096,7 +11148,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               {/* Calendar grid split by weeks to allow horizontal 1-page-per-week print layout */}
               {(() => {
-                const flatDays = renderCalendarDays();
+                const flatDays = calendarDays;
                 const totalItems = flatDays.length;
                 const remainder = totalItems % 7;
                 const paddingCount = remainder === 0 ? 0 : 7 - remainder;
