@@ -757,6 +757,59 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
   return false;
 };
 
+const isWorkOrderQc = (wo: WorkOrder, contractsList: Contract[] = []) => {
+  if (!wo) return false;
+  
+  // 1. Explicit QC in notes or type
+  const notesClean = (wo.notes || '').toLowerCase();
+  if (
+    notesClean.includes('control de calidad') || 
+    notesClean.includes('control calidad') || 
+    notesClean.includes('visita de control') || 
+    notesClean.includes('visita qc') ||
+    notesClean.includes('qc')
+  ) {
+    return true;
+  }
+  if (wo.type === 'Inspección') {
+    return true;
+  }
+
+  // 2. Matching QC date of a contract for this client
+  if (contractsList && contractsList.length > 0) {
+    const clientContracts = contractsList.filter(c => 
+      c.clientId === wo.clientId || 
+      (c.clientId && wo.clientId && c.clientId.trim().toLowerCase() === wo.clientId.trim().toLowerCase())
+    );
+
+    for (const con of clientContracts) {
+      if (!con.maintenanceDates || con.maintenanceDates.length === 0) continue;
+
+      const isMatchingQc = con.maintenanceDates.some((rawDate, idx) => {
+        const [cleanDate, specificEq] = rawDate.split('|');
+        if (!isWoMatchingContractDate(wo, con, rawDate, contractsList)) return false;
+
+        if (con.qcDates && con.qcDates.length > 0) {
+          return con.qcDates.some(qd => {
+            const [qDate, qEq] = qd.split('|');
+            if (specificEq && qEq) return qDate === cleanDate && qEq === specificEq;
+            return qd === rawDate || qd === cleanDate || qDate === cleanDate;
+          });
+        }
+        if (con.qcDate) {
+          return con.qcDate === cleanDate || con.qcDate === rawDate;
+        }
+        // Fallback default: last date of contract
+        return idx === con.maintenanceDates.length - 1;
+      });
+
+      if (isMatchingQc) return true;
+    }
+  }
+
+  return false;
+};
+
 const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], allContracts: Contract[] = []) => {
   if (!con.maintenanceDates || con.maintenanceDates.length === 0) {
     return { 
@@ -3535,24 +3588,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   ? wo.supportEngineerIds
                   : (wo.supportEngineerId ? [wo.supportEngineerId] : []);
                 const engColor = eng ? getEngineerColorClasses(eng.id) : null;
+                const isWoQc = isWorkOrderQc(wo, contracts);
                 const borderLClass = wo.isEquipmentDown
                   ? 'border-l-4 border-l-red-500'
+                  : isWoQc
+                  ? 'border-l-4 border-l-purple-600'
                   : (engColor ? `border-l-4 ${engColor.borderL}` : '');
-                let badgeBg = wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150';
+                let badgeBg = isWoQc ? 'bg-purple-50 text-purple-955 border border-purple-200' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150');
                 if (wo.isEquipmentDown) badgeBg = 'bg-red-50 text-red-955 border border-red-150';
                 else if (wo.status === 'Conciliado') badgeBg = 'bg-emerald-50 text-emerald-955 border border-emerald-150';
                 else if (wo.status === 'Reportado') badgeBg = 'bg-indigo-50 text-indigo-955 border border-indigo-150';
                 else if (wo.status === 'Realizado') badgeBg = 'bg-blue-50 text-blue-955 border border-blue-150';
                 else if (wo.status === 'En Proceso') badgeBg = 'bg-sky-50 text-sky-955 border border-sky-150';
-                else if (wo.status === 'Pendiente') badgeBg = wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150';
+                else if (wo.status === 'Pendiente') badgeBg = isWoQc ? 'bg-purple-50 text-purple-955 border border-purple-200' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150');
                 return (
                   <div
                     key={`pv-wo-${wo.id}`}
                     className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium cursor-pointer hover:shadow-sm select-none opacity-45 saturate-50 hover:opacity-100 hover:saturate-100 ${badgeBg} ${borderLClass}`}
                     onClick={e => { e.stopPropagation(); setInfoWO(wo); }}
-                    title={`${clientDisplayName} - ${wo.equipmentName}`}
+                    title={`${clientDisplayName} - ${wo.equipmentName}${isWoQc ? ' [Control de Calidad]' : ''}`}
                   >
-                    <p className="font-black truncate text-slate-900 leading-none mb-0.5">{clientDisplayName}</p>
+                    <div className="flex items-center justify-between font-black truncate text-slate-900 leading-none mb-0.5">
+                      <span className="truncate">{clientDisplayName}</span>
+                      {isWoQc && (
+                        <span className="bg-purple-700 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1 shadow-2xs border border-purple-800 flex items-center gap-0.5 animate-pulse" title="Visita de Control de Calidad">
+                          📋 CONTROL CALIDAD
+                        </span>
+                      )}
+                    </div>
                     {wo.plannedTime && (
                       <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">⏰ {wo.plannedTime}</p>
                     )}
@@ -3759,9 +3822,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               const supportEng = wo.supportEngineerId ? engineers.find(e => e.id === wo.supportEngineerId) : null;
               const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
               const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
-              let badgeBg = wo.type === 'Preventivo'
+              const isWoQc = isWorkOrderQc(wo, contracts);
+              let badgeBg = isWoQc
+                ? 'bg-purple-50/90 hover:bg-purple-100 text-purple-955 border border-purple-200'
+                : (wo.type === 'Preventivo'
                 ? 'bg-orange-100/80 hover:bg-orange-100 text-orange-955 border border-orange-200'
-                : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150';
+                : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150');
               if (wo.isEquipmentDown) {
                 badgeBg = 'bg-red-50 hover:bg-red-100 text-red-955 border border-red-150';
               } else if (wo.status === 'Conciliado') {
@@ -3773,9 +3839,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               } else if (wo.status === 'En Proceso') {
                 badgeBg = 'bg-sky-50 hover:bg-sky-100 text-sky-955 border border-sky-150';
               } else if (wo.status === 'Pendiente') {
-                badgeBg = wo.type === 'Preventivo'
+                badgeBg = isWoQc
+                  ? 'bg-purple-50/90 hover:bg-purple-100 text-purple-955 border border-purple-200'
+                  : (wo.type === 'Preventivo'
                   ? 'bg-orange-100/80 hover:bg-orange-100 text-orange-955 border border-orange-200'
-                  : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150';
+                  : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150');
               }
 
               const matchesQuery = searchQuery ? matchesSearch(wo) : true;
@@ -3794,6 +3862,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               const engColor = eng ? getEngineerColorClasses(eng.id) : null;
               const borderLClass = wo.isEquipmentDown
                 ? 'border-l-4 border-l-red-500'
+                : isWoQc
+                ? 'border-l-4 border-l-purple-600'
                 : (engColor ? `border-l-4 ${engColor.borderL}` : '');
               let cardStyle = `${badgeBg} ${borderLClass}`;
               let ringStyle = '';
@@ -3838,7 +3908,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     e.dataTransfer.effectAllowed = "move";
                   }}
                   className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium leading-normal cursor-pointer hover:shadow-sm select-none ${cardStyle} ${ringStyle}`}
-                  title={`${clientDisplayName} - ${wo.equipmentName} ${wo.plannedTime ? `(${wo.plannedTime})` : ''} (${eng?.name || ''}${supportNamesStr ? ` [Apoyo: ${supportNamesStr}]` : ''})${conflictDetail ? ` - ⚠️ ${conflictDetail.label}` : ''}`}
+                  title={`${clientDisplayName} - ${wo.equipmentName} ${wo.plannedTime ? `(${wo.plannedTime})` : ''} (${eng?.name || ''}${supportNamesStr ? ` [Apoyo: ${supportNamesStr}]` : ''})${isWoQc ? ' [Control de Calidad]' : ''}${conflictDetail ? ` - ⚠️ ${conflictDetail.label}` : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setInfoWO(wo);
@@ -3846,6 +3916,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 >
                   <div className="flex items-center justify-between font-black truncate text-slate-900 leading-none mb-0.5">
                     <span className="truncate">{clientDisplayName}</span>
+                    {isWoQc && (
+                      <span className="bg-purple-700 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1 shadow-2xs border border-purple-800 flex items-center gap-0.5 animate-pulse" title="Visita de Control de Calidad">
+                        📋 CONTROL CALIDAD
+                      </span>
+                    )}
                     {conflictDetail && (
                       <span className={`font-extrabold text-[7.5px] px-1 py-0.5 rounded animate-pulse shrink-0 ml-1 ${
                         conflictDetail.type === 'vacation' || conflictDetail.type === 'feriado'
@@ -4033,24 +4108,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   ? wo.supportEngineerIds
                   : (wo.supportEngineerId ? [wo.supportEngineerId] : []);
                 const engColor = eng ? getEngineerColorClasses(eng.id) : null;
+                const isWoQc = isWorkOrderQc(wo, contracts);
                 const borderLClass = wo.isEquipmentDown
                   ? 'border-l-4 border-l-red-500'
+                  : isWoQc
+                  ? 'border-l-4 border-l-purple-600'
                   : (engColor ? `border-l-4 ${engColor.borderL}` : '');
-                let badgeBg = wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150';
+                let badgeBg = isWoQc ? 'bg-purple-50 text-purple-955 border border-purple-200' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150');
                 if (wo.isEquipmentDown) badgeBg = 'bg-red-50 text-red-955 border border-red-150';
                 else if (wo.status === 'Conciliado') badgeBg = 'bg-emerald-50 text-emerald-955 border border-emerald-150';
                 else if (wo.status === 'Reportado') badgeBg = 'bg-indigo-50 text-indigo-955 border border-indigo-150';
                 else if (wo.status === 'Realizado') badgeBg = 'bg-blue-50 text-blue-955 border border-blue-150';
                 else if (wo.status === 'En Proceso') badgeBg = 'bg-sky-50 text-sky-955 border border-sky-150';
-                else if (wo.status === 'Pendiente') badgeBg = wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150';
+                else if (wo.status === 'Pendiente') badgeBg = isWoQc ? 'bg-purple-50 text-purple-955 border border-purple-200' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150');
                 return (
                   <div
                     key={`nv-wo-${wo.id}`}
                     className={`text-[9.5px] leading-tight p-1.5 rounded mb-1 text-left transition-all font-medium cursor-pointer hover:shadow-sm select-none opacity-45 saturate-50 hover:opacity-100 hover:saturate-100 ${badgeBg} ${borderLClass}`}
                     onClick={e => { e.stopPropagation(); setInfoWO(wo); }}
-                    title={`${clientDisplayName} - ${wo.equipmentName}`}
+                    title={`${clientDisplayName} - ${wo.equipmentName}${isWoQc ? ' [Control de Calidad]' : ''}`}
                   >
-                    <p className="font-black truncate text-slate-900 leading-none mb-0.5">{clientDisplayName}</p>
+                    <div className="flex items-center justify-between font-black truncate text-slate-900 leading-none mb-0.5">
+                      <span className="truncate">{clientDisplayName}</span>
+                      {isWoQc && (
+                        <span className="bg-purple-700 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1 shadow-2xs border border-purple-800 flex items-center gap-0.5 animate-pulse" title="Visita de Control de Calidad">
+                          📋 CONTROL CALIDAD
+                        </span>
+                      )}
+                    </div>
                     {wo.plannedTime && (
                       <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">⏰ {wo.plannedTime}</p>
                     )}
