@@ -760,20 +760,18 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
 const isWorkOrderQc = (wo: WorkOrder, contractsList: Contract[] = []) => {
   if (!wo) return false;
   
-  // 1. Explicit QC in notes or type
+  // 1. Explicit QC phrase in notes only (not just "qc" substring to avoid false positives)
   const notesClean = (wo.notes || '').toLowerCase();
   if (
     notesClean.includes('control de calidad') || 
     notesClean.includes('control calidad') || 
     notesClean.includes('visita de control') || 
     notesClean.includes('visita qc') ||
-    notesClean.includes('qc')
+    notesClean.includes('(visita de control de calidad)')
   ) {
     return true;
   }
-  if (wo.type === 'Inspección') {
-    return true;
-  }
+  // NOTE: wo.type === 'Inspección' is NOT a QC indicator — Inspección is a separate service type
 
   // 2. Matching QC date of a contract for this client
   if (contractsList && contractsList.length > 0) {
