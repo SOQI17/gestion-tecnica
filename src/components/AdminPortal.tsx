@@ -44,6 +44,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl } from '../utils/cloudinary';
 
+const cleanStr = (s: string) => (s || '')
+  .toLowerCase()
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .replace(/[^a-z0-9]/g, " ")
+  .replace(/\s+/g, " ")
+  .trim();
+
 export const DEFAULT_GLOBAL_ROLE_TEMPLATES: RoleTemplates = {
   Ventas: {
     canViewWorkOrders: true,
@@ -5302,13 +5310,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     reader.readAsText(file);
   };
 
-  const cleanStr = (s: string) => (s || '')
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 
   const findBestEquipmentMatch = (
     instNameInput: string,
