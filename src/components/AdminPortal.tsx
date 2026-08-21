@@ -5711,7 +5711,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           });
           
           const eqName = eqNameInEntry || (con.equipmentItems && con.equipmentItems.length > 0
-            ? con.equipmentItems[0].name
+            ? (con.equipmentItems.length === 1 ? con.equipmentItems[0].name : con.equipmentItems[idx % con.equipmentItems.length]?.name || con.equipmentItems[0].name)
             : 'Equipos según contrato');
 
           const newWO: WorkOrder = {
@@ -18143,10 +18143,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         if (!confirm(`¿Desea agendar automáticamente ${unagendedDates.length} visitas pendientes en el calendario de Agendamiento?`)) return;
 
                         const defaultEngineer = engineers[0]?.id || 'ENG-001';
-                        for (const rawDate of unagendedDates) {
+                        for (let uIdx = 0; uIdx < unagendedDates.length; uIdx++) {
+                          const rawDate = unagendedDates[uIdx];
                           const cleanDate = rawDate.split('|')[0].trim();
                           const eqNameInEntry = rawDate.split('|')[1]?.trim();
-                          const eqName = eqNameInEntry || (selectedContractForDetails.equipmentItems && selectedContractForDetails.equipmentItems.length > 0 ? selectedContractForDetails.equipmentItems[0].name : 'Equipos según contrato');
+                          const eqName = eqNameInEntry || (selectedContractForDetails.equipmentItems && selectedContractForDetails.equipmentItems.length > 0 
+                            ? (selectedContractForDetails.equipmentItems.length === 1 ? selectedContractForDetails.equipmentItems[0].name : selectedContractForDetails.equipmentItems[uIdx % selectedContractForDetails.equipmentItems.length]?.name || selectedContractForDetails.equipmentItems[0].name)
+                            : 'Equipos según contrato');
                           
                           const woId = `WO-MTO-${selectedContractForDetails.id}-${cleanDate}-${Math.floor(Math.random() * 1000)}`;
                           const activeQcDates = (selectedContractForDetails.qcDates && selectedContractForDetails.qcDates.length > 0)
