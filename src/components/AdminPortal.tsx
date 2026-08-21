@@ -1243,6 +1243,78 @@ export default function AdminPortal({
   const [registryCsvError, setRegistryCsvError] = useState<string | null>(null);
   const [infoScheduledTraining, setInfoScheduledTraining] = useState<ScheduledTraining | null>(null);
 
+  // Memoized equipment auto-fill suggestions for Registry Modal (combines maintenanceRegistries & contract equipmentItems)
+  const suggestedRegistryEquipments = useMemo(() => {
+    const normInput = cleanStr(regFormInstitutionName);
+    if (!normInput || normInput.length < 2) return [];
+
+    const stopWords = new Set(['hosp', 'hospital', 'clinica', 'clínica', 'centro', 'basico', 'básico', 'general', 'salud', 'subcentro', 'unidad', 'medica', 'médica', 'instituto', 'san', 'santa', 'de', 'del', 'la', 'el', 'los', 'las']);
+    const tokens = normInput.split(' ').map(t => t.toLowerCase().trim()).filter(t => t.length > 2 && !stopWords.has(t));
+
+    const uniqueEquips: {
+      institutionName: string;
+      eqBrand: string;
+      eqModel: string;
+      eqSerial: string;
+      tuboBrand: string;
+      tuboModel: string;
+      tuboSerial: string;
+    }[] = [];
+
+    const seenKeys = new Set<string>();
+
+    // A) From maintenanceRegistries
+    (maintenanceRegistries || []).forEach(reg => {
+      const regInst = cleanStr(reg.institutionName);
+      const matches = regInst === normInput || normInput.includes(regInst) || regInst.includes(normInput) || (tokens.length > 0 && tokens.some(t => regInst.includes(t)));
+      if (matches && reg.eqBrand && reg.eqBrand !== '-') {
+        const k = `${reg.institutionName.trim()}|${reg.eqBrand.trim()}|${reg.eqModel.trim()}|${reg.eqSerial.trim()}`;
+        if (!seenKeys.has(k)) {
+          seenKeys.add(k);
+          uniqueEquips.push({
+            institutionName: reg.institutionName,
+            eqBrand: reg.eqBrand,
+            eqModel: reg.eqModel,
+            eqSerial: reg.eqSerial,
+            tuboBrand: reg.tuboBrand || '-',
+            tuboModel: reg.tuboModel || '-',
+            tuboSerial: reg.tuboSerial || '-'
+          });
+        }
+      }
+    });
+
+    // B) ALSO from Contracts equipmentItems
+    (contracts || []).forEach(con => {
+      const client = clients.find(c => c.id === con.clientId);
+      const clientName = client ? client.name : (con.clientId || '');
+      const conInst = cleanStr(clientName);
+      const matches = conInst === normInput || normInput.includes(conInst) || conInst.includes(normInput) || (tokens.length > 0 && tokens.some(t => conInst.includes(t)));
+      if (matches && con.equipmentItems && con.equipmentItems.length > 0) {
+        con.equipmentItems.forEach(item => {
+          if (!item.name) return;
+          const brand = item.brand || 'GE';
+          const serial = item.serialNumber || '-';
+          const k = `${clientName.trim()}|${brand.trim()}|${item.name.trim()}|${serial.trim()}`;
+          if (!seenKeys.has(k)) {
+            seenKeys.add(k);
+            uniqueEquips.push({
+              institutionName: clientName,
+              eqBrand: brand,
+              eqModel: item.name,
+              eqSerial: serial,
+              tuboBrand: '-',
+              tuboModel: '-',
+              tuboSerial: '-'
+            });
+          }
+        });
+      }
+    });
+
+    return uniqueEquips;
+  }, [regFormInstitutionName, maintenanceRegistries, contracts, clients]);
+
   const getEngineerVacationConflict = (engId: string, startDate: string, duration: number) => {
     if (!engId || !startDate || !duration) return null;
     const end = getEndDateStr(startDate, duration);
@@ -15804,17 +15876,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         </div>
       )}
 
-      {/* Modal Creación de Registro de Mantenimiento */}
+      {/* Modal Creación / Edición de Registro de Mantenimiento */}
       {isRegistryModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="registry-form-modal">
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                 <FileSpreadsheet className="w-5 h-5 text-pink-500" />
-                <span>Nuevo Registro de Mantenimiento</span>
+                <span>{editingRegistry ? 'Editar Registro de Mantenimiento' : 'Nuevo Registro de Mantenimiento'}</span>
               </h3>
               <button
-                onClick={() => setIsRegistryModalOpen(false)}
+                onClick={() => {
+                  setIsRegistryModalOpen(false);
+                  setEditingRegistry(null);
+                }}
                 className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -15833,80 +15908,39 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   placeholder="Ej. HOSP. ENRIQUE GARCÉS"
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
                 />
-                {(() => {
-                  const normInput = cleanStr(regFormInstitutionName);
-                  if (!normInput || normInput.length < 2) return null;
-
-                  const tokens = normInput.split(' ').filter(t => t.length > 2 && t !== 'hosp' && t !== 'hospital' && t !== 'clinica' && t !== 'centro');
-
-                  const uniqueEquips: {
-                    institutionName: string;
-                    eqBrand: string;
-                    eqModel: string;
-                    eqSerial: string;
-                    tuboBrand: string;
-                    tuboModel: string;
-                    tuboSerial: string;
-                  }[] = [];
-
-                  const seenKeys = new Set<string>();
-
-                  (maintenanceRegistries || []).forEach(reg => {
-                    const regInst = cleanStr(reg.institutionName);
-                    const matches = regInst === normInput || normInput.includes(regInst) || regInst.includes(normInput) || (tokens.length > 0 && tokens.some(t => regInst.includes(t)));
-                    if (matches && reg.eqBrand && reg.eqBrand !== '-') {
-                      const k = `${reg.institutionName.trim()}|${reg.eqBrand.trim()}|${reg.eqModel.trim()}|${reg.eqSerial.trim()}`;
-                      if (!seenKeys.has(k)) {
-                        seenKeys.add(k);
-                        uniqueEquips.push({
-                          institutionName: reg.institutionName,
-                          eqBrand: reg.eqBrand,
-                          eqModel: reg.eqModel,
-                          eqSerial: reg.eqSerial,
-                          tuboBrand: reg.tuboBrand || '-',
-                          tuboModel: reg.tuboModel || '-',
-                          tuboSerial: reg.tuboSerial || '-'
-                        });
-                      }
-                    }
-                  });
-
-                  if (uniqueEquips.length === 0) return null;
-
-                  return (
-                    <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 space-y-1.5 mt-1.5 animate-in fade-in duration-150">
-                      <p className="text-[10px] font-extrabold text-amber-900 uppercase tracking-wider flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                        <span>Equipos registrados anteriormente para este cliente (Clic para autorrellenar):</span>
-                      </p>
-                      <div className="flex flex-wrap gap-1.5 pt-0.5">
-                        {uniqueEquips.slice(0, 6).map((sug, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => {
-                              setRegFormInstitutionName(sug.institutionName);
-                              setRegFormEqBrand(sug.eqBrand);
-                              setRegFormEqModel(sug.eqModel);
-                              setRegFormEqSerial(sug.eqSerial);
-                              setRegFormTuboBrand(sug.tuboBrand);
-                              setRegFormTuboModel(sug.tuboModel);
-                              setRegFormTuboSerial(sug.tuboSerial);
-                            }}
-                            className="text-[10px] bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-950 px-2.5 py-1 rounded-lg font-bold transition-all text-left shadow-2xs cursor-pointer flex items-center gap-1.5 group"
-                            title="Usar estos datos de marca, modelo y serie"
-                          >
-                            <span className="font-mono text-amber-700 bg-amber-100 group-hover:bg-amber-200 px-1 py-0.2 rounded text-[9px]">{sug.eqBrand}</span>
-                            <span>{sug.eqModel}</span>
-                            {sug.eqSerial && sug.eqSerial !== '-' && (
-                              <span className="text-slate-500 font-mono text-[9px]">({sug.eqSerial})</span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                {suggestedRegistryEquipments.length > 0 && (
+                  <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 space-y-1.5 mt-1.5 animate-in fade-in duration-150">
+                    <p className="text-[10px] font-extrabold text-amber-900 uppercase tracking-wider flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Equipos registrados y de cobertura para este cliente (Clic para autorrellenar):</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 pt-0.5 max-h-[140px] overflow-y-auto pr-1">
+                      {suggestedRegistryEquipments.map((sug, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setRegFormInstitutionName(sug.institutionName);
+                            setRegFormEqBrand(sug.eqBrand);
+                            setRegFormEqModel(sug.eqModel);
+                            setRegFormEqSerial(sug.eqSerial);
+                            setRegFormTuboBrand(sug.tuboBrand);
+                            setRegFormTuboModel(sug.tuboModel);
+                            setRegFormTuboSerial(sug.tuboSerial);
+                          }}
+                          className="text-[10px] bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-950 px-2.5 py-1 rounded-lg font-bold transition-all text-left shadow-2xs cursor-pointer flex items-center gap-1.5 group"
+                          title="Usar estos datos de marca, modelo y serie"
+                        >
+                          <span className="font-mono text-amber-700 bg-amber-100 group-hover:bg-amber-200 px-1 py-0.2 rounded text-[9px]">{sug.eqBrand}</span>
+                          <span>{sug.eqModel}</span>
+                          {sug.eqSerial && sug.eqSerial !== '-' && (
+                            <span className="text-slate-500 font-mono text-[9px]">({sug.eqSerial})</span>
+                          )}
+                        </button>
+                      ))}
                     </div>
-                  );
-                })()}
+                  </div>
+                )}
               </div>
 
               {/* Equipo section */}
@@ -16001,15 +16035,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Responsable</label>
-                  <input
-                    type="text"
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Responsable (Ingeniero)</label>
+                  <select
                     required
                     value={regFormResponsable}
                     onChange={(e) => setRegFormResponsable(e.target.value)}
-                    placeholder="SIXTO CALDERON"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
-                  />
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
+                  >
+                    <option value="">-- Seleccionar Responsable --</option>
+                    {engineers.map((eng) => (
+                      <option key={eng.id} value={eng.name}>
+                        {eng.name}
+                      </option>
+                    ))}
+                    {regFormResponsable && !engineers.some(e => e.name.trim().toLowerCase() === regFormResponsable.trim().toLowerCase()) && (
+                      <option value={regFormResponsable}>
+                        {regFormResponsable} (Responsable Registrado)
+                      </option>
+                    )}
+                  </select>
                 </div>
               </div>
 
