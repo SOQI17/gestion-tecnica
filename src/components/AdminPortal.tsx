@@ -206,6 +206,7 @@ interface AdminPortalProps {
   onSendPasswordReset?: (email: string) => void;
   maintenanceRegistries?: MaintenanceRegistry[];
   onAddMaintenanceRegistry?: (reg: MaintenanceRegistry) => void;
+  onDeleteMaintenanceRegistry?: (id: string) => void;
   onBulkUploadMaintenanceRegistries?: (registries: MaintenanceRegistry[]) => Promise<void>;
   onClearMaintenanceRegistries?: () => void;
   scheduledTrainings?: ScheduledTraining[];
@@ -1035,6 +1036,7 @@ export default function AdminPortal({
   onSendPasswordReset,
   maintenanceRegistries = [],
   onAddMaintenanceRegistry,
+  onDeleteMaintenanceRegistry,
   onBulkUploadMaintenanceRegistries,
   onClearMaintenanceRegistries,
   scheduledTrainings = [],
@@ -1227,6 +1229,7 @@ export default function AdminPortal({
   const [registrySortField, setRegistrySortField] = useState<'fecha' | 'institution' | 'responsable' | 'equipment'>('fecha');
   const [registrySortDir, setRegistrySortDir] = useState<'asc' | 'desc'>('desc');
   const [isRegistryModalOpen, setIsRegistryModalOpen] = useState(false);
+  const [editingRegistry, setEditingRegistry] = useState<MaintenanceRegistry | null>(null);
   const [regFormInstitutionName, setRegFormInstitutionName] = useState('');
   const [regFormEqBrand, setRegFormEqBrand] = useState('FUJIFILM');
   const [regFormEqModel, setRegFormEqModel] = useState('');
@@ -5539,8 +5542,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     e.preventDefault();
     if (!onAddMaintenanceRegistry) return;
 
+    const regId = editingRegistry ? editingRegistry.id : `REG-${Date.now()}`;
+
     const newReg: MaintenanceRegistry = {
-      id: `REG-${Date.now()}`,
+      id: regId,
       institutionName: regFormInstitutionName.trim() || 'S/N Institución',
       eqBrand: regFormEqBrand.trim(),
       eqModel: regFormEqModel.trim(),
@@ -5548,13 +5553,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       tuboBrand: regFormTuboBrand.trim(),
       tuboModel: regFormTuboModel.trim(),
       tuboSerial: regFormTuboSerial.trim(),
-      fecha: regFormFecha.trim() || new Date().toLocaleDateString('es-ES'),
+      fecha: regFormFecha.trim() || new Date().toISOString().split('T')[0],
       responsable: regFormResponsable.trim() || 'S/N Responsable',
-      createdAt: new Date().toISOString()
+      createdAt: editingRegistry?.createdAt || new Date().toISOString(),
+      workOrderId: editingRegistry?.workOrderId
     };
 
     onAddMaintenanceRegistry(newReg);
     setIsRegistryModalOpen(false);
+    setEditingRegistry(null);
   };
 
   const handleSaveEquipment = (e: React.FormEvent) => {
@@ -6261,6 +6268,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             )}
             <button
               onClick={() => {
+                setEditingRegistry(null);
                 setRegFormInstitutionName('');
                 setRegFormEqBrand('FUJIFILM');
                 setRegFormEqModel('');
@@ -6485,12 +6493,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       )}
                     </div>
                   </th>
+                  <th className="p-3 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {paginated.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-400 text-3xs font-bold">
+                    <td colSpan={6} className="p-8 text-center text-slate-400 text-3xs font-bold">
                       No se encontraron registros de mantenimiento.
                     </td>
                   </tr>
@@ -6528,6 +6537,45 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </td>
                       <td className="p-3 text-indigo-700 font-bold">
                         {reg.responsable}
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingRegistry(reg);
+                              setRegFormInstitutionName(reg.institutionName !== '-' ? reg.institutionName : '');
+                              setRegFormEqBrand(reg.eqBrand !== '-' ? reg.eqBrand : '');
+                              setRegFormEqModel(reg.eqModel !== '-' ? reg.eqModel : '');
+                              setRegFormEqSerial(reg.eqSerial !== '-' ? reg.eqSerial : '');
+                              setRegFormTuboBrand(reg.tuboBrand !== '-' ? reg.tuboBrand : '');
+                              setRegFormTuboModel(reg.tuboModel !== '-' ? reg.tuboModel : '');
+                              setRegFormTuboSerial(reg.tuboSerial !== '-' ? reg.tuboSerial : '');
+                              setRegFormFecha(reg.fecha !== '-' ? reg.fecha : '');
+                              setRegFormResponsable(reg.responsable !== '-' ? reg.responsable : '');
+                              setIsRegistryModalOpen(true);
+                            }}
+                            className="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-colors border border-indigo-200 cursor-pointer text-3xs font-bold flex items-center gap-1"
+                            title="Editar este registro de mantenimiento"
+                          >
+                            <Pencil className="w-3 h-3" />
+                            <span>Editar</span>
+                          </button>
+                          {onDeleteMaintenanceRegistry && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(`¿Eliminar el registro de ${reg.institutionName}?`)) {
+                                  onDeleteMaintenanceRegistry(reg.id);
+                                }
+                              }}
+                              className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition-colors border border-rose-200 cursor-pointer text-3xs font-bold flex items-center gap-1"
+                              title="Eliminar este registro"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -15969,7 +16017,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               <div className="flex justify-end gap-2 pt-1 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsRegistryModalOpen(false)}
+                  onClick={() => {
+                    setIsRegistryModalOpen(false);
+                    setEditingRegistry(null);
+                  }}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-150 rounded-lg cursor-pointer transition-colors"
                 >
                   Cancelar
@@ -15978,7 +16029,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   type="submit"
                   className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg cursor-pointer shadow-xs transition-colors"
                 >
-                  Guardar Registro
+                  {editingRegistry ? 'Guardar Cambios' : 'Guardar Registro'}
                 </button>
               </div>
             </form>

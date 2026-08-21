@@ -665,6 +665,15 @@ export default function App() {
     }
   }, [showNotification]);
 
+  const handleDeleteMaintenanceRegistry = useCallback(async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'maintenanceRegistries', id));
+      showNotification("Registro eliminado con éxito.", 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `maintenanceRegistries/${id}`);
+    }
+  }, [showNotification]);
+
   const handleClearEquipments = useCallback(async () => {
     try {
       showNotification("Eliminando equipos de la base de datos...", 'info');
@@ -1400,6 +1409,7 @@ export default function App() {
                 onDeletePermission={handleDeletePermission}
                 maintenanceRegistries={maintenanceRegistries}
                 onAddMaintenanceRegistry={handleAddMaintenanceRegistry}
+                onDeleteMaintenanceRegistry={handleDeleteMaintenanceRegistry}
                 onBulkUploadMaintenanceRegistries={handleBulkUploadMaintenanceRegistries}
                 onClearMaintenanceRegistries={handleClearMaintenanceRegistries}
                 scheduledTrainings={scheduledTrainings}
