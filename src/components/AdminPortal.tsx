@@ -5960,7 +5960,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       let fecha = (reg.fecha || '').trim();
       let responsable = (reg.responsable || '').trim();
 
-      // If registry is linked to a Work Order, dynamically get the true client name from the Work Order
+      // If registry is linked to a Work Order, dynamically get true values from the Work Order
       if (reg.workOrderId) {
         const wo = workOrders.find(w => w.id === reg.workOrderId);
         if (wo) {
@@ -5968,12 +5968,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           if (client) {
             institutionName = client.name;
           }
-          if (wo.plannedDate && (!fecha || fecha === '-')) {
+          if (wo.plannedDate) {
             fecha = wo.plannedDate;
           }
-          if (wo.engineerId && (!responsable || responsable === '-')) {
+          if (wo.engineerId) {
             const eng = engineers.find(e => e.id === wo.engineerId);
             if (eng) responsable = eng.name;
+          }
+          if (wo.equipmentName) {
+            const matchedEq = findBestEquipmentMatch(institutionName || client?.name || '', wo.equipmentName);
+            if (matchedEq && matchedEq.eqModel) {
+              eqBrand = matchedEq.eqBrand && matchedEq.eqBrand !== '-' ? matchedEq.eqBrand : eqBrand;
+              eqModel = matchedEq.eqModel;
+              if (matchedEq.eqSerial && matchedEq.eqSerial !== '-') eqSerial = matchedEq.eqSerial;
+              if (matchedEq.tuboBrand && matchedEq.tuboBrand !== '-') tuboBrand = matchedEq.tuboBrand;
+              if (matchedEq.tuboModel && matchedEq.tuboModel !== '-') tuboModel = matchedEq.tuboModel;
+              if (matchedEq.tuboSerial && matchedEq.tuboSerial !== '-') tuboSerial = matchedEq.tuboSerial;
+            } else {
+              eqModel = wo.equipmentName;
+            }
           }
         }
       }
@@ -6100,7 +6113,51 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     };
 
     const query = registrySearch.toLowerCase().trim();
-    const effectiveRegistries = (maintenanceRegistries || []).map(getEffectiveRegistryFields);
+
+    // Dynamically include any completed Work Order (Realizado/Conciliado) that does not yet have a record in maintenanceRegistries
+    const virtualRegistriesFromWorkOrders = workOrders
+      .filter(wo => (wo.status === 'Realizado' || wo.status === 'Conciliado') && !(maintenanceRegistries || []).some(reg => reg.workOrderId === wo.id))
+      .map(wo => {
+        const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
+        const eng = engineers.find(e => e.id === wo.engineerId);
+        const instName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'S/N Institución');
+        const eqName = wo.equipmentName || '';
+        
+        const matchedEq = findBestEquipmentMatch(instName, eqName);
+
+        let brand = matchedEq?.eqBrand || '-';
+        let model = matchedEq?.eqModel || eqName || '-';
+        let serial = matchedEq?.eqSerial || '-';
+        let tBrand = matchedEq?.tuboBrand || '-';
+        let tModel = matchedEq?.tuboModel || '-';
+        let tSerial = matchedEq?.tuboSerial || '-';
+
+        if (!brand || brand === '-' || !serial || serial === '-') {
+          const serialMatch = eqName.match(/\(([^)]+)\)/);
+          if (serialMatch) serial = serialMatch[1];
+        }
+
+        const virtReg: MaintenanceRegistry = {
+          id: `VIRT-REG-${wo.id}`,
+          institutionName: instName,
+          eqBrand: brand,
+          eqModel: model,
+          eqSerial: serial,
+          tuboBrand: tBrand,
+          tuboModel: tModel,
+          tuboSerial: tSerial,
+          fecha: wo.plannedDate || new Date().toISOString().split('T')[0],
+          responsable: eng ? eng.name : 'S/N Responsable',
+          createdAt: new Date().toISOString(),
+          workOrderId: wo.id,
+        };
+        return getEffectiveRegistryFields(virtReg);
+      });
+
+    const effectiveRegistries = [
+      ...(maintenanceRegistries || []).map(getEffectiveRegistryFields),
+      ...virtualRegistriesFromWorkOrders
+    ];
 
     const filtered = effectiveRegistries.filter(reg => {
       if (!query) return true;
@@ -13892,6 +13949,41 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             }
                             if (infoWO && editedWO && editedWO.plannedDate && infoWO.plannedDate !== editedWO.plannedDate) {
                               syncContractDatesForMovedWorkOrder(infoWO.clientId, infoWO.plannedDate, editedWO.plannedDate, infoWO.equipmentName);
+                            }
+                            if (onAddMaintenanceRegistry && (finalWO.status === 'Realizado' || finalWO.status === 'Conciliado')) {
+                              const existingReg = (maintenanceRegistries || []).find(r => r.workOrderId === finalWO.id);
+                              if (!existingReg) {
+                                const regId = `REG-WO-${finalWO.id}-${Date.now()}`;
+                                const clientObj = clients.find(c => c.id === finalWO.clientId);
+                                const clientInstName = clientObj?.name || 'S/N Institución';
+                                const eqName = finalWO.equipmentName || '';
+                                const eng = engineers.find(e => e.id === finalWO.engineerId);
+
+                                const matchedEq = findBestEquipmentMatch(clientInstName, eqName);
+
+                                let instName = clientInstName;
+                                let brand = matchedEq?.eqBrand || '-';
+                                let model = matchedEq?.eqModel || eqName || '-';
+                                let serial = matchedEq?.eqSerial || '-';
+                                let tBrand = matchedEq?.tuboBrand || '-';
+                                let tModel = matchedEq?.tuboModel || '-';
+                                let tSerial = matchedEq?.tuboSerial || '-';
+
+                                onAddMaintenanceRegistry({
+                                  id: regId,
+                                  institutionName: instName,
+                                  eqBrand: brand,
+                                  eqModel: model,
+                                  eqSerial: serial,
+                                  tuboBrand: tBrand,
+                                  tuboModel: tModel,
+                                  tuboSerial: tSerial,
+                                  fecha: finalWO.plannedDate || new Date().toISOString().split('T')[0],
+                                  responsable: eng?.name || 'S/N Responsable',
+                                  createdAt: new Date().toISOString(),
+                                  workOrderId: finalWO.id,
+                                });
+                              }
                             }
                             onUpdateWorkOrder(finalWO);
                             setInfoWO(finalWO);
