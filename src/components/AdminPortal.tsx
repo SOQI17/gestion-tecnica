@@ -1258,6 +1258,7 @@ export default function AdminPortal({
   const [editingEval360, setEditingEval360] = useState<EngineerEvaluation360 | null>(null);
   const [engMetricsSelectedStatus, setEngMetricsSelectedStatus] = useState<WorkOrderStatus | 'TODAS'>('Pendiente');
   const [engMetricsSelectedType, setEngMetricsSelectedType] = useState<WorkOrderType | null>(null);
+  const [showEngHoursDetail, setShowEngHoursDetail] = useState<boolean>(false);
 
   // Memoized equipment auto-fill suggestions for Registry Modal (combines maintenanceRegistries & contract equipmentItems)
   const suggestedRegistryEquipments = useMemo(() => {
@@ -15174,12 +15175,160 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             {stats?.asPrimary || 0} Principal / {stats?.asSupport || 0} Apoyo
                           </span>
                         </div>
-                        <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl text-center">
-                          <span className="text-[9px] font-bold text-slate-455 uppercase block">Horas en Campo</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowEngHoursDetail(!showEngHoursDetail)}
+                          className={`p-3 rounded-xl text-center border transition-all cursor-pointer ${
+                            showEngHoursDetail
+                              ? 'bg-indigo-100/90 border-indigo-500 ring-2 ring-indigo-500 shadow-xs'
+                              : 'bg-slate-50 border-slate-200/60 hover:bg-slate-100/80'
+                          }`}
+                          title="Haz clic para ver el desglose profesional minucioso de horas por orden de trabajo"
+                        >
+                          <span className="text-[9px] font-bold text-slate-500 uppercase block">Horas en Campo (Ver detalle)</span>
                           <span className="text-xl font-extrabold text-indigo-700 mt-1 block">{totalHours} hrs</span>
-                          <span className="text-[8px] text-slate-400 font-medium">De reportes técnicos</span>
-                        </div>
+                          <span className="text-[8px] text-indigo-800 font-extrabold bg-indigo-100 px-1.5 py-0.5 rounded-full inline-block mt-0.5">
+                            🔍 Haz clic para ver desglose
+                          </span>
+                        </button>
                       </div>
+
+                      {/* Interactive Executive Field Hours Detail Drawer */}
+                      {showEngHoursDetail && (() => {
+                        const engWOs = filteredDashOrders.filter(wo => 
+                          wo.engineerId === eng.id || wo.supportEngineerId === eng.id || wo.supportEngineerIds?.includes(eng.id)
+                        );
+
+                        let prevHours = 0, prevCount = 0;
+                        let instHours = 0, instCount = 0, instDaysTotal = 0;
+                        let corrHours = 0, corrCount = 0;
+                        let inspHours = 0, inspCount = 0;
+
+                        const woDetailedList = engWOs.map(wo => {
+                          const matchedReport = (reports || []).find(r => r.workOrderId === wo.id);
+                          let hrs = 8;
+                          let sourceLabel = '📅 Agenda Cronograma';
+                          if (matchedReport && matchedReport.hoursSpent) {
+                            const parsed = parseFloat(String(matchedReport.hoursSpent).replace(/[^0-9.]/g, ''));
+                            if (!isNaN(parsed) && parsed > 0) {
+                              hrs = parsed;
+                              sourceLabel = '📄 Reporte RE-TE-04';
+                            }
+                          } else if (wo.durationDays && wo.durationDays > 0) {
+                            hrs = wo.durationDays * 8;
+                            sourceLabel = `📅 Proyecto (${wo.durationDays}d - 8h/día)`;
+                          }
+
+                          const typeLower = (wo.type || '').toLowerCase();
+                          const isInst = typeLower.includes('instal') || typeLower.includes('fmi') || typeLower.includes('montaje');
+
+                          if (isInst) {
+                            instHours += hrs;
+                            instCount++;
+                            instDaysTotal += (wo.durationDays || 1);
+                          } else if (typeLower.includes('preventiv')) {
+                            prevHours += hrs;
+                            prevCount++;
+                          } else if (typeLower.includes('correctiv')) {
+                            corrHours += hrs;
+                            corrCount++;
+                          } else {
+                            inspHours += hrs;
+                            inspCount++;
+                          }
+
+                          return { wo, matchedReport, hrs, sourceLabel, isInst };
+                        });
+
+                        return (
+                          <div className="bg-indigo-50/90 border border-indigo-300 rounded-xl p-4 shadow-sm space-y-3 animate-in fade-in duration-200">
+                            <div className="flex items-center justify-between border-b border-indigo-200 pb-2">
+                              <h5 className="font-black text-xs text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
+                                <Clock className="w-4 h-4 text-indigo-600 animate-pulse" />
+                                <span>Desglose Profesional de Horas en Campo ({totalHours} hrs totales)</span>
+                              </h5>
+                              <button
+                                type="button"
+                                onClick={() => setShowEngHoursDetail(false)}
+                                className="text-[9px] font-extrabold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 px-2 py-0.5 rounded-md cursor-pointer"
+                              >
+                                ✕ Cerrar
+                              </button>
+                            </div>
+
+                            {/* Category Summary Cards */}
+                            <div className="grid grid-cols-4 gap-2 text-[9.5px]">
+                              <div className="bg-white p-2 rounded-lg border border-slate-200 text-center shadow-2xs">
+                                <span className="text-slate-400 font-bold uppercase block text-[8px]">Preventivos</span>
+                                <span className="font-black text-indigo-700 text-xs mt-0.5 block">{prevHours} hrs</span>
+                                <span className="text-[8px] text-slate-500 font-semibold">{prevCount} Órdenes</span>
+                              </div>
+                              <div className="bg-white p-2 rounded-lg border border-emerald-200 text-center shadow-2xs">
+                                <span className="text-emerald-700 font-bold uppercase block text-[8px]">Instalaciones</span>
+                                <span className="font-black text-emerald-800 text-xs mt-0.5 block">{instHours} hrs</span>
+                                <span className="text-[8px] text-emerald-600 font-semibold">{instCount} WOs ({instDaysTotal}d)</span>
+                              </div>
+                              <div className="bg-white p-2 rounded-lg border border-amber-200 text-center shadow-2xs">
+                                <span className="text-amber-700 font-bold uppercase block text-[8px]">Correctivos</span>
+                                <span className="font-black text-amber-800 text-xs mt-0.5 block">{corrHours} hrs</span>
+                                <span className="text-[8px] text-amber-600 font-semibold">{corrCount} Órdenes</span>
+                              </div>
+                              <div className="bg-white p-2 rounded-lg border border-sky-200 text-center shadow-2xs">
+                                <span className="text-sky-700 font-bold uppercase block text-[8px]">Otros / QC</span>
+                                <span className="font-black text-sky-800 text-xs mt-0.5 block">{inspHours} hrs</span>
+                                <span className="text-[8px] text-sky-600 font-semibold">{inspCount} Órdenes</span>
+                              </div>
+                            </div>
+
+                            {/* Structured Detailed Work Order List */}
+                            <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
+                              <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">Detalle Orden por Orden:</p>
+                              {woDetailedList.length === 0 ? (
+                                <p className="text-[10px] text-slate-400 font-bold text-center py-3">Sin mantenimientos ni horas registradas en este periodo.</p>
+                              ) : (
+                                woDetailedList.map(({ wo, hrs, sourceLabel, isInst }) => {
+                                  const client = clients.find(c => c.id === wo.clientId);
+                                  const effStatus = getWOEffectiveStatus(wo);
+
+                                  return (
+                                    <div key={wo.id} className="bg-white border border-slate-200/90 rounded-lg p-2 flex justify-between items-center text-[10px] hover:border-indigo-300 transition-all shadow-2xs">
+                                      <div className="truncate pr-2 space-y-0.5">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="font-mono font-extrabold text-slate-800 text-[10.5px]">{wo.id}</span>
+                                          <span className={`text-[8px] font-black px-1.5 py-0.2 rounded uppercase ${
+                                            isInst ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                            wo.type === 'Preventivo' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' :
+                                            'bg-amber-100 text-amber-800 border border-amber-200'
+                                          }`}>
+                                            {wo.type}
+                                          </span>
+                                        </div>
+                                        <p className="font-bold text-slate-900 truncate text-[10px]">{client ? client.name : (wo.clientId || 'Sin cliente')}</p>
+                                        <p className="text-slate-500 font-medium truncate text-[9px]">{wo.equipmentName} • 📅 {wo.plannedDate}</p>
+                                      </div>
+
+                                      <div className="text-right shrink-0 space-y-1">
+                                        <span className="font-mono font-black text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md text-xs block">
+                                          ⏱️ {hrs.toFixed(1)} hrs
+                                        </span>
+                                        <span className="text-[8px] font-bold text-slate-400 block">{sourceLabel}</span>
+                                        <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded inline-block ${
+                                          effStatus === 'Conciliado' ? 'bg-emerald-100 text-emerald-800' :
+                                          effStatus === 'Realizado' ? 'bg-blue-100 text-blue-800' :
+                                          effStatus === 'Reportado' ? 'bg-indigo-100 text-indigo-800' :
+                                          'bg-amber-100 text-amber-800'
+                                        }`}>
+                                          {effStatus.toUpperCase()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Completion rate bar */}
                       <div className="space-y-1.5 bg-slate-50/50 border border-slate-200/45 p-3.5 rounded-xl">
