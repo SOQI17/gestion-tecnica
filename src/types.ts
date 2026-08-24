@@ -328,3 +328,26 @@ export interface ContractGE {
   observaciones?: string;    // OBSERVACIONES / COMMENTS (ej: RENOVACION)
   createdAt?: string;
 }
+
+export interface EngineerEvaluation360 {
+  id: string;
+  engineerId: string;
+  evaluatorName: string;
+  period: string; // e.g. "2026-Q1" or "2026"
+  scoreGeneral: number; // 1.0 - 5.0
+  competencies: {
+    technicalDiagnostic: number; // 1 - 5
+    equipmentMastery: number; // 1 - 5
+    radiologicalSafety: number; // 1 - 5
+    reportAccuracy: number; // 1 - 5
+    communication: number; // 1 - 5
+    teamwork: number; // 1 - 5
+    problemSolving: number; // 1 - 5
+    punctuality: number; // 1 - 5
+    toolCare: number; // 1 - 5
+  };
+  feedbackStrengths?: string;
+  feedbackImprovements?: string;
+  actionPlan?: string;
+  updatedAt?: string;
+}

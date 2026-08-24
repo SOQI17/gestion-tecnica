@@ -36,6 +36,14 @@ export default function App() {
   const [vacations, setVacations] = useState<Vacation[]>([]);
   const [permissions, setPermissions] = useState<EngineerPermission[]>([]);
   const [maintenanceRegistries, setMaintenanceRegistries] = useState<MaintenanceRegistry[]>([]);
+  const [evaluations360, setEvaluations360] = useState<EngineerEvaluation360[]>(() => {
+    try {
+      const saved = localStorage.getItem('fsm_evaluations360');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [scheduledTrainings, setScheduledTrainings] = useState<ScheduledTraining[]>(() => {
     try {
       const saved = localStorage.getItem('fsm_scheduled_trainings');
@@ -671,6 +679,34 @@ export default function App() {
       showNotification("Registro eliminado con éxito.", 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `maintenanceRegistries/${id}`);
+    }
+  }, [showNotification]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'evaluations360'), (snapshot) => {
+      const list: EngineerEvaluation360[] = [];
+      snapshot.forEach(docSnap => {
+        list.push({ id: docSnap.id, ...docSnap.data() } as EngineerEvaluation360);
+      });
+      if (list.length > 0) {
+        setEvaluations360(list);
+        localStorage.setItem('fsm_evaluations360', JSON.stringify(list));
+      }
+    }, (error) => console.error(error));
+    return () => unsub();
+  }, []);
+
+  const handleSaveEvaluation360 = useCallback(async (evalItem: EngineerEvaluation360) => {
+    try {
+      await setDoc(doc(db, 'evaluations360', evalItem.id), cleanUndefined(evalItem));
+      setEvaluations360(prev => {
+        const next = [...prev.filter(e => e.id !== evalItem.id), evalItem];
+        localStorage.setItem('fsm_evaluations360', JSON.stringify(next));
+        return next;
+      });
+      showNotification(`Evaluación 360° guardada con éxito.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `evaluations360/${evalItem.id}`);
     }
   }, [showNotification]);
 
@@ -1410,6 +1446,8 @@ export default function App() {
                 maintenanceRegistries={maintenanceRegistries}
                 onAddMaintenanceRegistry={handleAddMaintenanceRegistry}
                 onDeleteMaintenanceRegistry={handleDeleteMaintenanceRegistry}
+                evaluations360={evaluations360}
+                onSaveEvaluation360={handleSaveEvaluation360}
                 onBulkUploadMaintenanceRegistries={handleBulkUploadMaintenanceRegistries}
                 onClearMaintenanceRegistries={handleClearMaintenanceRegistries}
                 scheduledTrainings={scheduledTrainings}

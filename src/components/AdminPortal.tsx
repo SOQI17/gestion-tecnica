@@ -217,6 +217,8 @@ interface AdminPortalProps {
   onDeleteMaintenanceRegistry?: (id: string) => void;
   onBulkUploadMaintenanceRegistries?: (registries: MaintenanceRegistry[]) => Promise<void>;
   onClearMaintenanceRegistries?: () => void;
+  evaluations360?: EngineerEvaluation360[];
+  onSaveEvaluation360?: (evalItem: EngineerEvaluation360) => void;
   scheduledTrainings?: ScheduledTraining[];
   onAddScheduledTraining?: (st: ScheduledTraining) => void;
   onUpdateScheduledTraining?: (st: ScheduledTraining) => void;
@@ -1047,6 +1049,8 @@ export default function AdminPortal({
   onDeleteMaintenanceRegistry,
   onBulkUploadMaintenanceRegistries,
   onClearMaintenanceRegistries,
+  evaluations360 = [],
+  onSaveEvaluation360,
   scheduledTrainings = [],
   onAddScheduledTraining,
   onUpdateScheduledTraining,
@@ -1250,6 +1254,8 @@ export default function AdminPortal({
   const [registryCsvSuccess, setRegistryCsvSuccess] = useState<string | null>(null);
   const [registryCsvError, setRegistryCsvError] = useState<string | null>(null);
   const [infoScheduledTraining, setInfoScheduledTraining] = useState<ScheduledTraining | null>(null);
+  const [eval360ModalTab, setEval360ModalTab] = useState<'metrics' | 'evaluation'>('metrics');
+  const [editingEval360, setEditingEval360] = useState<EngineerEvaluation360 | null>(null);
 
   // Memoized equipment auto-fill suggestions for Registry Modal (combines maintenanceRegistries & contract equipmentItems)
   const suggestedRegistryEquipments = useMemo(() => {
@@ -4323,6 +4329,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     });
   }, [workOrders, dashPeriod, dashMonth, dashSemester, dashYear]);
 
+  // Helper to determine true effective status for a Work Order considering reports and registries
+  const getWOEffectiveStatus = React.useCallback((wo: WorkOrder): WorkOrderStatus => {
+    if (wo.status === 'Realizado' || wo.status === 'Conciliado' || wo.status === 'Reportado' || wo.status === 'En Proceso') {
+      return wo.status;
+    }
+    const hasReport = (reports || []).some(r => r.workOrderId === wo.id);
+    const hasRegistry = (maintenanceRegistries || []).some(reg => reg.workOrderId === wo.id);
+    if (hasReport) return 'Reportado';
+    if (hasRegistry) return 'Realizado';
+    return wo.status;
+  }, [reports, maintenanceRegistries]);
+
   // Compute workload metrics and status breakdowns per engineer for the selected period
   const engineerStats = React.useMemo(() => {
     const statsMap: Record<string, {
@@ -4350,10 +4368,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     });
 
     filteredDashOrders.forEach(wo => {
+      const effStatus = getWOEffectiveStatus(wo);
       if (statsMap[wo.engineerId]) {
         statsMap[wo.engineerId].total++;
         statsMap[wo.engineerId].asPrimary++;
-        statsMap[wo.engineerId].statusCounts[wo.status]++;
+        statsMap[wo.engineerId].statusCounts[effStatus]++;
       }
       const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
         ? wo.supportEngineerIds
@@ -4362,13 +4381,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         if (statsMap[id]) {
           statsMap[id].total++;
           statsMap[id].asSupport++;
-          statsMap[id].statusCounts[wo.status]++;
+          statsMap[id].statusCounts[effStatus]++;
         }
       });
     });
 
     return Object.values(statsMap).sort((a, b) => b.total - a.total);
-  }, [filteredDashOrders, engineers]);
+  }, [filteredDashOrders, engineers, getWOEffectiveStatus]);
 
   // Calculate overall summary metrics
   const dashboardKPIs = React.useMemo(() => {
@@ -4387,7 +4406,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     let completedCount = 0;
     filteredDashOrders.forEach(wo => {
-      if (wo.status === 'Realizado' || wo.status === 'Reportado' || wo.status === 'Conciliado') {
+      const effStatus = getWOEffectiveStatus(wo);
+      if (effStatus === 'Realizado' || effStatus === 'Reportado' || effStatus === 'Conciliado') {
         completedCount++;
       }
     });
@@ -4399,7 +4419,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       topEngineerName: maxJobs > 0 ? `${topEngineerName.replace('Ing. ', '')} (${maxJobs})` : 'Ninguno',
       complianceRate
     };
-  }, [filteredDashOrders, engineerStats, engineers]);
+  }, [filteredDashOrders, engineerStats, engineers, getWOEffectiveStatus]);
 
   const handleExportDashboardCSV = () => {
     const headers = [
@@ -14454,9 +14474,40 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             }
           });
 
-          const complianceRate = stats && stats.total > 0 
-            ? Math.round(((stats.statusCounts.Conciliado + stats.statusCounts.Realizado + stats.statusCounts.Reportado) / stats.total) * 100) 
-            : 0;
+          const existingEval = (evaluations360 || []).find(e => e.engineerId === eng.id);
+          const currentEval: EngineerEvaluation360 = editingEval360 && editingEval360.engineerId === eng.id ? editingEval360 : (existingEval || {
+            id: `EVAL360-${eng.id}`,
+            engineerId: eng.id,
+            evaluatorName: 'Jefatura Técnica',
+            period: '2026',
+            scoreGeneral: 4.5,
+            competencies: {
+              technicalDiagnostic: 4.5,
+              equipmentMastery: 4.5,
+              radiologicalSafety: 5.0,
+              reportAccuracy: 4.5,
+              communication: 4.0,
+              teamwork: 4.5,
+              problemSolving: 4.5,
+              punctuality: 4.5,
+              toolCare: 5.0
+            },
+            feedbackStrengths: 'Excelente manejo técnico, amplio conocimiento de la modalidad y alto compromiso con el cliente.',
+            feedbackImprovements: 'Mantener la puntualidad en el registro inmediato de informes digitales RETE-04.',
+            actionPlan: 'Continuar con capacitaciones avanzadas de diagnóstico de fábrica GE.',
+            updatedAt: new Date().toISOString()
+          });
+
+          const updateEvalCompetency = (key: keyof EngineerEvaluation360['competencies'], val: number) => {
+            const nextComp = { ...currentEval.competencies, [key]: val };
+            const sum = Object.values(nextComp).reduce((a, b) => a + b, 0);
+            const avg = Number((sum / Object.keys(nextComp).length).toFixed(1));
+            setEditingEval360({
+              ...currentEval,
+              competencies: nextComp,
+              scoreGeneral: avg
+            });
+          };
 
           return (
             <div className="fixed inset-0 bg-slate-900/60 h-full w-full z-50 flex items-center justify-center p-4 no-print" id="eng-metrics-modal-overlay">
@@ -14466,16 +14517,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[90vh] z-50 flex flex-col justify-between"
+                className="relative bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[92vh] z-50 flex flex-col justify-between"
               >
                 {/* Header Section */}
-                <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-6">
+                <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
                   <div className="flex gap-4 items-center">
                     <div className="w-14 h-14 rounded-full bg-slate-100 text-3xl flex items-center justify-center border border-slate-200 shrink-0">
                       {getEngineerEmoji(eng.id)}
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-base text-slate-900 leading-tight">{eng.name}</h3>
+                      <h3 className="font-extrabold text-base text-slate-900 leading-tight flex items-center gap-2">
+                        <span>{eng.name}</span>
+                        <span className="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-mono font-bold">
+                          Score 360°: ⭐ {currentEval.scoreGeneral} / 5.0
+                        </span>
+                      </h3>
                       <p className="text-2xs text-slate-500 font-bold mt-1 uppercase tracking-wide">
                         {eng.specialty} • <span className="text-indigo-650 font-black">{eng.sede || 'Quito'}</span>
                       </p>
@@ -14490,148 +14546,316 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   </button>
                 </div>
 
-                {/* Content Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs mb-6">
-                  {/* Left Column: Job & Productivity Metrics */}
-                  <div className="space-y-5">
-                    <h4 className="font-bold text-slate-850 text-xs border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                      <BarChart3 className="w-4 h-4 text-indigo-550" />
-                      <span>Productividad del Periodo</span>
-                    </h4>
+                {/* Sub-Tabs: Metrics vs Evaluation 360 */}
+                <div className="flex gap-2 border-b border-slate-200 mb-5 pb-2">
+                  <button
+                    type="button"
+                    onClick={() => setEval360ModalTab('metrics')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      eval360ModalTab === 'metrics'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                    }`}
+                  >
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    <span>Métricas y Productividad</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEval360ModalTab('evaluation')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      eval360ModalTab === 'evaluation'
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                    }`}
+                  >
+                    <Award className="w-3.5 h-3.5" />
+                    <span>Evaluación 360° Competencias KPI</span>
+                  </button>
+                </div>
 
-                    {/* KPI summaries */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl text-center">
-                        <span className="text-[9px] font-bold text-slate-450 uppercase block">Total Asignaciones</span>
-                        <span className="text-xl font-extrabold text-slate-855 mt-1 block">{stats?.total || 0}</span>
-                        <span className="text-[8px] text-slate-400 font-medium">
-                          {stats?.asPrimary || 0} Principal / {stats?.asSupport || 0} Apoyo
-                        </span>
+                {eval360ModalTab === 'metrics' ? (
+                  /* Content Grid */
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs mb-6">
+                    {/* Left Column: Job & Productivity Metrics */}
+                    <div className="space-y-5">
+                      <h4 className="font-bold text-slate-850 text-xs border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+                        <BarChart3 className="w-4 h-4 text-indigo-550" />
+                        <span>Productividad del Periodo</span>
+                      </h4>
+
+                      {/* KPI summaries */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl text-center">
+                          <span className="text-[9px] font-bold text-slate-450 uppercase block">Total Asignaciones</span>
+                          <span className="text-xl font-extrabold text-slate-855 mt-1 block">{stats?.total || 0}</span>
+                          <span className="text-[8px] text-slate-400 font-medium">
+                            {stats?.asPrimary || 0} Principal / {stats?.asSupport || 0} Apoyo
+                          </span>
+                        </div>
+                        <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl text-center">
+                          <span className="text-[9px] font-bold text-slate-455 uppercase block">Horas en Campo</span>
+                          <span className="text-xl font-extrabold text-indigo-700 mt-1 block">{totalHours} hrs</span>
+                          <span className="text-[8px] text-slate-400 font-medium">De reportes técnicos</span>
+                        </div>
                       </div>
-                      <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl text-center">
-                        <span className="text-[9px] font-bold text-slate-455 uppercase block">Horas en Campo</span>
-                        <span className="text-xl font-extrabold text-indigo-700 mt-1 block">{totalHours} hrs</span>
-                        <span className="text-[8px] text-slate-400 font-medium">De reportes técnicos</span>
+
+                      {/* Completion rate bar */}
+                      <div className="space-y-1.5 bg-slate-50/50 border border-slate-200/45 p-3.5 rounded-xl">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="font-bold text-slate-600">Tasa de Cierre del Periodo</span>
+                          <span className="font-black text-emerald-700">{complianceRate}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                          <div 
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-550" 
+                            style={{ width: `${complianceRate}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Status counters breakdown list */}
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">Estados de Tarea (Reales)</span>
+                        <div className="grid grid-cols-2 gap-2 text-[10px]">
+                          <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
+                            <span className="font-semibold text-emerald-750">Conciliadas</span>
+                            <span className="font-black text-slate-900">{stats?.statusCounts.Conciliado || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
+                            <span className="font-semibold text-blue-750">Realizadas</span>
+                            <span className="font-black text-slate-900">{stats?.statusCounts.Realizado || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
+                            <span className="font-semibold text-indigo-750">Reportadas</span>
+                            <span className="font-black text-slate-900">{stats?.statusCounts.Reportado || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
+                            <span className="font-semibold text-sky-750">En Proceso</span>
+                            <span className="font-black text-slate-900">{stats?.statusCounts['En Proceso'] || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg col-span-2">
+                            <span className="font-semibold text-yellow-750">Pendientes</span>
+                            <span className="font-black text-slate-900">{stats?.statusCounts.Pendiente || 0}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Completion rate bar */}
-                    <div className="space-y-1.5 bg-slate-50/50 border border-slate-200/45 p-3.5 rounded-xl">
-                      <div className="flex justify-between items-center text-[10px]">
-                        <span className="font-bold text-slate-600">Tasa de Cierre del Periodo</span>
-                        <span className="font-black text-emerald-700">{complianceRate}%</span>
+                    {/* Right Column: Maintenance types & Vacation Status */}
+                    <div className="space-y-5">
+                      <h4 className="font-bold text-slate-800 text-xs border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+                        <Briefcase className="w-4 h-4 text-emerald-600" />
+                        <span>Distribución de Trabajos y Ausencias</span>
+                      </h4>
+
+                      {/* Maintenance types distribution */}
+                      <div className="space-y-2 bg-slate-50/50 border border-slate-200/40 p-3.5 rounded-xl">
+                        <span className="text-[10px] font-bold text-slate-550 uppercase block mb-1">Tipos de Servicio Ejecutados</span>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
+                          {Object.entries(typeBreakdown).map(([type, count]) => {
+                            if (count === 0) return null;
+                            return (
+                              <div key={type} className="flex justify-between items-center py-0.5 border-b border-slate-100 last:border-b-0">
+                                <span className="font-medium text-slate-600">{type}</span>
+                                <span className="font-bold text-slate-900 bg-slate-200/60 px-1.5 py-0.2 rounded-md">{count}</span>
+                              </div>
+                            );
+                          })}
+                          {Object.values(typeBreakdown).every(c => c === 0) && (
+                            <div className="col-span-2 text-center text-slate-400 py-4 font-bold">
+                              Sin servicios registrados en este periodo
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
-                        <div 
-                          className="h-full bg-emerald-500 rounded-full transition-all duration-550" 
-                          style={{ width: `${complianceRate}%` }}
+
+                      {/* Vacations details */}
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-bold text-slate-555 uppercase block flex items-center gap-1">
+                          <Palmtree className="w-3.5 h-3.5 text-teal-650" />
+                          <span>Resumen de Vacaciones Anuales</span>
+                        </span>
+                        <div className="bg-white border border-slate-200 rounded-xl p-3.5 divide-y divide-slate-100 text-[10px] space-y-1.5">
+                          <div className="flex justify-between items-center pb-1.5">
+                            <span className="font-medium text-slate-600">Días Anuales Permitidos</span>
+                            <span className="font-black text-slate-800">{eng.annualVacationDays || 15} días</span>
+                          </div>
+                          <div className="flex justify-between items-center py-1.5">
+                            <span className="font-medium text-slate-600">Vacaciones Pendientes</span>
+                            <span className="font-black text-amber-600">{eng.pendingVacationsLastYear || 0} días</span>
+                          </div>
+                          <div className="flex justify-between items-center py-1.5">
+                            <span className="font-medium text-slate-600">Vacaciones en Reserva (Standby)</span>
+                            <span className="font-black text-slate-700">{eng.standbyVacationsLastYear || 0} días</span>
+                          </div>
+                          <div className="flex justify-between items-center pt-1.5 border-t border-slate-100">
+                            <span className="font-medium text-slate-600">Día de Cumpleaños Libre</span>
+                            <span className={`font-bold px-1.5 py-0.5 rounded-full text-[8.5px] ${
+                              eng.birthdayVacationDay === 0 
+                                ? 'bg-red-50 text-red-700 border border-red-100' 
+                                : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                            }`}>
+                              {eng.birthdayVacationDay === 0 ? '❌ Ya Usado' : '✅ Disponible'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Tab 2: Evaluación 360° por Competencias */
+                  <div className="space-y-4 text-xs mb-6">
+                    {/* Score summary banner */}
+                    <div className="bg-gradient-to-r from-purple-900 to-indigo-800 text-white p-4 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-purple-200 tracking-wider">Calificación Global de Desempeño 360°</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-3xl font-black text-amber-300">⭐ {currentEval.scoreGeneral}</span>
+                          <span className="text-xs text-purple-100 font-bold">/ 5.0 Puntos</span>
+                        </div>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-xs border border-white/20 px-3.5 py-2 rounded-xl text-right">
+                        <span className="text-[9px] font-extrabold uppercase text-amber-300 block">Clasificación</span>
+                        <span className="text-xs font-bold text-white">
+                          {currentEval.scoreGeneral >= 4.5 ? '🌟 Excelente' : currentEval.scoreGeneral >= 3.8 ? '👍 Sobresaliente' : currentEval.scoreGeneral >= 3.0 ? '⚠️ Satisfactorio' : '🚨 Requiere Plan de Mejora'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Evaluador & Periodo */}
+                    <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Evaluado por</label>
+                        <input
+                          type="text"
+                          value={currentEval.evaluatorName}
+                          onChange={(e) => setEditingEval360({ ...currentEval, evaluatorName: e.target.value })}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-hidden"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Periodo de Evaluación</label>
+                        <input
+                          type="text"
+                          value={currentEval.period}
+                          onChange={(e) => setEditingEval360({ ...currentEval, period: e.target.value })}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-hidden"
                         />
                       </div>
                     </div>
 
-                    {/* Status counters breakdown list */}
-                    <div className="space-y-1.5">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase block">Estados de Tarea</span>
-                      <div className="grid grid-cols-2 gap-2 text-[10px]">
-                        <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
-                          <span className="font-semibold text-emerald-750">Conciliadas</span>
-                          <span className="font-black text-slate-900">{stats?.statusCounts.Conciliado || 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
-                          <span className="font-semibold text-blue-750">Realizadas</span>
-                          <span className="font-black text-slate-900">{stats?.statusCounts.Realizado || 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
-                          <span className="font-semibold text-indigo-750">Reportadas</span>
-                          <span className="font-black text-slate-900">{stats?.statusCounts.Reportado || 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
-                          <span className="font-semibold text-sky-750">En Proceso</span>
-                          <span className="font-black text-slate-900">{stats?.statusCounts['En Proceso'] || 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg col-span-2">
-                          <span className="font-semibold text-yellow-750">Pendientes</span>
-                          <span className="font-black text-slate-900">{stats?.statusCounts.Pendiente || 0}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Maintenance types & Vacation Status */}
-                  <div className="space-y-5">
-                    <h4 className="font-bold text-slate-800 text-xs border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                      <Briefcase className="w-4 h-4 text-emerald-600" />
-                      <span>Distribución de Trabajos y Ausencias</span>
-                    </h4>
-
-                    {/* Maintenance types distribution */}
-                    <div className="space-y-2 bg-slate-50/50 border border-slate-200/40 p-3.5 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-550 uppercase block mb-1">Tipos de Servicio Ejecutados</span>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
-                        {Object.entries(typeBreakdown).map(([type, count]) => {
-                          if (count === 0) return null;
+                    {/* Grid de 9 Competencias 360° */}
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                        <Award className="w-4 h-4 text-purple-600" />
+                        <span>Evaluación por Competencias (1.0 a 5.0 ⭐)</span>
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {[
+                          { key: 'technicalDiagnostic', label: '🛠️ Diagnóstico Técnico de Fallas' },
+                          { key: 'equipmentMastery', label: '⚙️ Dominio Modalidades GE' },
+                          { key: 'radiologicalSafety', label: '☢️ Seguridad Radiológica' },
+                          { key: 'reportAccuracy', label: '📄 Informes RETE-04' },
+                          { key: 'communication', label: '🗣️ Comunicación Cliente' },
+                          { key: 'teamwork', label: '🤝 Trabajo en Equipo' },
+                          { key: 'problemSolving', label: '⚡ Resolución bajo Presión' },
+                          { key: 'punctuality', label: '⏰ Puntualidad de Servicio' },
+                          { key: 'toolCare', label: '🧰 Cuidado de Herramientas' }
+                        ].map(comp => {
+                          const val = (currentEval.competencies as any)[comp.key] || 4.0;
                           return (
-                            <div key={type} className="flex justify-between items-center py-0.5 border-b border-slate-100 last:border-b-0">
-                              <span className="font-medium text-slate-600">{type}</span>
-                              <span className="font-bold text-slate-900 bg-slate-200/60 px-1.5 py-0.2 rounded-md">{count}</span>
+                            <div key={comp.key} className="bg-white border border-slate-200 rounded-xl p-3 space-y-1.5 hover:border-purple-300 transition-colors shadow-2xs">
+                              <div className="flex justify-between items-center text-[10px] font-bold">
+                                <span className="text-slate-700">{comp.label}</span>
+                                <span className="text-purple-700 font-mono text-xs">{val} ⭐</span>
+                              </div>
+                              <input
+                                type="range"
+                                min="1"
+                                max="5"
+                                step="0.5"
+                                value={val}
+                                onChange={(e) => updateEvalCompetency(comp.key as any, parseFloat(e.target.value))}
+                                className="w-full accent-purple-600 cursor-pointer"
+                              />
                             </div>
                           );
                         })}
-                        {Object.values(typeBreakdown).every(c => c === 0) && (
-                          <div className="col-span-2 text-center text-slate-400 py-4 font-bold">
-                            Sin servicios registrados en este periodo
-                          </div>
-                        )}
                       </div>
                     </div>
 
-                    {/* Vacations details */}
-                    <div className="space-y-2">
-                      <span className="text-[10px] font-bold text-slate-555 uppercase block flex items-center gap-1">
-                        <Palmtree className="w-3.5 h-3.5 text-teal-650" />
-                        <span>Resumen de Vacaciones Anuales</span>
-                      </span>
-                      <div className="bg-white border border-slate-200 rounded-xl p-3.5 divide-y divide-slate-100 text-[10px] space-y-1.5">
-                        <div className="flex justify-between items-center pb-1.5">
-                          <span className="font-medium text-slate-600">Días Anuales Permitidos</span>
-                          <span className="font-black text-slate-800">{eng.annualVacationDays || 15} días</span>
+                    {/* Feedback y Plan de Acción */}
+                    <div className="space-y-3 pt-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="block text-[10px] font-bold text-emerald-700 uppercase">💪 Fortalezas Destacadas</label>
+                          <textarea
+                            rows={2}
+                            value={currentEval.feedbackStrengths || ''}
+                            onChange={(e) => setEditingEval360({ ...currentEval, feedbackStrengths: e.target.value })}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700 outline-hidden"
+                            placeholder="Manejo impecable del cliente..."
+                          />
                         </div>
-                        <div className="flex justify-between items-center py-1.5">
-                          <span className="font-medium text-slate-600">Vacaciones Pendientes</span>
-                          <span className="font-black text-amber-600">{eng.pendingVacationsLastYear || 0} días</span>
+                        <div className="space-y-1">
+                          <label className="block text-[10px] font-bold text-amber-700 uppercase">🔍 Oportunidades de Mejora</label>
+                          <textarea
+                            rows={2}
+                            value={currentEval.feedbackImprovements || ''}
+                            onChange={(e) => setEditingEval360({ ...currentEval, feedbackImprovements: e.target.value })}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700 outline-hidden"
+                            placeholder="Optimizar tiempos en cierre de informes..."
+                          />
                         </div>
-                        <div className="flex justify-between items-center py-1.5">
-                          <span className="font-medium text-slate-600">Vacaciones en Reserva (Standby)</span>
-                          <span className="font-black text-slate-700">{eng.standbyVacationsLastYear || 0} días</span>
-                        </div>
-                        <div className="flex justify-between items-center pt-1.5 border-t border-slate-100">
-                          <span className="font-medium text-slate-600">Día de Cumpleaños Libre</span>
-                          <span className={`font-bold px-1.5 py-0.5 rounded-full text-[8.5px] ${
-                            eng.birthdayVacationDay === 0 
-                              ? 'bg-red-50 text-red-700 border border-red-100' 
-                              : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                          }`}>
-                            {eng.birthdayVacationDay === 0 ? '❌ Ya Usado' : '✅ Disponible'}
-                          </span>
-                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-indigo-700 uppercase">🎯 Plan de Acción y Capacitación</label>
+                        <textarea
+                          rows={2}
+                          value={currentEval.actionPlan || ''}
+                          onChange={(e) => setEditingEval360({ ...currentEval, actionPlan: e.target.value })}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700 outline-hidden"
+                          placeholder="Curso avanzado de Tomografía GE..."
+                        />
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                {/* Footer buttons: Export Excel or close */}
+                {/* Footer buttons */}
                 <div className="flex justify-between items-center border-t border-slate-100 pt-4 mt-2">
+                  {eval360ModalTab === 'metrics' ? (
+                    <button
+                      type="button"
+                      onClick={() => handleExportSingleEngineerCSV(eng)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+                    >
+                      <FileSpreadsheet className="w-4 h-4" />
+                      <span>Descargar Reporte Excel</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onSaveEvaluation360) {
+                          onSaveEvaluation360(currentEval);
+                          setEditingEval360(null);
+                        }
+                      }}
+                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Guardar Evaluación 360°</span>
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => handleExportSingleEngineerCSV(eng)}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
-                  >
-                    <FileSpreadsheet className="w-4 h-4" />
-                    <span>Descargar Reporte Excel</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsEngMetricsModalOpen(false)}
+                    onClick={() => {
+                      setIsEngMetricsModalOpen(false);
+                      setEditingEval360(null);
+                    }}
                     className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-4 py-2 rounded-xl transition-colors cursor-pointer"
                   >
                     Cerrar
