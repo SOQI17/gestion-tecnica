@@ -3693,7 +3693,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <span className="truncate">{clientDisplayName}</span>
                       {isWoQc && (
                         <span className="bg-purple-700 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1 shadow-2xs border border-purple-800 flex items-center gap-0.5 animate-pulse" title="Visita de Control de Calidad">
-                          📋 CONTROL CALIDAD
+                          📋 QC
                         </span>
                       )}
                     </div>
@@ -3999,7 +3999,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <span className="truncate">{clientDisplayName}</span>
                     {isWoQc && (
                       <span className="bg-purple-700 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1 shadow-2xs border border-purple-800 flex items-center gap-0.5 animate-pulse" title="Visita de Control de Calidad">
-                        📋 CONTROL CALIDAD
+                        📋 QC
                       </span>
                     )}
                     {conflictDetail && (
@@ -4213,7 +4213,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <span className="truncate">{clientDisplayName}</span>
                       {isWoQc && (
                         <span className="bg-purple-700 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1 shadow-2xs border border-purple-800 flex items-center gap-0.5 animate-pulse" title="Visita de Control de Calidad">
-                          📋 CONTROL CALIDAD
+                          📋 QC
                         </span>
                       )}
                     </div>
