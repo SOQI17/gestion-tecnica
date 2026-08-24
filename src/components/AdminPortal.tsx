@@ -4350,6 +4350,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       total: number;
       asPrimary: number;
       asSupport: number;
+      hoursSpent: number;
+      installationsCount: number;
+      installationDays: number;
+      preventiveCount: number;
+      correctiveCount: number;
       statusCounts: Record<WorkOrderStatus, number>;
     }> = {};
 
@@ -4359,6 +4364,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         total: 0,
         asPrimary: 0,
         asSupport: 0,
+        hoursSpent: 0,
+        installationsCount: 0,
+        installationDays: 0,
+        preventiveCount: 0,
+        correctiveCount: 0,
         statusCounts: {
           Pendiente: 0,
           'En Proceso': 0,
@@ -4371,18 +4381,56 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     const reportsList = reports || [];
 
+    const getWOScheduledHours = (wo: WorkOrder, matchedReport?: TechnicalReport): number => {
+      if (matchedReport && matchedReport.hoursSpent) {
+        const parsed = parseFloat(String(matchedReport.hoursSpent).replace(/[^0-9.]/g, ''));
+        if (!isNaN(parsed) && parsed > 0) return parsed;
+      }
+      if (wo.durationDays && wo.durationDays > 0) {
+        return wo.durationDays * 8;
+      }
+      if (wo.plannedTime && wo.plannedTime.includes('-')) {
+        const parts = wo.plannedTime.split('-').map(p => p.trim());
+        if (parts.length === 2) {
+          const [h1, m1] = parts[0].split(':').map(Number);
+          const [h2, m2] = parts[1].split(':').map(Number);
+          if (!isNaN(h1) && !isNaN(h2)) {
+            const mins = (h2 * 60 + (m2 || 0)) - (h1 * 60 + (m1 || 0));
+            if (mins > 0) return Number((mins / 60).toFixed(1));
+          }
+        }
+      }
+      return 8; // Default standard 8h agenda shift per WO
+    };
+
+    const isInstallationWO = (wo: WorkOrder): boolean => {
+      const typeLower = (wo.type || '').toLowerCase().trim();
+      const nameLower = (wo.equipmentName || '').toLowerCase().trim();
+      const notesLower = (wo.notes || '').toLowerCase().trim();
+
+      return (
+        typeLower.includes('instal') ||
+        typeLower.includes('fmi') ||
+        typeLower.includes('montaje') ||
+        nameLower.includes('instalac') ||
+        nameLower.includes('fmi') ||
+        notesLower.includes('instalac') ||
+        notesLower.includes('fmi')
+      );
+    };
+
     filteredDashOrders.forEach(wo => {
       const effStatus = getWOEffectiveStatus(wo);
       const matchedReport = reportsList.find(r => r.workOrderId === wo.id);
-      const reportHours = matchedReport && matchedReport.hoursSpent ? parseFloat(String(matchedReport.hoursSpent)) || 0 : 0;
-      const isInstallation = wo.type === 'Instalación' || wo.type === 'FMI';
+      const scheduledHours = getWOScheduledHours(wo, matchedReport);
+      const isInstallation = isInstallationWO(wo);
       const duration = wo.durationDays && wo.durationDays > 0 ? wo.durationDays : 1;
 
       if (statsMap[wo.engineerId]) {
         statsMap[wo.engineerId].total++;
         statsMap[wo.engineerId].asPrimary++;
         statsMap[wo.engineerId].statusCounts[effStatus]++;
-        statsMap[wo.engineerId].hoursSpent += reportHours;
+        statsMap[wo.engineerId].hoursSpent += scheduledHours;
         if (isInstallation) {
           statsMap[wo.engineerId].installationsCount++;
           statsMap[wo.engineerId].installationDays += duration;
@@ -4398,6 +4446,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           statsMap[id].total++;
           statsMap[id].asSupport++;
           statsMap[id].statusCounts[effStatus]++;
+          statsMap[id].hoursSpent += scheduledHours;
           if (isInstallation) {
             statsMap[id].installationsCount++;
             statsMap[id].installationDays += duration;
@@ -4434,6 +4483,44 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     let totalCorrectiveCount = 0;
     let totalInspectionCount = 0;
 
+    const getWOScheduledHours = (wo: WorkOrder, matchedReport?: TechnicalReport): number => {
+      if (matchedReport && matchedReport.hoursSpent) {
+        const parsed = parseFloat(String(matchedReport.hoursSpent).replace(/[^0-9.]/g, ''));
+        if (!isNaN(parsed) && parsed > 0) return parsed;
+      }
+      if (wo.durationDays && wo.durationDays > 0) {
+        return wo.durationDays * 8;
+      }
+      if (wo.plannedTime && wo.plannedTime.includes('-')) {
+        const parts = wo.plannedTime.split('-').map(p => p.trim());
+        if (parts.length === 2) {
+          const [h1, m1] = parts[0].split(':').map(Number);
+          const [h2, m2] = parts[1].split(':').map(Number);
+          if (!isNaN(h1) && !isNaN(h2)) {
+            const mins = (h2 * 60 + (m2 || 0)) - (h1 * 60 + (m1 || 0));
+            if (mins > 0) return Number((mins / 60).toFixed(1));
+          }
+        }
+      }
+      return 8;
+    };
+
+    const isInstallationWO = (wo: WorkOrder): boolean => {
+      const typeLower = (wo.type || '').toLowerCase().trim();
+      const nameLower = (wo.equipmentName || '').toLowerCase().trim();
+      const notesLower = (wo.notes || '').toLowerCase().trim();
+
+      return (
+        typeLower.includes('instal') ||
+        typeLower.includes('fmi') ||
+        typeLower.includes('montaje') ||
+        nameLower.includes('instalac') ||
+        nameLower.includes('fmi') ||
+        notesLower.includes('instalac') ||
+        notesLower.includes('fmi')
+      );
+    };
+
     filteredDashOrders.forEach(wo => {
       const effStatus = getWOEffectiveStatus(wo);
       if (effStatus === 'Realizado' || effStatus === 'Reportado' || effStatus === 'Conciliado') {
@@ -4441,11 +4528,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       }
 
       const matchedReport = (reports || []).find(r => r.workOrderId === wo.id);
-      if (matchedReport && matchedReport.hoursSpent) {
-        totalReportHours += parseFloat(String(matchedReport.hoursSpent)) || 0;
-      }
+      const scheduledHours = getWOScheduledHours(wo, matchedReport);
+      totalReportHours += scheduledHours;
 
-      if (wo.type === 'Instalación' || wo.type === 'FMI') {
+      if (isInstallationWO(wo)) {
         totalInstallationCount++;
         totalInstallationDays += (wo.durationDays && wo.durationDays > 0 ? wo.durationDays : 1);
       } else if (wo.type === 'Preventivo') {
