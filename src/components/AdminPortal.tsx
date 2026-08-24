@@ -1256,6 +1256,7 @@ export default function AdminPortal({
   const [infoScheduledTraining, setInfoScheduledTraining] = useState<ScheduledTraining | null>(null);
   const [eval360ModalTab, setEval360ModalTab] = useState<'metrics' | 'evaluation'>('metrics');
   const [editingEval360, setEditingEval360] = useState<EngineerEvaluation360 | null>(null);
+  const [engMetricsSelectedStatus, setEngMetricsSelectedStatus] = useState<WorkOrderStatus | 'TODAS'>('Pendiente');
 
   // Memoized equipment auto-fill suggestions for Registry Modal (combines maintenanceRegistries & contract equipmentItems)
   const suggestedRegistryEquipments = useMemo(() => {
@@ -4470,6 +4471,163 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handlePrintEngineerEvaluationAndMetrics = (eng: Engineer) => {
+    const stats = engineerStats.find(s => s.engineer.id === eng.id);
+    const existingEval = (evaluations360 || []).find(e => e.engineerId === eng.id);
+    const currentEval = editingEval360 && editingEval360.engineerId === eng.id ? editingEval360 : (existingEval || {
+      id: `EVAL360-${eng.id}`,
+      engineerId: eng.id,
+      evaluatorName: 'Jefatura Técnica',
+      period: '2026',
+      scoreGeneral: 4.5,
+      competencies: {
+        technicalDiagnostic: 4.5,
+        equipmentMastery: 4.5,
+        radiologicalSafety: 5.0,
+        reportAccuracy: 4.5,
+        communication: 4.0,
+        teamwork: 4.5,
+        problemSolving: 4.5,
+        punctuality: 4.5,
+        toolCare: 5.0
+      },
+      feedbackStrengths: 'Excelente manejo técnico, amplio conocimiento de la modalidad y alto compromiso con el cliente.',
+      feedbackImprovements: 'Mantener la puntualidad en el registro inmediato de informes digitales RETE-04.',
+      actionPlan: 'Continuar con capacitaciones avanzadas de diagnóstico de fábrica GE.',
+      updatedAt: new Date().toISOString()
+    });
+
+    const engOrders = filteredDashOrders.filter(wo => 
+      wo.engineerId === eng.id || 
+      (wo.supportEngineerIds && wo.supportEngineerIds.includes(eng.id)) ||
+      wo.supportEngineerId === eng.id
+    );
+    const pendingOrders = engOrders.filter(wo => getWOEffectiveStatus(wo) === 'Pendiente');
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Informe de Rendimiento y Evaluación 360° - ${eng.name}</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 25px; color: #0f172a; font-size: 11px; line-height: 1.4; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #4f46e5; padding-bottom: 12px; margin-bottom: 20px; }
+            .logo { font-size: 20px; font-weight: 900; color: #4f46e5; letter-spacing: 0.5px; }
+            .subtitle { font-size: 10px; color: #64748b; font-weight: bold; }
+            .title { font-size: 14px; font-weight: bold; text-transform: uppercase; color: #0f172a; margin-top: 4px; }
+            .section-title { font-size: 12px; font-weight: bold; background: #f1f5f9; padding: 6px 10px; border-left: 4px solid #4f46e5; margin: 18px 0 10px 0; text-transform: uppercase; border-radius: 0 4px 4px 0; }
+            .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+            .kpi-card { border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; text-align: center; background: #f8fafc; }
+            .kpi-val { font-size: 18px; font-weight: 900; color: #1e293b; margin-top: 4px; }
+            .kpi-label { font-size: 9px; color: #64748b; font-weight: bold; text-transform: uppercase; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
+            th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 7px; text-align: left; font-weight: bold; }
+            td { border: 1px solid #cbd5e1; padding: 7px; }
+            .badge-pending { background: #fef3c7; color: #92400e; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #fcd34d; }
+            .badge-score { background: #e0e7ff; color: #3730a3; font-weight: 900; padding: 6px 12px; border-radius: 8px; font-size: 14px; border: 1px solid #c7d2fe; }
+            .comp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .comp-card { border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 6px; background: #fff; display: flex; justify-content: space-between; }
+            .signatures { display: flex; justify-content: space-between; margin-top: 45px; }
+            .sig-box { width: 42%; text-align: center; border-top: 1.5px solid #64748b; padding-top: 8px; font-weight: bold; font-size: 11px; }
+            @media print { body { padding: 15px; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">ORIMEC - GESTIÓN TÉCNICA</div>
+              <div class="subtitle">SISTEMA INTEGRAL DE MANTENIMIENTO BIOMÉDICO</div>
+              <div class="title">Informe de Rendimiento y Evaluación 360°</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="badge-score">Score 360°: ⭐ ${currentEval.scoreGeneral} / 5.0</div>
+              <div style="margin-top: 5px; font-size: 9px; color: #64748b; font-weight: bold;">Fecha: ${new Date().toLocaleDateString('es-EC')}</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 15px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+            <div><strong>Ingeniero:</strong> ${eng.name}</div>
+            <div><strong>Especialidad:</strong> ${eng.specialty}</div>
+            <div><strong>Sede:</strong> ${eng.sede || 'Quito'}</div>
+            <div><strong>Email:</strong> ${eng.email}</div>
+            <div><strong>Evaluado por:</strong> ${currentEval.evaluatorName}</div>
+            <div><strong>Periodo:</strong> ${currentEval.period}</div>
+          </div>
+
+          <div class="section-title">1. Resumen de Métricas de Productividad</div>
+          <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Total Tareas</div><div class="kpi-val">${stats?.total || 0}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Tasa Cierre</div><div class="kpi-val">${stats && stats.total > 0 ? Math.round(((stats.statusCounts.Conciliado + stats.statusCounts.Realizado + stats.statusCounts.Reportado) / stats.total) * 100) : 0}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Realizadas/Conciliadas</div><div class="kpi-val">${(stats?.statusCounts.Realizado || 0) + (stats?.statusCounts.Conciliado || 0) + (stats?.statusCounts.Reportado || 0)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Pendientes</div><div class="kpi-val" style="color: #d97706;">${stats?.statusCounts.Pendiente || 0}</div></div>
+          </div>
+
+          <div class="section-title">2. Detalle de Órdenes Pendientes (${pendingOrders.length} Tareas)</div>
+          ${pendingOrders.length === 0 ? '<p style="color: #64748b; padding: 8px;">No registra órdenes pendientes de ejecución en este periodo.</p>' : `
+            <table>
+              <thead>
+                <tr>
+                  <th>Nº Orden</th>
+                  <th>Cliente / Institución</th>
+                  <th>Equipo / Modelo</th>
+                  <th>Fecha Programada</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pendingOrders.map(wo => {
+                  const client = clients.find(c => c.id === wo.clientId);
+                  return `
+                    <tr>
+                      <td><strong>${wo.id}</strong></td>
+                      <td>${client ? client.name : (wo.clientId || 'Sin cliente')}</td>
+                      <td>${wo.equipmentName}</td>
+                      <td>${wo.plannedDate}</td>
+                      <td><span class="badge-pending">PENDIENTE</span></td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          `}
+
+          <div class="section-title">3. Ficha de Evaluación 360° por Competencias</div>
+          <div class="comp-grid">
+            <div class="comp-card"><span>🛠️ Diagnóstico Técnico</span><strong>${currentEval.competencies.technicalDiagnostic} ⭐</strong></div>
+            <div class="comp-card"><span>⚙️ Dominio Modalidades GE</span><strong>${currentEval.competencies.equipmentMastery} ⭐</strong></div>
+            <div class="comp-card"><span>☢️ Seguridad Radiológica</span><strong>${currentEval.competencies.radiologicalSafety} ⭐</strong></div>
+            <div class="comp-card"><span>📄 Informes RETE-04</span><strong>${currentEval.competencies.reportAccuracy} ⭐</strong></div>
+            <div class="comp-card"><span>🗣️ Comunicación Cliente</span><strong>${currentEval.competencies.communication} ⭐</strong></div>
+            <div class="comp-card"><span>🤝 Trabajo en Equipo</span><strong>${currentEval.competencies.teamwork} ⭐</strong></div>
+            <div class="comp-card"><span>⚡ Resolución bajo Presión</span><strong>${currentEval.competencies.problemSolving} ⭐</strong></div>
+            <div class="comp-card"><span>⏰ Puntualidad Servicio</span><strong>${currentEval.competencies.punctuality} ⭐</strong></div>
+            <div class="comp-card"><span>🧰 Cuidado Herramientas</span><strong>${currentEval.competencies.toolCare} ⭐</strong></div>
+          </div>
+
+          <div style="margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;">
+            <p style="margin: 4px 0;"><strong>💪 Fortalezas:</strong> ${currentEval.feedbackStrengths || 'N/A'}</p>
+            <p style="margin: 4px 0;"><strong>🔍 Oportunidades Mejora:</strong> ${currentEval.feedbackImprovements || 'N/A'}</p>
+            <p style="margin: 4px 0;"><strong>🎯 Plan de Acción:</strong> ${currentEval.actionPlan || 'N/A'}</p>
+          </div>
+
+          <div class="signatures">
+            <div class="sig-box">${currentEval.evaluatorName}<br/><span style="font-size: 9px; color: #64748b; font-weight: normal;">Jefatura / Evaluador</span></div>
+            <div class="sig-box">${eng.name}<br/><span style="font-size: 9px; color: #64748b; font-weight: normal;">Ingeniero Evaluado</span></div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 600);
   };
 
   const handleExportSingleEngineerCSV = (eng: Engineer) => {
@@ -14618,31 +14776,135 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </div>
                       </div>
 
-                      {/* Status counters breakdown list */}
-                      <div className="space-y-1.5">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase block">Estados de Tarea (Reales)</span>
+                      {/* Status counters breakdown list with clickable pending view */}
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">Estados de Tarea (Reales) - Haz clic para ver detalle:</span>
                         <div className="grid grid-cols-2 gap-2 text-[10px]">
-                          <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
-                            <span className="font-semibold text-emerald-750">Conciliadas</span>
-                            <span className="font-black text-slate-900">{stats?.statusCounts.Conciliado || 0}</span>
-                          </div>
-                          <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
-                            <span className="font-semibold text-blue-750">Realizadas</span>
-                            <span className="font-black text-slate-900">{stats?.statusCounts.Realizado || 0}</span>
-                          </div>
-                          <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
-                            <span className="font-semibold text-indigo-750">Reportadas</span>
-                            <span className="font-black text-slate-900">{stats?.statusCounts.Reportado || 0}</span>
-                          </div>
-                          <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg">
-                            <span className="font-semibold text-sky-750">En Proceso</span>
-                            <span className="font-black text-slate-900">{stats?.statusCounts['En Proceso'] || 0}</span>
-                          </div>
-                          <div className="flex justify-between items-center bg-white border border-slate-150 p-2 rounded-lg col-span-2">
-                            <span className="font-semibold text-yellow-750">Pendientes</span>
-                            <span className="font-black text-slate-900">{stats?.statusCounts.Pendiente || 0}</span>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEngMetricsSelectedStatus('Conciliado')}
+                            className={`flex justify-between items-center p-2 rounded-lg transition-all cursor-pointer border text-left ${
+                              engMetricsSelectedStatus === 'Conciliado'
+                                ? 'bg-emerald-100/80 border-emerald-400 ring-1 ring-emerald-400'
+                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span className="font-semibold text-emerald-800">Conciliadas</span>
+                            <span className="font-black text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded">{stats?.statusCounts.Conciliado || 0}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEngMetricsSelectedStatus('Realizado')}
+                            className={`flex justify-between items-center p-2 rounded-lg transition-all cursor-pointer border text-left ${
+                              engMetricsSelectedStatus === 'Realizado'
+                                ? 'bg-blue-100/80 border-blue-400 ring-1 ring-blue-400'
+                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span className="font-semibold text-blue-800">Realizadas</span>
+                            <span className="font-black text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded">{stats?.statusCounts.Realizado || 0}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEngMetricsSelectedStatus('Reportado')}
+                            className={`flex justify-between items-center p-2 rounded-lg transition-all cursor-pointer border text-left ${
+                              engMetricsSelectedStatus === 'Reportado'
+                                ? 'bg-indigo-100/80 border-indigo-400 ring-1 ring-indigo-400'
+                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span className="font-semibold text-indigo-800">Reportadas</span>
+                            <span className="font-black text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded">{stats?.statusCounts.Reportado || 0}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEngMetricsSelectedStatus('En Proceso')}
+                            className={`flex justify-between items-center p-2 rounded-lg transition-all cursor-pointer border text-left ${
+                              engMetricsSelectedStatus === 'En Proceso'
+                                ? 'bg-sky-100/80 border-sky-400 ring-1 ring-sky-400'
+                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span className="font-semibold text-sky-800">En Proceso</span>
+                            <span className="font-black text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded">{stats?.statusCounts['En Proceso'] || 0}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEngMetricsSelectedStatus('Pendiente')}
+                            className={`flex justify-between items-center p-2 rounded-lg col-span-2 transition-all cursor-pointer border text-left ${
+                              engMetricsSelectedStatus === 'Pendiente'
+                                ? 'bg-amber-100/90 border-amber-400 ring-1 ring-amber-400 shadow-xs'
+                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span className="font-bold text-amber-800 flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Pendientes (Clic para ver lista de tareas)</span>
+                            </span>
+                            <span className="font-black text-amber-900 bg-amber-200 px-2 py-0.5 rounded text-xs">
+                              {stats?.statusCounts.Pendiente || 0}
+                            </span>
+                          </button>
                         </div>
+
+                        {/* Interactive Task List Drawer for Selected Status */}
+                        {(() => {
+                          const selectedStatusOrders = engOrders.filter(wo => {
+                            if (engMetricsSelectedStatus === 'TODAS') return true;
+                            return getWOEffectiveStatus(wo) === engMetricsSelectedStatus;
+                          });
+
+                          return (
+                            <div className="space-y-2 bg-amber-50/70 border border-amber-200 rounded-xl p-3 mt-2 shadow-2xs">
+                              <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-extrabold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                                  <ClipboardList className="w-3.5 h-3.5 text-amber-600" />
+                                  <span>Órdenes {engMetricsSelectedStatus === 'TODAS' ? 'Totales' : engMetricsSelectedStatus.toUpperCase()} ({selectedStatusOrders.length}):</span>
+                                </p>
+                                {engMetricsSelectedStatus !== 'TODAS' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setEngMetricsSelectedStatus('TODAS')}
+                                    className="text-[9px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                                  >
+                                    Ver todas
+                                  </button>
+                                )}
+                              </div>
+
+                              {selectedStatusOrders.length === 0 ? (
+                                <p className="text-[10px] text-slate-400 font-bold p-2 text-center">No hay órdenes en estado {engMetricsSelectedStatus}</p>
+                              ) : (
+                                <div className="max-h-[160px] overflow-y-auto space-y-1.5 pr-1">
+                                  {selectedStatusOrders.map(wo => {
+                                    const client = clients.find(c => c.id === wo.clientId);
+                                    const effStatus = getWOEffectiveStatus(wo);
+                                    return (
+                                      <div key={wo.id} className="bg-white border border-slate-200 rounded-lg p-2 flex justify-between items-center text-[10px] hover:border-amber-300 transition-colors shadow-2xs">
+                                        <div className="truncate pr-2">
+                                          <span className="font-mono font-bold text-slate-800 block truncate">{wo.id}</span>
+                                          <span className="font-bold text-indigo-950 block truncate">{client ? client.name : (wo.clientId || 'Sin cliente')}</span>
+                                          <span className="text-slate-500 font-medium truncate block text-[9px]">{wo.equipmentName}</span>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                          <span className="font-mono font-bold text-slate-600 block text-[9px]">📅 {wo.plannedDate}</span>
+                                          <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded inline-block mt-0.5 ${
+                                            effStatus === 'Pendiente' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                            effStatus === 'Realizado' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                            effStatus === 'Conciliado' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                            'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                          }`}>
+                                            {effStatus.toUpperCase()}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -14829,17 +15091,28 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 )}
 
                 {/* Footer buttons */}
-                <div className="flex justify-between items-center border-t border-slate-100 pt-4 mt-2">
-                  {eval360ModalTab === 'metrics' ? (
+                <div className="flex flex-wrap justify-between items-center border-t border-slate-100 pt-4 mt-2 gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleExportSingleEngineerCSV(eng)}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
                     >
                       <FileSpreadsheet className="w-4 h-4" />
-                      <span>Descargar Reporte Excel</span>
+                      <span>Excel</span>
                     </button>
-                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handlePrintEngineerEvaluationAndMetrics(eng)}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+                      title="Imprimir o Guardar en PDF Métricas y Evaluación 360°"
+                    >
+                      <Printer className="w-4 h-4" />
+                      <span>Imprimir PDF (Métricas + 360°)</span>
+                    </button>
+                  </div>
+
+                  {eval360ModalTab === 'evaluation' && (
                     <button
                       type="button"
                       onClick={() => {
