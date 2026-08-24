@@ -4369,12 +4369,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       };
     });
 
+    const reportsList = reports || [];
+
     filteredDashOrders.forEach(wo => {
       const effStatus = getWOEffectiveStatus(wo);
+      const matchedReport = reportsList.find(r => r.workOrderId === wo.id);
+      const reportHours = matchedReport && matchedReport.hoursSpent ? parseFloat(String(matchedReport.hoursSpent)) || 0 : 0;
+      const isInstallation = wo.type === 'Instalación' || wo.type === 'FMI';
+      const duration = wo.durationDays && wo.durationDays > 0 ? wo.durationDays : 1;
+
       if (statsMap[wo.engineerId]) {
         statsMap[wo.engineerId].total++;
         statsMap[wo.engineerId].asPrimary++;
         statsMap[wo.engineerId].statusCounts[effStatus]++;
+        statsMap[wo.engineerId].hoursSpent += reportHours;
+        if (isInstallation) {
+          statsMap[wo.engineerId].installationsCount++;
+          statsMap[wo.engineerId].installationDays += duration;
+        }
+        if (wo.type === 'Preventivo') statsMap[wo.engineerId].preventiveCount++;
+        if (wo.type === 'Correctivo') statsMap[wo.engineerId].correctiveCount++;
       }
       const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
         ? wo.supportEngineerIds
@@ -4384,14 +4398,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           statsMap[id].total++;
           statsMap[id].asSupport++;
           statsMap[id].statusCounts[effStatus]++;
+          if (isInstallation) {
+            statsMap[id].installationsCount++;
+            statsMap[id].installationDays += duration;
+          }
+          if (wo.type === 'Preventivo') statsMap[id].preventiveCount++;
+          if (wo.type === 'Correctivo') statsMap[id].correctiveCount++;
         }
       });
     });
 
     return Object.values(statsMap).sort((a, b) => b.total - a.total);
-  }, [filteredDashOrders, engineers, getWOEffectiveStatus]);
+  }, [filteredDashOrders, engineers, reports, getWOEffectiveStatus]);
 
-  // Calculate overall summary metrics
+  // Calculate overall summary metrics with detailed hours & installation project days
   const dashboardKPIs = React.useMemo(() => {
     const totalOrders = filteredDashOrders.length;
     const activeEngineersCount = engineers.length;
@@ -4407,21 +4427,161 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     });
 
     let completedCount = 0;
+    let totalReportHours = 0;
+    let totalInstallationCount = 0;
+    let totalInstallationDays = 0;
+    let totalPreventiveCount = 0;
+    let totalCorrectiveCount = 0;
+    let totalInspectionCount = 0;
+
     filteredDashOrders.forEach(wo => {
       const effStatus = getWOEffectiveStatus(wo);
       if (effStatus === 'Realizado' || effStatus === 'Reportado' || effStatus === 'Conciliado') {
         completedCount++;
       }
+
+      const matchedReport = (reports || []).find(r => r.workOrderId === wo.id);
+      if (matchedReport && matchedReport.hoursSpent) {
+        totalReportHours += parseFloat(String(matchedReport.hoursSpent)) || 0;
+      }
+
+      if (wo.type === 'Instalación' || wo.type === 'FMI') {
+        totalInstallationCount++;
+        totalInstallationDays += (wo.durationDays && wo.durationDays > 0 ? wo.durationDays : 1);
+      } else if (wo.type === 'Preventivo') {
+        totalPreventiveCount++;
+      } else if (wo.type === 'Correctivo') {
+        totalCorrectiveCount++;
+      } else if (wo.type === 'Inspección') {
+        totalInspectionCount++;
+      }
     });
+
     const complianceRate = totalOrders > 0 ? Math.round((completedCount / totalOrders) * 100) : 0;
+    const avgHoursPerEngineer = activeEngineersCount > 0 ? Number((totalReportHours / activeEngineersCount).toFixed(1)) : 0;
 
     return {
       totalOrders,
       averageJobs,
       topEngineerName: maxJobs > 0 ? `${topEngineerName.replace('Ing. ', '')} (${maxJobs})` : 'Ninguno',
-      complianceRate
+      complianceRate,
+      totalReportHours: Number(totalReportHours.toFixed(1)),
+      totalInstallationCount,
+      totalInstallationDays,
+      totalPreventiveCount,
+      totalCorrectiveCount,
+      totalInspectionCount,
+      avgHoursPerEngineer
     };
-  }, [filteredDashOrders, engineerStats, engineers, getWOEffectiveStatus]);
+  }, [filteredDashOrders, engineerStats, engineers, reports, getWOEffectiveStatus]);
+
+  const handlePrintMainDashboard = () => {
+    const periodTitle = dashPeriod === 'month' 
+      ? `Mes: ${monthsList[dashMonth - 1]} ${dashYear}`
+      : dashPeriod === 'semester'
+        ? `${dashSemester}º Semestre ${dashYear}`
+        : `Año ${dashYear}`;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Informe Ejecutivo de Rendimiento y Carga de Trabajo - ORIMEC</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 25px; color: #0f172a; font-size: 11px; line-height: 1.4; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 20px; }
+            .logo { font-size: 20px; font-weight: 900; color: #2563eb; letter-spacing: 0.5px; }
+            .subtitle { font-size: 10px; color: #64748b; font-weight: bold; }
+            .title { font-size: 14px; font-weight: bold; text-transform: uppercase; color: #0f172a; margin-top: 4px; }
+            .section-title { font-size: 12px; font-weight: bold; background: #f1f5f9; padding: 6px 10px; border-left: 4px solid #2563eb; margin: 18px 0 10px 0; text-transform: uppercase; border-radius: 0 4px 4px 0; }
+            .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 15px; }
+            .kpi-card { border: 1px solid #cbd5e1; padding: 10px 6px; border-radius: 8px; text-align: center; background: #f8fafc; }
+            .kpi-val { font-size: 16px; font-weight: 900; color: #1e293b; margin-top: 4px; }
+            .kpi-label { font-size: 8.5px; color: #64748b; font-weight: bold; text-transform: uppercase; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
+            th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 7px; text-align: left; font-weight: bold; }
+            td { border: 1px solid #cbd5e1; padding: 7px; }
+            .badge-pending { background: #fef3c7; color: #92400e; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+            .badge-ok { background: #dcfce7; color: #166534; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+            .signatures { display: flex; justify-content: space-between; margin-top: 45px; }
+            .sig-box { width: 42%; text-align: center; border-top: 1.5px solid #64748b; padding-top: 8px; font-weight: bold; font-size: 11px; }
+            @media print { body { padding: 15px; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">ORIMEC - GESTIÓN TÉCNICA</div>
+              <div class="subtitle">SISTEMA INTEGRAL DE MANTENIMIENTO Y BIOMÉDICA</div>
+              <div class="title">Informe Ejecutivo de Rendimiento y Carga de Trabajo</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 12px; font-weight: 900; color: #2563eb;">PERIODO: ${periodTitle}</div>
+              <div style="margin-top: 5px; font-size: 9px; color: #64748b; font-weight: bold;">Fecha: ${new Date().toLocaleDateString('es-EC')}</div>
+            </div>
+          </div>
+
+          <div class="section-title">1. Resumen Ejecutivo de Métricas Globales</div>
+          <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Total Órdenes</div><div class="kpi-val">${dashboardKPIs.totalOrders}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Horas Campo</div><div class="kpi-val" style="color: #2563eb;">${dashboardKPIs.totalReportHours} hrs</div></div>
+            <div class="kpi-card"><div class="kpi-label">Instalaciones</div><div class="kpi-val" style="color: #059669;">${dashboardKPIs.totalInstallationCount} (${dashboardKPIs.totalInstallationDays} días)</div></div>
+            <div class="kpi-card"><div class="kpi-label">Prom. Tareas/Técnico</div><div class="kpi-val">${dashboardKPIs.averageJobs}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Tasa de Cierre</div><div class="kpi-val" style="color: #16a34a;">${dashboardKPIs.complianceRate}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Técnico Destacado</div><div class="kpi-val" style="font-size: 10px;">${dashboardKPIs.topEngineerName}</div></div>
+          </div>
+
+          <div class="section-title">2. Desglose Minucioso de Productividad y Horas por Ingeniero</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Ingeniero</th>
+                <th>Especialidad / Sede</th>
+                <th>Total Tareas</th>
+                <th>Principal / Apoyo</th>
+                <th>Horas Campo</th>
+                <th>Instalaciones (Días)</th>
+                <th>Preventivos / Correctivos</th>
+                <th>Tasa Cierre</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${engineerStats.map(st => {
+                const totalCompleted = st.statusCounts.Conciliado + st.statusCounts.Realizado + st.statusCounts.Reportado;
+                const rate = st.total > 0 ? Math.round((totalCompleted / st.total) * 100) : 0;
+                return `
+                  <tr>
+                    <td><strong>${st.engineer.name}</strong></td>
+                    <td>${st.engineer.specialty} • ${st.engineer.sede || 'Quito'}</td>
+                    <td><strong>${st.total}</strong></td>
+                    <td>${st.asPrimary} Pr. / ${st.asSupport} Ap.</td>
+                    <td><strong>${st.hoursSpent} hrs</strong></td>
+                    <td>${st.installationsCount} WOs (${st.installationDays} días)</td>
+                    <td>${st.preventiveCount} Prev / ${st.correctiveCount} Corr</td>
+                    <td><span class="${rate >= 80 ? 'badge-ok' : 'badge-pending'}">${rate}%</span></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="signatures">
+            <div class="sig-box">Jefatura de Operaciones y Servicios Biomédicos<br/><span style="font-size: 9px; color: #64748b; font-weight: normal;">Supervisión Técnica</span></div>
+            <div class="sig-box">Dirección General ORIMEC<br/><span style="font-size: 9px; color: #64748b; font-weight: normal;">Gerencia de Mantenimiento</span></div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 600);
+  };
 
   const handleExportDashboardCSV = () => {
     const headers = [
@@ -12811,67 +12971,107 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <FileSpreadsheet className="w-3.5 h-3.5" />
                   <span>Exportar Excel</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={handlePrintMainDashboard}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-2xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+                  title="Imprimir o Guardar en PDF Dashboard Principal de Rendimiento"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Imprimir Dashboard</span>
+                </button>
               </div>
             </div>
 
-            {/* KPI Cards Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* KPI Cards Row (Expanded 6 Cards Minucioso) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
               {/* KPI 1: Total Orders */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div className="absolute top-0 left-0 h-1 bg-indigo-500 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider">Mantenimientos Totales</span>
-                    <h3 className="text-2xl font-bold text-indigo-750 mt-1">{dashboardKPIs.totalOrders}</h3>
-                    <p className="text-3xs text-slate-500 mt-1">Órdenes del periodo</p>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Mantenimientos</span>
+                    <h3 className="text-xl font-black text-indigo-900 mt-1">{dashboardKPIs.totalOrders}</h3>
+                    <p className="text-[8.5px] text-slate-500 mt-0.5 font-medium">Órdenes del periodo</p>
                   </div>
-                  <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
-                    <CalendarRange className="w-5 h-5" />
+                  <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+                    <CalendarRange className="w-4 h-4" />
                   </div>
                 </div>
               </div>
 
-              {/* KPI 2: Average Workload */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+              {/* KPI 2: Total Worked Field Hours */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+                <div className="absolute top-0 left-0 h-1 bg-blue-600 w-full" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Horas Campo</span>
+                    <h3 className="text-xl font-black text-blue-700 mt-1">{dashboardKPIs.totalReportHours} hrs</h3>
+                    <p className="text-[8.5px] text-slate-500 mt-0.5 font-medium">Prom. {dashboardKPIs.avgHoursPerEngineer} h/téc</p>
+                  </div>
+                  <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+                    <BarChart3 className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI 3: Installation & Project Days */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+                <div className="absolute top-0 left-0 h-1 bg-emerald-600 w-full" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Instalaciones</span>
+                    <h3 className="text-xl font-black text-emerald-700 mt-1">{dashboardKPIs.totalInstallationCount} WOs</h3>
+                    <p className="text-[8.5px] text-emerald-800 mt-0.5 font-extrabold">{dashboardKPIs.totalInstallationDays} Días Proyecto</p>
+                  </div>
+                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
+                    <Briefcase className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI 4: Average Workload */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div className="absolute top-0 left-0 h-1 bg-teal-500 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider">Promedio de Carga</span>
-                    <h3 className="text-2xl font-bold text-teal-700 mt-1">{dashboardKPIs.averageJobs}</h3>
-                    <p className="text-3xs text-slate-500 mt-1">Tareas por ingeniero</p>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Promedio Carga</span>
+                    <h3 className="text-xl font-black text-teal-700 mt-1">{dashboardKPIs.averageJobs}</h3>
+                    <p className="text-[8.5px] text-slate-500 mt-0.5 font-medium">Tareas por técnico</p>
                   </div>
-                  <div className="p-3 bg-teal-50 text-teal-650 rounded-lg">
-                    <Percent className="w-5 h-5" />
+                  <div className="p-2.5 bg-teal-50 text-teal-650 rounded-lg shrink-0">
+                    <Percent className="w-4 h-4" />
                   </div>
                 </div>
               </div>
 
-              {/* KPI 3: Top Performer */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+              {/* KPI 5: Top Performer */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div className="absolute top-0 left-0 h-1 bg-amber-500 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider">Mayor Asignación</span>
-                    <h3 className="text-base font-bold text-amber-700 mt-2.5 truncate max-w-[150px]">{dashboardKPIs.topEngineerName}</h3>
-                    <p className="text-3xs text-slate-500 mt-1.5">Técnico con más tareas</p>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Mayor Carga</span>
+                    <h3 className="text-xs font-black text-amber-800 mt-1.5 truncate max-w-[110px]">{dashboardKPIs.topEngineerName}</h3>
+                    <p className="text-[8.5px] text-slate-500 mt-0.5 font-medium">Técnico con más tareas</p>
                   </div>
-                  <div className="p-3 bg-amber-50 text-amber-600 rounded-lg">
-                    <Award className="w-5 h-5" />
+                  <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg shrink-0">
+                    <Award className="w-4 h-4" />
                   </div>
                 </div>
               </div>
 
-              {/* KPI 4: Completion rate */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
-                <div className="absolute top-0 left-0 h-1 bg-emerald-500 w-full" />
+              {/* KPI 6: Completion rate */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+                <div className="absolute top-0 left-0 h-1 bg-indigo-600 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider">Tasa de Cierre</span>
-                    <h3 className="text-2xl font-bold text-emerald-700 mt-1">{dashboardKPIs.complianceRate}%</h3>
-                    <p className="text-3xs text-slate-500 mt-1">Órdenes cerradas/ejecutadas</p>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Tasa de Cierre</span>
+                    <h3 className="text-xl font-black text-emerald-700 mt-1">{dashboardKPIs.complianceRate}%</h3>
+                    <p className="text-[8.5px] text-slate-500 mt-0.5 font-medium">Avance general</p>
                   </div>
-                  <div className="p-3 bg-emerald-50 text-emerald-605 rounded-lg">
-                    <TrendingUp className="w-5 h-5" />
+                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
+                    <TrendingUp className="w-4 h-4" />
                   </div>
                 </div>
               </div>
@@ -13004,6 +13204,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <tr className="bg-slate-50 border-b border-slate-200 font-bold text-slate-500 text-3xs uppercase">
                         <th className="p-2.5">Ingeniero</th>
                         <th className="p-2.5 text-center">Tareas</th>
+                        <th className="p-2.5 text-center font-bold text-blue-700">Horas Campo</th>
+                        <th className="p-2.5 text-center font-bold text-emerald-700">Instalaciones (Días)</th>
                         <th className="p-2.5 text-center">Como Principal / Apoyo</th>
                         <th className="p-2.5">Estado / Avance Proporcional</th>
                       </tr>
@@ -13011,18 +13213,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <tbody className="divide-y divide-slate-100 bg-white font-medium">
                       {engineerStats.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="p-4 text-center text-slate-400 font-bold text-3xs">
+                          <td colSpan={6} className="p-4 text-center text-slate-400 font-bold text-3xs">
                             No se encontraron registros de ingenieros para este periodo
                           </td>
                         </tr>
                       ) : (
                         engineerStats.map(st => {
                           const total = st.total;
-                          const conciliadoPct = total > 0 ? (st.statusCounts.Conciliado / total) * 100 : 0;
-                          const realizadoPct = total > 0 ? (st.statusCounts.Realizado / total) * 100 : 0;
-                          const reportadoPct = total > 0 ? (st.statusCounts.Reportado / total) * 100 : 0;
-                          const enProcesoPct = total > 0 ? (st.statusCounts['En Proceso'] / total) * 100 : 0;
-                          const pendientePct = total > 0 ? (st.statusCounts.Pendiente / total) * 100 : 0;
+                          const completed = st.statusCounts.Conciliado + st.statusCounts.Realizado + st.statusCounts.Reportado;
+                          const pending = st.statusCounts.Pendiente;
+                          const inProgress = st.statusCounts['En Proceso'];
 
                           return (
                             <tr 
@@ -13031,25 +13231,39 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setSelectedEngForMetrics(st.engineer);
                                 setIsEngMetricsModalOpen(true);
                               }}
-                              className="hover:bg-indigo-50/40 cursor-pointer transition-colors group"
+                              className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                             >
-                              <td className="p-2.5">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs shrink-0">{getEngineerEmoji(st.engineer.id)}</span>
-                                  <div>
-                                    <p className="font-bold text-slate-800 text-2xs leading-tight flex items-center gap-1.5">
-                                      {st.engineer.name}
-                                      <ExternalLink className="w-2.5 h-2.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </p>
-                                    <p className="text-[8px] text-slate-450 leading-none mt-0.5">{st.engineer.specialty}</p>
-                                  </div>
+                              <td className="p-2.5 flex items-center gap-2">
+                                <div className="w-7 h-7 rounded-full bg-slate-100 text-sm flex items-center justify-center border border-slate-200 shrink-0">
+                                  {getEngineerEmoji(st.engineer.id)}
+                                </div>
+                                <div className="truncate">
+                                  <h6 className="font-extrabold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors flex items-center gap-1">
+                                    <span>{st.engineer.name}</span>
+                                    <ExternalLink className="w-2.5 h-2.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  </h6>
+                                  <p className="text-[9px] text-slate-400 font-medium">
+                                    {st.engineer.specialty} • <span className="text-slate-600 font-bold">{st.engineer.sede || 'Quito'}</span>
+                                  </p>
                                 </div>
                               </td>
-                              <td className="p-2.5 text-center font-bold text-slate-900 text-xs">{total}</td>
-                              <td className="p-2.5 text-center text-[9px] text-slate-500">
-                                <span className="font-bold text-indigo-700">{st.asPrimary}</span> <span className="text-[8px] text-slate-350">Pr.</span>
-                                <span className="mx-1">/</span>
-                                <span className="font-bold text-emerald-700">{st.asSupport}</span> <span className="text-[8px] text-slate-350">Ap.</span>
+                              <td className="p-2.5 text-center font-black text-slate-900 text-xs">
+                                {st.total}
+                              </td>
+                              <td className="p-2.5 text-center font-black text-blue-700 text-xs">
+                                {st.hoursSpent} hrs
+                              </td>
+                              <td className="p-2.5 text-center">
+                                <span className={`font-bold px-2 py-0.5 rounded-full text-[9px] ${
+                                  st.installationsCount > 0 
+                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                    : 'text-slate-400 font-normal'
+                                }`}>
+                                  {st.installationsCount > 0 ? `${st.installationsCount} WOs (${st.installationDays} d)` : '0'}
+                                </span>
+                              </td>
+                              <td className="p-2.5 text-center text-3xs font-semibold text-slate-500">
+                                <span className="font-bold text-indigo-700">{st.asPrimary} Pr.</span> / <span className="text-slate-600">{st.asSupport} Ap.</span>
                               </td>
                               <td className="p-2.5">
                                 {total === 0 ? (
