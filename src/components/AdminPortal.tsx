@@ -14474,6 +14474,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             }
           });
 
+          const complianceRate = stats && stats.total > 0 
+            ? Math.round(((stats.statusCounts.Conciliado + stats.statusCounts.Realizado + stats.statusCounts.Reportado) / stats.total) * 100) 
+            : 0;
+
           const existingEval = (evaluations360 || []).find(e => e.engineerId === eng.id);
           const currentEval: EngineerEvaluation360 = editingEval360 && editingEval360.engineerId === eng.id ? editingEval360 : (existingEval || {
             id: `EVAL360-${eng.id}`,

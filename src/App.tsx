@@ -683,31 +683,38 @@ export default function App() {
   }, [showNotification]);
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'evaluations360'), (snapshot) => {
-      const list: EngineerEvaluation360[] = [];
-      snapshot.forEach(docSnap => {
-        list.push({ id: docSnap.id, ...docSnap.data() } as EngineerEvaluation360);
+    let unsub = () => {};
+    try {
+      unsub = onSnapshot(collection(db, 'evaluations360'), (snapshot) => {
+        const list: EngineerEvaluation360[] = [];
+        snapshot.forEach(docSnap => {
+          list.push({ id: docSnap.id, ...docSnap.data() } as EngineerEvaluation360);
+        });
+        if (list.length > 0) {
+          setEvaluations360(list);
+          localStorage.setItem('fsm_evaluations360', JSON.stringify(list));
+        }
+      }, (error) => {
+        console.warn("Firestore evaluations360 permissions warning, fallback to local storage:", error.message);
       });
-      if (list.length > 0) {
-        setEvaluations360(list);
-        localStorage.setItem('fsm_evaluations360', JSON.stringify(list));
-      }
-    }, (error) => console.error(error));
+    } catch (e) {
+      console.warn("evaluations360 subscription error:", e);
+    }
     return () => unsub();
   }, []);
 
   const handleSaveEvaluation360 = useCallback(async (evalItem: EngineerEvaluation360) => {
+    setEvaluations360(prev => {
+      const next = [...prev.filter(e => e.id !== evalItem.id), evalItem];
+      localStorage.setItem('fsm_evaluations360', JSON.stringify(next));
+      return next;
+    });
     try {
       await setDoc(doc(db, 'evaluations360', evalItem.id), cleanUndefined(evalItem));
-      setEvaluations360(prev => {
-        const next = [...prev.filter(e => e.id !== evalItem.id), evalItem];
-        localStorage.setItem('fsm_evaluations360', JSON.stringify(next));
-        return next;
-      });
-      showNotification(`Evaluación 360° guardada con éxito.`, 'success');
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `evaluations360/${evalItem.id}`);
+      console.warn("Could not sync evaluation360 to Firestore (saved locally):", error);
     }
+    showNotification(`Evaluación 360° guardada con éxito.`, 'success');
   }, [showNotification]);
 
   const handleClearEquipments = useCallback(async () => {
