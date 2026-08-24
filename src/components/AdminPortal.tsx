@@ -13224,6 +13224,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           const pending = st.statusCounts.Pendiente;
                           const inProgress = st.statusCounts['En Proceso'];
 
+                          const conciliadoPct = total > 0 ? (st.statusCounts.Conciliado / total) * 100 : 0;
+                          const realizadoPct = total > 0 ? (st.statusCounts.Realizado / total) * 100 : 0;
+                          const reportadoPct = total > 0 ? (st.statusCounts.Reportado / total) * 100 : 0;
+                          const enProcesoPct = total > 0 ? (st.statusCounts['En Proceso'] / total) * 100 : 0;
+                          const pendientePct = total > 0 ? (st.statusCounts.Pendiente / total) * 100 : 0;
+
                           return (
                             <tr 
                               key={st.engineer.id} 
