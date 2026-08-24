@@ -4473,32 +4473,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     document.body.removeChild(link);
   };
 
-  const handlePrintEngineerEvaluationAndMetrics = (eng: Engineer) => {
+  const handlePrintEngineerMetricsOnly = (eng: Engineer) => {
     const stats = engineerStats.find(s => s.engineer.id === eng.id);
-    const existingEval = (evaluations360 || []).find(e => e.engineerId === eng.id);
-    const currentEval = editingEval360 && editingEval360.engineerId === eng.id ? editingEval360 : (existingEval || {
-      id: `EVAL360-${eng.id}`,
-      engineerId: eng.id,
-      evaluatorName: 'Jefatura Técnica',
-      period: '2026',
-      scoreGeneral: 4.5,
-      competencies: {
-        technicalDiagnostic: 4.5,
-        equipmentMastery: 4.5,
-        radiologicalSafety: 5.0,
-        reportAccuracy: 4.5,
-        communication: 4.0,
-        teamwork: 4.5,
-        problemSolving: 4.5,
-        punctuality: 4.5,
-        toolCare: 5.0
-      },
-      feedbackStrengths: 'Excelente manejo técnico, amplio conocimiento de la modalidad y alto compromiso con el cliente.',
-      feedbackImprovements: 'Mantener la puntualidad en el registro inmediato de informes digitales RETE-04.',
-      actionPlan: 'Continuar con capacitaciones avanzadas de diagnóstico de fábrica GE.',
-      updatedAt: new Date().toISOString()
-    });
-
     const engOrders = filteredDashOrders.filter(wo => 
       wo.engineerId === eng.id || 
       (wo.supportEngineerIds && wo.supportEngineerIds.includes(eng.id)) ||
@@ -4513,14 +4489,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Informe de Rendimiento y Evaluación 360° - ${eng.name}</title>
+          <title>Informe de Métricas y Productividad - ${eng.name}</title>
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 25px; color: #0f172a; font-size: 11px; line-height: 1.4; }
-            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #4f46e5; padding-bottom: 12px; margin-bottom: 20px; }
-            .logo { font-size: 20px; font-weight: 900; color: #4f46e5; letter-spacing: 0.5px; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 20px; }
+            .logo { font-size: 20px; font-weight: 900; color: #2563eb; letter-spacing: 0.5px; }
             .subtitle { font-size: 10px; color: #64748b; font-weight: bold; }
             .title { font-size: 14px; font-weight: bold; text-transform: uppercase; color: #0f172a; margin-top: 4px; }
-            .section-title { font-size: 12px; font-weight: bold; background: #f1f5f9; padding: 6px 10px; border-left: 4px solid #4f46e5; margin: 18px 0 10px 0; text-transform: uppercase; border-radius: 0 4px 4px 0; }
+            .section-title { font-size: 12px; font-weight: bold; background: #f1f5f9; padding: 6px 10px; border-left: 4px solid #2563eb; margin: 18px 0 10px 0; text-transform: uppercase; border-radius: 0 4px 4px 0; }
             .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
             .kpi-card { border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; text-align: center; background: #f8fafc; }
             .kpi-val { font-size: 18px; font-weight: 900; color: #1e293b; margin-top: 4px; }
@@ -4529,9 +4505,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 7px; text-align: left; font-weight: bold; }
             td { border: 1px solid #cbd5e1; padding: 7px; }
             .badge-pending { background: #fef3c7; color: #92400e; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #fcd34d; }
-            .badge-score { background: #e0e7ff; color: #3730a3; font-weight: 900; padding: 6px 12px; border-radius: 8px; font-size: 14px; border: 1px solid #c7d2fe; }
-            .comp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-            .comp-card { border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 6px; background: #fff; display: flex; justify-content: space-between; }
+            .badge-ok { background: #dcfce7; color: #166534; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #86efac; }
             .signatures { display: flex; justify-content: space-between; margin-top: 45px; }
             .sig-box { width: 42%; text-align: center; border-top: 1.5px solid #64748b; padding-top: 8px; font-weight: bold; font-size: 11px; }
             @media print { body { padding: 15px; } }
@@ -4542,10 +4516,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <div>
               <div class="logo">ORIMEC - GESTIÓN TÉCNICA</div>
               <div class="subtitle">SISTEMA INTEGRAL DE MANTENIMIENTO BIOMÉDICO</div>
-              <div class="title">Informe de Rendimiento y Evaluación 360°</div>
+              <div class="title">Informe de Métricas y Productividad</div>
             </div>
             <div style="text-align: right;">
-              <div class="badge-score">Score 360°: ⭐ ${currentEval.scoreGeneral} / 5.0</div>
+              <div style="font-size: 12px; font-weight: 900; color: #1e293b;">PERIODO ${dashYear}</div>
               <div style="margin-top: 5px; font-size: 9px; color: #64748b; font-weight: bold;">Fecha: ${new Date().toLocaleDateString('es-EC')}</div>
             </div>
           </div>
@@ -4555,19 +4529,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <div><strong>Especialidad:</strong> ${eng.specialty}</div>
             <div><strong>Sede:</strong> ${eng.sede || 'Quito'}</div>
             <div><strong>Email:</strong> ${eng.email}</div>
-            <div><strong>Evaluado por:</strong> ${currentEval.evaluatorName}</div>
-            <div><strong>Periodo:</strong> ${currentEval.period}</div>
           </div>
 
-          <div class="section-title">1. Resumen de Métricas de Productividad</div>
+          <div class="section-title">1. Resumen KPI de Productividad</div>
           <div class="kpi-grid">
             <div class="kpi-card"><div class="kpi-label">Total Tareas</div><div class="kpi-val">${stats?.total || 0}</div></div>
-            <div class="kpi-card"><div class="kpi-label">Tasa Cierre</div><div class="kpi-val">${stats && stats.total > 0 ? Math.round(((stats.statusCounts.Conciliado + stats.statusCounts.Realizado + stats.statusCounts.Reportado) / stats.total) * 100) : 0}%</div></div>
-            <div class="kpi-card"><div class="kpi-label">Realizadas/Conciliadas</div><div class="kpi-val">${(stats?.statusCounts.Realizado || 0) + (stats?.statusCounts.Conciliado || 0) + (stats?.statusCounts.Reportado || 0)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Tasa Cierre</div><div class="kpi-val" style="color: #16a34a;">${stats && stats.total > 0 ? Math.round(((stats.statusCounts.Conciliado + stats.statusCounts.Realizado + stats.statusCounts.Reportado) / stats.total) * 100) : 0}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Realizadas/Conciliadas</div><div class="kpi-val" style="color: #2563eb;">${(stats?.statusCounts.Realizado || 0) + (stats?.statusCounts.Conciliado || 0) + (stats?.statusCounts.Reportado || 0)}</div></div>
             <div class="kpi-card"><div class="kpi-label">Pendientes</div><div class="kpi-val" style="color: #d97706;">${stats?.statusCounts.Pendiente || 0}</div></div>
           </div>
 
-          <div class="section-title">2. Detalle de Órdenes Pendientes (${pendingOrders.length} Tareas)</div>
+          <div class="section-title">2. Órdenes Pendientes de Ejecución (${pendingOrders.length} Tareas)</div>
           ${pendingOrders.length === 0 ? '<p style="color: #64748b; padding: 8px;">No registra órdenes pendientes de ejecución en este periodo.</p>' : `
             <table>
               <thead>
@@ -4596,23 +4568,163 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </table>
           `}
 
-          <div class="section-title">3. Ficha de Evaluación 360° por Competencias</div>
-          <div class="comp-grid">
-            <div class="comp-card"><span>🛠️ Diagnóstico Técnico</span><strong>${currentEval.competencies.technicalDiagnostic} ⭐</strong></div>
-            <div class="comp-card"><span>⚙️ Dominio Modalidades GE</span><strong>${currentEval.competencies.equipmentMastery} ⭐</strong></div>
-            <div class="comp-card"><span>☢️ Seguridad Radiológica</span><strong>${currentEval.competencies.radiologicalSafety} ⭐</strong></div>
-            <div class="comp-card"><span>📄 Informes RETE-04</span><strong>${currentEval.competencies.reportAccuracy} ⭐</strong></div>
-            <div class="comp-card"><span>🗣️ Comunicación Cliente</span><strong>${currentEval.competencies.communication} ⭐</strong></div>
-            <div class="comp-card"><span>🤝 Trabajo en Equipo</span><strong>${currentEval.competencies.teamwork} ⭐</strong></div>
-            <div class="comp-card"><span>⚡ Resolución bajo Presión</span><strong>${currentEval.competencies.problemSolving} ⭐</strong></div>
-            <div class="comp-card"><span>⏰ Puntualidad Servicio</span><strong>${currentEval.competencies.punctuality} ⭐</strong></div>
-            <div class="comp-card"><span>🧰 Cuidado Herramientas</span><strong>${currentEval.competencies.toolCare} ⭐</strong></div>
+          <div class="section-title">3. Detalle Completo de Trabajos Asignados en el Periodo (${engOrders.length} Tareas)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Nº Orden</th>
+                <th>Cliente</th>
+                <th>Equipo</th>
+                <th>Fecha</th>
+                <th>Rol</th>
+                <th>Estado Real</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${engOrders.map(wo => {
+                const client = clients.find(c => c.id === wo.clientId);
+                const isPrimary = wo.engineerId === eng.id;
+                const effStatus = getWOEffectiveStatus(wo);
+                return `
+                  <tr>
+                    <td><strong>${wo.id}</strong></td>
+                    <td>${client ? client.name : 'Cliente Desconocido'}</td>
+                    <td>${wo.equipmentName}</td>
+                    <td>${wo.plannedDate}</td>
+                    <td>${isPrimary ? 'Principal' : 'Apoyo'}</td>
+                    <td><span class="${effStatus === 'Pendiente' ? 'badge-pending' : 'badge-ok'}">${effStatus.toUpperCase()}</span></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="signatures">
+            <div class="sig-box">Jefatura Técnica<br/><span style="font-size: 9px; color: #64748b; font-weight: normal;">Supervisión Biomédica</span></div>
+            <div class="sig-box">${eng.name}<br/><span style="font-size: 9px; color: #64748b; font-weight: normal;">Ingeniero Responsable</span></div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 600);
+  };
+
+  const handlePrintEngineerEvaluation360Only = (eng: Engineer) => {
+    const existingEval = (evaluations360 || []).find(e => e.engineerId === eng.id);
+    const currentEval = editingEval360 && editingEval360.engineerId === eng.id ? editingEval360 : (existingEval || {
+      id: `EVAL360-${eng.id}`,
+      engineerId: eng.id,
+      evaluatorName: 'Jefatura Técnica',
+      period: '2026',
+      scoreGeneral: 4.5,
+      competencies: {
+        technicalDiagnostic: 4.5,
+        equipmentMastery: 4.5,
+        radiologicalSafety: 5.0,
+        reportAccuracy: 4.5,
+        communication: 4.0,
+        teamwork: 4.5,
+        problemSolving: 4.5,
+        punctuality: 4.5,
+        toolCare: 5.0
+      },
+      feedbackStrengths: 'Excelente manejo técnico, amplio conocimiento de la modalidad y alto compromiso con el cliente.',
+      feedbackImprovements: 'Mantener la puntualidad en el registro inmediato de informes digitales RETE-04.',
+      actionPlan: 'Continuar con capacitaciones avanzadas de diagnóstico de fábrica GE.',
+      updatedAt: new Date().toISOString()
+    });
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const compDefs = [
+      { key: 'technicalDiagnostic', label: '🛠️ Diagnóstico Técnico de Fallas', desc: 'Capacidad para detectar, aislar y resolver averías complejas en componentes biomédicos.' },
+      { key: 'equipmentMastery', label: '⚙️ Dominio Modalidades GE', desc: 'Conocimiento técnico avanzado en hardware y software de equipos GE (CT, MR, RX, etc.).' },
+      { key: 'radiologicalSafety', label: '☢️ Seguridad Radiológica', desc: 'Cumplimiento estricto de normas de bioseguridad, blindaje y protección radiológica.' },
+      { key: 'reportAccuracy', label: '📄 Informes RETE-04', desc: 'Precisión, claridad y oportunidad en la elaboración y entrega de reportes de mantenimiento.' },
+      { key: 'communication', label: '🗣️ Comunicación Cliente', desc: 'Relación profesional, empatía y atención clara a las solicitudes del personal hospitalario.' },
+      { key: 'teamwork', label: '🤝 Trabajo en Equipo', desc: 'Colaboración activa, disposición de apoyo a compañeros e intercambio de conocimientos.' },
+      { key: 'problemSolving', label: '⚡ Resolución bajo Presión', desc: 'Mantener la calma, eficiencia y buen criterio ante emergencias técnicas críticas.' },
+      { key: 'punctuality', label: '⏰ Puntualidad de Servicio', desc: 'Respeto riguroso a los horarios programados de visita e inspección a clientes.' },
+      { key: 'toolCare', label: '🧰 Cuidado de Herramientas', desc: 'Uso adecuado, calibración y conservación de maletines y herramientas de medición.' }
+    ];
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Informe Oficial de Evaluación 360° - ${eng.name}</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 25px; color: #0f172a; font-size: 11px; line-height: 1.4; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #9333ea; padding-bottom: 12px; margin-bottom: 20px; }
+            .logo { font-size: 20px; font-weight: 900; color: #9333ea; letter-spacing: 0.5px; }
+            .subtitle { font-size: 10px; color: #64748b; font-weight: bold; }
+            .title { font-size: 14px; font-weight: bold; text-transform: uppercase; color: #0f172a; margin-top: 4px; }
+            .section-title { font-size: 12px; font-weight: bold; background: #f3e8ff; padding: 6px 10px; border-left: 4px solid #9333ea; margin: 18px 0 10px 0; text-transform: uppercase; border-radius: 0 4px 4px 0; color: #581c87; }
+            .badge-score { background: #faf5ff; color: #6b21a8; font-weight: 900; padding: 8px 16px; border-radius: 10px; font-size: 15px; border: 1.5px solid #d8b4fe; text-align: center; }
+            .comp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .comp-card { border: 1px solid #e9d5ff; padding: 10px 12px; border-radius: 8px; background: #fff; }
+            .comp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+            .comp-title { font-weight: bold; color: #4c1d95; font-size: 11px; }
+            .comp-desc { font-size: 9px; color: #64748b; margin-top: 2px; }
+            .comp-val { font-size: 12px; font-weight: 900; color: #7e22ce; }
+            .signatures { display: flex; justify-content: space-between; margin-top: 45px; }
+            .sig-box { width: 42%; text-align: center; border-top: 1.5px solid #64748b; padding-top: 8px; font-weight: bold; font-size: 11px; }
+            @media print { body { padding: 15px; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">ORIMEC - GESTIÓN TÉCNICA</div>
+              <div class="subtitle">SISTEMA INTEGRAL DE MANTENIMIENTO BIOMÉDICO</div>
+              <div class="title">Evaluación 360° por Competencias</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="badge-score">
+                <div>Score 360°: ⭐ ${currentEval.scoreGeneral} / 5.0</div>
+                <div style="font-size: 9px; text-transform: uppercase; color: #7e22ce; margin-top: 2px;">
+                  ${currentEval.scoreGeneral >= 4.5 ? '🌟 Excelente' : currentEval.scoreGeneral >= 3.8 ? '👍 Sobresaliente' : currentEval.scoreGeneral >= 3.0 ? '⚠️ Satisfactorio' : '🚨 Requiere Plan de Mejora'}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div style="margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;">
-            <p style="margin: 4px 0;"><strong>💪 Fortalezas:</strong> ${currentEval.feedbackStrengths || 'N/A'}</p>
-            <p style="margin: 4px 0;"><strong>🔍 Oportunidades Mejora:</strong> ${currentEval.feedbackImprovements || 'N/A'}</p>
-            <p style="margin: 4px 0;"><strong>🎯 Plan de Acción:</strong> ${currentEval.actionPlan || 'N/A'}</p>
+          <div style="margin-bottom: 15px; background: #faf5ff; border: 1px solid #e9d5ff; padding: 12px; border-radius: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+            <div><strong>Ingeniero Evaluado:</strong> ${eng.name}</div>
+            <div><strong>Especialidad:</strong> ${eng.specialty}</div>
+            <div><strong>Sede:</strong> ${eng.sede || 'Quito'}</div>
+            <div><strong>Email:</strong> ${eng.email}</div>
+            <div><strong>Evaluado por:</strong> ${currentEval.evaluatorName}</div>
+            <div><strong>Periodo de Evaluación:</strong> ${currentEval.period}</div>
+          </div>
+
+          <div class="section-title">1. Calificación por Competencias Técnicas, Conductuales y Operativas</div>
+          <div class="comp-grid">
+            ${compDefs.map(c => {
+              const val = (currentEval.competencies as any)[c.key] || 4.0;
+              return `
+                <div class="comp-card">
+                  <div class="comp-head">
+                    <span class="comp-title">${c.label}</span>
+                    <span class="comp-val">${val} ⭐</span>
+                  </div>
+                  <div class="comp-desc">${c.desc}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="section-title">2. Retroalimentación Cualitativa y Plan de Desarrollo</div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;">
+            <p style="margin: 6px 0;"><strong>💪 Fortalezas Destacadas:</strong> ${currentEval.feedbackStrengths || 'N/A'}</p>
+            <p style="margin: 6px 0;"><strong>🔍 Oportunidades de Mejora:</strong> ${currentEval.feedbackImprovements || 'N/A'}</p>
+            <p style="margin: 6px 0;"><strong>🎯 Plan de Acción y Capacitación:</strong> ${currentEval.actionPlan || 'N/A'}</p>
           </div>
 
           <div class="signatures">
@@ -15011,7 +15123,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
                     </div>
 
-                    {/* Grid de 9 Competencias 360° */}
+                    {/* Grid de 9 Competencias 360° con explicaciones */}
                     <div className="space-y-2">
                       <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
                         <Award className="w-4 h-4 text-purple-600" />
@@ -15019,22 +15131,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {[
-                          { key: 'technicalDiagnostic', label: '🛠️ Diagnóstico Técnico de Fallas' },
-                          { key: 'equipmentMastery', label: '⚙️ Dominio Modalidades GE' },
-                          { key: 'radiologicalSafety', label: '☢️ Seguridad Radiológica' },
-                          { key: 'reportAccuracy', label: '📄 Informes RETE-04' },
-                          { key: 'communication', label: '🗣️ Comunicación Cliente' },
-                          { key: 'teamwork', label: '🤝 Trabajo en Equipo' },
-                          { key: 'problemSolving', label: '⚡ Resolución bajo Presión' },
-                          { key: 'punctuality', label: '⏰ Puntualidad de Servicio' },
-                          { key: 'toolCare', label: '🧰 Cuidado de Herramientas' }
+                          { key: 'technicalDiagnostic', label: '🛠️ Diagnóstico Técnico', description: 'Detección, aislamiento y resolución de averías biomédicas.' },
+                          { key: 'equipmentMastery', label: '⚙️ Dominio Modalidades GE', description: 'Conocimiento técnico avanzado en hardware y software GE.' },
+                          { key: 'radiologicalSafety', label: '☢️ Seguridad Radiológica', description: 'Cumplimiento de normas de bioseguridad y protección.' },
+                          { key: 'reportAccuracy', label: '📄 Informes RETE-04', description: 'Calidad, precisión y entrega oportuna de reportes.' },
+                          { key: 'communication', label: '🗣️ Comunicación Cliente', description: 'Relación profesional y atención al personal hospitalario.' },
+                          { key: 'teamwork', label: '🤝 Trabajo en Equipo', description: 'Colaboración activa y apoyo mutuo entre técnicos.' },
+                          { key: 'problemSolving', label: '⚡ Resolución bajo Presión', description: 'Eficiencia y serenidad en emergencias técnicas.' },
+                          { key: 'punctuality', label: '⏰ Puntualidad de Servicio', description: 'Respeto puntual a horarios de visita programados.' },
+                          { key: 'toolCare', label: '🧰 Cuidado de Herramientas', description: 'Uso adecuado y conservación de maletines e instrumentos.' }
                         ].map(comp => {
                           const val = (currentEval.competencies as any)[comp.key] || 4.0;
                           return (
                             <div key={comp.key} className="bg-white border border-slate-200 rounded-xl p-3 space-y-1.5 hover:border-purple-300 transition-colors shadow-2xs">
-                              <div className="flex justify-between items-center text-[10px] font-bold">
-                                <span className="text-slate-700">{comp.label}</span>
-                                <span className="text-purple-700 font-mono text-xs">{val} ⭐</span>
+                              <div className="flex justify-between items-start text-[10px] font-bold gap-1">
+                                <div>
+                                  <span className="text-slate-800 font-bold block">{comp.label}</span>
+                                  <span className="text-slate-400 font-normal text-[8.5px] leading-tight block mt-0.5">{comp.description}</span>
+                                </div>
+                                <span className="text-purple-700 font-mono text-xs shrink-0">{val} ⭐</span>
                               </div>
                               <input
                                 type="range"
@@ -15090,9 +15205,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   </div>
                 )}
 
-                {/* Footer buttons */}
+                {/* Footer buttons with separate print actions */}
                 <div className="flex flex-wrap justify-between items-center border-t border-slate-100 pt-4 mt-2 gap-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       type="button"
                       onClick={() => handleExportSingleEngineerCSV(eng)}
@@ -15103,12 +15218,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </button>
                     <button
                       type="button"
-                      onClick={() => handlePrintEngineerEvaluationAndMetrics(eng)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
-                      title="Imprimir o Guardar en PDF Métricas y Evaluación 360°"
+                      onClick={() => handlePrintEngineerMetricsOnly(eng)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+                      title="Imprimir solo el reporte de Métricas y Productividad"
                     >
                       <Printer className="w-4 h-4" />
-                      <span>Imprimir PDF (Métricas + 360°)</span>
+                      <span>Imprimir Métricas</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePrintEngineerEvaluation360Only(eng)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+                      title="Imprimir solo la Evaluación 360° por Competencias"
+                    >
+                      <Award className="w-4 h-4" />
+                      <span>Imprimir Evaluaciones 360°</span>
                     </button>
                   </div>
 
@@ -15121,7 +15245,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           setEditingEval360(null);
                         }
                       }}
-                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+                      className="bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
                     >
                       <Check className="w-4 h-4" />
                       <span>Guardar Evaluación 360°</span>
