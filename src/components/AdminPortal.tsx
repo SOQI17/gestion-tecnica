@@ -4634,7 +4634,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         toolCare: 5.0
       },
       feedbackStrengths: 'Excelente manejo técnico, amplio conocimiento de la modalidad y alto compromiso con el cliente.',
-      feedbackImprovements: 'Mantener la puntualidad en el registro inmediato de informes digitales RETE-04.',
+      feedbackImprovements: 'Mantener la puntualidad en el registro inmediato de informes digitales.',
       actionPlan: 'Continuar con capacitaciones avanzadas de diagnóstico de fábrica GE.',
       updatedAt: new Date().toISOString()
     });
@@ -4646,7 +4646,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       { key: 'technicalDiagnostic', label: '🛠️ Diagnóstico Técnico de Fallas', desc: 'Capacidad para detectar, aislar y resolver averías complejas en componentes biomédicos.' },
       { key: 'equipmentMastery', label: '⚙️ Dominio Modalidades GE', desc: 'Conocimiento técnico avanzado en hardware y software de equipos GE (CT, MR, RX, etc.).' },
       { key: 'radiologicalSafety', label: '☢️ Seguridad Radiológica', desc: 'Cumplimiento estricto de normas de bioseguridad, blindaje y protección radiológica.' },
-      { key: 'reportAccuracy', label: '📄 Informes RETE-04', desc: 'Precisión, claridad y oportunidad en la elaboración y entrega de reportes de mantenimiento.' },
+      { key: 'reportAccuracy', label: '📄 Informes Digitales', desc: 'Precisión, claridad y oportunidad en la elaboración y entrega de reportes de mantenimiento.' },
       { key: 'communication', label: '🗣️ Comunicación Cliente', desc: 'Relación profesional, empatía y atención clara a las solicitudes del personal hospitalario.' },
       { key: 'teamwork', label: '🤝 Trabajo en Equipo', desc: 'Colaboración activa, disposición de apoyo a compañeros e intercambio de conocimientos.' },
       { key: 'problemSolving', label: '⚡ Resolución bajo Presión', desc: 'Mantener la calma, eficiencia y buen criterio ante emergencias técnicas críticas.' },
@@ -14767,7 +14767,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               toolCare: 5.0
             },
             feedbackStrengths: 'Excelente manejo técnico, amplio conocimiento de la modalidad y alto compromiso con el cliente.',
-            feedbackImprovements: 'Mantener la puntualidad en el registro inmediato de informes digitales RETE-04.',
+            feedbackImprovements: 'Mantener la puntualidad en el registro inmediato de informes digitales.',
             actionPlan: 'Continuar con capacitaciones avanzadas de diagnóstico de fábrica GE.',
             updatedAt: new Date().toISOString()
           });
@@ -15134,7 +15134,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           { key: 'technicalDiagnostic', label: '🛠️ Diagnóstico Técnico', description: 'Detección, aislamiento y resolución de averías biomédicas.' },
                           { key: 'equipmentMastery', label: '⚙️ Dominio Modalidades GE', description: 'Conocimiento técnico avanzado en hardware y software GE.' },
                           { key: 'radiologicalSafety', label: '☢️ Seguridad Radiológica', description: 'Cumplimiento de normas de bioseguridad y protección.' },
-                          { key: 'reportAccuracy', label: '📄 Informes RETE-04', description: 'Calidad, precisión y entrega oportuna de reportes.' },
+                          { key: 'reportAccuracy', label: '📄 Informes Digitales', description: 'Calidad, precisión y entrega oportuna de reportes.' },
                           { key: 'communication', label: '🗣️ Comunicación Cliente', description: 'Relación profesional y atención al personal hospitalario.' },
                           { key: 'teamwork', label: '🤝 Trabajo en Equipo', description: 'Colaboración activa y apoyo mutuo entre técnicos.' },
                           { key: 'problemSolving', label: '⚡ Resolución bajo Presión', description: 'Eficiencia y serenidad en emergencias técnicas.' },
