@@ -1257,6 +1257,7 @@ export default function AdminPortal({
   const [eval360ModalTab, setEval360ModalTab] = useState<'metrics' | 'evaluation'>('metrics');
   const [editingEval360, setEditingEval360] = useState<EngineerEvaluation360 | null>(null);
   const [engMetricsSelectedStatus, setEngMetricsSelectedStatus] = useState<WorkOrderStatus | 'TODAS'>('Pendiente');
+  const [engMetricsSelectedType, setEngMetricsSelectedType] = useState<WorkOrderType | null>(null);
 
   // Memoized equipment auto-fill suggestions for Registry Modal (combines maintenanceRegistries & contract equipmentItems)
   const suggestedRegistryEquipments = useMemo(() => {
@@ -15027,17 +15028,27 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <span>Distribución de Trabajos y Ausencias</span>
                       </h4>
 
-                      {/* Maintenance types distribution */}
+                      {/* Maintenance types distribution with clickable detail */}
                       <div className="space-y-2 bg-slate-50/50 border border-slate-200/40 p-3.5 rounded-xl">
-                        <span className="text-[10px] font-bold text-slate-550 uppercase block mb-1">Tipos de Servicio Ejecutados</span>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tipos de Servicio Ejecutados - Haz clic para ver lista:</span>
+                        <div className="grid grid-cols-2 gap-2 text-[10px]">
                           {Object.entries(typeBreakdown).map(([type, count]) => {
                             if (count === 0) return null;
+                            const isSelected = engMetricsSelectedType === type;
                             return (
-                              <div key={type} className="flex justify-between items-center py-0.5 border-b border-slate-100 last:border-b-0">
-                                <span className="font-medium text-slate-600">{type}</span>
-                                <span className="font-bold text-slate-900 bg-slate-200/60 px-1.5 py-0.2 rounded-md">{count}</span>
-                              </div>
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() => setEngMetricsSelectedType(isSelected ? null : (type as WorkOrderType))}
+                                className={`flex justify-between items-center px-2 py-1.5 rounded-lg border transition-all cursor-pointer text-left ${
+                                  isSelected
+                                    ? 'bg-emerald-100 border-emerald-400 text-emerald-900 font-bold ring-1 ring-emerald-400 shadow-2xs'
+                                    : 'bg-white border-slate-200 hover:bg-slate-100/70 text-slate-700 font-semibold'
+                                }`}
+                              >
+                                <span className="truncate pr-1">{type}</span>
+                                <span className="font-extrabold text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded-md shrink-0 text-2xs">{count}</span>
+                              </button>
                             );
                           })}
                           {Object.values(typeBreakdown).every(c => c === 0) && (
@@ -15046,6 +15057,59 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             </div>
                           )}
                         </div>
+
+                        {/* Interactive Drawer for Selected Service Type */}
+                        {engMetricsSelectedType && (() => {
+                          const typeOrders = engOrders.filter(wo => wo.type === engMetricsSelectedType);
+                          return (
+                            <div className="space-y-2 bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 mt-3 shadow-2xs animate-in fade-in duration-150">
+                              <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                                  <Briefcase className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span>Órdenes de {engMetricsSelectedType} ({typeOrders.length}):</span>
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => setEngMetricsSelectedType(null)}
+                                  className="text-[9px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
+                                >
+                                  Cerrar
+                                </button>
+                              </div>
+
+                              {typeOrders.length === 0 ? (
+                                <p className="text-[10px] text-slate-400 font-bold p-2 text-center">Sin órdenes registradas para {engMetricsSelectedType}</p>
+                              ) : (
+                                <div className="max-h-[160px] overflow-y-auto space-y-1.5 pr-1">
+                                  {typeOrders.map(wo => {
+                                    const client = clients.find(c => c.id === wo.clientId);
+                                    const effStatus = getWOEffectiveStatus(wo);
+                                    return (
+                                      <div key={wo.id} className="bg-white border border-slate-200 rounded-lg p-2 flex justify-between items-center text-[10px] hover:border-emerald-300 transition-colors shadow-2xs">
+                                        <div className="truncate pr-2">
+                                          <span className="font-mono font-bold text-slate-800 block truncate">{wo.id}</span>
+                                          <span className="font-bold text-emerald-950 block truncate">{client ? client.name : (wo.clientId || 'Sin cliente')}</span>
+                                          <span className="text-slate-500 font-medium truncate block text-[9px]">{wo.equipmentName}</span>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                          <span className="font-mono font-bold text-slate-600 block text-[9px]">📅 {wo.plannedDate}</span>
+                                          <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded inline-block mt-0.5 ${
+                                            effStatus === 'Pendiente' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                            effStatus === 'Realizado' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                            effStatus === 'Conciliado' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                            'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                          }`}>
+                                            {effStatus.toUpperCase()}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Vacations details */}
