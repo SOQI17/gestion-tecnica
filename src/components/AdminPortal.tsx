@@ -4499,7 +4499,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
       const engInstGroups: Record<string, WorkOrder[]> = {};
       engInstWOs.forEach(wo => {
-        const key = `${(wo.clientId || wo.clientName || '').trim().toLowerCase()}___${(wo.equipmentName || '').trim().toLowerCase()}`;
+        const cleanId = (wo.id || '').split('_')[0].split('-').slice(0, 3).join('-').trim().toLowerCase();
+        const clientKey = (wo.clientId || wo.clientName || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        const equipKey = (wo.equipmentName || '').trim().toLowerCase().replace(/- día \d+/gi, '').replace(/[^a-z0-9]/g, '');
+        const key = cleanId && cleanId.length > 5 ? cleanId : `${clientKey}___${equipKey}`;
+
         if (!engInstGroups[key]) engInstGroups[key] = [];
         engInstGroups[key].push(wo);
       });
@@ -4555,9 +4559,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       totalReportHours += scheduledHours;
 
       if (isInstallationWO(wo)) {
-        const clientKey = (wo.clientId || wo.clientName || '').trim().toLowerCase();
-        const equipKey = (wo.equipmentName || '').trim().toLowerCase();
-        const key = `${clientKey}___${equipKey}`;
+        const cleanId = (wo.id || '').split('_')[0].split('-').slice(0, 3).join('-').trim().toLowerCase();
+        const clientKey = (wo.clientId || wo.clientName || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        const equipKey = (wo.equipmentName || '').trim().toLowerCase().replace(/- día \d+/gi, '').replace(/[^a-z0-9]/g, '');
+        const key = cleanId && cleanId.length > 5 ? cleanId : `${clientKey}___${equipKey}`;
+
         if (!installationGroups[key]) installationGroups[key] = [];
         installationGroups[key].push(wo);
       } else if (wo.type === 'Preventivo') {
@@ -11473,7 +11479,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           {[
             { id: 'scheduler', label: 'Calendario y Planificador', icon: CalendarIcon },
             { id: 'auditor', label: 'Conciliación de Reportes', count: pendingValidation, icon: ClipboardList },
-            { id: 'ordersList', label: 'Bitácora General', icon: FileText },
             { id: 'dashboard', label: 'Métricas de Ingenieros', icon: BarChart3 }
           ].map(sb => {
             const Icon = sb.icon;
@@ -15271,7 +15276,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                         const instGroups: Record<string, WorkOrder[]> = {};
                         woDetailedList.filter(item => item.isInst).forEach(item => {
-                          const key = `${(item.wo.clientId || item.wo.clientName || '').trim().toLowerCase()}___${(item.wo.equipmentName || '').trim().toLowerCase()}`;
+                          const cleanId = (item.wo.id || '').split('_')[0].split('-').slice(0, 3).join('-').trim().toLowerCase();
+                          const clientKey = (item.wo.clientId || item.wo.clientName || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+                          const equipKey = (item.wo.equipmentName || '').trim().toLowerCase().replace(/- día \d+/gi, '').replace(/[^a-z0-9]/g, '');
+                          const key = cleanId && cleanId.length > 5 ? cleanId : `${clientKey}___${equipKey}`;
+
                           if (!instGroups[key]) instGroups[key] = [];
                           instGroups[key].push(item.wo);
                         });
