@@ -1260,6 +1260,8 @@ export default function AdminPortal({
   const [engMetricsSelectedType, setEngMetricsSelectedType] = useState<WorkOrderType | null>(null);
   const [showEngHoursDetail, setShowEngHoursDetail] = useState<boolean>(false);
   const [expandedMainKPICard, setExpandedMainKPICard] = useState<'mantenimientos' | 'horas' | 'instalaciones' | 'carga' | 'topPerformer' | 'cierre' | null>(null);
+  const [excludedEngIds, setExcludedEngIds] = useState<string[]>([]);
+  const [showEngFilterModal, setShowEngFilterModal] = useState<boolean>(false);
 
   // Memoized equipment auto-fill suggestions for Registry Modal (combines maintenanceRegistries & contract equipmentItems)
   const suggestedRegistryEquipments = useMemo(() => {
@@ -4436,7 +4438,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       statusCounts: Record<WorkOrderStatus, number>;
     }> = {};
 
-    engineers.forEach(e => {
+    const activeEngineers = engineers.filter(e => !excludedEngIds.includes(e.id));
+
+    activeEngineers.forEach(e => {
       statsMap[e.id] = {
         engineer: e,
         total: 0,
@@ -4458,8 +4462,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     });
 
     const reportsList = reports || [];
-
-
 
     filteredDashOrders.forEach(wo => {
       const effStatus = getWOEffectiveStatus(wo);
@@ -4492,7 +4494,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     });
 
     // Deduplicate unique installation projects per engineer
-    engineers.forEach(e => {
+    activeEngineers.forEach(e => {
       const engInstWOs = filteredDashOrders.filter(wo => 
         isInstallationWO(wo) && (wo.engineerId === e.id || wo.supportEngineerId === e.id || wo.supportEngineerIds?.includes(e.id))
       );
@@ -4522,12 +4524,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     });
 
     return Object.values(statsMap).sort((a, b) => b.total - a.total);
-  }, [filteredDashOrders, engineers, reports, getWOEffectiveStatus]);
+  }, [filteredDashOrders, engineers, reports, getWOEffectiveStatus, excludedEngIds]);
 
   // Calculate overall summary metrics with detailed hours & installation project days
   const dashboardKPIs = React.useMemo(() => {
     const totalOrders = filteredDashOrders.length;
-    const activeEngineersCount = engineers.length;
+    const activeEngineersCount = engineers.length - excludedEngIds.length;
     const averageJobs = activeEngineersCount > 0 ? Number((totalOrders / activeEngineersCount).toFixed(1)) : 0;
     
     let topEngineerName = 'Ninguno';
@@ -4601,7 +4603,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       totalInspectionCount,
       avgHoursPerEngineer
     };
-  }, [filteredDashOrders, engineerStats, engineers, reports, getWOEffectiveStatus]);
+  }, [filteredDashOrders, engineerStats, engineers, reports, getWOEffectiveStatus, excludedEngIds]);
 
   const handlePrintMainDashboard = () => {
     const periodTitle = dashPeriod === 'month' 
@@ -13017,6 +13019,114 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         {/* Tab D: Metrics & Performance Dashboard */}
         {activeSubTab === 'dashboard' && (
           <div className="space-y-6">
+            {/* Engineer Filter & Exclusion Modal */}
+            {showEngFilterModal && (
+              <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150 no-print">
+                <div className="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <Users className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-slate-900">Selección y Filtrado de Técnicos</h4>
+                        <p className="text-3xs text-slate-500 font-medium">Excluye técnicos inactivos o de otras áreas del Dashboard e Informe PDF</p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowEngFilterModal(false)}
+                      className="text-slate-400 hover:text-slate-700 text-sm font-bold cursor-pointer p-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Quick Action Buttons */}
+                  <div className="flex flex-wrap gap-2 pt-1 pb-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const zeroTaskEngIds = engineers.filter(e => {
+                          const engOrders = filteredDashOrders.filter(wo => wo.engineerId === e.id || wo.supportEngineerId === e.id || wo.supportEngineerIds?.includes(e.id));
+                          return engOrders.length === 0;
+                        }).map(e => e.id);
+                        setExcludedEngIds(zeroTaskEngIds);
+                      }}
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                    >
+                      <span>⚡ Ocultar Técnicos sin Tareas (0)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setExcludedEngIds([])}
+                      className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <span>✅ Incluir Todos ({engineers.length})</span>
+                    </button>
+                  </div>
+
+                  {/* Engineers Checklist List */}
+                  <div className="max-h-72 overflow-y-auto custom-scrollbar border border-slate-200 rounded-xl divide-y divide-slate-100">
+                    {engineers.map(eng => {
+                      const engOrdersCount = filteredDashOrders.filter(wo => wo.engineerId === eng.id || wo.supportEngineerId === eng.id || wo.supportEngineerIds?.includes(eng.id)).length;
+                      const isIncluded = !excludedEngIds.includes(eng.id);
+
+                      return (
+                        <label
+                          key={eng.id}
+                          className={`flex items-center justify-between p-2.5 hover:bg-slate-50 cursor-pointer transition-colors ${
+                            !isIncluded ? 'opacity-50 bg-slate-50/50' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isIncluded}
+                              onChange={() => {
+                                if (isIncluded) {
+                                  setExcludedEngIds(prev => [...prev, eng.id]);
+                                } else {
+                                  setExcludedEngIds(prev => prev.filter(id => id !== eng.id));
+                                }
+                              }}
+                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                            />
+                            <div>
+                              <span className="font-bold text-xs text-slate-800 block">{eng.name}</span>
+                              <span className="text-3xs text-slate-400">{eng.specialty || 'Ingeniero Biomédico'} • {eng.location || 'Sede'}</span>
+                            </div>
+                          </div>
+
+                          <span className={`text-2xs font-extrabold px-2.5 py-0.5 rounded-full ${
+                            engOrdersCount > 0 ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-400'
+                          }`}>
+                            {engOrdersCount} tareas
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                    <span className="text-xs font-bold text-slate-600">
+                      Incluidos: <strong className="text-indigo-600">{engineers.length - excludedEngIds.length}</strong> de {engineers.length} técnicos
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowEngFilterModal(false)}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors cursor-pointer shadow-sm"
+                    >
+                      Aplicar Filtro al Informe
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {/* Filter banner */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between no-print">
               <div>
@@ -13089,6 +13199,24 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </select>
                   </div>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => setShowEngFilterModal(true)}
+                  className={`font-bold text-2xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-xs hover:shadow-md border ${
+                    excludedEngIds.length > 0
+                      ? 'bg-amber-500 text-slate-950 border-amber-600 hover:bg-amber-400 font-extrabold animate-pulse'
+                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                  }`}
+                  title="Filtrar o Excluir Técnicos del Informe"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>
+                    {excludedEngIds.length > 0
+                      ? `Técnicos (${engineers.length - excludedEngIds.length}/${engineers.length})`
+                      : 'Filtrar Técnicos'}
+                  </span>
+                </button>
 
                 <button
                   type="button"
