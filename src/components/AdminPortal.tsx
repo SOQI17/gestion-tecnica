@@ -4473,10 +4473,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         statsMap[wo.engineerId].asPrimary++;
         statsMap[wo.engineerId].statusCounts[effStatus]++;
         statsMap[wo.engineerId].hoursSpent += scheduledHours;
-        if (isInstallation) {
-          statsMap[wo.engineerId].installationsCount++;
-          statsMap[wo.engineerId].installationDays += duration;
-        }
         if (wo.type === 'Preventivo') statsMap[wo.engineerId].preventiveCount++;
         if (wo.type === 'Correctivo') statsMap[wo.engineerId].correctiveCount++;
       }
@@ -4489,14 +4485,35 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           statsMap[id].asSupport++;
           statsMap[id].statusCounts[effStatus]++;
           statsMap[id].hoursSpent += scheduledHours;
-          if (isInstallation) {
-            statsMap[id].installationsCount++;
-            statsMap[id].installationDays += duration;
-          }
           if (wo.type === 'Preventivo') statsMap[id].preventiveCount++;
           if (wo.type === 'Correctivo') statsMap[id].correctiveCount++;
         }
       });
+    });
+
+    // Deduplicate unique installation projects per engineer
+    engineers.forEach(e => {
+      const engInstWOs = filteredDashOrders.filter(wo => 
+        isInstallationWO(wo) && (wo.engineerId === e.id || wo.supportEngineerId === e.id || wo.supportEngineerIds?.includes(e.id))
+      );
+
+      const engInstGroups: Record<string, WorkOrder[]> = {};
+      engInstWOs.forEach(wo => {
+        const key = `${(wo.clientId || wo.clientName || '').trim().toLowerCase()}___${(wo.equipmentName || '').trim().toLowerCase()}`;
+        if (!engInstGroups[key]) engInstGroups[key] = [];
+        engInstGroups[key].push(wo);
+      });
+
+      if (statsMap[e.id]) {
+        statsMap[e.id].installationsCount = Object.keys(engInstGroups).length;
+        let days = 0;
+        Object.values(engInstGroups).forEach(group => {
+          const maxDur = Math.max(...group.map(w => w.durationDays || 1));
+          const distinctDates = new Set(group.map(w => w.plannedDate)).size;
+          days += Math.max(maxDur, distinctDates);
+        });
+        statsMap[e.id].installationDays = days;
+      }
     });
 
     return Object.values(statsMap).sort((a, b) => b.total - a.total);
@@ -4525,6 +4542,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     let totalCorrectiveCount = 0;
     let totalInspectionCount = 0;
 
+    const installationGroups: Record<string, WorkOrder[]> = {};
+
     filteredDashOrders.forEach(wo => {
       const effStatus = getWOEffectiveStatus(wo);
       if (effStatus === 'Realizado' || effStatus === 'Reportado' || effStatus === 'Conciliado') {
@@ -4536,8 +4555,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       totalReportHours += scheduledHours;
 
       if (isInstallationWO(wo)) {
-        totalInstallationCount++;
-        totalInstallationDays += (wo.durationDays && wo.durationDays > 0 ? wo.durationDays : 1);
+        const clientKey = (wo.clientId || wo.clientName || '').trim().toLowerCase();
+        const equipKey = (wo.equipmentName || '').trim().toLowerCase();
+        const key = `${clientKey}___${equipKey}`;
+        if (!installationGroups[key]) installationGroups[key] = [];
+        installationGroups[key].push(wo);
       } else if (wo.type === 'Preventivo') {
         totalPreventiveCount++;
       } else if (wo.type === 'Correctivo') {
@@ -4545,6 +4567,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       } else if (wo.type === 'Inspección') {
         totalInspectionCount++;
       }
+    });
+
+    totalInstallationCount = Object.keys(installationGroups).length;
+    totalInstallationDays = 0;
+    Object.values(installationGroups).forEach(groupWOs => {
+      const maxDur = Math.max(...groupWOs.map(w => w.durationDays || 1));
+      const distinctDates = new Set(groupWOs.map(w => w.plannedDate)).size;
+      totalInstallationDays += Math.max(maxDur, distinctDates);
     });
 
     const complianceRate = totalOrders > 0 ? Math.round((completedCount / totalOrders) * 100) : 0;
@@ -13112,8 +13142,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Instalaciones</span>
-                    <h3 className="text-xl font-black text-emerald-700 mt-1">{dashboardKPIs.totalInstallationDays} Días</h3>
-                    <p className="text-[8.5px] text-emerald-800 mt-0.5 font-extrabold">{dashboardKPIs.totalInstallationDays * 8}h laborables ({dashboardKPIs.totalInstallationCount} proyectos)</p>
+                    <h3 className="text-xl font-black text-emerald-700 mt-1">{dashboardKPIs.totalInstallationCount} {dashboardKPIs.totalInstallationCount === 1 ? 'Proyecto' : 'Proyectos'}</h3>
+                    <p className="text-[8.5px] text-emerald-800 mt-0.5 font-extrabold">{dashboardKPIs.totalInstallationDays} Días ({dashboardKPIs.totalInstallationDays * 8}h laborables)</p>
                   </div>
                   <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
                     <Briefcase className="w-4 h-4" />
@@ -13355,7 +13385,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
                                     : 'text-slate-400 font-normal'
                                 }`}>
-                                  {st.installationsCount > 0 ? `${st.installationDays} d / ${st.installationDays * 8}h` : '0'}
+                                  {st.installationsCount > 0 ? `${st.installationsCount} proj. (${st.installationDays}d / ${st.installationDays * 8}h)` : '0'}
                                 </span>
                               </td>
                               <td className="p-2.5 text-center text-3xs font-semibold text-slate-500">
@@ -15224,9 +15254,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           const isInst = isInstallationWO(wo);
 
                           if (isInst) {
-                            instHours += hrs;
-                            instCount++;
-                            instDaysTotal += (wo.durationDays || 1);
+                            // Accumulate counts, deduplicated below
                           } else if (typeLower.includes('preventiv')) {
                             prevHours += hrs;
                             prevCount++;
@@ -15240,6 +15268,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           return { wo, matchedReport, hrs, sourceLabel, isInst };
                         });
+
+                        const instGroups: Record<string, WorkOrder[]> = {};
+                        woDetailedList.filter(item => item.isInst).forEach(item => {
+                          const key = `${(item.wo.clientId || item.wo.clientName || '').trim().toLowerCase()}___${(item.wo.equipmentName || '').trim().toLowerCase()}`;
+                          if (!instGroups[key]) instGroups[key] = [];
+                          instGroups[key].push(item.wo);
+                        });
+
+                        instCount = Object.keys(instGroups).length;
+                        instDaysTotal = 0;
+                        Object.values(instGroups).forEach(group => {
+                          const maxDur = Math.max(...group.map(w => w.durationDays || 1));
+                          const distinctDates = new Set(group.map(w => w.plannedDate)).size;
+                          instDaysTotal += Math.max(maxDur, distinctDates);
+                        });
+                        instHours = instDaysTotal * 8;
 
                         return (
                           <div className="bg-indigo-50/90 border border-indigo-300 rounded-xl p-4 shadow-sm space-y-3 animate-in fade-in duration-200">
