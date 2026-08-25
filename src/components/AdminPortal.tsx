@@ -4700,7 +4700,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
           <div class="signatures">
             <div class="sig-box">Jefatura de Operaciones y Servicios Biomédicos<br/><span style="font-size: 9px; color: #64748b; font-weight: normal;">Supervisión Técnica</span></div>
-            <div class="sig-box">Dirección General ORIMEC<br/><span style="font-size: 9px; color: #64748b; font-weight: normal;">Gerencia de Mantenimiento</span></div>
+            <div class="sig-box">Gerencia Técnica de ORIMEC<br/><span style="font-size: 9px; color: #64748b; font-weight: normal;">Aprobación y Certificación</span></div>
           </div>
         </body>
       </html>
