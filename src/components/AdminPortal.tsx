@@ -4411,6 +4411,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     return 3;
   };
 
+  const getWOClientDisplayName = React.useCallback((wo: WorkOrder): string => {
+    if (!wo) return 'Cliente';
+    const found = (clients || []).find(c => c.id === wo.clientId);
+    if (found && found.name) return found.name;
+    if (wo.clientName && wo.clientName.trim() && !wo.clientName.startsWith('cli-')) return wo.clientName;
+    if (wo.location && wo.location.trim()) return wo.location;
+    if (wo.siteName && wo.siteName.trim()) return wo.siteName;
+    return wo.clientName || wo.clientId || 'Cliente';
+  }, [clients]);
+
   // Compute workload metrics and status breakdowns per engineer for the selected period
   const engineerStats = React.useMemo(() => {
     const statsMap: Record<string, {
@@ -4490,7 +4500,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       const engInstGroups: Record<string, WorkOrder[]> = {};
       engInstWOs.forEach(wo => {
         const cleanId = (wo.id || '').split('_')[0].split('-').slice(0, 3).join('-').trim().toLowerCase();
-        const clientKey = (wo.clientId || wo.clientName || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        const clientNameResolved = getWOClientDisplayName(wo);
+        const clientKey = clientNameResolved.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
         const equipKey = (wo.equipmentName || '').trim().toLowerCase().replace(/- día \d+/gi, '').replace(/[^a-z0-9]/g, '');
         const key = cleanId && cleanId.length > 5 ? cleanId : `${clientKey}___${equipKey}`;
 
@@ -4550,7 +4561,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
       if (isInstallationWO(wo)) {
         const cleanId = (wo.id || '').split('_')[0].split('-').slice(0, 3).join('-').trim().toLowerCase();
-        const clientKey = (wo.clientId || wo.clientName || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        const clientNameResolved = getWOClientDisplayName(wo);
+        const clientKey = clientNameResolved.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
         const equipKey = (wo.equipmentName || '').trim().toLowerCase().replace(/- día \d+/gi, '').replace(/[^a-z0-9]/g, '');
         const key = cleanId && cleanId.length > 5 ? cleanId : `${clientKey}___${equipKey}`;
 
@@ -13322,7 +13334,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             return (
                               <tr key={wo.id} className="hover:bg-slate-800/50">
                                 <td className="p-2 font-mono font-bold text-indigo-300 text-[10px]">{wo.id}</td>
-                                <td className="p-2 font-medium">{wo.clientName || wo.clientId}</td>
+                                <td className="p-2 font-medium">{getWOClientDisplayName(wo)}</td>
                                 <td className="p-2 text-slate-400">{wo.equipmentName}</td>
                                 <td className="p-2 text-slate-300">{eng ? eng.name : 'No asignado'}</td>
                                 <td className="p-2 text-slate-400 font-mono text-[10px]">{wo.plannedDate}</td>
@@ -13409,7 +13421,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             return (
                               <tr key={wo.id} className="hover:bg-slate-800/50">
                                 <td className="p-2.5 font-mono font-bold text-emerald-400 text-[10px]">{wo.id}</td>
-                                <td className="p-2.5 font-semibold text-white">{wo.clientName || wo.clientId}</td>
+                                <td className="p-2.5 font-semibold text-white">{getWOClientDisplayName(wo)}</td>
                                 <td className="p-2.5 text-slate-300">{wo.equipmentName}</td>
                                 <td className="p-2.5 text-slate-400">{eng ? eng.name : 'No asignado'}</td>
                                 <td className="p-2.5 text-center font-bold text-emerald-300">{days} {days === 1 ? 'Día' : 'Días'}</td>
