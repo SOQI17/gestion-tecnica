@@ -1259,6 +1259,7 @@ export default function AdminPortal({
   const [engMetricsSelectedStatus, setEngMetricsSelectedStatus] = useState<WorkOrderStatus | 'TODAS'>('Pendiente');
   const [engMetricsSelectedType, setEngMetricsSelectedType] = useState<WorkOrderType | null>(null);
   const [showEngHoursDetail, setShowEngHoursDetail] = useState<boolean>(false);
+  const [expandedMainKPICard, setExpandedMainKPICard] = useState<'mantenimientos' | 'horas' | 'instalaciones' | 'carga' | 'topPerformer' | 'cierre' | null>(null);
 
   // Memoized equipment auto-fill suggestions for Registry Modal (combines maintenanceRegistries & contract equipmentItems)
   const suggestedRegistryEquipments = useMemo(() => {
@@ -13098,98 +13099,434 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </div>
             </div>
 
-            {/* KPI Cards Row (Expanded 6 Cards Minucioso) */}
+            {/* KPI Cards Row (Expanded 6 Interactive Cards Minucioso) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
               {/* KPI 1: Total Orders */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+              <button
+                type="button"
+                onClick={() => setExpandedMainKPICard(prev => prev === 'mantenimientos' ? null : 'mantenimientos')}
+                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'mantenimientos' ? 'ring-2 ring-indigo-500 border-indigo-500 bg-indigo-50/20' : 'border-slate-200 hover:border-indigo-300'
+                }`}
+              >
                 <div className="absolute top-0 left-0 h-1 bg-indigo-500 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Mantenimientos</span>
                     <h3 className="text-xl font-black text-indigo-900 mt-1">{dashboardKPIs.totalOrders}</h3>
-                    <p className="text-[8.5px] text-slate-500 mt-0.5 font-medium">Órdenes del periodo</p>
+                    <p className="text-[8.5px] text-indigo-700 mt-0.5 font-semibold flex items-center gap-1">
+                      <span>Órdenes del periodo</span>
+                      <span className="text-[7.5px] bg-indigo-100 text-indigo-800 px-1 rounded font-bold">🔍 Ver</span>
+                    </p>
                   </div>
-                  <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+                  <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <CalendarRange className="w-4 h-4" />
                   </div>
                 </div>
-              </div>
+              </button>
 
               {/* KPI 2: Total Worked Field Hours */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+              <button
+                type="button"
+                onClick={() => setExpandedMainKPICard(prev => prev === 'horas' ? null : 'horas')}
+                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'horas' ? 'ring-2 ring-blue-500 border-blue-500 bg-blue-50/20' : 'border-slate-200 hover:border-blue-300'
+                }`}
+              >
                 <div className="absolute top-0 left-0 h-1 bg-blue-600 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Horas Campo</span>
                     <h3 className="text-xl font-black text-blue-700 mt-1">{dashboardKPIs.totalReportHours} hrs</h3>
-                    <p className="text-[8.5px] text-slate-500 mt-0.5 font-medium">Prom. {dashboardKPIs.avgHoursPerEngineer} h/téc</p>
+                    <p className="text-[8.5px] text-blue-800 mt-0.5 font-semibold flex items-center gap-1">
+                      <span>Prom. {dashboardKPIs.avgHoursPerEngineer} h/téc</span>
+                      <span className="text-[7.5px] bg-blue-100 text-blue-800 px-1 rounded font-bold">🔍 Ver</span>
+                    </p>
                   </div>
-                  <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+                  <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <BarChart3 className="w-4 h-4" />
                   </div>
                 </div>
-              </div>
+              </button>
 
               {/* KPI 3: Installation & Project Days */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+              <button
+                type="button"
+                onClick={() => setExpandedMainKPICard(prev => prev === 'instalaciones' ? null : 'instalaciones')}
+                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'instalaciones' ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/20' : 'border-slate-200 hover:border-emerald-300'
+                }`}
+              >
                 <div className="absolute top-0 left-0 h-1 bg-emerald-600 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Instalaciones</span>
                     <h3 className="text-xl font-black text-emerald-700 mt-1">{dashboardKPIs.totalInstallationCount} {dashboardKPIs.totalInstallationCount === 1 ? 'Proyecto' : 'Proyectos'}</h3>
-                    <p className="text-[8.5px] text-emerald-800 mt-0.5 font-extrabold">{dashboardKPIs.totalInstallationDays} Días ({dashboardKPIs.totalInstallationDays * 8}h laborables)</p>
+                    <p className="text-[8.5px] text-emerald-800 mt-0.5 font-extrabold flex items-center gap-1">
+                      <span>{dashboardKPIs.totalInstallationDays} Días ({dashboardKPIs.totalInstallationDays * 8}h)</span>
+                      <span className="text-[7.5px] bg-emerald-100 text-emerald-800 px-1 rounded font-bold">🔍 Ver</span>
+                    </p>
                   </div>
-                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
+                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <Briefcase className="w-4 h-4" />
                   </div>
                 </div>
-              </div>
+              </button>
 
               {/* KPI 4: Average Workload */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+              <button
+                type="button"
+                onClick={() => setExpandedMainKPICard(prev => prev === 'carga' ? null : 'carga')}
+                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'carga' ? 'ring-2 ring-teal-500 border-teal-500 bg-teal-50/20' : 'border-slate-200 hover:border-teal-300'
+                }`}
+              >
                 <div className="absolute top-0 left-0 h-1 bg-teal-500 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Promedio Carga</span>
                     <h3 className="text-xl font-black text-teal-700 mt-1">{dashboardKPIs.averageJobs}</h3>
-                    <p className="text-[8.5px] text-slate-500 mt-0.5 font-medium">Tareas por técnico</p>
+                    <p className="text-[8.5px] text-teal-800 mt-0.5 font-semibold flex items-center gap-1">
+                      <span>Tareas por técnico</span>
+                      <span className="text-[7.5px] bg-teal-100 text-teal-800 px-1 rounded font-bold">🔍 Ver</span>
+                    </p>
                   </div>
-                  <div className="p-2.5 bg-teal-50 text-teal-650 rounded-lg shrink-0">
+                  <div className="p-2.5 bg-teal-50 text-teal-650 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <Percent className="w-4 h-4" />
                   </div>
                 </div>
-              </div>
+              </button>
 
               {/* KPI 5: Top Performer */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+              <button
+                type="button"
+                onClick={() => setExpandedMainKPICard(prev => prev === 'topPerformer' ? null : 'topPerformer')}
+                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'topPerformer' ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-50/20' : 'border-slate-200 hover:border-amber-300'
+                }`}
+              >
                 <div className="absolute top-0 left-0 h-1 bg-amber-500 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Mayor Carga</span>
                     <h3 className="text-xs font-black text-amber-800 mt-1.5 truncate max-w-[110px]">{dashboardKPIs.topEngineerName}</h3>
-                    <p className="text-[8.5px] text-slate-500 mt-0.5 font-medium">Técnico con más tareas</p>
+                    <p className="text-[8.5px] text-amber-800 mt-0.5 font-semibold flex items-center gap-1">
+                      <span>Técnico líder</span>
+                      <span className="text-[7.5px] bg-amber-100 text-amber-800 px-1 rounded font-bold">🔍 Ver</span>
+                    </p>
                   </div>
-                  <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg shrink-0">
+                  <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <Award className="w-4 h-4" />
                   </div>
                 </div>
-              </div>
+              </button>
 
               {/* KPI 6: Completion rate */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
+              <button
+                type="button"
+                onClick={() => setExpandedMainKPICard(prev => prev === 'cierre' ? null : 'cierre')}
+                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'cierre' ? 'ring-2 ring-indigo-600 border-indigo-600 bg-indigo-50/20' : 'border-slate-200 hover:border-indigo-300'
+                }`}
+              >
                 <div className="absolute top-0 left-0 h-1 bg-indigo-600 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Tasa de Cierre</span>
                     <h3 className="text-xl font-black text-emerald-700 mt-1">{dashboardKPIs.complianceRate}%</h3>
-                    <p className="text-[8.5px] text-slate-500 mt-0.5 font-medium">Avance general</p>
+                    <p className="text-[8.5px] text-emerald-800 mt-0.5 font-semibold flex items-center gap-1">
+                      <span>Avance general</span>
+                      <span className="text-[7.5px] bg-emerald-100 text-emerald-800 px-1 rounded font-bold">🔍 Ver</span>
+                    </p>
                   </div>
-                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
+                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <TrendingUp className="w-4 h-4" />
                   </div>
                 </div>
-              </div>
+              </button>
             </div>
+
+            {/* Specialized Expanded Drawer for Clicked KPI Card */}
+            {expandedMainKPICard && (
+              <div className="bg-slate-900 text-white rounded-2xl p-5 shadow-xl border border-slate-800 space-y-4 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    {expandedMainKPICard === 'mantenimientos' && <CalendarRange className="w-5 h-5 text-indigo-400" />}
+                    {expandedMainKPICard === 'horas' && <BarChart3 className="w-5 h-5 text-blue-400" />}
+                    {expandedMainKPICard === 'instalaciones' && <Briefcase className="w-5 h-5 text-emerald-400" />}
+                    {expandedMainKPICard === 'carga' && <Percent className="w-5 h-5 text-teal-400" />}
+                    {expandedMainKPICard === 'topPerformer' && <Award className="w-5 h-5 text-amber-400" />}
+                    {expandedMainKPICard === 'cierre' && <TrendingUp className="w-5 h-5 text-emerald-400" />}
+                    
+                    <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-100">
+                      {expandedMainKPICard === 'mantenimientos' && `Desglose Especializado de Mantenimientos (${dashboardKPIs.totalOrders} Órdenes totales)`}
+                      {expandedMainKPICard === 'horas' && `Análisis Especializado de Horas Campo (${dashboardKPIs.totalReportHours} hrs en periodo)`}
+                      {expandedMainKPICard === 'instalaciones' && `Proyectos Especiales de Instalación (${dashboardKPIs.totalInstallationCount} Proyectos / ${dashboardKPIs.totalInstallationDays} Días)`}
+                      {expandedMainKPICard === 'carga' && `Análisis de Capacidad y Distribución de Carga (${dashboardKPIs.averageJobs} tareas/téc)`}
+                      {expandedMainKPICard === 'topPerformer' && `Clasificación y Liderazgo Operativo de Ingenieros`}
+                      {expandedMainKPICard === 'cierre' && `Tasa de Cierre y Gestión de Cumplimiento (${dashboardKPIs.complianceRate}%)`}
+                    </h4>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setExpandedMainKPICard(null)}
+                    className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1 rounded-lg cursor-pointer transition-colors"
+                  >
+                    ✕ Ocultar Desglose
+                  </button>
+                </div>
+
+                {/* Specialized Content per Card */}
+                {expandedMainKPICard === 'mantenimientos' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                      <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-center">
+                        <span className="text-3xs text-indigo-400 font-bold uppercase block">Preventivos</span>
+                        <span className="text-lg font-black text-indigo-300">{dashboardKPIs.totalPreventiveCount}</span>
+                      </div>
+                      <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-center">
+                        <span className="text-3xs text-amber-400 font-bold uppercase block">Correctivos</span>
+                        <span className="text-lg font-black text-amber-300">{dashboardKPIs.totalCorrectiveCount}</span>
+                      </div>
+                      <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-center">
+                        <span className="text-3xs text-emerald-400 font-bold uppercase block">Instalaciones</span>
+                        <span className="text-lg font-black text-emerald-300">{dashboardKPIs.totalInstallationCount}</span>
+                      </div>
+                      <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-center">
+                        <span className="text-3xs text-purple-400 font-bold uppercase block">Inspecciones</span>
+                        <span className="text-lg font-black text-purple-300">{dashboardKPIs.totalInspectionCount}</span>
+                      </div>
+                      <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-center">
+                        <span className="text-3xs text-teal-400 font-bold uppercase block">Tasa de Cierre</span>
+                        <span className="text-lg font-black text-teal-300">{dashboardKPIs.complianceRate}%</span>
+                      </div>
+                    </div>
+
+                    <div className="max-h-64 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl">
+                      <table className="w-full text-left text-xs text-slate-300">
+                        <thead className="bg-slate-800 text-slate-400 uppercase text-[9px] sticky top-0">
+                          <tr>
+                            <th className="p-2.5">Código WO</th>
+                            <th className="p-2.5">Cliente / Institución</th>
+                            <th className="p-2.5">Equipo</th>
+                            <th className="p-2.5">Técnico Principal</th>
+                            <th className="p-2.5">Fecha</th>
+                            <th className="p-2.5 text-center">Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800">
+                          {filteredDashOrders.map(wo => {
+                            const eng = engineers.find(e => e.id === wo.engineerId);
+                            const effStatus = getWOEffectiveStatus(wo);
+                            return (
+                              <tr key={wo.id} className="hover:bg-slate-800/50">
+                                <td className="p-2 font-mono font-bold text-indigo-300 text-[10px]">{wo.id}</td>
+                                <td className="p-2 font-medium">{wo.clientName || wo.clientId}</td>
+                                <td className="p-2 text-slate-400">{wo.equipmentName}</td>
+                                <td className="p-2 text-slate-300">{eng ? eng.name : 'No asignado'}</td>
+                                <td className="p-2 text-slate-400 font-mono text-[10px]">{wo.plannedDate}</td>
+                                <td className="p-2 text-center">
+                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                    effStatus === 'Conciliado' || effStatus === 'Reportado' || effStatus === 'Realizado'
+                                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                                      : 'bg-amber-950 text-amber-400 border border-amber-800'
+                                  }`}>
+                                    {effStatus}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {expandedMainKPICard === 'horas' && (
+                  <div className="space-y-4">
+                    <p className="text-xs text-slate-400">
+                      Horas estimadas y ejecutadas por los ingenieros según la agenda de trabajo y reportes técnicos digitales (RE-TE-04):
+                    </p>
+                    <div className="max-h-64 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl">
+                      <table className="w-full text-left text-xs text-slate-300">
+                        <thead className="bg-slate-800 text-slate-400 uppercase text-[9px] sticky top-0">
+                          <tr>
+                            <th className="p-2.5">Ingeniero</th>
+                            <th className="p-2.5 text-center">Asignaciones</th>
+                            <th className="p-2.5 text-right">Horas Campo</th>
+                            <th className="p-2.5 text-right">Promedio / Tarea</th>
+                            <th className="p-2.5 text-right">% del Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800">
+                          {engineerStats.map(st => {
+                            const pct = dashboardKPIs.totalReportHours > 0 
+                              ? Math.round((st.hoursSpent / dashboardKPIs.totalReportHours) * 100) 
+                              : 0;
+                            const avgTask = st.total > 0 ? (st.hoursSpent / st.total).toFixed(1) : '0';
+                            return (
+                              <tr key={st.engineer.id} className="hover:bg-slate-800/50">
+                                <td className="p-2.5 font-bold text-white flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                  <span>{st.engineer.name}</span>
+                                </td>
+                                <td className="p-2.5 text-center font-semibold text-slate-300">{st.total} tareas</td>
+                                <td className="p-2.5 text-right font-black text-blue-400 text-sm">{st.hoursSpent} hrs</td>
+                                <td className="p-2.5 text-right font-mono text-slate-400">{avgTask} h/tarea</td>
+                                <td className="p-2.5 text-right font-bold text-indigo-300">{pct}%</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {expandedMainKPICard === 'instalaciones' && (
+                  <div className="space-y-4">
+                    <p className="text-xs text-slate-400">
+                      Listado deduplicado de proyectos especiales de instalación y montaje técnico con su duración en días y horas laborables asociadas (8h/día):
+                    </p>
+                    <div className="max-h-64 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl">
+                      <table className="w-full text-left text-xs text-slate-300">
+                        <thead className="bg-slate-800 text-slate-400 uppercase text-[9px] sticky top-0">
+                          <tr>
+                            <th className="p-2.5">Código WO</th>
+                            <th className="p-2.5">Cliente / Clínica</th>
+                            <th className="p-2.5">Equipo a Instalar</th>
+                            <th className="p-2.5">Técnico Asignado</th>
+                            <th className="p-2.5 text-center">Duración</th>
+                            <th className="p-2.5 text-center">Horas Lab.</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800">
+                          {filteredDashOrders.filter(isInstallationWO).map(wo => {
+                            const eng = engineers.find(e => e.id === wo.engineerId);
+                            const days = wo.durationDays && wo.durationDays > 0 ? wo.durationDays : 1;
+                            return (
+                              <tr key={wo.id} className="hover:bg-slate-800/50">
+                                <td className="p-2.5 font-mono font-bold text-emerald-400 text-[10px]">{wo.id}</td>
+                                <td className="p-2.5 font-semibold text-white">{wo.clientName || wo.clientId}</td>
+                                <td className="p-2.5 text-slate-300">{wo.equipmentName}</td>
+                                <td className="p-2.5 text-slate-400">{eng ? eng.name : 'No asignado'}</td>
+                                <td className="p-2.5 text-center font-bold text-emerald-300">{days} {days === 1 ? 'Día' : 'Días'}</td>
+                                <td className="p-2.5 text-center font-bold text-slate-200">{days * 8} hrs</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {expandedMainKPICard === 'carga' && (
+                  <div className="space-y-4">
+                    <p className="text-xs text-slate-400">
+                      Balance de carga de trabajo entre el equipo técnico (Promedio esperado: <strong className="text-teal-300">{dashboardKPIs.averageJobs} tareas</strong>):
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {engineerStats.map(st => {
+                        const diff = (st.total - dashboardKPIs.averageJobs).toFixed(1);
+                        const isHigh = st.total > dashboardKPIs.averageJobs * 1.2;
+                        const isLow = st.total < dashboardKPIs.averageJobs * 0.7;
+                        return (
+                          <div key={st.engineer.id} className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 flex items-center justify-between">
+                            <div>
+                              <h5 className="font-bold text-sm text-white">{st.engineer.name}</h5>
+                              <p className="text-3xs text-slate-400 mt-0.5">
+                                {st.asPrimary} Principal / {st.asSupport} Apoyo ({st.hoursSpent} hrs)
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-lg font-black text-white">{st.total} tareas</span>
+                              <span className={`block text-[9px] font-bold ${
+                                isHigh ? 'text-amber-400' : isLow ? 'text-blue-400' : 'text-emerald-400'
+                              }`}>
+                                {isHigh ? '🔴 Carga Alta' : isLow ? '🟡 Carga Baja' : '🟢 Carga Óptima'} ({diff > '0' ? `+${diff}` : diff})
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {expandedMainKPICard === 'topPerformer' && (
+                  <div className="space-y-4">
+                    <p className="text-xs text-slate-400">
+                      Ranking del personal técnico con mayor volumen de asignaciones operativas en el periodo:
+                    </p>
+                    <div className="space-y-2">
+                      {engineerStats.slice(0, 5).map((st, idx) => (
+                        <div key={st.engineer.id} className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs ${
+                              idx === 0 ? 'bg-amber-500 text-slate-950' : idx === 1 ? 'bg-slate-300 text-slate-950' : 'bg-slate-700 text-slate-200'
+                            }`}>
+                              #{idx + 1}
+                            </span>
+                            <div>
+                              <h5 className="font-bold text-sm text-white">{st.engineer.name}</h5>
+                              <p className="text-3xs text-slate-400">{st.engineer.specialty || 'Ingeniero Biomédico'}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-base font-black text-amber-400">{st.total} Asignaciones</span>
+                            <p className="text-[9px] text-slate-400 font-medium">{st.hoursSpent} hrs en campo</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {expandedMainKPICard === 'cierre' && (
+                  <div className="space-y-4">
+                    <p className="text-xs text-slate-400">
+                      Tasa de finalización y conciliación global de trabajos en el periodo. Muestra el estado del avance operacional:
+                    </p>
+                    <div className="max-h-64 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl">
+                      <table className="w-full text-left text-xs text-slate-300">
+                        <thead className="bg-slate-800 text-slate-400 uppercase text-[9px] sticky top-0">
+                          <tr>
+                            <th className="p-2.5">Ingeniero</th>
+                            <th className="p-2.5 text-center">Completadas</th>
+                            <th className="p-2.5 text-center">Pendientes</th>
+                            <th className="p-2.5 text-right">Tasa de Cierre</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800">
+                          {engineerStats.map(st => {
+                            const done = (st.statusCounts.Realizado || 0) + (st.statusCounts.Reportado || 0) + (st.statusCounts.Conciliado || 0);
+                            const pending = (st.statusCounts.Pendiente || 0) + (st.statusCounts.EnProceso || 0);
+                            const rate = st.total > 0 ? Math.round((done / st.total) * 100) : 0;
+                            return (
+                              <tr key={st.engineer.id} className="hover:bg-slate-800/50">
+                                <td className="p-2.5 font-bold text-white">{st.engineer.name}</td>
+                                <td className="p-2.5 text-center font-bold text-emerald-400">{done}</td>
+                                <td className="p-2.5 text-center font-bold text-amber-400">{pending}</td>
+                                <td className="p-2.5 text-right">
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                                    rate >= 80 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'
+                                  }`}>
+                                    {rate}%
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Chart and Table grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
