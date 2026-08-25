@@ -4649,7 +4649,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <td><strong>${st.total}</strong></td>
                     <td>${st.asPrimary} Pr. / ${st.asSupport} Ap.</td>
                     <td><strong>${st.hoursSpent} hrs</strong></td>
-                    <td>${st.installationsCount} WOs (${st.installationDays} d / ${st.installationDays * 8}h lab)</td>
+                    <td>${st.installationDays} días (${st.installationDays * 8}h laborables)</td>
                     <td>${st.preventiveCount} Prev / ${st.correctiveCount} Corr</td>
                     <td><span class="${rate >= 80 ? 'badge-ok' : 'badge-pending'}">${rate}%</span></td>
                   </tr>
@@ -13112,8 +13112,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Instalaciones</span>
-                    <h3 className="text-xl font-black text-emerald-700 mt-1">{dashboardKPIs.totalInstallationCount} WOs</h3>
-                    <p className="text-[8.5px] text-emerald-800 mt-0.5 font-extrabold">{dashboardKPIs.totalInstallationDays} Días ({dashboardKPIs.totalInstallationDays * 8}h laborables)</p>
+                    <h3 className="text-xl font-black text-emerald-700 mt-1">{dashboardKPIs.totalInstallationDays} Días</h3>
+                    <p className="text-[8.5px] text-emerald-800 mt-0.5 font-extrabold">{dashboardKPIs.totalInstallationDays * 8}h laborables ({dashboardKPIs.totalInstallationCount} proyectos)</p>
                   </div>
                   <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
                     <Briefcase className="w-4 h-4" />
@@ -13355,7 +13355,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
                                     : 'text-slate-400 font-normal'
                                 }`}>
-                                  {st.installationsCount > 0 ? `${st.installationsCount} WOs (${st.installationDays} d / ${st.installationDays * 8}h)` : '0'}
+                                  {st.installationsCount > 0 ? `${st.installationDays} d / ${st.installationDays * 8}h` : '0'}
                                 </span>
                               </td>
                               <td className="p-2.5 text-center text-3xs font-semibold text-slate-500">
@@ -15267,7 +15267,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               <div className="bg-white p-2 rounded-lg border border-emerald-200 text-center shadow-2xs">
                                 <span className="text-emerald-700 font-bold uppercase block text-[8px]">Instalaciones</span>
                                 <span className="font-black text-emerald-800 text-xs mt-0.5 block">{instHours} hrs</span>
-                                <span className="text-[8px] text-emerald-600 font-semibold">{instCount} WOs ({instDaysTotal}d)</span>
+                                <span className="text-[8px] text-emerald-600 font-semibold">{instDaysTotal} días ({instCount} proyect.)</span>
                               </div>
                               <div className="bg-white p-2 rounded-lg border border-amber-200 text-center shadow-2xs">
                                 <span className="text-amber-700 font-bold uppercase block text-[8px]">Correctivos</span>
