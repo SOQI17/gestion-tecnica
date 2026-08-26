@@ -3534,8 +3534,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             // skip rendering a separate top blue badge since contract details are integrated inside the Work Order card.
             const hasAgendatedWO = activeWorkOrdersList.some(wo => 
               wo.plannedDate === dateStr && (
-                wo.clientId === con.clientId ||
-                (con.equipmentItems && con.equipmentItems.some(eq => eq.equipmentName.trim().toLowerCase() === wo.equipmentName.trim().toLowerCase()))
+                (wo.clientId && con.clientId && wo.clientId === con.clientId) ||
+                (con.equipmentItems && con.equipmentItems.some(eq => {
+                  const eqName = (eq?.name || eq?.equipmentName || '').trim().toLowerCase();
+                  const woEqName = (wo?.equipmentName || '').trim().toLowerCase();
+                  return eqName !== '' && woEqName !== '' && (eqName === woEqName || eqName.includes(woEqName) || woEqName.includes(eqName));
+                }))
               )
             );
 
@@ -3689,9 +3693,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
                 const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
                 const matchedContract = contracts.find(c => 
-                  c.clientId === wo.clientId || 
-                  (client && c.clientId === client.id) || 
-                  (c.equipmentItems && c.equipmentItems.some(eq => eq.equipmentName.trim().toLowerCase() === wo.equipmentName.trim().toLowerCase()))
+                  (c.clientId && wo.clientId && c.clientId === wo.clientId) || 
+                  (client && c.clientId && c.clientId === client.id) || 
+                  (c.equipmentItems && c.equipmentItems.some(eq => {
+                    const eqName = (eq?.name || eq?.equipmentName || '').trim().toLowerCase();
+                    const woEqName = (wo?.equipmentName || '').trim().toLowerCase();
+                    return eqName !== '' && woEqName !== '' && (eqName === woEqName || eqName.includes(woEqName) || woEqName.includes(eqName));
+                  }))
                 );
                 const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
                   ? wo.supportEngineerIds
@@ -3945,9 +3953,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
               const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
               const matchedContract = contracts.find(c => 
-                c.clientId === wo.clientId || 
-                (client && c.clientId === client.id) || 
-                (c.equipmentItems && c.equipmentItems.some(eq => eq.equipmentName.trim().toLowerCase() === wo.equipmentName.trim().toLowerCase()))
+                (c.clientId && wo.clientId && c.clientId === wo.clientId) || 
+                (client && c.clientId && c.clientId === client.id) || 
+                (c.equipmentItems && c.equipmentItems.some(eq => {
+                  const eqName = (eq?.name || eq?.equipmentName || '').trim().toLowerCase();
+                  const woEqName = (wo?.equipmentName || '').trim().toLowerCase();
+                  return eqName !== '' && woEqName !== '' && (eqName === woEqName || eqName.includes(woEqName) || woEqName.includes(eqName));
+                }))
               );
               const isWoQc = isWorkOrderQc(wo, contracts);
               let badgeBg = isWoQc
@@ -4245,9 +4257,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
                 const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
                 const matchedContract = contracts.find(c => 
-                  c.clientId === wo.clientId || 
-                  (client && c.clientId === client.id) || 
-                  (c.equipmentItems && c.equipmentItems.some(eq => eq.equipmentName.trim().toLowerCase() === wo.equipmentName.trim().toLowerCase()))
+                  (c.clientId && wo.clientId && c.clientId === wo.clientId) || 
+                  (client && c.clientId && c.clientId === client.id) || 
+                  (c.equipmentItems && c.equipmentItems.some(eq => {
+                    const eqName = (eq?.name || eq?.equipmentName || '').trim().toLowerCase();
+                    const woEqName = (wo?.equipmentName || '').trim().toLowerCase();
+                    return eqName !== '' && woEqName !== '' && (eqName === woEqName || eqName.includes(woEqName) || woEqName.includes(eqName));
+                  }))
                 );
                 const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
                   ? wo.supportEngineerIds
