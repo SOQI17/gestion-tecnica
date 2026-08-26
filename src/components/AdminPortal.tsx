@@ -3530,6 +3530,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           const effectiveDate = matchingWO ? matchingWO.plannedDate : contractDate;
 
           if (effectiveDate === dateStr) {
+            // Unify: If there is already a Work Order agendated on dateStr for this contract/client,
+            // skip rendering a separate top blue badge since contract details are integrated inside the Work Order card.
+            const hasAgendatedWO = activeWorkOrdersList.some(wo => 
+              wo.plannedDate === dateStr && (
+                wo.clientId === con.clientId ||
+                (con.equipmentItems && con.equipmentItems.some(eq => eq.equipmentName.trim().toLowerCase() === wo.equipmentName.trim().toLowerCase()))
+              )
+            );
+
+            if (hasAgendatedWO) return;
+
             const client = clients.find(c => c.id === con.clientId);
             const isDone = matchingWO ? (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado') : false;
             
@@ -3677,6 +3688,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 const eng = engineers.find(e => e.id === wo.engineerId);
                 const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
                 const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
+                const matchedContract = contracts.find(c => 
+                  c.clientId === wo.clientId || 
+                  (client && c.clientId === client.id) || 
+                  (c.equipmentItems && c.equipmentItems.some(eq => eq.equipmentName.trim().toLowerCase() === wo.equipmentName.trim().toLowerCase()))
+                );
                 const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
                   ? wo.supportEngineerIds
                   : (wo.supportEngineerId ? [wo.supportEngineerId] : []);
@@ -3709,6 +3725,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </span>
                       )}
                     </div>
+                    {matchedContract && (
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedContractForDetails(matchedContract);
+                          setIsContractDetailsModalOpen(true);
+                        }}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[7.5px] px-1.5 py-0.5 rounded cursor-pointer transition-colors shadow-2xs inline-flex items-center gap-1 my-0.5 no-print"
+                        title={`Ver Detalle del Contrato ${matchedContract.id}`}
+                      >
+                        <span>📜 Contrato: {matchedContract.id}</span>
+                      </div>
+                    )}
                     {wo.plannedTime && (
                       <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">⏰ {wo.plannedTime}</p>
                     )}
@@ -3915,6 +3944,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               const supportEng = wo.supportEngineerId ? engineers.find(e => e.id === wo.supportEngineerId) : null;
               const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
               const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
+              const matchedContract = contracts.find(c => 
+                c.clientId === wo.clientId || 
+                (client && c.clientId === client.id) || 
+                (c.equipmentItems && c.equipmentItems.some(eq => eq.equipmentName.trim().toLowerCase() === wo.equipmentName.trim().toLowerCase()))
+              );
               const isWoQc = isWorkOrderQc(wo, contracts);
               let badgeBg = isWoQc
                 ? 'bg-purple-50/90 hover:bg-purple-100 text-purple-955 border border-purple-200'
@@ -4029,6 +4063,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </span>
                     )}
                   </div>
+                  {matchedContract && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedContractForDetails(matchedContract);
+                        setIsContractDetailsModalOpen(true);
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[7.5px] px-1.5 py-0.5 rounded cursor-pointer transition-colors shadow-2xs inline-flex items-center gap-1 my-0.5 no-print"
+                      title={`Ver Detalle del Contrato ${matchedContract.id}`}
+                    >
+                      <span>📜 Contrato: {matchedContract.id}</span>
+                    </div>
+                  )}
                   {wo.plannedTime && (
                     <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">
                       ⏰ {wo.plannedTime}
@@ -4197,6 +4244,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 const eng = engineers.find(e => e.id === wo.engineerId);
                 const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
                 const clientDisplayName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'Cliente');
+                const matchedContract = contracts.find(c => 
+                  c.clientId === wo.clientId || 
+                  (client && c.clientId === client.id) || 
+                  (c.equipmentItems && c.equipmentItems.some(eq => eq.equipmentName.trim().toLowerCase() === wo.equipmentName.trim().toLowerCase()))
+                );
                 const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
                   ? wo.supportEngineerIds
                   : (wo.supportEngineerId ? [wo.supportEngineerId] : []);
@@ -4229,6 +4281,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </span>
                       )}
                     </div>
+                    {matchedContract && (
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedContractForDetails(matchedContract);
+                          setIsContractDetailsModalOpen(true);
+                        }}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[7.5px] px-1.5 py-0.5 rounded cursor-pointer transition-colors shadow-2xs inline-flex items-center gap-1 my-0.5 no-print"
+                        title={`Ver Detalle del Contrato ${matchedContract.id}`}
+                      >
+                        <span>📜 Contrato: {matchedContract.id}</span>
+                      </div>
+                    )}
                     {wo.plannedTime && (
                       <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">⏰ {wo.plannedTime}</p>
                     )}
