@@ -9669,7 +9669,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       else urgencyCategory = 'futuros';
 
       const valUSD = con.contractValue || 0;
-      const proposalStatus = con.proposalStatus || 'Sin Contactar';
+
+      // Smart renewal status detection if not manually set
+      const hasSuccessor = contracts.some(other =>
+        other.id !== con.id &&
+        isClientMatch(other.clientId, con.clientId, clients) &&
+        new Date(other.startDate + 'T00:00:00').getTime() > new Date(con.startDate + 'T00:00:00').getTime()
+      );
+
+      let defaultStatus: Contract['proposalStatus'] = 'Sin Contactar';
+      if (hasSuccessor || con.linkedContractId) {
+        defaultStatus = 'Renovado';
+      } else if (diffDays <= 90) {
+        defaultStatus = 'En Negociación';
+      }
+
+      const proposalStatus = con.proposalStatus || defaultStatus;
 
       // Auto-assign priority based on value / expiration if not explicitly set
       let priority: 'Alta' | 'Media' | 'Baja' = con.dealPriority || 'Media';
@@ -9687,7 +9702,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         urgencyCategory,
         valUSD,
         proposalStatus,
-        priority
+        priority,
+        hasSuccessor
       };
     });
 
