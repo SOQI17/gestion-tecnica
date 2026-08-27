@@ -6753,7 +6753,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         setEditingContract={setEditingContract}
         setIsContractModalOpen={setIsContractModalOpen}
         onDeleteContract={onDeleteContract}
-        onRenewContract={onRenewContract}
         contractGeSearch={contractGeSearch}
         setContractGeSearch={setContractGeSearch}
         exportContractsGeToExcel={exportContractsGeToExcel}
@@ -6761,9 +6760,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         setIsContractGeImporterOpen={setIsContractGeImporterOpen}
         handleContractGeCsvUpload={handleContractGeCsvUpload}
         contractGeCsvError={contractGeCsvError}
-        onClearContractsGE={onClearContractsGE}
         onDeleteContractGE={onDeleteContractGE}
-        setEditingContractGE={setEditingContractGE}
+        setEditingContractGE={setEditingContractGe}
         setIsContractGeModalOpen={setIsContractGeModalOpen}
         resetContractForm={() => {
           const today = new Date();
@@ -6813,21 +6811,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           setIsContractModalOpen(true);
         }}
         resetContractGeForm={(clientName?: string) => {
-          setEditingContractGE(null);
+          setEditingContractGe(null);
           setGeFormCliente(clientName || '');
           setGeFormSid('');
           setGeFormModalidad('');
           setGeFormEquipo('');
           setGeFormEquipmentNum('');
           setGeFormInvoice('');
-          setGeFormInvoiceAmount('');
+          setGeFormAmount('');
           setGeFormMonths('');
           setGeFormInvoiceDate('');
           setGeFormDueDate('');
           setGeFormPaymentPeriod('');
           setGeFormMonthNum('');
           setGeFormContractNum('');
-          setGeFormObservaciones('');
+          setGeFormObs('');
           setIsContractGeModalOpen(true);
         }}
       />
