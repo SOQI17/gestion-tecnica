@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag, UserPlus, Mail, Lock, Shield, Phone, MapPin, KeyRound, Pencil, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag, UserPlus, Mail, Lock, Shield, Phone, MapPin, KeyRound, Pencil, Clock, DollarSign, Eye } from 'lucide-react';
 
 export const OFFICIAL_MODALITIES = [
   { code: 'MR', label: 'MR: Resonancia Magnética' },
