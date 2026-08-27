@@ -6730,6 +6730,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
   const renderContratosSubView = () => {
     return (
       <ContratosTab
+        workOrders={workOrders}
         contractsSubTab={contractsSubTab}
         contracts={contracts}
         clients={clients}
