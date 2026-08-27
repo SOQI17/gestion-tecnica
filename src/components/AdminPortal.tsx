@@ -1447,6 +1447,7 @@ export default function AdminPortal({
   const [contractPage, setContractPage] = useState(1);
   const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null>(null);
   const [contractFilterBrand, setContractFilterBrand] = useState<string>('all');
+  const [contractValueFilter, setContractValueFilter] = useState<'all' | 'valued' | 'unvalued'>('all');
   const [contractDateSort, setContractDateSort] = useState<'none' | 'start_asc' | 'start_desc' | 'end_asc' | 'end_desc'>('none');
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isContractImporterOpen, setIsContractImporterOpen] = useState(false);
