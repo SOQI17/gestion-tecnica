@@ -1428,7 +1428,12 @@ export default function AdminPortal({
   const [equipFormStatus, setEquipFormStatus] = useState<'Operativo' | 'No Operativo'>('Operativo');
 
   // Contratos Tab states
-  const [contractsSubTab, setContractsSubTab] = useState<'garantias' | 'ge'>('garantias');
+  const [contractsSubTab, setContractsSubTab] = useState<'garantias' | 'ge' | 'proyeccion'>('garantias');
+  const [projSearch, setProjSearch] = useState('');
+  const [projFilter, setProjFilter] = useState<'todos' | 'vencidos' | 'criticos' | 'proximos' | 'futuros'>('todos');
+  const [projSort, setProjSort] = useState<'vencimiento' | 'valor' | 'cliente'>('vencimiento');
+  const [editingValContractId, setEditingValContractId] = useState<string | null>(null);
+  const [editingValInput, setEditingValInput] = useState<string>('');
   const [contractSearch, setContractSearch] = useState('');
   const [contractPage, setContractPage] = useState(1);
   const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null>(null);
@@ -9507,7 +9512,608 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     );
   };
 
+  const handlePrintContractProjectionPdf = (projectionsList: any[], totals: any) => {
+    const printWin = window.open('', '_blank');
+    if (!printWin) {
+      alert('Por favor permita ventanas emergentes para generar el informe PDF de proyecciones.');
+      return;
+    }
+
+    const todayStr = new Date().toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Informe Ejecutivo de Proyección y Solicitud de Contratos - ORIMEC FSM</title>
+          <style>
+            @page { size: A4 portrait; margin: 12mm 15mm; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; margin: 0; padding: 0; font-size: 11px; background: #fff; }
+            .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2.5px solid #4338ca; padding-bottom: 12px; margin-bottom: 16px; }
+            .title { font-size: 15px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; letter-spacing: -0.3px; margin: 0; }
+            .subtitle { font-size: 9.5px; color: #475569; margin-top: 3px; font-weight: 600; }
+            .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+            .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; }
+            .kpi-val { font-size: 15px; font-weight: 900; color: #312e81; }
+            .kpi-lbl { font-size: 8px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-top: 3px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            th { background: #312e81; color: white; padding: 8px; font-size: 8.5px; font-weight: 800; text-align: left; text-transform: uppercase; letter-spacing: 0.5px; }
+            td { padding: 7px 8px; border-bottom: 1px solid #e2e8f0; font-size: 9px; vertical-align: middle; }
+            tr:nth-child(even) { background: #f8fafc; }
+            .badge-vencido { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 8px; }
+            .badge-critico { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 8px; }
+            .badge-proximo { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 8px; }
+            .badge-futuro { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 8px; }
+            .signatures { margin-top: 45px; display: flex; justify-content: space-around; page-break-inside: avoid; }
+            .sig-box { text-align: center; width: 220px; }
+            .sig-line { border-top: 1.5px solid #0f172a; margin-bottom: 4px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="title">ORIMEC FSM — PROYECCIÓN Y RENOVACIÓN DE CONTRATOS</div>
+              <div class="subtitle">Informe Ejecutivo de Cartera Comercial, Oportunidades y Clientes Objetivos para Solicitud de Servicios</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 9px; font-weight: 800; color: #4338ca;">ORIMEC ECUADOR</div>
+              <div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">${todayStr}</div>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-val">$${totals.totalRiskValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <div class="kpi-lbl">Valor Cartera en Riesgo (&le;90d / Vencidos)</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val">${totals.uniqueTargetClients}</div>
+              <div class="kpi-lbl">Clientes Potenciales Objetivo</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val">${totals.criticosCount + totals.proximosCount}</div>
+              <div class="kpi-lbl">Contratos por Vencer (1-90 Días)</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val">${totals.vencidosCount}</div>
+              <div class="kpi-lbl">Contratos Vencidos Sin Renovar</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Nº Contrato</th>
+                <th>Cliente / Sede</th>
+                <th>Equipos Coberturados</th>
+                <th>Valor ($ USD)</th>
+                <th>Fecha Vencimiento</th>
+                <th>Días Restantes</th>
+                <th>Estado de Gestión</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${projectionsList.map(p => `
+                <tr>
+                  <td style="font-weight: 800; color: #312e81;">${p.contract.id}</td>
+                  <td style="font-weight: 700;">${p.clientName}</td>
+                  <td style="font-size: 8.5px; color: #475569;">${(p.contract.equipmentItems || []).map((e: any) => e.name || e.equipmentName).join(', ') || 'Equipos Biomédicos varios'}</td>
+                  <td style="font-weight: 900; color: #047857;">$${p.valUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td style="font-weight: 700;">${p.contract.endDate}</td>
+                  <td>
+                    <span class="${
+                      p.urgencyCategory === 'vencidos' ? 'badge-vencido' :
+                      p.urgencyCategory === 'criticos' ? 'badge-critico' :
+                      p.urgencyCategory === 'proximos' ? 'badge-proximo' : 'badge-futuro'
+                    }">
+                      ${p.diffDays < 0 ? `Vencido hace ${Math.abs(p.diffDays)}d` : `${p.diffDays} días restantes`}
+                    </span>
+                  </td>
+                  <td style="font-weight: 800; color: #4338ca;">${p.proposalStatus}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="signatures">
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <div style="font-weight: 800; font-size: 10px; color: #1e1b4b;">Gerencia Técnica Biomédica</div>
+              <div style="font-size: 8.5px; color: #64748b;">ORIMEC Ecuador</div>
+            </div>
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <div style="font-weight: 800; font-size: 10px; color: #1e1b4b;">Gerencia Comercial & Ventas</div>
+              <div style="font-size: 8.5px; color: #64748b;">Renovaciones y Solicitud de Contratos</div>
+            </div>
+          </div>
+
+          <script>window.onload = function() { window.print(); };</script>
+        </body>
+      </html>
+    `;
+
+    printWin.document.open();
+    printWin.document.write(htmlContent);
+    printWin.document.close();
+  };
+
+  const renderProyeccionSubView = () => {
+    const todayMs = new Date().setHours(0,0,0,0);
+
+    const allProjections = contracts.map(con => {
+      const client = clients.find(c => isClientMatch(c.id, con.clientId, clients)) || clients.find(c => c.id === con.clientId);
+      const clientName = client ? client.name : (con.clientId && con.clientId !== 'fsm_placeholder' ? con.clientId : 'Cliente por Registrar');
+      const endDateMs = new Date(con.endDate + 'T00:00:00').getTime();
+      const diffDays = Math.ceil((endDateMs - todayMs) / (1000 * 60 * 60 * 24));
+
+      let urgencyCategory: 'vencidos' | 'criticos' | 'proximos' | 'futuros' = 'futuros';
+      if (diffDays < 0) urgencyCategory = 'vencidos';
+      else if (diffDays <= 30) urgencyCategory = 'criticos';
+      else if (diffDays <= 90) urgencyCategory = 'proximos';
+      else urgencyCategory = 'futuros';
+
+      const valUSD = con.contractValue || 0;
+      const proposalStatus = con.proposalStatus || 'Sin Contactar';
+
+      return {
+        contract: con,
+        client,
+        clientName,
+        diffDays,
+        urgencyCategory,
+        valUSD,
+        proposalStatus
+      };
+    });
+
+    // Compute Totals
+    const vencidosList = allProjections.filter(p => p.urgencyCategory === 'vencidos');
+    const criticosList = allProjections.filter(p => p.urgencyCategory === 'criticos');
+    const proximosList = allProjections.filter(p => p.urgencyCategory === 'proximos');
+    const futurosList = allProjections.filter(p => p.urgencyCategory === 'futuros');
+
+    const vencidosVal = vencidosList.reduce((acc, p) => acc + p.valUSD, 0);
+    const criticosVal = criticosList.reduce((acc, p) => acc + p.valUSD, 0);
+    const proximosVal = proximosList.reduce((acc, p) => acc + p.valUSD, 0);
+    const totalRiskValue = vencidosVal + criticosVal + proximosVal;
+
+    const targetList = allProjections.filter(p => p.urgencyCategory !== 'futuros');
+    const uniqueTargetClients = new Set(targetList.map(p => p.clientName)).size;
+
+    const pipelineVal = allProjections
+      .filter(p => p.proposalStatus === 'Propuesta Presentada' || p.proposalStatus === 'En Negociación' || p.proposalStatus === 'Solicitud Enviada')
+      .reduce((acc, p) => acc + p.valUSD, 0);
+
+    const totals = {
+      totalRiskValue,
+      uniqueTargetClients,
+      criticosCount: criticosList.length,
+      proximosCount: proximosList.length,
+      vencidosCount: vencidosList.length,
+      pipelineVal
+    };
+
+    // Filter & Sort List
+    let filtered = allProjections.filter(p => {
+      if (projFilter === 'vencidos') return p.urgencyCategory === 'vencidos';
+      if (projFilter === 'criticos') return p.urgencyCategory === 'criticos';
+      if (projFilter === 'proximos') return p.urgencyCategory === 'proximos';
+      if (projFilter === 'futuros') return p.urgencyCategory === 'futuros';
+      return true;
+    });
+
+    if (projSearch.trim()) {
+      const q = projSearch.trim().toLowerCase();
+      filtered = filtered.filter(p =>
+        p.contract.id.toLowerCase().includes(q) ||
+        p.clientName.toLowerCase().includes(q) ||
+        (p.contract.type || '').toLowerCase().includes(q) ||
+        (p.contract.equipmentItems || []).some(e => (e.name || '').toLowerCase().includes(q))
+      );
+    }
+
+    if (projSort === 'vencimiento') {
+      filtered.sort((a, b) => a.diffDays - b.diffDays);
+    } else if (projSort === 'valor') {
+      filtered.sort((a, b) => b.valUSD - a.valUSD);
+    } else if (projSort === 'cliente') {
+      filtered.sort((a, b) => a.clientName.localeCompare(b.clientName));
+    }
+
+    const handleSaveContractValue = (contractId: string, val: number) => {
+      const con = contracts.find(c => c.id === contractId);
+      if (con && onUpdateContract) {
+        onUpdateContract({ ...con, contractValue: val });
+        showNotification(`Valor del contrato ${contractId} actualizado a $${val.toLocaleString('en-US')}`, 'success');
+      }
+      setEditingValContractId(null);
+    };
+
+    const handleSaveProposalStatus = (contractId: string, newStatus: Contract['proposalStatus']) => {
+      const con = contracts.find(c => c.id === contractId);
+      if (con && onUpdateContract) {
+        onUpdateContract({ ...con, proposalStatus: newStatus });
+        showNotification(`Estado de gestión para ${contractId} actualizado a "${newStatus}"`, 'success');
+      }
+    };
+
     return (
+      <div className="space-y-6 font-sans">
+        {/* Banner Header & Export Actions */}
+        <div className="bg-gradient-to-r from-indigo-900 via-indigo-850 to-slate-900 text-white p-6 rounded-2xl shadow-lg border border-indigo-700/40 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="relative z-10 max-w-2xl">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-emerald-500/20 text-emerald-300 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full border border-emerald-400/30 uppercase tracking-widest flex items-center gap-1">
+                <TrendingUp className="w-3 h-3 text-emerald-400" />
+                Inteligencia Comercial Biomédica
+              </span>
+            </div>
+            <h3 className="font-black text-xl text-white tracking-tight">Proyección Comercial & Clientes Potenciales</h3>
+            <p className="text-xs text-indigo-200 mt-1 leading-relaxed">
+              Monitoreo de vencimientos, estimación de montos en USD para solicitudes de contrato y cartera objetivo para renovación de coberturas.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 relative z-10 flex-wrap">
+            <button
+              onClick={() => handlePrintContractProjectionPdf(filtered, totals)}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md hover:shadow-indigo-500/30 flex items-center gap-2 cursor-pointer"
+            >
+              <Printer className="w-4 h-4" />
+              <span>🖨️ Exportar Informe PDF</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Executive KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Valor en Riesgo / Oportunidad */}
+          <div className="bg-white border border-indigo-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">Valor Cartera en Riesgo</span>
+              <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+                <DollarSign className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="font-black text-2xl text-slate-900 mt-2">
+              ${totalRiskValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-[10px] text-slate-500 font-semibold mt-1 flex items-center gap-1">
+              <span>Monto estimado en USD de {totals.criticosCount + totals.proximosCount + totals.vencidosCount} contratos (&le;90d)</span>
+            </p>
+          </div>
+
+          {/* Card 2: Clientes Potenciales Objetivo */}
+          <div className="bg-white border border-emerald-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Clientes Potenciales</span>
+              <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
+                <Users className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="font-black text-2xl text-slate-900 mt-2">{uniqueTargetClients}</p>
+            <p className="text-[10px] text-slate-500 font-semibold mt-1">
+              Instituciones/Terceros para solicitud de renovación
+            </p>
+          </div>
+
+          {/* Card 3: Por Vencer (30-90 días) */}
+          <div className="bg-white border border-amber-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Por Vencer (1-90 Días)</span>
+              <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="font-black text-2xl text-slate-900 mt-2">{totals.criticosCount + totals.proximosCount}</p>
+            <p className="text-[10px] font-bold text-amber-800 mt-1">
+              ${(criticosVal + proximosVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD en negociación
+            </p>
+          </div>
+
+          {/* Card 4: Vencidos Sin Renovar */}
+          <div className="bg-white border border-rose-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700">Vencidos Sin Renovar</span>
+              <div className="p-2 rounded-lg bg-rose-50 text-rose-600">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="font-black text-2xl text-slate-900 mt-2">{totals.vencidosCount}</p>
+            <p className="text-[10px] font-bold text-rose-800 mt-1">
+              ${vencidosVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD para recuperar
+            </p>
+          </div>
+        </div>
+
+        {/* Filter Controls & Search */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Buscar por cliente, nº contrato o equipo..."
+              value={projSearch}
+              onChange={(e) => setProjSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50"
+            />
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={() => setProjFilter('todos')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                projFilter === 'todos'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Todos ({allProjections.length})
+            </button>
+            <button
+              onClick={() => setProjFilter('vencidos')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                projFilter === 'vencidos'
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
+              }`}
+            >
+              🔴 Vencidos ({vencidosList.length})
+            </button>
+            <button
+              onClick={() => setProjFilter('criticos')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                projFilter === 'criticos'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+              }`}
+            >
+              🟠 Críticos (&lt;30d) ({criticosList.length})
+            </button>
+            <button
+              onClick={() => setProjFilter('proximos')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                projFilter === 'proximos'
+                  ? 'bg-yellow-500 text-slate-955 shadow-xs'
+                  : 'bg-yellow-50 text-yellow-800 hover:bg-yellow-100'
+              }`}
+            >
+              🟡 Próximos (30-90d) ({proximosList.length})
+            </button>
+            <button
+              onClick={() => setProjFilter('futuros')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                projFilter === 'futuros'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-blue-50 text-blue-800 hover:bg-blue-100'
+              }`}
+            >
+              🔵 Futuros (&gt;90d) ({futurosList.length})
+            </button>
+          </div>
+
+          {/* Sort Selector */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-bold text-slate-500">Ordenar:</span>
+            <select
+              value={projSort}
+              onChange={(e: any) => setProjSort(e.target.value)}
+              className="text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="vencimiento">Por Vencimiento</option>
+              <option value="valor">Por Valor (USD)</option>
+              <option value="cliente">Por Cliente</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Projection Pipeline Table */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div>
+              <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">
+                Listado de Proyección de Contratos & Oportunidades ({filtered.length} Registros)
+              </h4>
+              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                Haz clic en el Valor (USD) para editar el monto o cambia el Estado de la Solicitud directamente.
+              </p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse font-sans">
+              <thead>
+                <tr className="bg-slate-900 text-white text-[10px] font-extrabold uppercase tracking-wider">
+                  <th className="p-3">Nº Contrato</th>
+                  <th className="p-3">Cliente / Ubicación</th>
+                  <th className="p-3">Equipos Coberturados</th>
+                  <th className="p-3 text-right">Valor del Contrato (USD)</th>
+                  <th className="p-3 text-center">Vencimiento</th>
+                  <th className="p-3 text-center">Días Restantes</th>
+                  <th className="p-3 text-center">Estado de Solicitud</th>
+                  <th className="p-3 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-150 text-xs">
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-slate-400 font-semibold">
+                      No se encontraron contratos con los filtros aplicados.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map(p => {
+                    const con = p.contract;
+                    const isEditingVal = editingValContractId === con.id;
+
+                    return (
+                      <tr key={con.id} className="hover:bg-slate-50/80 transition-colors">
+                        {/* Contract ID */}
+                        <td className="p-3 font-black text-indigo-900">
+                          <span
+                            onClick={() => { setSelectedContractForDetails(con); setIsContractDetailsModalOpen(true); }}
+                            className="cursor-pointer hover:underline text-indigo-700"
+                          >
+                            {con.id}
+                          </span>
+                        </td>
+
+                        {/* Client Name & City */}
+                        <td className="p-3 font-bold text-slate-800">
+                          <div>
+                            <p className="font-extrabold">{p.clientName}</p>
+                            {con.city && (
+                              <span className="inline-block bg-slate-100 text-slate-600 text-[9px] font-semibold px-1.5 py-0.2 rounded mt-0.5">
+                                📍 {con.city}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Covered Equipment */}
+                        <td className="p-3 text-slate-600 text-[11px]">
+                          {con.equipmentItems && con.equipmentItems.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 max-w-xs">
+                              {con.equipmentItems.map((item, idx) => (
+                                <span key={idx} className="bg-slate-100 text-slate-700 text-[9.5px] font-semibold px-1.5 py-0.5 rounded border border-slate-200/60">
+                                  {item.name} {item.brand ? `(${item.brand})` : ''}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 italic text-[10px]">Sin equipos especificados</span>
+                          )}
+                        </td>
+
+                        {/* Contract Value ($ USD) */}
+                        <td className="p-3 text-right font-black text-emerald-700">
+                          {isEditingVal ? (
+                            <div className="flex items-center justify-end gap-1">
+                              <span className="text-xs text-slate-500 font-bold">$</span>
+                              <input
+                                type="number"
+                                min={0}
+                                value={editingValInput}
+                                onChange={(e) => setEditingValInput(e.target.value)}
+                                className="w-24 p-1 text-xs font-mono font-bold border border-indigo-300 rounded focus:ring-1 focus:ring-indigo-500 bg-white"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleSaveContractValue(con.id, parseFloat(editingValInput) || 0);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingValContractId(null);
+                                  }
+                                }}
+                              />
+                              <button
+                                onClick={() => handleSaveContractValue(con.id, parseFloat(editingValInput) || 0)}
+                                className="p-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-3xs font-bold cursor-pointer"
+                              >
+                                ✓
+                              </button>
+                            </div>
+                          ) : (
+                            <div
+                              onClick={() => {
+                                setEditingValContractId(con.id);
+                                setEditingValInput((con.contractValue || 0).toString());
+                              }}
+                              className="group inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-50 p-1 rounded transition-colors"
+                              title="Haga clic para editar el valor del contrato en USD"
+                            >
+                              <span className="text-xs">
+                                {p.valUSD > 0
+                                  ? `$${p.valUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                  : <span className="text-slate-400 font-normal italic">$ Ingresar Valor</span>}
+                              </span>
+                              <Pencil className="w-3 h-3 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                            </div>
+                          )}
+                        </td>
+
+                        {/* End Date */}
+                        <td className="p-3 text-center font-bold text-slate-700">
+                          {con.endDate}
+                        </td>
+
+                        {/* Days Remaining & Urgency Badge */}
+                        <td className="p-3 text-center">
+                          {p.urgencyCategory === 'vencidos' && (
+                            <span className="bg-rose-50 text-rose-800 border border-rose-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                              🔴 Vencido ({Math.abs(p.diffDays)}d)
+                            </span>
+                          )}
+                          {p.urgencyCategory === 'criticos' && (
+                            <span className="bg-amber-50 text-amber-800 border border-amber-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                              🟠 {p.diffDays} días (Crítico)
+                            </span>
+                          )}
+                          {p.urgencyCategory === 'proximos' && (
+                            <span className="bg-yellow-50 text-yellow-800 border border-yellow-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                              🟡 {p.diffDays} días (Próximo)
+                            </span>
+                          )}
+                          {p.urgencyCategory === 'futuros' && (
+                            <span className="bg-blue-50 text-blue-800 border border-blue-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                              🔵 {p.diffDays} días
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Proposal Status Dropdown */}
+                        <td className="p-3 text-center">
+                          <select
+                            value={p.proposalStatus}
+                            onChange={(e: any) => handleSaveProposalStatus(con.id, e.target.value)}
+                            className={`text-[10px] font-extrabold px-2 py-1 rounded-lg border focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer ${
+                              p.proposalStatus === 'Renovado'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                : p.proposalStatus === 'En Negociación'
+                                ? 'bg-purple-50 text-purple-800 border-purple-300'
+                                : p.proposalStatus === 'Propuesta Presentada'
+                                ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
+                                : p.proposalStatus === 'Solicitud Enviada'
+                                ? 'bg-sky-50 text-sky-800 border-sky-300'
+                                : p.proposalStatus === 'Perdido'
+                                ? 'bg-rose-50 text-rose-800 border-rose-300'
+                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}
+                          >
+                            <option value="Sin Contactar">⚪ Sin Contactar</option>
+                            <option value="Solicitud Enviada">📩 Solicitud Enviada</option>
+                            <option value="Propuesta Presentada">📋 Propuesta Presentada</option>
+                            <option value="En Negociación">🤝 En Negociación</option>
+                            <option value="Renovado">✅ Renovado</option>
+                            <option value="Perdido">❌ Perdido</option>
+                          </select>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => { setSelectedContractForDetails(con); setIsContractDetailsModalOpen(true); }}
+                            className="text-[10px] font-extrabold px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Detalle</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
       <div className="space-y-6 font-sans">
         {/* Top Sub-Tab Switcher Capsule */}
         <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/80 max-w-max no-print">
@@ -9534,9 +10140,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <FileSpreadsheet className="w-4 h-4" />
             <span>Contratos con GE</span>
           </button>
+
+          <button
+            onClick={() => setContractsSubTab('proyeccion')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+              contractsSubTab === 'proyeccion'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <TrendingUp className="w-4 h-4 text-emerald-300" />
+            <span>📈 Proyección & Oportunidades (Clientes Potenciales)</span>
+          </button>
         </div>
 
-        {contractsSubTab === 'garantias' ? renderGarantiasSubView() : renderGeSubView()}
+        {contractsSubTab === 'garantias'
+          ? renderGarantiasSubView()
+          : contractsSubTab === 'ge'
+          ? renderGeSubView()
+          : renderProyeccionSubView()}
       </div>
     );
   };
