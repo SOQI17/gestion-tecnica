@@ -1442,6 +1442,7 @@ export default function AdminPortal({
 
   // Contratos Tab states
   const [contractsSubTab, setContractsSubTab] = useState<'garantias' | 'ge' | 'proyeccion'>('garantias');
+  const [contractValueFilter, setContractValueFilter] = useState<'all' | 'unvalued' | 'valued'>('all');
   const [projSearch, setProjSearch] = useState('');
   const [projFilter, setProjFilter] = useState<'todos' | 'vencidos' | 'criticos' | 'proximos' | 'futuros'>('todos');
   const [projStageFilter, setProjStageFilter] = useState<string>('all');
@@ -8666,6 +8667,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
         if (!matchesQuery) return false;
 
+        if (contractValueFilter === 'unvalued') {
+          if (con.contractValue && con.contractValue > 0) return false;
+        } else if (contractValueFilter === 'valued') {
+          if (!con.contractValue || con.contractValue <= 0) return false;
+        }
+
         if (contractFilterBrand !== 'all') {
           const hasBrand = (con.equipmentItems || []).some(
             e => normalizeBrandName(e.brand).toLowerCase() === contractFilterBrand.toLowerCase()
@@ -9751,6 +9758,66 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     printWin.document.close();
   };
 
+  const handleExportCrmExcelCsv = (projectionsList: any[]) => {
+    if (!projectionsList || projectionsList.length === 0) {
+      alert("No hay registros en la proyección comercial para exportar.");
+      return;
+    }
+
+    const headers = [
+      'Nº CONTRATO',
+      'CLIENTE',
+      'CIUDAD / SEDE',
+      'TIPO DE CONTRATO',
+      'EQUIPOS COBERTURADOS',
+      'VALOR CONTRATO (USD)',
+      'PRIORIDAD COMERCIAL',
+      '% DE CIERRE (PROBABILIDAD)',
+      'VALOR PONDERADO (USD)',
+      'FECHA INICIO',
+      'FECHA VENCIMIENTO',
+      'DÍAS RESTANTES',
+      'CATEGORÍA URGENCIA',
+      'ETAPA CRM (EMBUDO)',
+      'NOTAS Y GESTIÓN COMERCIAL'
+    ];
+
+    const rows = projectionsList.map(p => {
+      const con = p.contract;
+      const eqList = (con.equipmentItems || []).map((e: any) => `${e.name || ''}${e.brand ? ` (${e.brand})` : ''}`.trim()).filter(Boolean).join(' | ') || 'Sin especificar';
+      const valPonderado = (p.valUSD * p.closingProbability) / 100;
+
+      return [
+        `"${(con.id || '').replace(/"/g, '""')}"`,
+        `"${(p.clientName || '').replace(/"/g, '""')}"`,
+        `"${(con.city || 'N/A').replace(/"/g, '""')}"`,
+        `"${(con.type || '').replace(/"/g, '""')}"`,
+        `"${eqList.replace(/"/g, '""')}"`,
+        p.valUSD ? p.valUSD.toFixed(2) : '0.00',
+        `"${p.priority}"`,
+        `${p.closingProbability}%`,
+        valPonderado.toFixed(2),
+        `"${con.startDate || 'N/A'}"`,
+        `"${con.endDate || 'N/A'}"`,
+        p.diffDays,
+        `"${p.urgencyCategory.toUpperCase()}"`,
+        `"${(p.proposalStatus || '').replace(/"/g, '""')}"`,
+        `"${(con.proposalNotes || '').replace(/"/g, '""')}"`
+      ].join(';');
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(';'), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    link.href = URL.createObjectURL(blob);
+    link.download = `Proyeccion_CRM_Clientes_ORIMEC_${today}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showNotification(`Exportado exitosamente a Excel (${projectionsList.length} registros)`, 'success');
+  };
+
   const renderProyeccionSubView = () => {
 
     // CRM Funnel Stage Totals
@@ -9960,6 +10027,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
 
           <div className="flex items-center gap-2 relative z-10 flex-wrap">
+            <button
+              onClick={() => handleExportCrmExcelCsv(filtered)}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md hover:shadow-emerald-500/30 flex items-center gap-2 cursor-pointer"
+              title="Exportar proyección comercial completa a Excel (CSV con soporte de caracteres latinos)"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>📊 Exportar CRM (Excel)</span>
+            </button>
             <button
               onClick={() => handlePrintContractProjectionPdf(filtered, totals)}
               className="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md hover:shadow-indigo-500/30 flex items-center gap-2 cursor-pointer"
