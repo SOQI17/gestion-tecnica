@@ -1207,9 +1207,10 @@ export default function App() {
   // ── Computed values (memoized to avoid recompute on every render) ──
   const currentUserPermissions = useMemo(() => {
     if (!currentUser) return undefined;
+    const userEmail = (currentUser.email || '').trim().toLowerCase();
     const matchedCurrentEng =
       engineers.find(e => e.id === currentUser.engineerId) ||
-      engineers.find(e => e.email && e.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase());
+      engineers.find(e => e.email && userEmail !== '' && e.email.trim().toLowerCase() === userEmail);
     return matchedCurrentEng?.customPermissions;
   }, [engineers, currentUser]);
 
@@ -1271,12 +1272,12 @@ export default function App() {
 
         {/* Action Controls & Navigation Switcher */}
         {(() => {
+          const userEmailClean = (currentUser?.email || '').trim().toLowerCase();
           const matchedCurrentEng = currentUser ? (
             engineers.find(e => e.id === currentUser.engineerId) ||
-            engineers.find(e => e.email && e.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase())
+            engineers.find(e => e.email && userEmailClean !== '' && e.email.trim().toLowerCase() === userEmailClean)
           ) : undefined;
 
-          const userEmailClean = currentUser?.email.trim().toLowerCase() || '';
           const canSwitchPortals = currentUser && (
             currentUser.role === 'admin' || 
             isDemoMode || 
