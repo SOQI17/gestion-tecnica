@@ -3471,6 +3471,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         /* Multi-day Event Tracks Wrapper */
         .cal-tracks-wrapper {
           display: block !important;
+          position: relative !important;
           background: #f8fafc !important;
           border-bottom: 1px solid #cbd5e1 !important;
           padding: 2px 0 !important;
@@ -3486,6 +3487,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           margin: 1px 0 !important;
           padding: 0 !important;
           width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        .cal-tracks-wrapper [style*="gridColumn"] {
+          margin-left: 2px !important;
+          margin-right: 2px !important;
           box-sizing: border-box !important;
         }
 
@@ -10694,7 +10701,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
 
                     {tracks.length > 0 && (
-                      <div className="cal-tracks-wrapper bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
+                      <div className="cal-tracks-wrapper bg-slate-50 py-1.5 border-b border-slate-200 space-y-1 relative">
+                        {/* 7-column background guide lines for pixel-perfect column alignment */}
+                        <div className="grid grid-cols-7 absolute inset-0 pointer-events-none">
+                          {[0, 1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="border-r border-slate-200/80 last:border-r-0 h-full" />
+                          ))}
+                        </div>
+
                         {tracks.map((track, tIdx) => (
                           <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
                             {track.map(wo => {
@@ -13150,7 +13164,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Multi-day events tracks (if any) */}
                           {tracks.length > 0 && (
-                            <div className="cal-tracks-wrapper bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
+                            <div className="cal-tracks-wrapper bg-slate-50 py-1.5 border-b border-slate-200 space-y-1 relative">
+                              {/* 7-column background guide lines for pixel-perfect column alignment */}
+                              <div className="grid grid-cols-7 absolute inset-0 pointer-events-none">
+                                {[0, 1, 2, 3, 4, 5, 6].map(i => (
+                                  <div key={i} className="border-r border-slate-200/80 last:border-r-0 h-full" />
+                                ))}
+                              </div>
+
                               {tracks.map((track, tIdx) => (
                                 <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
                                   {track.map(wo => {
