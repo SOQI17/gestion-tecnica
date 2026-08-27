@@ -196,6 +196,7 @@ export interface Contract {
   proposalStatus?: 'Sin Contactar' | 'Solicitud Enviada' | 'Propuesta Presentada' | 'En Negociación' | 'Renovado' | 'Perdido';
   proposalNotes?: string;
   dealPriority?: 'Alta' | 'Media' | 'Baja';
+  closingProbability?: number; // Porcentaje de probabilidad / disposición de cierre del cliente (0-100%)
   coverage?: string;
   equipmentItems?: ContractEquipmentItem[]; // List of equipment covered
   maintenanceFrequency?: 'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno';

@@ -1486,6 +1486,17 @@ export default function AdminPortal({
 
       const proposalStatus = con.proposalStatus || defaultStatus;
 
+      // Smart calculation or custom override for closing probability (%)
+      let defaultProb = 50;
+      if (proposalStatus === 'Renovado') defaultProb = 100;
+      else if (proposalStatus === 'En Negociación') defaultProb = 75;
+      else if (proposalStatus === 'Propuesta Presentada') defaultProb = 50;
+      else if (proposalStatus === 'Solicitud Enviada') defaultProb = 30;
+      else if (proposalStatus === 'Sin Contactar') defaultProb = 15;
+      else if (proposalStatus === 'Perdido') defaultProb = 0;
+
+      const closingProbability = typeof con.closingProbability === 'number' ? con.closingProbability : defaultProb;
+
       // Auto-assign priority based on value / expiration if not explicitly set
       let priority: 'Alta' | 'Media' | 'Baja' = con.dealPriority || 'Media';
       if (!con.dealPriority) {
@@ -1503,6 +1514,7 @@ export default function AdminPortal({
         valUSD,
         proposalStatus,
         priority,
+        closingProbability,
         hasSuccessor
       };
     });
@@ -9684,6 +9696,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <th>Cliente / Sede</th>
                 <th>Equipos Coberturados</th>
                 <th>Valor ($ USD)</th>
+                <th>Prioridad</th>
+                <th>% Cierre</th>
                 <th>Fecha Vencimiento</th>
                 <th>Días Restantes</th>
                 <th>Estado de Gestión</th>
@@ -9696,6 +9710,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <td style="font-weight: 700;">${p.clientName}</td>
                   <td style="font-size: 8.5px; color: #475569;">${(p.contract.equipmentItems || []).map((e: any) => e.name || e.equipmentName).join(', ') || 'Equipos Biomédicos varios'}</td>
                   <td style="font-weight: 900; color: #047857;">$${p.valUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td style="font-weight: 700;">${p.priority}</td>
+                  <td style="font-weight: 900; color: #0284c7; text-align: center;">${p.closingProbability}%</td>
                   <td style="font-weight: 700;">${p.contract.endDate}</td>
                   <td>
                     <span class="${
@@ -9840,6 +9856,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       if (con && onUpdateContract) {
         onUpdateContract({ ...con, dealPriority: newPriority });
         showNotification(`Prioridad comercial para ${contractId} asignada a ${newPriority}`, 'success');
+      }
+    };
+
+    const handleSaveClosingProbability = (contractId: string, newProb: number) => {
+      const con = contracts.find(c => c.id === contractId);
+      if (con && onUpdateContract) {
+        onUpdateContract({ ...con, closingProbability: newProb });
+        showNotification(`Probabilidad de cierre para ${contractId} actualizada a ${newProb}%`, 'success');
       }
     };
 
@@ -10107,6 +10131,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <th className="p-3">Equipos Coberturados</th>
                   <th className="p-3 text-right">Valor Contrato (USD)</th>
                   <th className="p-3 text-center">Prioridad</th>
+                  <th className="p-3 text-center">% de Cierre</th>
                   <th className="p-3 text-center">Vencimiento</th>
                   <th className="p-3 text-center">Días Restantes</th>
                   <th className="p-3 text-center">Etapa del Embudo (CRM)</th>
@@ -10116,7 +10141,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               <tbody className="divide-y divide-slate-150 text-xs">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="p-8 text-center text-slate-400 font-semibold">
+                    <td colSpan={10} className="p-8 text-center text-slate-400 font-semibold">
                       No se encontraron oportunidades con los filtros aplicados.
                     </td>
                   </tr>
@@ -10233,6 +10258,37 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               <option value="Media">⚡ Media</option>
                               <option value="Baja">❄️ Baja</option>
                             </select>
+                          </td>
+
+                          {/* % de Cierre (Probabilidad / Disposición del Cliente) */}
+                          <td className="p-3 text-center">
+                            <div
+                              className="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 px-2 py-1 rounded-xl shadow-2xs hover:border-indigo-300 transition-colors"
+                              title="Disposición y Receptividad del Cliente para Cerrar / Renovar (0-100%)"
+                            >
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={p.closingProbability}
+                                onChange={(e) => {
+                                  const val = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
+                                  handleSaveClosingProbability(con.id, val);
+                                }}
+                                className="w-10 text-center text-xs font-black text-slate-800 bg-transparent focus:outline-none"
+                              />
+                              <span className="text-[10px] font-black text-slate-500">%</span>
+                              <div
+                                className="w-2 h-2 rounded-full shrink-0 ml-0.5"
+                                style={{
+                                  backgroundColor:
+                                    p.closingProbability >= 80 ? '#10b981' :
+                                    p.closingProbability >= 60 ? '#0284c7' :
+                                    p.closingProbability >= 40 ? '#f59e0b' :
+                                    p.closingProbability >= 20 ? '#f97316' : '#ef4444'
+                                }}
+                              />
+                            </div>
                           </td>
 
                           {/* End Date */}
