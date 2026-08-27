@@ -1447,6 +1447,7 @@ export default function AdminPortal({
   const [projStageFilter, setProjStageFilter] = useState<string>('all');
   const [projPriorityFilter, setProjPriorityFilter] = useState<'todas' | 'Alta' | 'Media' | 'Baja'>('todas');
   const [projSort, setProjSort] = useState<'vencimiento' | 'valor' | 'cliente' | 'prioridad'>('vencimiento');
+  const [projPage, setProjPage] = useState(1);
   const [editingValContractId, setEditingValContractId] = useState<string | null>(null);
   const [editingValInput, setEditingValInput] = useState<string>('');
   const [contractSearch, setContractSearch] = useState('');
@@ -9653,11 +9654,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     printWin.document.close();
   };
 
-  const renderProyeccionSubView = () => {
+  // ── Memoized CRM Contract Projections (Optimized for Instant Tab Switch) ──
+  const allProjections = useMemo(() => {
     const todayMs = new Date().setHours(0,0,0,0);
+    const clientMap = new Map(clients.map(c => [c.id, c]));
 
-    const allProjections = contracts.map(con => {
-      const client = clients.find(c => isClientMatch(c.id, con.clientId, clients)) || clients.find(c => c.id === con.clientId);
+    return contracts.map(con => {
+      const client = clients.find(c => isClientMatch(c.id, con.clientId, clients)) || clientMap.get(con.clientId);
       const clientName = client ? client.name : (con.clientId && con.clientId !== 'fsm_placeholder' ? con.clientId : 'Cliente por Registrar');
       const endDateMs = new Date(con.endDate + 'T00:00:00').getTime();
       const diffDays = Math.ceil((endDateMs - todayMs) / (1000 * 60 * 60 * 24));
@@ -9673,8 +9676,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       // Smart renewal status detection if not manually set
       const hasSuccessor = contracts.some(other =>
         other.id !== con.id &&
-        isClientMatch(other.clientId, con.clientId, clients) &&
-        new Date(other.startDate + 'T00:00:00').getTime() > new Date(con.startDate + 'T00:00:00').getTime()
+        (other.clientId === con.clientId || isClientMatch(other.clientId, con.clientId, clients)) &&
+        other.startDate > con.startDate
       );
 
       let defaultStatus: Contract['proposalStatus'] = 'Sin Contactar';
@@ -9706,6 +9709,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         hasSuccessor
       };
     });
+  }, [contracts, clients]);
+
+  const renderProyeccionSubView = () => {
 
     // CRM Funnel Stage Totals
     const stages = [
@@ -10091,188 +10097,226 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </td>
                   </tr>
                 ) : (
-                  filtered.map(p => {
-                    const con = p.contract;
-                    const isEditingVal = editingValContractId === con.id;
+                  (() => {
+                    const itemsPerPage = 20;
+                    const totalProjPages = Math.ceil(filtered.length / itemsPerPage);
+                    const safePage = Math.min(projPage, totalProjPages || 1);
+                    const paginatedList = filtered.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
 
-                    return (
-                      <tr key={con.id} className="hover:bg-slate-50/80 transition-colors">
-                        {/* Contract ID */}
-                        <td className="p-3 font-black text-indigo-900">
-                          <span
-                            onClick={() => { setSelectedContractForDetails(con); setIsContractDetailsModalOpen(true); }}
-                            className="cursor-pointer hover:underline text-indigo-700"
-                          >
-                            {con.id}
-                          </span>
-                        </td>
+                    return paginatedList.map(p => {
+                      const con = p.contract;
+                      const isEditingVal = editingValContractId === con.id;
 
-                        {/* Client Name & City */}
-                        <td className="p-3 font-bold text-slate-800">
-                          <div>
-                            <p className="font-extrabold">{p.clientName}</p>
-                            {con.city && (
-                              <span className="inline-block bg-slate-100 text-slate-600 text-[9px] font-semibold px-1.5 py-0.2 rounded mt-0.5">
-                                📍 {con.city}
+                      return (
+                        <tr key={con.id} className="hover:bg-slate-50/80 transition-colors">
+                          {/* Contract ID */}
+                          <td className="p-3 font-black text-indigo-900">
+                            <span
+                              onClick={() => { setSelectedContractForDetails(con); setIsContractDetailsModalOpen(true); }}
+                              className="cursor-pointer hover:underline text-indigo-700"
+                            >
+                              {con.id}
+                            </span>
+                          </td>
+
+                          {/* Client Name & City */}
+                          <td className="p-3 font-bold text-slate-800">
+                            <div>
+                              <p className="font-extrabold">{p.clientName}</p>
+                              {con.city && (
+                                <span className="inline-block bg-slate-100 text-slate-600 text-[9px] font-semibold px-1.5 py-0.2 rounded mt-0.5">
+                                  📍 {con.city}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Covered Equipment */}
+                          <td className="p-3 text-slate-600 text-[11px]">
+                            {con.equipmentItems && con.equipmentItems.length > 0 ? (
+                              <div className="flex flex-wrap gap-1 max-w-xs">
+                                {con.equipmentItems.map((item, idx) => (
+                                  <span key={idx} className="bg-slate-100 text-slate-700 text-[9.5px] font-semibold px-1.5 py-0.5 rounded border border-slate-200/60">
+                                    {item.name} {item.brand ? `(${item.brand})` : ''}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic text-[10px]">Sin equipos especificados</span>
+                            )}
+                          </td>
+
+                          {/* Contract Value ($ USD) */}
+                          <td className="p-3 text-right font-black text-emerald-700">
+                            {isEditingVal ? (
+                              <div className="flex items-center justify-end gap-1">
+                                <span className="text-xs text-slate-500 font-bold">$</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={editingValInput}
+                                  onChange={(e) => setEditingValInput(e.target.value)}
+                                  className="w-24 p-1 text-xs font-mono font-bold border border-indigo-300 rounded focus:ring-1 focus:ring-indigo-500 bg-white"
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleSaveContractValue(con.id, parseFloat(editingValInput) || 0);
+                                    } else if (e.key === 'Escape') {
+                                      setEditingValContractId(null);
+                                    }
+                                  }}
+                                />
+                                <button
+                                  onClick={() => handleSaveContractValue(con.id, parseFloat(editingValInput) || 0)}
+                                  className="p-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-3xs font-bold cursor-pointer"
+                                >
+                                  ✓
+                                </button>
+                              </div>
+                            ) : (
+                              <div
+                                onClick={() => {
+                                  setEditingValContractId(con.id);
+                                  setEditingValInput((con.contractValue || 0).toString());
+                                }}
+                                className="group inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-50 p-1 rounded transition-colors"
+                                title="Haga clic para editar el valor del contrato en USD"
+                              >
+                                <span className="text-xs">
+                                  {p.valUSD > 0
+                                    ? `$${p.valUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    : <span className="text-slate-400 font-normal italic">$ Ingresar Valor</span>}
+                                </span>
+                                <Pencil className="w-3 h-3 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Priority Dropdown */}
+                          <td className="p-3 text-center">
+                            <select
+                              value={p.priority}
+                              onChange={(e: any) => handleSaveDealPriority(con.id, e.target.value)}
+                              className={`text-[9.5px] font-extrabold px-2 py-0.5 rounded border focus:outline-none cursor-pointer ${
+                                p.priority === 'Alta'
+                                  ? 'bg-rose-100 text-rose-800 border-rose-300'
+                                  : p.priority === 'Media'
+                                  ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                  : 'bg-slate-100 text-slate-700 border-slate-200'
+                              }`}
+                            >
+                              <option value="Alta">🔥 Alta</option>
+                              <option value="Media">⚡ Media</option>
+                              <option value="Baja">❄️ Baja</option>
+                            </select>
+                          </td>
+
+                          {/* End Date */}
+                          <td className="p-3 text-center font-bold text-slate-700">
+                            {con.endDate}
+                          </td>
+
+                          {/* Days Remaining & Urgency Badge */}
+                          <td className="p-3 text-center">
+                            {p.urgencyCategory === 'vencidos' && (
+                              <span className="bg-rose-50 text-rose-800 border border-rose-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                                🔴 Vencido ({Math.abs(p.diffDays)}d)
                               </span>
                             )}
-                          </div>
-                        </td>
-
-                        {/* Covered Equipment */}
-                        <td className="p-3 text-slate-600 text-[11px]">
-                          {con.equipmentItems && con.equipmentItems.length > 0 ? (
-                            <div className="flex flex-wrap gap-1 max-w-xs">
-                              {con.equipmentItems.map((item, idx) => (
-                                <span key={idx} className="bg-slate-100 text-slate-700 text-[9.5px] font-semibold px-1.5 py-0.5 rounded border border-slate-200/60">
-                                  {item.name} {item.brand ? `(${item.brand})` : ''}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-slate-400 italic text-[10px]">Sin equipos especificados</span>
-                          )}
-                        </td>
-
-                        {/* Contract Value ($ USD) */}
-                        <td className="p-3 text-right font-black text-emerald-700">
-                          {isEditingVal ? (
-                            <div className="flex items-center justify-end gap-1">
-                              <span className="text-xs text-slate-500 font-bold">$</span>
-                              <input
-                                type="number"
-                                min={0}
-                                value={editingValInput}
-                                onChange={(e) => setEditingValInput(e.target.value)}
-                                className="w-24 p-1 text-xs font-mono font-bold border border-indigo-300 rounded focus:ring-1 focus:ring-indigo-500 bg-white"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    handleSaveContractValue(con.id, parseFloat(editingValInput) || 0);
-                                  } else if (e.key === 'Escape') {
-                                    setEditingValContractId(null);
-                                  }
-                                }}
-                              />
-                              <button
-                                onClick={() => handleSaveContractValue(con.id, parseFloat(editingValInput) || 0)}
-                                className="p-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-3xs font-bold cursor-pointer"
-                              >
-                                ✓
-                              </button>
-                            </div>
-                          ) : (
-                            <div
-                              onClick={() => {
-                                setEditingValContractId(con.id);
-                                setEditingValInput((con.contractValue || 0).toString());
-                              }}
-                              className="group inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-50 p-1 rounded transition-colors"
-                              title="Haga clic para editar el valor del contrato en USD"
-                            >
-                              <span className="text-xs">
-                                {p.valUSD > 0
-                                  ? `$${p.valUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                  : <span className="text-slate-400 font-normal italic">$ Ingresar Valor</span>}
+                            {p.urgencyCategory === 'criticos' && (
+                              <span className="bg-amber-50 text-amber-800 border border-amber-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                                🟠 {p.diffDays} días (Crítico)
                               </span>
-                              <Pencil className="w-3 h-3 text-slate-400 group-hover:text-emerald-600 transition-colors" />
-                            </div>
-                          )}
-                        </td>
+                            )}
+                            {p.urgencyCategory === 'proximos' && (
+                              <span className="bg-yellow-50 text-yellow-800 border border-yellow-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                                🟡 {p.diffDays} días (Próximo)
+                              </span>
+                            )}
+                            {p.urgencyCategory === 'futuros' && (
+                              <span className="bg-blue-50 text-blue-800 border border-blue-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                                🔵 {p.diffDays} días
+                              </span>
+                            )}
+                          </td>
 
-                        {/* Priority Dropdown */}
-                        <td className="p-3 text-center">
-                          <select
-                            value={p.priority}
-                            onChange={(e: any) => handleSaveDealPriority(con.id, e.target.value)}
-                            className={`text-[9.5px] font-extrabold px-2 py-0.5 rounded border focus:outline-none cursor-pointer ${
-                              p.priority === 'Alta'
-                                ? 'bg-rose-100 text-rose-800 border-rose-300'
-                                : p.priority === 'Media'
-                                ? 'bg-amber-100 text-amber-800 border-amber-300'
-                                : 'bg-slate-100 text-slate-700 border-slate-200'
-                            }`}
-                          >
-                            <option value="Alta">🔥 Alta</option>
-                            <option value="Media">⚡ Media</option>
-                            <option value="Baja">❄️ Baja</option>
-                          </select>
-                        </td>
+                          {/* Proposal Status Dropdown (CRM Funnel) */}
+                          <td className="p-3 text-center">
+                            <select
+                              value={p.proposalStatus}
+                              onChange={(e: any) => handleSaveProposalStatus(con.id, e.target.value)}
+                              className={`text-[10px] font-extrabold px-2 py-1 rounded-lg border focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer ${
+                                p.proposalStatus === 'Renovado'
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                  : p.proposalStatus === 'En Negociación'
+                                  ? 'bg-purple-50 text-purple-800 border-purple-300'
+                                  : p.proposalStatus === 'Propuesta Presentada'
+                                  ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
+                                  : p.proposalStatus === 'Solicitud Enviada'
+                                  ? 'bg-sky-50 text-sky-800 border-sky-300'
+                                  : p.proposalStatus === 'Perdido'
+                                  ? 'bg-rose-50 text-rose-800 border-rose-300'
+                                  : 'bg-slate-100 text-slate-700 border-slate-200'
+                              }`}
+                            >
+                              <option value="Sin Contactar">⚪ Sin Contactar</option>
+                              <option value="Solicitud Enviada">📩 Solicitud Enviada</option>
+                              <option value="Propuesta Presentada">📋 Propuesta Presentada</option>
+                              <option value="En Negociación">🤝 En Negociación</option>
+                              <option value="Renovado">✅ Renovado</option>
+                              <option value="Perdido">❌ Perdido</option>
+                            </select>
+                          </td>
 
-                        {/* End Date */}
-                        <td className="p-3 text-center font-bold text-slate-700">
-                          {con.endDate}
-                        </td>
-
-                        {/* Days Remaining & Urgency Badge */}
-                        <td className="p-3 text-center">
-                          {p.urgencyCategory === 'vencidos' && (
-                            <span className="bg-rose-50 text-rose-800 border border-rose-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
-                              🔴 Vencido ({Math.abs(p.diffDays)}d)
-                            </span>
-                          )}
-                          {p.urgencyCategory === 'criticos' && (
-                            <span className="bg-amber-50 text-amber-800 border border-amber-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
-                              🟠 {p.diffDays} días (Crítico)
-                            </span>
-                          )}
-                          {p.urgencyCategory === 'proximos' && (
-                            <span className="bg-yellow-50 text-yellow-800 border border-yellow-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
-                              🟡 {p.diffDays} días (Próximo)
-                            </span>
-                          )}
-                          {p.urgencyCategory === 'futuros' && (
-                            <span className="bg-blue-50 text-blue-800 border border-blue-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
-                              🔵 {p.diffDays} días
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Proposal Status Dropdown (CRM Funnel) */}
-                        <td className="p-3 text-center">
-                          <select
-                            value={p.proposalStatus}
-                            onChange={(e: any) => handleSaveProposalStatus(con.id, e.target.value)}
-                            className={`text-[10px] font-extrabold px-2 py-1 rounded-lg border focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer ${
-                              p.proposalStatus === 'Renovado'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                : p.proposalStatus === 'En Negociación'
-                                ? 'bg-purple-50 text-purple-800 border-purple-300'
-                                : p.proposalStatus === 'Propuesta Presentada'
-                                ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
-                                : p.proposalStatus === 'Solicitud Enviada'
-                                ? 'bg-sky-50 text-sky-800 border-sky-300'
-                                : p.proposalStatus === 'Perdido'
-                                ? 'bg-rose-50 text-rose-800 border-rose-300'
-                                : 'bg-slate-100 text-slate-700 border-slate-200'
-                            }`}
-                          >
-                            <option value="Sin Contactar">⚪ Sin Contactar</option>
-                            <option value="Solicitud Enviada">📩 Solicitud Enviada</option>
-                            <option value="Propuesta Presentada">📋 Propuesta Presentada</option>
-                            <option value="En Negociación">🤝 En Negociación</option>
-                            <option value="Renovado">✅ Renovado</option>
-                            <option value="Perdido">❌ Perdido</option>
-                          </select>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="p-3 text-center">
-                          <button
-                            onClick={() => { setSelectedContractForDetails(con); setIsContractDetailsModalOpen(true); }}
-                            className="text-[10px] font-extrabold px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
-                          >
-                            <Eye className="w-3 h-3" />
-                            <span>Detalle</span>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
+                          {/* Actions */}
+                          <td className="p-3 text-center">
+                            <button
+                              onClick={() => { setSelectedContractForDetails(con); setIsContractDetailsModalOpen(true); }}
+                              className="text-[10px] font-extrabold px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <Eye className="w-3 h-3" />
+                              <span>Detalle</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* Projection Pagination Footer */}
+          {(() => {
+            const itemsPerPage = 20;
+            const totalProjPages = Math.ceil(filtered.length / itemsPerPage);
+            if (totalProjPages <= 1) return null;
+
+            return (
+              <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 flex items-center justify-between font-sans">
+                <span className="text-3xs text-slate-500 font-medium">
+                  Página {projPage} de {totalProjPages} ({filtered.length} Oportunidades Totales)
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setProjPage(prev => Math.max(prev - 1, 1))}
+                    disabled={projPage === 1}
+                    className="px-3 py-1 text-xs font-extrabold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    onClick={() => setProjPage(prev => Math.min(prev + 1, totalProjPages))}
+                    disabled={projPage === totalProjPages}
+                    className="px-3 py-1 text-xs font-extrabold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     );
