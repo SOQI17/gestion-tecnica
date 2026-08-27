@@ -6727,6 +6727,64 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     showNotification(`Exportado exitosamente a Excel (${projectionsList.length} registros)`, 'success');
   };
 
+  const handleEditContract = (con: Contract) => {
+    setEditingContract(con);
+    setContractFormId(con.id || '');
+    setContractFormClientId(con.clientId || '');
+    setContractFormType(con.type || 'Garantía extendida/Contrato');
+    setContractFormStart(con.startDate || '');
+    setContractFormEnd(con.endDate || '');
+    setContractFormStatus(con.status || 'Activo');
+    setContractFormCity(con.city || '');
+    setContractFormValue(con.contractValue ? String(con.contractValue) : '');
+    setContractFormCoverage(con.coverage || '');
+    const client = clients.find(c => c.id === con.clientId);
+    setContractClientSearchQuery(client ? `${client.name} - ${client.city || ''}` : con.clientId || '');
+    setIsContractClientDropdownOpen(false);
+    setIsCreatingNewClientForContract(false);
+    setContractFormEquipmentItems(con.equipmentItems || []);
+    setTempEquipName('');
+    setTempEquipBrand('');
+    setTempEquipModality('');
+    setTempEquipSerial('');
+    setTempEquipGon('');
+    setContractFormFrequency(con.maintenanceFrequency || 'Ninguno');
+    setContractFormPreferredDay(con.preferredDay ? String(con.preferredDay) : '');
+    setContractFormSelectedEquipForFreq('all');
+    setContractFormMaintenanceDates(con.maintenanceDates || []);
+    setTempMaintenanceDate('');
+    setContractFormQcDate(con.qcDate || '');
+    setContractFormQcDates(con.qcDates || []);
+    setContractFormPdfUrl(con.pdfUrl || '');
+    setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
+    setContractFormIsNewEquipment(!!con.isNewEquipment);
+    setContractFormSrPdfUrl(con.srPdfUrl || '');
+    setContractFormCaPdfUrl(con.caPdfUrl || '');
+    setContractFormPodPdfUrl(con.podPdfUrl || '');
+    setContractFormPendingAdmin(!!con.pendingAdminSchedule);
+    setContractFormLinkedId(con.linkedContractId || '');
+    setIsContractModalOpen(true);
+  };
+
+  const handleEditContractGe = (c: ContractGE) => {
+    setEditingContractGe(c);
+    setGeFormCliente(c.cliente || '');
+    setGeFormSid(c.sid || '');
+    setGeFormModalidad(c.modalidad || '');
+    setGeFormEquipo(c.equipo || '');
+    setGeFormEquipmentNum(c.equipmentNum ? String(c.equipmentNum) : '');
+    setGeFormInvoice(c.invoice || '');
+    setGeFormAmount(c.invoiceAmount ? String(c.invoiceAmount) : '');
+    setGeFormMonths(c.months ? String(c.months) : '');
+    setGeFormInvoiceDate(c.invoiceDate || '');
+    setGeFormDueDate(c.dueDate || '');
+    setGeFormPaymentPeriod(c.paymentPeriod || '');
+    setGeFormMonthNum(c.monthNum ? String(c.monthNum) : '');
+    setGeFormContractNum(c.contractNum ? String(c.contractNum) : '');
+    setGeFormObs(c.observaciones || '');
+    setIsContractGeModalOpen(true);
+  };
+
   const renderContratosSubView = () => {
     return (
       <ContratosTab
@@ -6755,6 +6813,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         exportContractsToExcel={exportContractsToExcel}
         getContractExpirationAlert={getContractExpirationAlert}
         setEditingContract={setEditingContract}
+        onEditContract={handleEditContract}
         setIsContractModalOpen={setIsContractModalOpen}
         onDeleteContract={onDeleteContract}
         contractGeSearch={contractGeSearch}
@@ -6766,6 +6825,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         contractGeCsvError={contractGeCsvError}
         onDeleteContractGE={onDeleteContractGE}
         setEditingContractGE={setEditingContractGe}
+        onEditContractGE={handleEditContractGe}
         setIsContractGeModalOpen={setIsContractGeModalOpen}
         resetContractForm={() => {
           const today = new Date();

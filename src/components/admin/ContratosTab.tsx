@@ -28,6 +28,7 @@ interface ContratosTabProps {
   exportContractsToExcel: () => void;
   getContractExpirationAlert: (endDate: string, status: string, linkedContractId?: string) => { level: 'urgent_1m' | 'warning_3m' | 'expired' | null; daysRemaining: number } | null;
   setEditingContract: (contract: Contract | null) => void;
+  onEditContract?: (contract: Contract) => void;
   setIsContractModalOpen: (open: boolean) => void;
   onDeleteContract?: (contractId: string) => void;
   onRenewContract?: (contract: Contract) => void;
@@ -43,6 +44,7 @@ interface ContratosTabProps {
   onClearContractsGE?: () => void;
   onDeleteContractGE?: (id: string) => void;
   setEditingContractGE: (contract: ContractGE | null) => void;
+  onEditContractGE?: (contract: ContractGE) => void;
   setIsContractGeModalOpen: (open: boolean) => void;
   
   // Reset functions
@@ -76,6 +78,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
   exportContractsToExcel,
   getContractExpirationAlert,
   setEditingContract,
+  onEditContract,
   setIsContractModalOpen,
   onDeleteContract,
   onRenewContract,
@@ -89,6 +92,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
   onClearContractsGE,
   onDeleteContractGE,
   setEditingContractGE,
+  onEditContractGE,
   setIsContractGeModalOpen,
   resetContractForm,
   resetContractGeForm,
@@ -258,8 +262,12 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                           <button
                             type="button"
                             onClick={() => {
-                              setEditingContractGE(c);
-                              setIsContractGeModalOpen(true);
+                              if (onEditContractGE) {
+                                onEditContractGE(c);
+                              } else {
+                                setEditingContractGE(c);
+                                setIsContractGeModalOpen(true);
+                              }
                             }}
                             className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
                           >
@@ -798,28 +806,42 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                           )}
 
                           {/* Contrato PDF Link Button */}
-                          <a
-                            href={con.pdfUrl || '#'}
-                            target={con.pdfUrl ? "_blank" : undefined}
-                            rel="noreferrer"
-                            onClick={e => { if (!con.pdfUrl) { e.preventDefault(); alert("PDF de Contrato no adjuntado aún"); } }}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (con.pdfUrl) {
+                                window.open(con.pdfUrl, '_blank');
+                              } else if (onEditContract) {
+                                onEditContract(con);
+                              } else {
+                                setEditingContract(con);
+                                setIsContractModalOpen(true);
+                              }
+                            }}
                             className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
+                            title={con.pdfUrl ? "Ver Documento del Contrato PDF" : "Abrir ficha de contrato para adjuntar o ver documento"}
                           >
                             📄 Contrato <ExternalLink className="w-2.5 h-2.5 text-emerald-600" />
-                          </a>
+                          </button>
 
                           {/* Cronograma PDF Link Button */}
-                          {(con.schedulePdfUrl || con.maintenanceDates?.length) && (
-                            <a
-                              href={con.schedulePdfUrl || '#'}
-                              target={con.schedulePdfUrl ? "_blank" : undefined}
-                              rel="noreferrer"
-                              onClick={e => { if (!con.schedulePdfUrl) { e.preventDefault(); alert("Cronograma PDF no adjuntado aún"); } }}
-                              className="inline-flex items-center gap-1 text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
-                            >
-                              📅 Cronograma <ExternalLink className="w-2.5 h-2.5 text-purple-600" />
-                            </a>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (con.schedulePdfUrl) {
+                                window.open(con.schedulePdfUrl, '_blank');
+                              } else if (onEditContract) {
+                                onEditContract(con);
+                              } else {
+                                setEditingContract(con);
+                                setIsContractModalOpen(true);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1 text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
+                            title={con.schedulePdfUrl ? "Ver Cronograma PDF" : "Abrir ficha de contrato para ver mantenimientos o adjuntar cronograma"}
+                          >
+                            📅 Cronograma <ExternalLink className="w-2.5 h-2.5 text-purple-600" />
+                          </button>
                         </div>
                       </td>
 
@@ -829,8 +851,12 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                           <button
                             type="button"
                             onClick={() => {
-                              setEditingContract(con);
-                              setIsContractModalOpen(true);
+                              if (onEditContract) {
+                                onEditContract(con);
+                              } else {
+                                setEditingContract(con);
+                                setIsContractModalOpen(true);
+                              }
                             }}
                             className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs"
                           >
