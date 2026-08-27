@@ -10188,124 +10188,151 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
         </div>
 
-        {/* Filter Controls & Priority Segment Pills */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1 min-w-[240px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Buscar por cliente, nº contrato o equipo..."
-              value={projSearch}
-              onChange={(e) => setProjSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50"
-            />
-          </div>
+        {/* Filter Controls — 2-row professional layout */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
 
-          {/* Expiration Segment Pills */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <button
-              onClick={() => setProjFilter('todos')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                projFilter === 'todos'
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              Todos ({allProjections.length})
-            </button>
-            <button
-              onClick={() => setProjFilter('vencidos')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                projFilter === 'vencidos'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
-              }`}
-            >
-              🔴 Vencidos ({allProjections.filter(p => p.urgencyCategory === 'vencidos').length})
-            </button>
-            <button
-              onClick={() => setProjFilter('criticos')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                projFilter === 'criticos'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
-              }`}
-            >
-              🟠 Críticos (&lt;30d) ({allProjections.filter(p => p.urgencyCategory === 'criticos').length})
-            </button>
-            <button
-              onClick={() => setProjFilter('proximos')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                projFilter === 'proximos'
-                  ? 'bg-yellow-500 text-slate-955 shadow-xs'
-                  : 'bg-yellow-50 text-yellow-800 hover:bg-yellow-100'
-              }`}
-            >
-              🟡 Próximos (30-90d) ({allProjections.filter(p => p.urgencyCategory === 'proximos').length})
-            </button>
-          </div>
+          {/* Row 1: Search + Dropdowns */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar por cliente, nº contrato o equipo..."
+                value={projSearch}
+                onChange={(e) => setProjSearch(e.target.value)}
+                className="w-full pl-8 pr-4 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-slate-50/60 placeholder-slate-400 text-slate-700"
+              />
+            </div>
 
-          {/* Priority Pills */}
-          <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
-            <button
-              onClick={() => setProjPriorityFilter('todas')}
-              className={`px-2.5 py-1 text-2xs font-bold rounded-md cursor-pointer ${
-                projPriorityFilter === 'todas' ? 'bg-indigo-100 text-indigo-800' : 'text-slate-500 hover:bg-slate-100'
-              }`}
-            >
-              Prioridad: Todas
-            </button>
-            <button
-              onClick={() => setProjPriorityFilter('Alta')}
-              className={`px-2.5 py-1 text-2xs font-extrabold rounded-md cursor-pointer ${
-                projPriorityFilter === 'Alta' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700'
-              }`}
-            >
-              🔥 Alta
-            </button>
-            <button
-              onClick={() => setProjPriorityFilter('Media')}
-              className={`px-2.5 py-1 text-2xs font-extrabold rounded-md cursor-pointer ${
-                projPriorityFilter === 'Media' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-700'
-              }`}
-            >
-              ⚡ Media
-            </button>
-          </div>
+            <div className="h-4 w-px bg-slate-200 shrink-0" />
 
-          {/* Contract Value USD Filter Selector */}
-          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3 shrink-0">
-            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-2xs">
+            {/* Valor USD Filter */}
+            <div className="flex items-center gap-1.5 shrink-0">
               <DollarSign className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span className="text-[10px] font-extrabold text-slate-500 uppercase">Valor USD:</span>
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Valor:</span>
               <select
                 value={contractValueFilter}
                 onChange={(e: any) => setContractValueFilter(e.target.value)}
-                className="bg-transparent font-extrabold text-xs text-slate-800 outline-hidden cursor-pointer"
+                className={`font-extrabold text-[11px] outline-hidden cursor-pointer rounded-md px-2 py-1 border transition-colors ${
+                  contractValueFilter !== 'all'
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                    : 'bg-transparent border-slate-200 text-slate-700'
+                }`}
               >
                 <option value="all">Todos los Valores</option>
                 <option value="unvalued">⚠️ Sin Valor ($0 / Pendientes)</option>
-                <option value="valued">✅ Con Valor Registrado ($ USD)</option>
+                <option value="valued">✅ Con Valor Registrado</option>
               </select>
+            </div>
+
+            <div className="h-4 w-px bg-slate-200 shrink-0" />
+
+            {/* Sort Selector */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Ordenar:</span>
+              <select
+                value={projSort}
+                onChange={(e: any) => setProjSort(e.target.value)}
+                className="font-extrabold text-[11px] text-slate-700 bg-transparent border border-slate-200 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400 cursor-pointer"
+              >
+                <option value="vencimiento">Por Vencimiento</option>
+                <option value="valor">Por Valor (USD)</option>
+                <option value="prioridad">Por Prioridad</option>
+                <option value="cliente">Por Cliente</option>
+              </select>
+            </div>
+
+            {/* Results count */}
+            <div className="ml-auto shrink-0 text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md">
+              <span className="text-indigo-600 font-extrabold">{filtered.length}</span> / {allProjections.length} registros
             </div>
           </div>
 
-          {/* Sort Selector */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs font-bold text-slate-500">Ordenar:</span>
-            <select
-              value={projSort}
-              onChange={(e: any) => setProjSort(e.target.value)}
-              className="text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="vencimiento">Por Vencimiento</option>
-              <option value="valor">Por Valor (USD)</option>
-              <option value="prioridad">Por Prioridad</option>
-              <option value="cliente">Por Cliente</option>
-            </select>
+          {/* Row 2: Status Pills + Priority Pills */}
+          <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/40">
+            {/* Expiration Segment Pills */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mr-1">Estado:</span>
+              <button
+                onClick={() => setProjFilter('todos')}
+                className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  projFilter === 'todos'
+                    ? 'bg-slate-800 text-white shadow-xs'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                Todos ({allProjections.length})
+              </button>
+              <button
+                onClick={() => setProjFilter('vencidos')}
+                className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  projFilter === 'vencidos'
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'bg-white text-rose-700 border border-rose-200 hover:bg-rose-50'
+                }`}
+              >
+                🔴 Vencidos ({allProjections.filter(p => p.urgencyCategory === 'vencidos').length})
+              </button>
+              <button
+                onClick={() => setProjFilter('criticos')}
+                className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  projFilter === 'criticos'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-white text-amber-800 border border-amber-200 hover:bg-amber-50'
+                }`}
+              >
+                🟠 Críticos &lt;30d ({allProjections.filter(p => p.urgencyCategory === 'criticos').length})
+              </button>
+              <button
+                onClick={() => setProjFilter('proximos')}
+                className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  projFilter === 'proximos'
+                    ? 'bg-yellow-500 text-white shadow-xs'
+                    : 'bg-white text-yellow-800 border border-yellow-200 hover:bg-yellow-50'
+                }`}
+              >
+                🟡 Próximos 30-90d ({allProjections.filter(p => p.urgencyCategory === 'proximos').length})
+              </button>
+            </div>
+
+            {/* Priority Pills */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mr-1">Prioridad:</span>
+              <button
+                onClick={() => setProjPriorityFilter('todas')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-md cursor-pointer transition-all ${
+                  projPriorityFilter === 'todas'
+                    ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                    : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                Todas
+              </button>
+              <button
+                onClick={() => setProjPriorityFilter('Alta')}
+                className={`px-2.5 py-1 text-[11px] font-extrabold rounded-md cursor-pointer transition-all ${
+                  projPriorityFilter === 'Alta'
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'bg-white text-rose-700 border border-rose-200 hover:bg-rose-50'
+                }`}
+              >
+                🔥 Alta
+              </button>
+              <button
+                onClick={() => setProjPriorityFilter('Media')}
+                className={`px-2.5 py-1 text-[11px] font-extrabold rounded-md cursor-pointer transition-all ${
+                  projPriorityFilter === 'Media'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-white text-amber-700 border border-amber-200 hover:bg-amber-50'
+                }`}
+              >
+                ⚡ Media
+              </button>
+            </div>
           </div>
         </div>
+
+
 
         {/* Projection Pipeline Table */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
