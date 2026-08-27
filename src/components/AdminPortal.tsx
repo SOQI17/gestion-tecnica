@@ -9138,19 +9138,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
 
             {/* Contract Value USD Filter Selector */}
-            <div className="flex items-center gap-1.5 bg-amber-50/80 border border-amber-300 rounded-lg px-2.5 py-1 shadow-2xs shrink-0">
-              <DollarSign className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-              <span className="text-[10px] font-black text-amber-900 uppercase">Valor USD:</span>
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-2xs shrink-0">
+              <DollarSign className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase">Valor USD:</span>
               <select
                 value={contractValueFilter}
                 onChange={(e: any) => {
                   setContractValueFilter(e.target.value);
                   setContractPage(1);
                 }}
-                className="bg-transparent font-black text-xs text-amber-950 outline-hidden cursor-pointer"
+                className="bg-transparent font-extrabold text-xs text-slate-800 outline-hidden cursor-pointer"
               >
                 <option value="all">Todos los Valores</option>
-                <option value="unvalued">⚠️ Sin Valor ($0 / Pendientes) ({contracts.filter(c => !c.contractValue || c.contractValue <= 0).length})</option>
+                <option value="unvalued">⚠️ Sin Valor ($0 / Pendientes)</option>
                 <option value="valued">✅ Con Valor Registrado ($ USD)</option>
               </select>
             </div>
