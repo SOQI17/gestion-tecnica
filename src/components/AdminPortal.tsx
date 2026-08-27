@@ -9137,6 +9137,24 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </select>
             </div>
 
+            {/* Contract Value USD Filter Selector */}
+            <div className="flex items-center gap-1.5 bg-amber-50/80 border border-amber-300 rounded-lg px-2.5 py-1 shadow-2xs shrink-0">
+              <DollarSign className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span className="text-[10px] font-black text-amber-900 uppercase">Valor USD:</span>
+              <select
+                value={contractValueFilter}
+                onChange={(e: any) => {
+                  setContractValueFilter(e.target.value);
+                  setContractPage(1);
+                }}
+                className="bg-transparent font-black text-xs text-amber-950 outline-hidden cursor-pointer"
+              >
+                <option value="all">Todos los Valores</option>
+                <option value="unvalued">⚠️ Sin Valor ($0 / Pendientes) ({contracts.filter(c => !c.contractValue || c.contractValue <= 0).length})</option>
+                <option value="valued">✅ Con Valor Registrado ($ USD)</option>
+              </select>
+            </div>
+
             {/* Date Sort Selector */}
             <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-2xs shrink-0">
               <CalendarIcon className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
@@ -9193,6 +9211,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   contractDateSort === 'end_asc' ? 'Vencimiento (Más próximos)' : 'Vencimiento (Más lejanos)'
                 }</span>
                 <span className="bg-emerald-200 text-emerald-900 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black">✕</span>
+              </button>
+            )}
+
+            {contractValueFilter !== 'all' && (
+              <button
+                onClick={() => setContractValueFilter('all')}
+                className="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg text-3xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs shrink-0 animate-in fade-in zoom-in-95 duration-150"
+              >
+                <span>Valor: {contractValueFilter === 'unvalued' ? '⚠️ Sin Valor ($0)' : '✅ Con Valor ($ USD)'}</span>
+                <span className="bg-amber-300 text-amber-950 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black">✕</span>
               </button>
             )}
           </div>
