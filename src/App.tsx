@@ -559,6 +559,11 @@ export default function App() {
   }, [showNotification]);
 
   const handleAddContract = useCallback(async (newContract: Contract) => {
+    setContracts(prev => {
+      const next = [...prev.filter(c => c.id !== newContract.id), newContract];
+      try { localStorage.setItem('fsm_contracts', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
     try {
       await setDoc(doc(db, 'contracts', newContract.id), cleanUndefined(newContract));
       showNotification(`Contrato ${newContract.id} registrado con éxito.`, 'success');
@@ -568,6 +573,11 @@ export default function App() {
   }, [showNotification]);
 
   const handleUpdateContract = useCallback(async (updatedContract: Contract) => {
+    setContracts(prev => {
+      const next = prev.map(c => c.id === updatedContract.id ? updatedContract : c);
+      try { localStorage.setItem('fsm_contracts', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
     try {
       await setDoc(doc(db, 'contracts', updatedContract.id), cleanUndefined(updatedContract));
       showNotification(`Contrato ${updatedContract.id} actualizado.`, 'success');

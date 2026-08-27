@@ -9867,6 +9867,78 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       }
     };
 
+    const ClosingProbabilityCell = ({ initialVal, onSave }: { initialVal: number, onSave: (v: number) => void }) => {
+      const [val, setVal] = useState<string>(initialVal.toString());
+
+      useEffect(() => {
+        setVal(initialVal.toString());
+      }, [initialVal]);
+
+      const commitVal = (vStr: string) => {
+        let num = parseInt(vStr, 10);
+        if (isNaN(num)) num = 0;
+        if (num < 0) num = 0;
+        if (num > 100) num = 100;
+        setVal(num.toString());
+        if (num !== initialVal) {
+          onSave(num);
+        }
+      };
+
+      const numVal = parseInt(val, 10) || 0;
+
+      return (
+        <div
+          className="inline-flex items-center gap-1 bg-white border border-slate-200 px-1.5 py-1 rounded-xl shadow-2xs hover:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500 transition-all"
+          title="Edite el porcentaje de apertura o disposición del cliente (0-100%)"
+        >
+          <button
+            type="button"
+            onClick={() => commitVal((numVal - 5).toString())}
+            className="w-4 h-4 rounded flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-3xs cursor-pointer select-none"
+            title="Restar 5%"
+          >
+            -
+          </button>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            value={val}
+            onChange={(e) => setVal(e.target.value)}
+            onBlur={() => commitVal(val)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                commitVal(val);
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            className="w-9 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none"
+          />
+          <span className="text-[10px] font-black text-slate-400">%</span>
+          <button
+            type="button"
+            onClick={() => commitVal((numVal + 5).toString())}
+            className="w-4 h-4 rounded flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-3xs cursor-pointer select-none"
+            title="Sumar 5%"
+          >
+            +
+          </button>
+          <div
+            className="w-2.5 h-2.5 rounded-full shrink-0 ml-0.5 shadow-3xs"
+            style={{
+              backgroundColor:
+                numVal >= 80 ? '#10b981' :
+                numVal >= 60 ? '#0284c7' :
+                numVal >= 40 ? '#f59e0b' :
+                numVal >= 20 ? '#f97316' : '#ef4444'
+            }}
+            title={`Apertura del Cliente: ${numVal}%`}
+          />
+        </div>
+      );
+    };
+
     return (
       <div className="space-y-6 font-sans">
         {/* Banner Header & Export Actions */}
@@ -10262,33 +10334,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* % de Cierre (Probabilidad / Disposición del Cliente) */}
                           <td className="p-3 text-center">
-                            <div
-                              className="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 px-2 py-1 rounded-xl shadow-2xs hover:border-indigo-300 transition-colors"
-                              title="Disposición y Receptividad del Cliente para Cerrar / Renovar (0-100%)"
-                            >
-                              <input
-                                type="number"
-                                min={0}
-                                max={100}
-                                value={p.closingProbability}
-                                onChange={(e) => {
-                                  const val = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
-                                  handleSaveClosingProbability(con.id, val);
-                                }}
-                                className="w-10 text-center text-xs font-black text-slate-800 bg-transparent focus:outline-none"
-                              />
-                              <span className="text-[10px] font-black text-slate-500">%</span>
-                              <div
-                                className="w-2 h-2 rounded-full shrink-0 ml-0.5"
-                                style={{
-                                  backgroundColor:
-                                    p.closingProbability >= 80 ? '#10b981' :
-                                    p.closingProbability >= 60 ? '#0284c7' :
-                                    p.closingProbability >= 40 ? '#f59e0b' :
-                                    p.closingProbability >= 20 ? '#f97316' : '#ef4444'
-                                }}
-                              />
-                            </div>
+                            <ClosingProbabilityCell
+                              initialVal={p.closingProbability}
+                              onSave={(newProb) => handleSaveClosingProbability(con.id, newProb)}
+                            />
                           </td>
 
                           {/* End Date */}
