@@ -1442,6 +1442,9 @@ export default function AdminPortal({
   const [equipFormStatus, setEquipFormStatus] = useState<'Operativo' | 'No Operativo'>('Operativo');
 
   // Contratos Tab states
+  const showNotification = (msg: string, type?: 'success' | 'error' | 'info' | 'warning') => {
+    console.log(`[Notification ${type || 'info'}]:`, msg);
+  };
   const [contractsSubTab, setContractsSubTab] = useState<'garantias' | 'ge' | 'proyeccion'>('garantias');
   const [contractSearch, setContractSearch] = useState('');
   const [contractPage, setContractPage] = useState(1);
