@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Briefcase, Database, Plus, Search, FileSpreadsheet, Building, AlertCircle, Calendar, Tag, ShieldCheck, Clock, Shield, CheckCircle2, ChevronRight, Sparkles, Filter, ExternalLink, Eye, Pencil, Trash2, ArrowUpRight, Folder, Hourglass, BellRing, Ban, AlertTriangle, FileText } from 'lucide-react';
+import { Briefcase, Database, Plus, Search, FileSpreadsheet, Building, AlertCircle, Calendar, Tag, ShieldCheck, Clock, Shield, CheckCircle2, ChevronRight, Sparkles, Filter, ExternalLink, Eye, Pencil, Trash2, ArrowUpRight, Folder, Hourglass, BellRing, Ban, AlertTriangle, FileText, TrendingUp, CalendarRange } from 'lucide-react';
 import { Contract, Client, ContractGE, WorkOrder } from '../../types';
 import { triggerDirectDownload } from '../../utils/cloudinary';
 
@@ -115,6 +115,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
     return trimmed;
   };
 
+  const [isGeDashboardExpanded, setIsGeDashboardExpanded] = useState(true);
+
   if (contractsSubTab === 'ge') {
     const query = contractGeSearch.toLowerCase().trim();
     const filteredGE = contractsGE.filter(c => {
@@ -133,20 +135,71 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
     });
 
     const totalAmount = filteredGE.reduce((sum, item) => sum + (item.invoiceAmount || 0), 0);
+    const withObsCount = filteredGE.filter(item => item.observaciones && item.observaciones.trim().length > 0).length;
+
+    // Analytics: Top Clients by Number of Invoices
+    const clientStatsMap = new Map<string, { totalAmount: number; count: number }>();
+    contractsGE.forEach(c => {
+      let name = (c.cliente || 'Desconocido').trim();
+      name = name.replace(/\uFFFD/g, 'í').replace(/Mara/g, 'María').trim();
+
+      const current = clientStatsMap.get(name) || { totalAmount: 0, count: 0 };
+      clientStatsMap.set(name, {
+        totalAmount: current.totalAmount + (c.invoiceAmount || 0),
+        count: current.count + 1
+      });
+    });
+
+    const topClientsByCount = Array.from(clientStatsMap.entries())
+      .map(([name, stat]) => ({ name, ...stat }))
+      .sort((a, b) => b.count - a.count || b.totalAmount - a.totalAmount)
+      .slice(0, 5);
+
+    const topClientsByAmount = Array.from(clientStatsMap.entries())
+      .map(([name, stat]) => ({ name, ...stat }))
+      .sort((a, b) => b.totalAmount - a.totalAmount || b.count - a.count)
+      .slice(0, 5);
+
+    // Duration buckets
+    let dur1_6 = 0;
+    let dur7_12 = 0;
+    let dur13_24 = 0;
+    let dur25Plus = 0;
+
+    contractsGE.forEach(c => {
+      const m = c.months || 0;
+      if (m >= 1 && m <= 6) dur1_6++;
+      else if (m >= 7 && m <= 12) dur7_12++;
+      else if (m >= 13 && m <= 24) dur13_24++;
+      else if (m > 24) dur25Plus++;
+    });
+
+    const renewalAlerts = contractsGE.filter(c => c.observaciones && c.observaciones.toLowerCase().includes('renovacion'));
 
     return (
       <div className="space-y-6 font-sans">
-        {/* GE Header Block */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+        {/* GE Header Toolbar */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
           <div>
-            <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-              <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
-              Contratos con General Electric (GE)
+            <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+              <FileSpreadsheet className="w-4.5 h-4.5 text-indigo-600" />
+              Dashboard de Contratos con GE & Facturación
             </h4>
-            <p className="text-3xs text-slate-500 mt-0.5 font-medium">Gestión de cuotas, facturación, servicios contratados y SID GE por cliente.</p>
+            <p className="text-3xs text-slate-500 mt-0.5 font-medium">
+              Control ejecutivo de facturación, modalidades (CT, MR, SURGERY), coberturas y renovaciones.
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-2 items-center">
+            <button
+              type="button"
+              onClick={() => setIsGeDashboardExpanded(!isGeDashboardExpanded)}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-200"
+            >
+              <Clock className="w-3.5 h-3.5 text-slate-500" />
+              <span>{isGeDashboardExpanded ? '⏱ Ocultar Dashboard' : '📊 Mostrar Dashboard'}</span>
+            </button>
+
             <button
               type="button"
               onClick={exportContractsGeToExcel}
@@ -169,12 +222,13 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                 <span>{isContractGeImporterOpen ? 'Ocultar Ingestor' : '📥 Importar CSV GE'}</span>
               </button>
             )}
+
             <button
               onClick={() => resetContractGeForm()}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-indigo-600 transition-colors"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-indigo-600 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Nuevo Registro GE</span>
+              <span>+ Nueva Factura GE</span>
             </button>
           </div>
         </div>
@@ -202,40 +256,215 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           </div>
         )}
 
-        {/* GE Search Bar */}
-        <div className="flex items-center justify-between gap-4">
+        {/* Top 4 Metric Cards Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Total Facturado GE</span>
+              <span className="text-xl font-black text-indigo-700">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Volumen Total USD acumulado</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-base shadow-2xs">
+              💰
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Total Registros GE</span>
+              <span className="text-xl font-black text-slate-800">{filteredGE.length} Facturas</span>
+              <p className="text-[9px] text-slate-400 font-semibold mt-0.5">{contractsGE.length} guardadas en Firestore</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-base shadow-2xs">
+              🧾
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Cliente con Más Facturas</span>
+              <span className="text-sm font-black text-indigo-700 truncate max-w-[140px] block">{topClientsByCount[0]?.name || 'N/A'}</span>
+              <p className="text-[9px] text-indigo-600 font-bold mt-0.5">{topClientsByCount[0]?.count || 0} Facturas registradas</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-base shadow-2xs">
+              🏆
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Renovaciones & Alertas</span>
+              <span className="text-xl font-black text-amber-600">{renewalAlerts.length} Pendientes</span>
+              <p className="text-[9px] text-amber-700 font-semibold mt-0.5">{withObsCount} observaciones notas</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-base shadow-2xs">
+              ⚠️
+            </div>
+          </div>
+        </div>
+
+        {/* Visual Analytics Executive Cards Section */}
+        {isGeDashboardExpanded && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Card 1: Top 5 Clientes por Cantidad de Facturas */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
+                  <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
+                  <span>Clientes con Más Facturas (N° Facturas)</span>
+                </h5>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Top 5</span>
+              </div>
+              <div className="space-y-2.5">
+                {topClientsByCount.length === 0 ? (
+                  <p className="text-3xs text-slate-400 italic">No hay datos suficientes.</p>
+                ) : (
+                  topClientsByCount.map((client, idx) => {
+                    const pct = filteredGE.length > 0 ? (client.count / filteredGE.length) * 100 : 0;
+                    return (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between items-center text-3xs">
+                          <div className="truncate max-w-[170px]">
+                            <span className="font-extrabold text-slate-900 block truncate">{client.name}</span>
+                            <span className="text-[9px] text-slate-400 font-semibold font-mono">${client.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="font-mono font-black text-indigo-700 block text-xs">
+                              {client.count} factura{client.count !== 1 ? 's' : ''}
+                            </span>
+                            <span className="text-[9px] font-bold text-indigo-500">
+                              {pct.toFixed(1)}% del total
+                            </span>
+                          </div>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                          <div
+                            className="bg-gradient-to-r from-indigo-500 to-indigo-600 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${Math.max(pct, 5)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Card 2: Clientes con Mayor Valor de Facturación ($ USD) */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                  <span>Clientes con Mayor Facturación ($ USD)</span>
+                </h5>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Top 5</span>
+              </div>
+              <div className="space-y-2.5">
+                {topClientsByAmount.length === 0 ? (
+                  <p className="text-3xs text-slate-400 italic">No hay datos suficientes.</p>
+                ) : (
+                  topClientsByAmount.map((client, idx) => {
+                    const pct = totalAmount > 0 ? (client.totalAmount / totalAmount) * 100 : 0;
+                    return (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between items-center text-3xs">
+                          <div className="truncate max-w-[160px]">
+                            <span className="font-extrabold text-slate-900 block truncate">{client.name}</span>
+                            <span className="text-[9px] text-slate-400 font-semibold">{client.count} factura{client.count !== 1 ? 's' : ''}</span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="font-mono font-black text-emerald-700 block text-xs">
+                              ${client.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-[9px] font-bold text-emerald-600">
+                              {pct.toFixed(1)}% del total
+                            </span>
+                          </div>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                          <div
+                            className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${Math.max(pct, 5)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Card 3: Duración Cobertura (Meses) */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
+                  <CalendarRange className="w-4 h-4 text-emerald-600" />
+                  <span>Duración Cobertura (Meses)</span>
+                </h5>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Rango Meses</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-slate-500 uppercase">1 - 6 Meses</span>
+                  <span className="text-base font-black text-slate-800">{dur1_6} Facturas</span>
+                </div>
+                <div className="bg-indigo-50 border border-indigo-200 p-3 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-indigo-700 uppercase">7 - 12 Meses</span>
+                  <span className="text-base font-black text-indigo-900">{dur7_12} Facturas</span>
+                </div>
+                <div className="bg-purple-50 border border-purple-200 p-3 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-purple-700 uppercase">13 - 24 Meses</span>
+                  <span className="text-base font-black text-purple-900">{dur13_24} Facturas</span>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-amber-700 uppercase">&gt; 24 Meses</span>
+                  <span className="text-base font-black text-amber-900">{dur25Plus} Facturas</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* GE Search & Filter Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 p-3 rounded-xl shadow-2xs">
           <div className="relative flex-1 max-w-md">
             <input
               type="text"
-              placeholder="Buscar por cliente, SID, modalidad, equipo, factura o contrato..."
+              placeholder="Buscar por cliente, SID, modalidad, equipo, invoice, periodo, observaciones..."
               value={contractGeSearch}
               onChange={(e) => setContractGeSearch(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-4 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-400"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
           </div>
-          <span className="text-3xs text-slate-400 font-bold uppercase tracking-wider">{filteredGE.length} registros (Total: ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })})</span>
+          <span className="text-3xs font-mono font-black text-slate-500 uppercase tracking-wider px-2">
+            {filteredGE.length} REGISTROS GE ENCONTRADOS
+          </span>
         </div>
 
-        {/* GE Table */}
+        {/* Full 12-Column GE Table */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse font-sans text-xs">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-3xs font-bold uppercase text-slate-400 tracking-wider">
-                  <th className="p-4">Cliente</th>
-                  <th className="p-4">SID / Modalidad</th>
-                  <th className="p-4">Equipo</th>
-                  <th className="p-4">Factura</th>
-                  <th className="p-4 text-right">Monto ($)</th>
-                  <th className="p-4">Vencimiento</th>
-                  <th className="p-4 text-center">Acciones</th>
+                <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                  <th className="p-3.5">CLIENTE</th>
+                  <th className="p-3.5">SID / MODALIDAD</th>
+                  <th className="p-3.5">EQUIPO</th>
+                  <th className="p-3.5">INVOICE</th>
+                  <th className="p-3.5 text-right">INVOICE AMOUNT</th>
+                  <th className="p-3.5 text-center">MONTHS</th>
+                  <th className="p-3.5">FECHA FACTURA</th>
+                  <th className="p-3.5">PERIODO / #MES</th>
+                  <th className="p-3.5 text-center">CONTRATO</th>
+                  <th className="p-3.5">OBSERVACIONES / COMMENTS</th>
+                  <th className="p-3.5 text-center">ACCIONES</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium">
+              <tbody className="divide-y divide-slate-100 font-medium text-xs">
                 {filteredGE.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-slate-400 text-3xs font-bold">
+                    <td colSpan={11} className="p-8 text-center text-slate-400 text-3xs font-bold uppercase tracking-wider">
                       No se encontraron contratos GE registrados.
                     </td>
                   </tr>
@@ -245,35 +474,108 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                     cleanName = cleanName.replace(/\uFFFD/g, 'í').replace(/Mara/g, 'María').trim();
 
                     return (
-                      <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-4 font-bold text-slate-900">{cleanName}</td>
-                        <td className="p-4">
+                      <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                        {/* 1. CLIENTE */}
+                        <td className="p-3.5 font-bold text-slate-900">{cleanName}</td>
+
+                        {/* 2. SID / MODALIDAD */}
+                        <td className="p-3.5">
                           <div className="flex flex-col">
-                            <span className="font-mono font-bold text-indigo-700">{c.sid || '-'}</span>
-                            <span className="text-3xs text-slate-400 font-bold">{c.modalidad || '-'}</span>
+                            <span className="font-mono font-bold text-indigo-700 text-xs">{c.sid || '-'}</span>
+                            {c.modalidad && (
+                              <span className="text-[9px] text-slate-400 font-bold uppercase">{c.modalidad}</span>
+                            )}
                           </div>
                         </td>
-                        <td className="p-4 font-semibold text-slate-800">{c.equipo || '-'}</td>
-                        <td className="p-4 font-mono font-bold text-slate-700">{c.invoice}</td>
-                        <td className="p-4 text-right font-mono font-extrabold text-slate-900">
-                          ${(c.invoiceAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+
+                        {/* 3. EQUIPO */}
+                        <td className="p-3.5 font-semibold text-slate-700">{c.equipo || '-'}</td>
+
+                        {/* 4. INVOICE */}
+                        <td className="p-3.5 font-mono font-extrabold text-indigo-900 text-xs">{c.invoice}</td>
+
+                        {/* 5. INVOICE AMOUNT */}
+                        <td className="p-3.5 text-right font-mono font-black text-emerald-700 text-xs">
+                          ${(c.invoiceAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td className="p-4 text-slate-600 font-medium">{c.dueDate || '-'}</td>
-                        <td className="p-4 text-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onEditContractGE) {
-                                onEditContractGE(c);
-                              } else {
-                                setEditingContractGE(c);
-                                setIsContractGeModalOpen(true);
-                              }
-                            }}
-                            className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
-                          >
-                            Editar
-                          </button>
+
+                        {/* 6. MONTHS */}
+                        <td className="p-3.5 text-center font-mono font-bold text-slate-700">{c.months || '-'}</td>
+
+                        {/* 7. FECHA FACTURA */}
+                        <td className="p-3.5">
+                          <div className="flex flex-col text-[10px] font-semibold text-slate-700">
+                            <span>{c.invoiceDate || '-'}</span>
+                            {c.dueDate && (
+                              <span className="text-[9px] text-slate-400 font-bold">Venc: {c.dueDate}</span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* 8. PERIODO / #MES */}
+                        <td className="p-3.5">
+                          <div className="flex flex-col text-[10px] font-bold text-indigo-950">
+                            <span>{c.paymentPeriod || '-'}</span>
+                            {c.monthNum && (
+                              <span className="text-[9px] text-slate-400 font-semibold">#Mes: {c.monthNum}</span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* 9. CONTRATO */}
+                        <td className="p-3.5 text-center">
+                          {c.contractNum ? (
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-indigo-50 text-indigo-700 font-mono font-extrabold text-3xs border border-indigo-200">
+                              {c.contractNum}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 font-normal">-</span>
+                          )}
+                        </td>
+
+                        {/* 10. OBSERVACIONES / COMMENTS */}
+                        <td className="p-3.5 max-w-[200px]">
+                          {c.observaciones ? (
+                            <span className="text-3xs text-slate-600 font-medium line-clamp-2" title={c.observaciones}>
+                              {c.observaciones}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 font-normal">-</span>
+                          )}
+                        </td>
+
+                        {/* 11. ACCIONES */}
+                        <td className="p-3.5 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onEditContractGE) {
+                                  onEditContractGE(c);
+                                } else {
+                                  setEditingContractGE(c);
+                                  setIsContractGeModalOpen(true);
+                                }
+                              }}
+                              className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs"
+                            >
+                              Editar
+                            </button>
+                            {onDeleteContractGE && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (window.confirm(`¿Está seguro de eliminar el registro GE ${c.invoice}?`)) {
+                                    onDeleteContractGE(c.id);
+                                  }
+                                }}
+                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                                title="Eliminar Registro GE"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -843,48 +1145,54 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             </span>
                           )}
 
-                          {/* Contrato PDF Link Button */}
+                          {/* Contrato PDF Button (ONLY rendered if document URL exists) */}
                           {(() => {
                             const targetPdf = con.contractPdfUrl || con.pdfUrl;
+                            if (!targetPdf) return null;
                             return (
                               <button
                                 type="button"
-                                onClick={() => {
-                                  if (targetPdf) {
-                                    triggerDirectDownload(targetPdf, `Contrato_${con.id}.pdf`);
-                                  } else if (onEditContract) {
-                                    onEditContract(con);
-                                  } else {
-                                    setEditingContract(con);
-                                    setIsContractModalOpen(true);
-                                  }
-                                }}
+                                onClick={() => triggerDirectDownload(targetPdf, `Contrato_${con.id}.pdf`)}
                                 className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
-                                title={targetPdf ? "Descargar Documento del Contrato PDF" : "Abrir ficha de contrato para adjuntar o ver documento"}
+                                title="Descargar Documento del Contrato PDF"
                               >
                                 📄 Contrato <ExternalLink className="w-2.5 h-2.5 text-emerald-600" />
                               </button>
                             );
                           })()}
 
-                          {/* Cronograma PDF Link Button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (con.schedulePdfUrl) {
-                                triggerDirectDownload(con.schedulePdfUrl, `Cronograma_${con.id}.pdf`);
-                              } else if (onEditContract) {
-                                onEditContract(con);
-                              } else {
-                                setEditingContract(con);
-                                setIsContractModalOpen(true);
-                              }
-                            }}
-                            className="inline-flex items-center gap-1 text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
-                            title={con.schedulePdfUrl ? "Descargar Cronograma PDF" : "Abrir ficha de contrato para ver mantenimientos o adjuntar cronograma"}
-                          >
-                            📅 Cronograma <ExternalLink className="w-2.5 h-2.5 text-purple-600" />
-                          </button>
+                          {/* Cronograma PDF Button (ONLY rendered if schedule URL exists) */}
+                          {con.schedulePdfUrl && (
+                            <button
+                              type="button"
+                              onClick={() => triggerDirectDownload(con.schedulePdfUrl!, `Cronograma_${con.id}.pdf`)}
+                              className="inline-flex items-center gap-1 text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
+                              title="Descargar Cronograma PDF"
+                            >
+                              📅 Cronograma <ExternalLink className="w-2.5 h-2.5 text-purple-600" />
+                            </button>
+                          )}
+
+                          {/* Service Record (SR) PDF Button (ONLY rendered if SR URL exists) */}
+                          {(() => {
+                            const srPdf = con.serviceRecordPdfUrl || con.srPdfUrl;
+                            if (!srPdf) return null;
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => triggerDirectDownload(srPdf, `ServiceRecord_${con.id}.pdf`)}
+                                className="inline-flex items-center gap-1 text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
+                                title="Descargar Service Record (SR) PDF"
+                              >
+                                📜 Service Record (SR) <ExternalLink className="w-2.5 h-2.5 text-blue-600" />
+                              </button>
+                            );
+                          })()}
+
+                          {/* Fallback if no coverage badges or PDFs exist */}
+                          {!con.coverage && !con.isNewEquipment && !(con.contractPdfUrl || con.pdfUrl) && !con.schedulePdfUrl && !(con.serviceRecordPdfUrl || con.srPdfUrl) && (
+                            <span className="text-slate-400 font-normal text-center block">-</span>
+                          )}
                         </div>
                       </td>
 
