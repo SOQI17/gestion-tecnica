@@ -6121,9 +6121,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       qcDate: isSalesReadOnly && editingContract ? editingContract.qcDate : (isPendingSchedule ? undefined : (contractFormQcDate || (contractFormQcDates[0] || (contractFormMaintenanceDates.length > 0 ? contractFormMaintenanceDates[contractFormMaintenanceDates.length - 1] : '')))),
       qcDates: isSalesReadOnly && editingContract ? editingContract.qcDates : (isPendingSchedule ? [] : (contractFormQcDates.length > 0 ? contractFormQcDates : computeDefaultQcDates(contractFormMaintenanceDates))),
       contractPdfUrl: contractFormPdfUrl.trim() || undefined,
+      pdfUrl: contractFormPdfUrl.trim() || undefined,
       schedulePdfUrl: contractFormSchedulePdfUrl.trim() || undefined,
       isNewEquipment: contractFormIsNewEquipment,
       serviceRecordPdfUrl: contractFormIsNewEquipment ? (contractFormSrPdfUrl.trim() || undefined) : undefined,
+      srPdfUrl: contractFormIsNewEquipment ? (contractFormSrPdfUrl.trim() || undefined) : undefined,
       caPdfUrl: contractFormIsNewEquipment ? (contractFormCaPdfUrl.trim() || undefined) : undefined,
       podPdfUrl: contractFormIsNewEquipment ? (contractFormPodPdfUrl.trim() || undefined) : undefined,
       pendingAdminSchedule: isSalesReadOnly && editingContract ? editingContract.pendingAdminSchedule : (hasSchedule ? false : isPendingSchedule),
@@ -6755,12 +6757,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setTempMaintenanceDate('');
     setContractFormQcDate(con.qcDate || '');
     setContractFormQcDates(con.qcDates || []);
-    setContractFormPdfUrl(con.pdfUrl || '');
-    setContractFormSchedulePdfUrl(con.schedulePdfUrl || '');
-    setContractFormIsNewEquipment(!!con.isNewEquipment);
-    setContractFormSrPdfUrl(con.srPdfUrl || '');
-    setContractFormCaPdfUrl(con.caPdfUrl || '');
-    setContractFormPodPdfUrl(con.podPdfUrl || '');
+    const pdfUrlVal = con.contractPdfUrl || con.pdfUrl || (con as any).contractPdf || '';
+    const schedulePdfUrlVal = con.schedulePdfUrl || (con as any).cronogramaPdfUrl || '';
+    const srPdfUrlVal = con.serviceRecordPdfUrl || con.srPdfUrl || '';
+    const caPdfUrlVal = con.caPdfUrl || '';
+    const podPdfUrlVal = con.podPdfUrl || '';
+
+    setContractFormPdfUrl(pdfUrlVal);
+    setContractFormSchedulePdfUrl(schedulePdfUrlVal);
+    setContractFormIsNewEquipment(!!con.isNewEquipment || !!srPdfUrlVal || !!caPdfUrlVal || !!podPdfUrlVal);
+    setContractFormSrPdfUrl(srPdfUrlVal);
+    setContractFormCaPdfUrl(caPdfUrlVal);
+    setContractFormPodPdfUrl(podPdfUrlVal);
     setContractFormPendingAdmin(!!con.pendingAdminSchedule);
     setContractFormLinkedId(con.linkedContractId || '');
     setIsContractModalOpen(true);

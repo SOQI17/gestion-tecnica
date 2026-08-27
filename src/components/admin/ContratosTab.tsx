@@ -843,23 +843,28 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                           )}
 
                           {/* Contrato PDF Link Button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (con.pdfUrl) {
-                                window.open(con.pdfUrl, '_blank');
-                              } else if (onEditContract) {
-                                onEditContract(con);
-                              } else {
-                                setEditingContract(con);
-                                setIsContractModalOpen(true);
-                              }
-                            }}
-                            className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
-                            title={con.pdfUrl ? "Ver Documento del Contrato PDF" : "Abrir ficha de contrato para adjuntar o ver documento"}
-                          >
-                            📄 Contrato <ExternalLink className="w-2.5 h-2.5 text-emerald-600" />
-                          </button>
+                          {(() => {
+                            const targetPdf = con.contractPdfUrl || con.pdfUrl;
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (targetPdf) {
+                                    window.open(targetPdf, '_blank');
+                                  } else if (onEditContract) {
+                                    onEditContract(con);
+                                  } else {
+                                    setEditingContract(con);
+                                    setIsContractModalOpen(true);
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
+                                title={targetPdf ? "Ver Documento del Contrato PDF" : "Abrir ficha de contrato para adjuntar o ver documento"}
+                              >
+                                📄 Contrato <ExternalLink className="w-2.5 h-2.5 text-emerald-600" />
+                              </button>
+                            );
+                          })()}
 
                           {/* Cronograma PDF Link Button */}
                           <button
