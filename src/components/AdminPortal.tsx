@@ -10143,9 +10143,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
         </div>
 
-        {/* Commercial Sales Funnel Stages Bar */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between">
+        {/* Embudo Comercial + Filter Controls + Pipeline Table */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+          <div className="p-5 border-b border-slate-100">
             <h4 className="font-black text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-indigo-600" />
               <span>Embudo Comercial de Ventas & Renovación (Pipeline CRM)</span>
@@ -10160,7 +10160,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             )}
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-5 border-b border-slate-100">
             {stageSummary.map(st => {
               const isSelected = projStageFilter === st.id;
               return (
@@ -10185,14 +10185,75 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               );
             })}
           </div>
-        </div>
 
-        {/* Filter Controls — 2-row professional layout */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+          {/* Pipeline subheader: title + Estado pills */}
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+            <div>
+              <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <span>📋 Pipeline de Oportunidades &amp; Gestión Comercial ({filtered.length} registros)</span>
+              </h4>
+              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                Haz clic en el Valor (USD) para ingresar o editar el monto. Asigna la Etapa Comercial y Prioridad directamente.
+              </p>
+            </div>
+            {/* Estado filter pills */}
+            <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0">
+              <button
+                onClick={() => setProjFilter('todos')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  projFilter === 'todos'
+                    ? 'bg-slate-800 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                Todos ({allProjections.length})
+              </button>
+              <button
+                onClick={() => setProjFilter('vencidos')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  projFilter === 'vencidos'
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                }`}
+              >
+                🔴 Vencidos ({allProjections.filter(p => p.urgencyCategory === 'vencidos').length})
+              </button>
+              <button
+                onClick={() => setProjFilter('criticos')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  projFilter === 'criticos'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                }`}
+              >
+                🟠 Críticos &lt;30d ({allProjections.filter(p => p.urgencyCategory === 'criticos').length})
+              </button>
+              <button
+                onClick={() => setProjFilter('proximos')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  projFilter === 'proximos'
+                    ? 'bg-yellow-500 text-white shadow-xs'
+                    : 'bg-yellow-50 text-yellow-800 border border-yellow-200 hover:bg-yellow-100'
+                }`}
+              >
+                🟡 Próximos 30-90d ({allProjections.filter(p => p.urgencyCategory === 'proximos').length})
+              </button>
+              <button
+                onClick={() => setProjFilter('renovados')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  projFilter === 'renovados'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                }`}
+              >
+                ✅ Renovados ({allProjections.filter(p => p.proposalStatus === 'Renovado').length})
+              </button>
+            </div>
+          </div>
 
-          {/* Row 1: Search + Dropdowns */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
-            <div className="relative flex-1 min-w-[220px]">
+          {/* Search + Valor + Ordenar + Prioridad row */}
+          <div className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 bg-white">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -10202,10 +10263,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 className="w-full pl-8 pr-4 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-slate-50/60 placeholder-slate-400 text-slate-700"
               />
             </div>
-
             <div className="h-4 w-px bg-slate-200 shrink-0" />
-
-            {/* Valor USD Filter */}
             <div className="flex items-center gap-1.5 shrink-0">
               <DollarSign className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Valor:</span>
@@ -10223,10 +10281,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <option value="valued">✅ Con Valor Registrado</option>
               </select>
             </div>
-
             <div className="h-4 w-px bg-slate-200 shrink-0" />
-
-            {/* Sort Selector */}
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Ordenar:</span>
               <select
@@ -10240,17 +10295,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <option value="cliente">Por Cliente</option>
               </select>
             </div>
-
-            {/* Results count */}
-            <div className="ml-auto shrink-0 text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md">
-              <span className="text-indigo-600 font-extrabold">{filtered.length}</span> / {allProjections.length} registros
-            </div>
-          </div>
-
-          {/* Row 2: Priority Pills only */}
-          <div className="flex items-center justify-end gap-3 px-4 py-2.5 bg-slate-50/40">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mr-1">Prioridad:</span>
+            <div className="h-4 w-px bg-slate-200 shrink-0" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Prioridad:</span>
               <button
                 onClick={() => setProjPriorityFilter('todas')}
                 className={`px-2.5 py-1 text-[11px] font-bold rounded-md cursor-pointer transition-all ${
@@ -10282,81 +10329,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 ⚡ Media
               </button>
             </div>
-          </div>
-        </div>
-
-
-
-        {/* Projection Pipeline Table */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-          {/* Pipeline Header with Estado filter pills */}
-          <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">
-                  Pipeline de Oportunidades &amp; Gestión Comercial
-                </h4>
-                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                  Haz clic en el Valor (USD) para ingresar o editar el monto. Asigna la Etapa Comercial y Prioridad directamente.
-                </p>
-              </div>
-              {/* Estado filter pills — moved here */}
-              <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                <button
-                  onClick={() => setProjFilter('todos')}
-                  className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                    projFilter === 'todos'
-                      ? 'bg-slate-800 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Todos ({allProjections.length})
-                </button>
-                <button
-                  onClick={() => setProjFilter('vencidos')}
-                  className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                    projFilter === 'vencidos'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-                  }`}
-                >
-                  🔴 Vencidos ({allProjections.filter(p => p.urgencyCategory === 'vencidos').length})
-                </button>
-                <button
-                  onClick={() => setProjFilter('criticos')}
-                  className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                    projFilter === 'criticos'
-                      ? 'bg-amber-600 text-white shadow-xs'
-                      : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
-                  }`}
-                >
-                  🟠 Críticos &lt;30d ({allProjections.filter(p => p.urgencyCategory === 'criticos').length})
-                </button>
-                <button
-                  onClick={() => setProjFilter('proximos')}
-                  className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                    projFilter === 'proximos'
-                      ? 'bg-yellow-500 text-white shadow-xs'
-                      : 'bg-yellow-50 text-yellow-800 border border-yellow-200 hover:bg-yellow-100'
-                  }`}
-                >
-                  🟡 Próximos 30-90d ({allProjections.filter(p => p.urgencyCategory === 'proximos').length})
-                </button>
-                <button
-                  onClick={() => setProjFilter('renovados')}
-                  className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                    projFilter === 'renovados'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                  }`}
-                >
-                  ✅ Renovados ({allProjections.filter(p => p.proposalStatus === 'Renovado').length})
-                </button>
-              </div>
+            <div className="ml-auto shrink-0 text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md">
+              <span className="text-indigo-600 font-extrabold">{filtered.length}</span> / {allProjections.length} registros
             </div>
           </div>
 
           <div className="overflow-x-auto">
+
             <table className="w-full text-left border-collapse font-sans">
               <thead>
                 <tr className="bg-slate-900 text-white text-[10px] font-extrabold uppercase tracking-wider">
