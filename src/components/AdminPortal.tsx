@@ -3389,14 +3389,23 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       @media print {
         @page {
           size: landscape;
-          margin: 6mm 8mm;
+          margin: 4mm 6mm;
         }
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+          box-sizing: border-box !important;
         }
 
-        /* Hide EVERYTHING on the page */
+        /* Force 100% opacity and disable any grayscale / desaturation / transparency */
+        #print-isolation-wrap *,
+        .calendar-week-container * {
+          opacity: 1 !important;
+          filter: none !important;
+          -webkit-filter: none !important;
+        }
+
+        /* Hide EVERYTHING on the page except the cloned print container */
         body.is-printing-calendar > *:not(#print-isolation-wrap) {
           display: none !important;
         }
@@ -3405,71 +3414,114 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         body.is-printing-calendar > #print-isolation-wrap {
           display: block !important;
           width: 100% !important;
-          padding: 3mm !important;
+          padding: 2mm !important;
           box-sizing: border-box !important;
           background: white !important;
         }
 
-        /* Compact each week block — don't allow internal page break */
+        /* Compact & solid week block — prevent page break splitting */
         .calendar-week-container {
           break-inside: avoid !important;
           page-break-inside: avoid !important;
-          margin-bottom: 4mm !important;
-          border: 1px solid #cbd5e1 !important;
-          border-radius: 4px !important;
+          margin-bottom: 3mm !important;
+          border: 1.5px solid #475569 !important;
+          border-radius: 6px !important;
           overflow: visible !important;
           display: block !important;
+          background: #ffffff !important;
         }
 
         /* Week header (hidden on screen, shown on print) */
         .calendar-week-container > div:first-child {
           display: flex !important;
+          border-bottom: 1.5px solid #475569 !important;
+          background: #f8fafc !important;
+          padding: 4px 8px !important;
         }
 
         /* Day-of-week header row */
         .calendar-week-container > div:nth-child(2) {
           display: grid !important;
           grid-template-columns: repeat(7, 1fr) !important;
+          border-bottom: 1px solid #94a3b8 !important;
+          background: #f1f5f9 !important;
         }
 
         /* Calendar day grid */
         .calendar-days-grid {
           display: grid !important;
           grid-template-columns: repeat(7, 1fr) !important;
+          background: #ffffff !important;
         }
 
-        /* Compact day cells (override the 115px Tailwind class) */
+        /* Compact & legible day cells */
         .cal-day-cell {
-          min-height: 55px !important;
+          min-height: 70px !important;
           height: auto !important;
           max-height: none !important;
-          padding: 3px 4px !important;
-          overflow: hidden !important;
+          padding: 4px 4px !important;
+          overflow: visible !important;
           box-sizing: border-box !important;
+          border-right: 1px solid #cbd5e1 !important;
+          border-bottom: 1px solid #cbd5e1 !important;
+          background-color: #ffffff !important;
         }
 
-        /* Compact all text inside cells */
+        .cal-day-cell:last-child {
+          border-right: none !important;
+        }
+
+        /* Force high contrast dark black text for readability */
+        .cal-day-cell p,
+        .cal-day-cell span,
+        .cal-day-cell div {
+          color: #0f172a !important;
+        }
+
+        .cal-day-cell .font-black,
+        .cal-day-cell .font-bold,
+        .cal-day-cell .font-extrabold {
+          color: #020617 !important;
+          font-weight: 800 !important;
+        }
+
+        /* Card boxes inside cells */
+        .cal-day-cell > div,
+        .cal-day-cell [class*="rounded"] {
+          border: 1px solid #94a3b8 !important;
+          background-color: #f8fafc !important;
+          border-left-width: 3px !important;
+          margin-bottom: 3px !important;
+          padding: 3px 4px !important;
+          opacity: 1 !important;
+        }
+
+        /* Readable text sizes inside cells */
         .cal-day-cell * {
-          font-size: 6.5px !important;
+          font-size: 8px !important;
           line-height: 1.2 !important;
         }
 
-        /* Multi-day event pill bars */
+        /* Multi-day event pill bars & vacations */
         .calendar-week-container .h-7 {
-          height: 16px !important;
+          height: 18px !important;
           min-height: 0 !important;
+          opacity: 1 !important;
+          border: 1px solid #475569 !important;
         }
         .calendar-week-container .h-7 * {
-          font-size: 6px !important;
-          line-height: 1 !important;
+          font-size: 7.5px !important;
+          line-height: 1.1 !important;
+          color: #0f172a !important;
+          font-weight: 700 !important;
         }
 
-        /* Force space-y gap to be minimal */
+        /* Force space-y gap */
         .cal-day-cell .space-y-1 > * + * {
-          margin-top: 1px !important;
+          margin-top: 2px !important;
         }
 
-        /* Hide interactive elements inside clone */
+        /* Hide interactive controls in print */
         .no-print, button, select, input {
           display: none !important;
         }
