@@ -670,6 +670,19 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
   };
 };
 
+const isClientMatch = (woClientId: string | undefined, conClientId: string | undefined, clientsList: Client[] = []) => {
+  if (!woClientId || !conClientId) return false;
+  const c1 = woClientId.trim().toLowerCase();
+  const c2 = conClientId.trim().toLowerCase();
+  if (c1 === c2) return true;
+  const client1 = clientsList.find(c => c.id === woClientId || c.name.trim().toLowerCase() === c1);
+  const client2 = clientsList.find(c => c.id === conClientId || c.name.trim().toLowerCase() === c2);
+  if (client1 && client2 && client1.id === client2.id) return true;
+  if (client1 && (client1.name.trim().toLowerCase().includes(c2) || c2.includes(client1.name.trim().toLowerCase()))) return true;
+  if (client2 && (client2.name.trim().toLowerCase().includes(c1) || c1.includes(client2.name.trim().toLowerCase()))) return true;
+  return false;
+};
+
 const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate: string, allContracts: Contract[] = []) => {
   if (!wo || !con || !rawContractDate) return false;
   const cleanTargetDate = rawContractDate.split('|')[0].trim();
