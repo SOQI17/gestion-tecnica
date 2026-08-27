@@ -1444,7 +1444,9 @@ export default function AdminPortal({
   const [contractsSubTab, setContractsSubTab] = useState<'garantias' | 'ge' | 'proyeccion'>('garantias');
   const [projSearch, setProjSearch] = useState('');
   const [projFilter, setProjFilter] = useState<'todos' | 'vencidos' | 'criticos' | 'proximos' | 'futuros'>('todos');
-  const [projSort, setProjSort] = useState<'vencimiento' | 'valor' | 'cliente'>('vencimiento');
+  const [projStageFilter, setProjStageFilter] = useState<string>('all');
+  const [projPriorityFilter, setProjPriorityFilter] = useState<'todas' | 'Alta' | 'Media' | 'Baja'>('todas');
+  const [projSort, setProjSort] = useState<'vencimiento' | 'valor' | 'cliente' | 'prioridad'>('vencimiento');
   const [editingValContractId, setEditingValContractId] = useState<string | null>(null);
   const [editingValInput, setEditingValInput] = useState<string>('');
   const [contractSearch, setContractSearch] = useState('');
@@ -9669,6 +9671,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       const valUSD = con.contractValue || 0;
       const proposalStatus = con.proposalStatus || 'Sin Contactar';
 
+      // Auto-assign priority based on value / expiration if not explicitly set
+      let priority: 'Alta' | 'Media' | 'Baja' = con.dealPriority || 'Media';
+      if (!con.dealPriority) {
+        if (diffDays < 0 || diffDays <= 30 || valUSD >= 5000) priority = 'Alta';
+        else if (diffDays <= 90 || valUSD >= 2000) priority = 'Media';
+        else priority = 'Baja';
+      }
+
       return {
         contract: con,
         client,
@@ -9676,38 +9686,55 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         diffDays,
         urgencyCategory,
         valUSD,
-        proposalStatus
+        proposalStatus,
+        priority
       };
     });
 
-    // Compute Totals
-    const vencidosList = allProjections.filter(p => p.urgencyCategory === 'vencidos');
-    const criticosList = allProjections.filter(p => p.urgencyCategory === 'criticos');
-    const proximosList = allProjections.filter(p => p.urgencyCategory === 'proximos');
-    const futurosList = allProjections.filter(p => p.urgencyCategory === 'futuros');
+    // CRM Funnel Stage Totals
+    const stages = [
+      { id: 'Sin Contactar', label: 'Sin Contactar', color: 'bg-slate-100 border-slate-300 text-slate-800', dot: '⚪' },
+      { id: 'Solicitud Enviada', label: 'Solicitud Enviada', color: 'bg-sky-50 border-sky-300 text-sky-900', dot: '📩' },
+      { id: 'Propuesta Presentada', label: 'Propuesta Presentada', color: 'bg-indigo-50 border-indigo-300 text-indigo-900', dot: '📋' },
+      { id: 'En Negociación', label: 'En Negociación', color: 'bg-purple-50 border-purple-300 text-purple-900', dot: '🤝' },
+      { id: 'Renovado', label: 'Renovados / Ganados', color: 'bg-emerald-50 border-emerald-300 text-emerald-900', dot: '✅' },
+      { id: 'Perdido', label: 'Perdidos', color: 'bg-rose-50 border-rose-300 text-rose-900', dot: '❌' },
+    ];
 
-    const vencidosVal = vencidosList.reduce((acc, p) => acc + p.valUSD, 0);
-    const criticosVal = criticosList.reduce((acc, p) => acc + p.valUSD, 0);
-    const proximosVal = proximosList.reduce((acc, p) => acc + p.valUSD, 0);
-    const totalRiskValue = vencidosVal + criticosVal + proximosVal;
+    const stageSummary = stages.map(st => {
+      const deals = allProjections.filter(p => p.proposalStatus === st.id);
+      const sumVal = deals.reduce((acc, p) => acc + p.valUSD, 0);
+      return {
+        ...st,
+        count: deals.length,
+        valUSD: sumVal
+      };
+    });
 
-    const targetList = allProjections.filter(p => p.urgencyCategory !== 'futuros');
-    const uniqueTargetClients = new Set(targetList.map(p => p.clientName)).size;
+    // Executive Metrics
+    const totalPipelineVal = allProjections.reduce((acc, p) => acc + p.valUSD, 0);
+    const totalRiskDeals = allProjections.filter(p => p.urgencyCategory !== 'futuros');
+    const totalRiskVal = totalRiskDeals.reduce((acc, p) => acc + p.valUSD, 0);
+    const uniqueTargetClients = new Set(totalRiskDeals.map(p => p.clientName)).size;
 
-    const pipelineVal = allProjections
-      .filter(p => p.proposalStatus === 'Propuesta Presentada' || p.proposalStatus === 'En Negociación' || p.proposalStatus === 'Solicitud Enviada')
-      .reduce((acc, p) => acc + p.valUSD, 0);
+    const wonDeals = allProjections.filter(p => p.proposalStatus === 'Renovado');
+    const inProgressDeals = allProjections.filter(p => p.proposalStatus === 'En Negociación' || p.proposalStatus === 'Propuesta Presentada');
+    const totalClosedOrActive = wonDeals.length + inProgressDeals.length;
+    const conversionRate = allProjections.length > 0 ? Math.round((totalClosedOrActive / allProjections.length) * 100) : 0;
+
+    const dealsWithValue = allProjections.filter(p => p.valUSD > 0);
+    const avgTicketUSD = dealsWithValue.length > 0 ? Math.round(dealsWithValue.reduce((a, b) => a + b.valUSD, 0) / dealsWithValue.length) : 0;
 
     const totals = {
-      totalRiskValue,
+      totalRiskValue: totalRiskVal,
       uniqueTargetClients,
-      criticosCount: criticosList.length,
-      proximosCount: proximosList.length,
-      vencidosCount: vencidosList.length,
-      pipelineVal
+      criticosCount: allProjections.filter(p => p.urgencyCategory === 'criticos').length,
+      proximosCount: allProjections.filter(p => p.urgencyCategory === 'proximos').length,
+      vencidosCount: allProjections.filter(p => p.urgencyCategory === 'vencidos').length,
+      pipelineVal: totalPipelineVal
     };
 
-    // Filter & Sort List
+    // Filter & Sort
     let filtered = allProjections.filter(p => {
       if (projFilter === 'vencidos') return p.urgencyCategory === 'vencidos';
       if (projFilter === 'criticos') return p.urgencyCategory === 'criticos';
@@ -9715,6 +9742,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       if (projFilter === 'futuros') return p.urgencyCategory === 'futuros';
       return true;
     });
+
+    if (projStageFilter !== 'all') {
+      filtered = filtered.filter(p => p.proposalStatus === projStageFilter);
+    }
+
+    if (projPriorityFilter !== 'todas') {
+      filtered = filtered.filter(p => p.priority === projPriorityFilter);
+    }
 
     if (projSearch.trim()) {
       const q = projSearch.trim().toLowerCase();
@@ -9732,6 +9767,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       filtered.sort((a, b) => b.valUSD - a.valUSD);
     } else if (projSort === 'cliente') {
       filtered.sort((a, b) => a.clientName.localeCompare(b.clientName));
+    } else if (projSort === 'prioridad') {
+      const pOrder = { Alta: 1, Media: 2, Baja: 3 };
+      filtered.sort((a, b) => pOrder[a.priority] - pOrder[b.priority]);
     }
 
     const handleSaveContractValue = (contractId: string, val: number) => {
@@ -9751,20 +9789,31 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       }
     };
 
+    const handleSaveDealPriority = (contractId: string, newPriority: Contract['dealPriority']) => {
+      const con = contracts.find(c => c.id === contractId);
+      if (con && onUpdateContract) {
+        onUpdateContract({ ...con, dealPriority: newPriority });
+        showNotification(`Prioridad comercial para ${contractId} asignada a ${newPriority}`, 'success');
+      }
+    };
+
     return (
       <div className="space-y-6 font-sans">
         {/* Banner Header & Export Actions */}
-        <div className="bg-gradient-to-r from-indigo-900 via-indigo-850 to-slate-900 text-white p-6 rounded-2xl shadow-lg border border-indigo-700/40 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-indigo-950 via-indigo-900 to-slate-900 text-white p-6 rounded-2xl shadow-xl border border-indigo-700/40 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="relative z-10 max-w-2xl">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1.5">
               <span className="bg-emerald-500/20 text-emerald-300 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full border border-emerald-400/30 uppercase tracking-widest flex items-center gap-1">
                 <TrendingUp className="w-3 h-3 text-emerald-400" />
-                Inteligencia Comercial Biomédica
+                CRM & Pipeline Comercial Biomédico
+              </span>
+              <span className="bg-indigo-500/30 text-indigo-200 text-[9px] font-bold px-2 py-0.5 rounded-full border border-indigo-400/20">
+                ORIMEC Executive Suite
               </span>
             </div>
-            <h3 className="font-black text-xl text-white tracking-tight">Proyección Comercial & Clientes Potenciales</h3>
+            <h3 className="font-black text-xl text-white tracking-tight">Proyección Comercial & Gestión de Clientes Potenciales</h3>
             <p className="text-xs text-indigo-200 mt-1 leading-relaxed">
-              Monitoreo de vencimientos, estimación de montos en USD para solicitudes de contrato y cartera objetivo para renovación de coberturas.
+              Embudo de oportunidades comerciales, control de montos negociados en USD, asignación de prioridades y proyección de renovación de contratos.
             </p>
           </div>
 
@@ -9774,30 +9823,46 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               className="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md hover:shadow-indigo-500/30 flex items-center gap-2 cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>🖨️ Exportar Informe PDF</span>
+              <span>🖨️ Exportar Informe CRM (PDF)</span>
             </button>
           </div>
         </div>
 
-        {/* Executive KPI Cards */}
+        {/* Executive CRM KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Valor en Riesgo / Oportunidad */}
+          {/* Card 1: Pipeline Total Estimado */}
           <div className="bg-white border border-indigo-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">Valor Cartera en Riesgo</span>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">Pipeline Comercial Total</span>
               <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
                 <DollarSign className="w-5 h-5" />
               </div>
             </div>
             <p className="font-black text-2xl text-slate-900 mt-2">
-              ${totalRiskValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${totalPipelineVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="text-[10px] text-slate-500 font-semibold mt-1 flex items-center gap-1">
-              <span>Monto estimado en USD de {totals.criticosCount + totals.proximosCount + totals.vencidosCount} contratos (&le;90d)</span>
+            <p className="text-[10px] text-slate-500 font-semibold mt-1">
+              Valor proyectado acumulado de {allProjections.length} contratos
             </p>
           </div>
 
-          {/* Card 2: Clientes Potenciales Objetivo */}
+          {/* Card 2: Valor Cartera en Riesgo */}
+          <div className="bg-white border border-amber-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Valor Cartera en Riesgo</span>
+              <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="font-black text-2xl text-slate-900 mt-2">
+              ${totalRiskVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-[10px] font-bold text-amber-800 mt-1">
+              {totalRiskDeals.length} contratos en riesgo (&le;90d / Vencidos)
+            </p>
+          </div>
+
+          {/* Card 3: Clientes Objetivo */}
           <div className="bg-white border border-emerald-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Clientes Potenciales</span>
@@ -9807,40 +9872,72 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
             <p className="font-black text-2xl text-slate-900 mt-2">{uniqueTargetClients}</p>
             <p className="text-[10px] text-slate-500 font-semibold mt-1">
-              Instituciones/Terceros para solicitud de renovación
+              Instituciones clave para solicitud de renovación
             </p>
           </div>
 
-          {/* Card 3: Por Vencer (30-90 días) */}
-          <div className="bg-white border border-amber-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
+          {/* Card 4: Ticket Promedio por Contrato */}
+          <div className="bg-white border border-purple-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Por Vencer (1-90 Días)</span>
-              <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
-                <AlertTriangle className="w-5 h-5" />
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700">Ticket Promedio Contrato</span>
+              <div className="p-2 rounded-lg bg-purple-50 text-purple-600">
+                <Award className="w-5 h-5" />
               </div>
             </div>
-            <p className="font-black text-2xl text-slate-900 mt-2">{totals.criticosCount + totals.proximosCount}</p>
-            <p className="text-[10px] font-bold text-amber-800 mt-1">
-              ${(criticosVal + proximosVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD en negociación
+            <p className="font-black text-2xl text-slate-900 mt-2">
+              ${avgTicketUSD.toLocaleString('en-US')} USD
             </p>
-          </div>
-
-          {/* Card 4: Vencidos Sin Renovar */}
-          <div className="bg-white border border-rose-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700">Vencidos Sin Renovar</span>
-              <div className="p-2 rounded-lg bg-rose-50 text-rose-600">
-                <ShieldAlert className="w-5 h-5" />
-              </div>
-            </div>
-            <p className="font-black text-2xl text-slate-900 mt-2">{totals.vencidosCount}</p>
-            <p className="text-[10px] font-bold text-rose-800 mt-1">
-              ${vencidosVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD para recuperar
+            <p className="text-[10px] font-bold text-purple-800 mt-1">
+              Tasa de Oportunidad Activa: {conversionRate}%
             </p>
           </div>
         </div>
 
-        {/* Filter Controls & Search */}
+        {/* Commercial Sales Funnel Stages Bar */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="font-black text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-indigo-600" />
+              <span>Embudo Comercial de Ventas & Renovación (Pipeline CRM)</span>
+            </h4>
+            {projStageFilter !== 'all' && (
+              <button
+                onClick={() => setProjStageFilter('all')}
+                className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+              >
+                Ver Todas las Etapas
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            {stageSummary.map(st => {
+              const isSelected = projStageFilter === st.id;
+              return (
+                <div
+                  key={st.id}
+                  onClick={() => setProjStageFilter(isSelected ? 'all' : st.id)}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer select-none ${st.color} ${
+                    isSelected ? 'ring-2 ring-indigo-600 scale-[1.02] shadow-md' : 'hover:shadow-xs hover:scale-[1.01]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-2xs font-extrabold">
+                    <span>{st.dot} {st.label}</span>
+                    <span className="bg-white/80 px-1.5 py-0.2 rounded font-black text-[9px]">{st.count}</span>
+                  </div>
+                  <p className="font-black text-sm text-slate-900 mt-2 leading-none">
+                    ${st.valUSD.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  </p>
+                  <p className="text-[8.5px] font-semibold text-slate-500 mt-1">
+                    {allProjections.length > 0 ? Math.round((st.count / allProjections.length) * 100) : 0}% del total
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Filter Controls & Priority Segment Pills */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search Input */}
           <div className="relative flex-1 min-w-[240px]">
@@ -9854,7 +9951,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             />
           </div>
 
-          {/* Category Filter Pills */}
+          {/* Expiration Segment Pills */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => setProjFilter('todos')}
@@ -9874,7 +9971,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
               }`}
             >
-              🔴 Vencidos ({vencidosList.length})
+              🔴 Vencidos ({allProjections.filter(p => p.urgencyCategory === 'vencidos').length})
             </button>
             <button
               onClick={() => setProjFilter('criticos')}
@@ -9884,7 +9981,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
               }`}
             >
-              🟠 Críticos (&lt;30d) ({criticosList.length})
+              🟠 Críticos (&lt;30d) ({allProjections.filter(p => p.urgencyCategory === 'criticos').length})
             </button>
             <button
               onClick={() => setProjFilter('proximos')}
@@ -9894,17 +9991,35 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   : 'bg-yellow-50 text-yellow-800 hover:bg-yellow-100'
               }`}
             >
-              🟡 Próximos (30-90d) ({proximosList.length})
+              🟡 Próximos (30-90d) ({allProjections.filter(p => p.urgencyCategory === 'proximos').length})
             </button>
+          </div>
+
+          {/* Priority Pills */}
+          <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
             <button
-              onClick={() => setProjFilter('futuros')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                projFilter === 'futuros'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-blue-50 text-blue-800 hover:bg-blue-100'
+              onClick={() => setProjPriorityFilter('todas')}
+              className={`px-2.5 py-1 text-2xs font-bold rounded-md cursor-pointer ${
+                projPriorityFilter === 'todas' ? 'bg-indigo-100 text-indigo-800' : 'text-slate-500 hover:bg-slate-100'
               }`}
             >
-              🔵 Futuros (&gt;90d) ({futurosList.length})
+              Prioridad: Todas
+            </button>
+            <button
+              onClick={() => setProjPriorityFilter('Alta')}
+              className={`px-2.5 py-1 text-2xs font-extrabold rounded-md cursor-pointer ${
+                projPriorityFilter === 'Alta' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700'
+              }`}
+            >
+              🔥 Alta
+            </button>
+            <button
+              onClick={() => setProjPriorityFilter('Media')}
+              className={`px-2.5 py-1 text-2xs font-extrabold rounded-md cursor-pointer ${
+                projPriorityFilter === 'Media' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-700'
+              }`}
+            >
+              ⚡ Media
             </button>
           </div>
 
@@ -9918,6 +10033,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             >
               <option value="vencimiento">Por Vencimiento</option>
               <option value="valor">Por Valor (USD)</option>
+              <option value="prioridad">Por Prioridad</option>
               <option value="cliente">Por Cliente</option>
             </select>
           </div>
@@ -9928,10 +10044,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div>
               <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">
-                Listado de Proyección de Contratos & Oportunidades ({filtered.length} Registros)
+                Pipeline de Oportunidades & Gestión Comercial ({filtered.length} Registros)
               </h4>
               <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                Haz clic en el Valor (USD) para editar el monto o cambia el Estado de la Solicitud directamente.
+                Haz clic en el Valor (USD) para ingresar o editar el monto. Asigna la Etapa Comercial y Prioridad directamente.
               </p>
             </div>
           </div>
@@ -9943,18 +10059,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <th className="p-3">Nº Contrato</th>
                   <th className="p-3">Cliente / Ubicación</th>
                   <th className="p-3">Equipos Coberturados</th>
-                  <th className="p-3 text-right">Valor del Contrato (USD)</th>
+                  <th className="p-3 text-right">Valor Contrato (USD)</th>
+                  <th className="p-3 text-center">Prioridad</th>
                   <th className="p-3 text-center">Vencimiento</th>
                   <th className="p-3 text-center">Días Restantes</th>
-                  <th className="p-3 text-center">Estado de Solicitud</th>
+                  <th className="p-3 text-center">Etapa del Embudo (CRM)</th>
                   <th className="p-3 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-150 text-xs">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-slate-400 font-semibold">
-                      No se encontraron contratos con los filtros aplicados.
+                    <td colSpan={9} className="p-8 text-center text-slate-400 font-semibold">
+                      No se encontraron oportunidades con los filtros aplicados.
                     </td>
                   </tr>
                 ) : (
@@ -10047,6 +10164,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           )}
                         </td>
 
+                        {/* Priority Dropdown */}
+                        <td className="p-3 text-center">
+                          <select
+                            value={p.priority}
+                            onChange={(e: any) => handleSaveDealPriority(con.id, e.target.value)}
+                            className={`text-[9.5px] font-extrabold px-2 py-0.5 rounded border focus:outline-none cursor-pointer ${
+                              p.priority === 'Alta'
+                                ? 'bg-rose-100 text-rose-800 border-rose-300'
+                                : p.priority === 'Media'
+                                ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}
+                          >
+                            <option value="Alta">🔥 Alta</option>
+                            <option value="Media">⚡ Media</option>
+                            <option value="Baja">❄️ Baja</option>
+                          </select>
+                        </td>
+
                         {/* End Date */}
                         <td className="p-3 text-center font-bold text-slate-700">
                           {con.endDate}
@@ -10076,7 +10212,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           )}
                         </td>
 
-                        {/* Proposal Status Dropdown */}
+                        {/* Proposal Status Dropdown (CRM Funnel) */}
                         <td className="p-3 text-center">
                           <select
                             value={p.proposalStatus}

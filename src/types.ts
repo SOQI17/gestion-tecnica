@@ -195,6 +195,7 @@ export interface Contract {
   contractValue?: number; // Valor del contrato en USD (opcional)
   proposalStatus?: 'Sin Contactar' | 'Solicitud Enviada' | 'Propuesta Presentada' | 'En Negociación' | 'Renovado' | 'Perdido';
   proposalNotes?: string;
+  dealPriority?: 'Alta' | 'Media' | 'Baja';
   coverage?: string;
   equipmentItems?: ContractEquipmentItem[]; // List of equipment covered
   maintenanceFrequency?: 'Mensual' | 'Bimestral' | 'Trimestral' | 'Cuatrimestral' | 'Semestral' | 'Anual' | 'Personalizado' | 'Ninguno';
