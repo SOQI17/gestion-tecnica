@@ -9848,11 +9848,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
   const renderProyeccionSubView = () => {
 
-    // CRM Funnel Stage Totals
+    // CRM Funnel Stage Totals — Solicitud Enviada & Propuesta Presentada hidden from funnel display
     const stages = [
       { id: 'Sin Contactar', label: 'Sin Contactar', color: 'bg-slate-100 border-slate-300 text-slate-800', dot: '⚪' },
-      { id: 'Solicitud Enviada', label: 'Solicitud Enviada', color: 'bg-sky-50 border-sky-300 text-sky-900', dot: '📩' },
-      { id: 'Propuesta Presentada', label: 'Propuesta Presentada', color: 'bg-indigo-50 border-indigo-300 text-indigo-900', dot: '📋' },
       { id: 'En Negociación', label: 'En Negociación', color: 'bg-purple-50 border-purple-300 text-purple-900', dot: '🤝' },
       { id: 'Renovado', label: 'Renovados / Ganados', color: 'bg-emerald-50 border-emerald-300 text-emerald-900', dot: '✅' },
       { id: 'Perdido', label: 'Perdidos', color: 'bg-rose-50 border-rose-300 text-rose-900', dot: '❌' },
@@ -9897,6 +9895,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       if (projFilter === 'criticos') return p.urgencyCategory === 'criticos';
       if (projFilter === 'proximos') return p.urgencyCategory === 'proximos';
       if (projFilter === 'futuros') return p.urgencyCategory === 'futuros';
+      if (projFilter === 'renovados') return p.proposalStatus === 'Renovado';
       return true;
     });
 
@@ -10292,6 +10291,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 }`}
               >
                 🟡 Próximos 30-90d ({allProjections.filter(p => p.urgencyCategory === 'proximos').length})
+              </button>
+              <button
+                onClick={() => setProjFilter('renovados')}
+                className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  projFilter === 'renovados'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50'
+                }`}
+              >
+                ✅ Renovados ({allProjections.filter(p => p.proposalStatus === 'Renovado').length})
               </button>
             </div>
 
