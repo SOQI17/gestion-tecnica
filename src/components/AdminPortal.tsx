@@ -1450,6 +1450,63 @@ export default function AdminPortal({
   const [projPage, setProjPage] = useState(1);
   const [editingValContractId, setEditingValContractId] = useState<string | null>(null);
   const [editingValInput, setEditingValInput] = useState<string>('');
+
+  // Memoized CRM Contract Projections (Top-level Hook)
+  const allProjections = useMemo(() => {
+    const todayMs = new Date().setHours(0,0,0,0);
+    const clientMap = new Map(clients.map(c => [c.id, c]));
+
+    return contracts.map(con => {
+      const client = clients.find(c => isClientMatch(c.id, con.clientId, clients)) || clientMap.get(con.clientId);
+      const clientName = client ? client.name : (con.clientId && con.clientId !== 'fsm_placeholder' ? con.clientId : 'Cliente por Registrar');
+      const endDateMs = new Date(con.endDate + 'T00:00:00').getTime();
+      const diffDays = Math.ceil((endDateMs - todayMs) / (1000 * 60 * 60 * 24));
+
+      let urgencyCategory: 'vencidos' | 'criticos' | 'proximos' | 'futuros' = 'futuros';
+      if (diffDays < 0) urgencyCategory = 'vencidos';
+      else if (diffDays <= 30) urgencyCategory = 'criticos';
+      else if (diffDays <= 90) urgencyCategory = 'proximos';
+      else urgencyCategory = 'futuros';
+
+      const valUSD = con.contractValue || 0;
+
+      // Smart renewal status detection if not manually set
+      const hasSuccessor = contracts.some(other =>
+        other.id !== con.id &&
+        (other.clientId === con.clientId || isClientMatch(other.clientId, con.clientId, clients)) &&
+        other.startDate > con.startDate
+      );
+
+      let defaultStatus: Contract['proposalStatus'] = 'Sin Contactar';
+      if (hasSuccessor || con.linkedContractId) {
+        defaultStatus = 'Renovado';
+      } else if (diffDays <= 90) {
+        defaultStatus = 'En Negociación';
+      }
+
+      const proposalStatus = con.proposalStatus || defaultStatus;
+
+      // Auto-assign priority based on value / expiration if not explicitly set
+      let priority: 'Alta' | 'Media' | 'Baja' = con.dealPriority || 'Media';
+      if (!con.dealPriority) {
+        if (diffDays < 0 || diffDays <= 30 || valUSD >= 5000) priority = 'Alta';
+        else if (diffDays <= 90 || valUSD >= 2000) priority = 'Media';
+        else priority = 'Baja';
+      }
+
+      return {
+        contract: con,
+        client,
+        clientName,
+        diffDays,
+        urgencyCategory,
+        valUSD,
+        proposalStatus,
+        priority,
+        hasSuccessor
+      };
+    });
+  }, [contracts, clients]);
   const [contractSearch, setContractSearch] = useState('');
   const [contractPage, setContractPage] = useState(1);
   const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null>(null);
@@ -9653,63 +9710,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     printWin.document.write(htmlContent);
     printWin.document.close();
   };
-
-  // ── Memoized CRM Contract Projections (Optimized for Instant Tab Switch) ──
-  const allProjections = useMemo(() => {
-    const todayMs = new Date().setHours(0,0,0,0);
-    const clientMap = new Map(clients.map(c => [c.id, c]));
-
-    return contracts.map(con => {
-      const client = clients.find(c => isClientMatch(c.id, con.clientId, clients)) || clientMap.get(con.clientId);
-      const clientName = client ? client.name : (con.clientId && con.clientId !== 'fsm_placeholder' ? con.clientId : 'Cliente por Registrar');
-      const endDateMs = new Date(con.endDate + 'T00:00:00').getTime();
-      const diffDays = Math.ceil((endDateMs - todayMs) / (1000 * 60 * 60 * 24));
-
-      let urgencyCategory: 'vencidos' | 'criticos' | 'proximos' | 'futuros' = 'futuros';
-      if (diffDays < 0) urgencyCategory = 'vencidos';
-      else if (diffDays <= 30) urgencyCategory = 'criticos';
-      else if (diffDays <= 90) urgencyCategory = 'proximos';
-      else urgencyCategory = 'futuros';
-
-      const valUSD = con.contractValue || 0;
-
-      // Smart renewal status detection if not manually set
-      const hasSuccessor = contracts.some(other =>
-        other.id !== con.id &&
-        (other.clientId === con.clientId || isClientMatch(other.clientId, con.clientId, clients)) &&
-        other.startDate > con.startDate
-      );
-
-      let defaultStatus: Contract['proposalStatus'] = 'Sin Contactar';
-      if (hasSuccessor || con.linkedContractId) {
-        defaultStatus = 'Renovado';
-      } else if (diffDays <= 90) {
-        defaultStatus = 'En Negociación';
-      }
-
-      const proposalStatus = con.proposalStatus || defaultStatus;
-
-      // Auto-assign priority based on value / expiration if not explicitly set
-      let priority: 'Alta' | 'Media' | 'Baja' = con.dealPriority || 'Media';
-      if (!con.dealPriority) {
-        if (diffDays < 0 || diffDays <= 30 || valUSD >= 5000) priority = 'Alta';
-        else if (diffDays <= 90 || valUSD >= 2000) priority = 'Media';
-        else priority = 'Baja';
-      }
-
-      return {
-        contract: con,
-        client,
-        clientName,
-        diffDays,
-        urgencyCategory,
-        valUSD,
-        proposalStatus,
-        priority,
-        hasSuccessor
-      };
-    });
-  }, [contracts, clients]);
 
   const renderProyeccionSubView = () => {
 
