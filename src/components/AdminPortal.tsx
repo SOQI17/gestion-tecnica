@@ -3389,21 +3389,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       @media print {
         @page {
           size: landscape;
-          margin: 4mm 6mm;
+          margin: 6mm 8mm;
         }
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
-          box-sizing: border-box !important;
         }
 
-        /* Force 100% opacity and disable any grayscale / desaturation / transparency */
+        /* Force 100% opacity and clear dark text for all items (including days of other months) */
         #print-isolation-wrap *,
         .calendar-week-container * {
           opacity: 1 !important;
           filter: none !important;
           -webkit-filter: none !important;
-          box-sizing: border-box !important;
         }
 
         /* Hide EVERYTHING on the page except the cloned print container */
@@ -3415,117 +3413,50 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         body.is-printing-calendar > #print-isolation-wrap {
           display: block !important;
           width: 100% !important;
-          padding: 2mm !important;
+          padding: 3mm !important;
           box-sizing: border-box !important;
           background: white !important;
         }
 
-        /* Compact & solid week block — prevent page break splitting */
+        /* Compact each week block — don't allow internal page break */
         .calendar-week-container {
           break-inside: avoid !important;
           page-break-inside: avoid !important;
-          margin-bottom: 3mm !important;
-          border: 1.5px solid #475569 !important;
-          border-radius: 6px !important;
+          margin-bottom: 4mm !important;
+          border: 1px solid #cbd5e1 !important;
+          border-radius: 4px !important;
           overflow: visible !important;
           display: block !important;
-          background: #ffffff !important;
-          box-sizing: border-box !important;
-          width: 100% !important;
         }
 
-        /* Week title header */
+        /* Week header (hidden on screen, shown on print) */
         .calendar-week-container > div:first-child {
           display: flex !important;
-          border-bottom: 1.5px solid #475569 !important;
-          background: #f8fafc !important;
-          padding: 4px 8px !important;
         }
 
         /* Day-of-week header row */
-        .cal-weekday-header-row {
+        .calendar-week-container > div:nth-child(2) {
           display: grid !important;
           grid-template-columns: repeat(7, 1fr) !important;
-          border-bottom: 1.5px solid #475569 !important;
-          background: #f1f5f9 !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          box-sizing: border-box !important;
-          width: 100% !important;
-        }
-
-        .cal-weekday-header-row > div {
-          text-align: center !important;
-          font-weight: 800 !important;
-          font-size: 9px !important;
-          color: #0f172a !important;
-          padding: 5px 2px !important;
-          border-right: 1px solid #cbd5e1 !important;
-          box-sizing: border-box !important;
-        }
-
-        .cal-weekday-header-row > div:last-child {
-          border-right: none !important;
-        }
-
-        /* Multi-day Event Tracks Wrapper */
-        .cal-tracks-wrapper {
-          display: block !important;
-          position: relative !important;
-          background: #f8fafc !important;
-          border-bottom: 1px solid #cbd5e1 !important;
-          padding: 2px 0 !important;
-          margin: 0 !important;
-          width: 100% !important;
-          box-sizing: border-box !important;
-        }
-
-        .cal-tracks-wrapper .grid-cols-7 {
-          display: grid !important;
-          grid-template-columns: repeat(7, 1fr) !important;
-          position: relative !important;
-          margin: 1px 0 !important;
-          padding: 0 !important;
-          width: 100% !important;
-          box-sizing: border-box !important;
-        }
-
-        .cal-tracks-wrapper [style*="gridColumn"] {
-          margin-left: 2px !important;
-          margin-right: 2px !important;
-          box-sizing: border-box !important;
         }
 
         /* Calendar day grid */
         .calendar-days-grid {
           display: grid !important;
           grid-template-columns: repeat(7, 1fr) !important;
-          background: #ffffff !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          box-sizing: border-box !important;
-          width: 100% !important;
         }
 
-        /* Compact & legible day cells */
+        /* Compact day cells (override the 115px Tailwind class) */
         .cal-day-cell {
-          min-height: 70px !important;
+          min-height: 60px !important;
           height: auto !important;
           max-height: none !important;
-          padding: 4px 4px !important;
-          overflow: visible !important;
+          padding: 3px 4px !important;
+          overflow: hidden !important;
           box-sizing: border-box !important;
-          border-right: 1px solid #cbd5e1 !important;
-          border-bottom: 1px solid #cbd5e1 !important;
-          background-color: #ffffff !important;
         }
 
-        .cal-day-cell:nth-child(7n),
-        .cal-day-cell:last-child {
-          border-right: none !important;
-        }
-
-        /* Force high contrast dark black text for readability */
+        /* Clear dark high-contrast text for readability (including days from other months) */
         .cal-day-cell p,
         .cal-day-cell span,
         .cal-day-cell div {
@@ -3539,43 +3470,30 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           font-weight: 800 !important;
         }
 
-        /* Card boxes inside cells */
-        .cal-day-cell > div,
-        .cal-day-cell [class*="rounded"] {
-          border: 1px solid #94a3b8 !important;
-          background-color: #f8fafc !important;
-          border-left-width: 3px !important;
-          margin-bottom: 3px !important;
-          padding: 3px 4px !important;
-          opacity: 1 !important;
-        }
-
-        /* Readable text sizes inside cells */
+        /* Compact all text inside cells */
         .cal-day-cell * {
-          font-size: 8px !important;
+          font-size: 7.5px !important;
           line-height: 1.2 !important;
         }
 
-        /* Multi-day event pill bars & vacations */
+        /* Multi-day event pill bars */
         .calendar-week-container .h-7 {
-          height: 18px !important;
+          height: 17px !important;
           min-height: 0 !important;
-          opacity: 1 !important;
-          border: 1px solid #475569 !important;
         }
         .calendar-week-container .h-7 * {
-          font-size: 7.5px !important;
-          line-height: 1.1 !important;
+          font-size: 7px !important;
+          line-height: 1 !important;
           color: #0f172a !important;
           font-weight: 700 !important;
         }
 
-        /* Force space-y gap */
+        /* Force space-y gap to be minimal */
         .cal-day-cell .space-y-1 > * + * {
-          margin-top: 2px !important;
+          margin-top: 1px !important;
         }
 
-        /* Hide interactive controls in print */
+        /* Hide interactive elements inside clone */
         .no-print, button, select, input {
           display: none !important;
         }
@@ -10692,22 +10610,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </span>
                     </div>
 
-                    <div className="cal-weekday-header-row hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 text-center font-bold text-[8px] uppercase bg-slate-50">
+                    <div className="hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 text-center font-bold text-[8px] uppercase py-0.5 bg-slate-50">
                       {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dayName => (
-                        <div key={dayName} className="text-slate-700 py-1.5 border-r border-slate-200 last:border-r-0 font-extrabold">
+                        <div key={dayName} className="text-slate-500 py-1">
                           {dayName}
                         </div>
                       ))}
                     </div>
 
                     {tracks.length > 0 && (
-                      <div className="cal-tracks-wrapper bg-slate-50 py-1.5 border-b border-slate-200 space-y-1 relative">
-                        {/* 7-column background guide lines for pixel-perfect column alignment */}
-                        <div className="grid grid-cols-7 absolute inset-0 pointer-events-none">
-                          {[0, 1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="border-r border-slate-200/80 last:border-r-0 h-full" />
-                          ))}
-                        </div>
+                      <div className="bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
 
                         {tracks.map((track, tIdx) => (
                           <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
@@ -13154,9 +13066,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
 
                           {/* Print-only weekday column headers */}
-                          <div className="cal-weekday-header-row hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 bg-slate-50">
+                          <div className="hidden print:grid grid-cols-7 gap-0 border-b border-slate-200">
                             {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dayName => (
-                              <div key={dayName} className="text-center font-extrabold text-[9px] text-slate-700 uppercase py-1 border-r border-slate-200 last:border-r-0">
+                              <div key={dayName} className="text-center font-bold text-[9px] text-slate-500 uppercase py-1">
                                 {dayName}
                               </div>
                             ))}
@@ -13164,13 +13076,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Multi-day events tracks (if any) */}
                           {tracks.length > 0 && (
-                            <div className="cal-tracks-wrapper bg-slate-50 py-1.5 border-b border-slate-200 space-y-1 relative">
-                              {/* 7-column background guide lines for pixel-perfect column alignment */}
-                              <div className="grid grid-cols-7 absolute inset-0 pointer-events-none">
-                                {[0, 1, 2, 3, 4, 5, 6].map(i => (
-                                  <div key={i} className="border-r border-slate-200/80 last:border-r-0 h-full" />
-                                ))}
-                              </div>
+                            <div className="bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
 
                               {tracks.map((track, tIdx) => (
                                 <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
