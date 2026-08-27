@@ -3403,6 +3403,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           opacity: 1 !important;
           filter: none !important;
           -webkit-filter: none !important;
+          box-sizing: border-box !important;
         }
 
         /* Hide EVERYTHING on the page except the cloned print container */
@@ -3429,9 +3430,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           overflow: visible !important;
           display: block !important;
           background: #ffffff !important;
+          box-sizing: border-box !important;
+          width: 100% !important;
         }
 
-        /* Week header (hidden on screen, shown on print) */
+        /* Week title header */
         .calendar-week-container > div:first-child {
           display: flex !important;
           border-bottom: 1.5px solid #475569 !important;
@@ -3440,7 +3443,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         }
 
         /* Day-of-week header row */
-        .calendar-week-container > div:nth-child(2) {
+        .cal-weekday-header-row {
           display: grid !important;
           grid-template-columns: repeat(7, 1fr) !important;
           border-bottom: 1.5px solid #475569 !important;
@@ -3448,9 +3451,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           margin: 0 !important;
           padding: 0 !important;
           box-sizing: border-box !important;
+          width: 100% !important;
         }
 
-        .calendar-week-container > div:nth-child(2) > div {
+        .cal-weekday-header-row > div {
           text-align: center !important;
           font-weight: 800 !important;
           font-size: 9px !important;
@@ -3460,8 +3464,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           box-sizing: border-box !important;
         }
 
-        .calendar-week-container > div:nth-child(2) > div:last-child {
+        .cal-weekday-header-row > div:last-child {
           border-right: none !important;
+        }
+
+        /* Multi-day Event Tracks Wrapper */
+        .cal-tracks-wrapper {
+          display: block !important;
+          background: #f8fafc !important;
+          border-bottom: 1px solid #cbd5e1 !important;
+          padding: 2px 0 !important;
+          margin: 0 !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        .cal-tracks-wrapper .grid-cols-7 {
+          display: grid !important;
+          grid-template-columns: repeat(7, 1fr) !important;
+          position: relative !important;
+          margin: 1px 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
         }
 
         /* Calendar day grid */
@@ -3472,6 +3497,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           margin: 0 !important;
           padding: 0 !important;
           box-sizing: border-box !important;
+          width: 100% !important;
         }
 
         /* Compact & legible day cells */
@@ -3487,6 +3513,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           background-color: #ffffff !important;
         }
 
+        .cal-day-cell:nth-child(7n),
         .cal-day-cell:last-child {
           border-right: none !important;
         }
@@ -10658,7 +10685,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </span>
                     </div>
 
-                    <div className="hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 text-center font-bold text-[8px] uppercase bg-slate-50">
+                    <div className="cal-weekday-header-row hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 text-center font-bold text-[8px] uppercase bg-slate-50">
                       {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dayName => (
                         <div key={dayName} className="text-slate-700 py-1.5 border-r border-slate-200 last:border-r-0 font-extrabold">
                           {dayName}
@@ -10667,7 +10694,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
 
                     {tracks.length > 0 && (
-                      <div className="bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
+                      <div className="cal-tracks-wrapper bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
                         {tracks.map((track, tIdx) => (
                           <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
                             {track.map(wo => {
@@ -13113,7 +13140,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
 
                           {/* Print-only weekday column headers */}
-                          <div className="hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 bg-slate-50">
+                          <div className="cal-weekday-header-row hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 bg-slate-50">
                             {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dayName => (
                               <div key={dayName} className="text-center font-extrabold text-[9px] text-slate-700 uppercase py-1 border-r border-slate-200 last:border-r-0">
                                 {dayName}
@@ -13123,7 +13150,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Multi-day events tracks (if any) */}
                           {tracks.length > 0 && (
-                            <div className="bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
+                            <div className="cal-tracks-wrapper bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
                               {tracks.map((track, tIdx) => (
                                 <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
                                   {track.map(wo => {
