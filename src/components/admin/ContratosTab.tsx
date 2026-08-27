@@ -744,14 +744,51 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             {con.status}
                           </span>
 
-                          {/* MTOS PENDIENTES Pill */}
+                          {/* MTOS PENDIENTES Pill (Linked strictly to Contract & Agendamiento) */}
                           {(() => {
-                            const contractWOs = workOrders.filter(w => w.contractId === con.id || (w.clientId === con.clientId && con.equipmentItems?.some(e => e.serialNumber === w.equipmentSerial || e.name === w.equipmentName)));
-                            const totalMtos = contractWOs.length || (con.maintenanceDates?.length || (con.equipmentItems?.length ? con.equipmentItems.length * 4 : 4));
-                            const pendingMtos = contractWOs.length > 0 
-                              ? contractWOs.filter(w => w.status !== 'Completado' && w.status !== 'Saldado' && w.status !== 'Reportado').length 
-                              : Math.ceil(totalMtos / 2);
-                            const completedMtos = totalMtos - pendingMtos;
+                            // Strict Work Orders matching this specific contract ID or serial number
+                            const contractWOs = workOrders.filter(w => 
+                              (w.contractId && (w.contractId === con.id || (con.linkedContractId && w.contractId === con.linkedContractId))) ||
+                              (con.equipmentItems && con.equipmentItems.some(e => e.serialNumber && e.serialNumber.trim() !== '' && e.serialNumber === w.equipmentSerial))
+                            );
+
+                            const scheduledDates = con.maintenanceDates || [];
+                            
+                            // Total visits scheduled for this contract
+                            let totalMtos = 0;
+                            if (scheduledDates.length > 0) {
+                              totalMtos = scheduledDates.length;
+                            } else if (contractWOs.length > 0) {
+                              totalMtos = contractWOs.length;
+                            } else {
+                              const freqMult = con.maintenanceFrequency === 'Mensual' ? 12 
+                                : con.maintenanceFrequency === 'Bimensual' ? 6 
+                                : con.maintenanceFrequency === 'Trimestral' ? 4 
+                                : con.maintenanceFrequency === 'Cuatrimestral' ? 3 
+                                : con.maintenanceFrequency === 'Semestral' ? 2 : 2;
+                              totalMtos = (con.equipmentItems?.length || 1) * freqMult;
+                            }
+
+                            // Completed visits count from linked Agendamiento / Work Orders or schedule
+                            let completedMtos = 0;
+                            if (contractWOs.length > 0) {
+                              completedMtos = contractWOs.filter(w => w.status === 'Completado' || w.status === 'Saldado' || w.status === 'Reportado').length;
+                            } else if (scheduledDates.length > 0) {
+                              completedMtos = scheduledDates.filter((d: any) => typeof d === 'object' ? (d.completed || d.status === 'completed') : false).length;
+                              if (completedMtos === 0) {
+                                const todayStr = new Date().toISOString().split('T')[0];
+                                completedMtos = scheduledDates.filter((d: any) => {
+                                  const dateStr = typeof d === 'string' ? d : d.date;
+                                  return dateStr && dateStr < todayStr;
+                                }).length;
+                              }
+                            } else {
+                              completedMtos = Math.max(0, totalMtos - 4);
+                            }
+
+                            // Ensure logical bounds: completedMtos <= totalMtos
+                            completedMtos = Math.min(completedMtos, totalMtos);
+                            const pendingMtos = Math.max(0, totalMtos - completedMtos);
 
                             return (
                               <div className="bg-slate-100/90 border border-slate-200 text-slate-700 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full">
