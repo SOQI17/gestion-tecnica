@@ -7165,69 +7165,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         </div>
       </div>
 
-      {activeAdminTab === 'agendamiento' && (
-        <AgendamientoTab
-          userRole={userRole}
-          activeSubTab={activeSubTab}
-          setActiveSubTab={setActiveSubTab}
-          subTabStats={subTabStats}
-          pendingValidation={pendingValidation}
-          workOrders={workOrders}
-          setWorkOrders={setWorkOrders}
-          engineers={engineers}
-          clients={clients}
-          reports={reports}
-          searchOrderQuery={searchOrderQuery}
-          setSearchOrderQuery={setSearchOrderQuery}
-          filterStatusOrder={filterStatusOrder}
-          setFilterStatusOrder={setFilterStatusOrder}
-          selectedOrderForModal={selectedOrderForModal}
-          setSelectedOrderForModal={setSelectedOrderForModal}
-          selectedOrderForAuditor={selectedOrderForAuditor}
-          setSelectedOrderForAuditor={setSelectedOrderForAuditor}
-          auditorValidationNote={auditorValidationNote}
-          setAuditorValidationNote={setAuditorValidationNote}
-          auditorRejectReason={auditorRejectReason}
-          setAuditorRejectReason={setAuditorRejectReason}
-          customRejectReason={customRejectReason}
-          setCustomRejectReason={setCustomRejectReason}
-          csvPreviewOrders={csvPreviewOrders}
-          setCsvPreviewOrders={setCsvPreviewOrders}
-          isCsvIngestorOpen={isCsvIngestorOpen}
-          setIsCsvIngestorOpen={setIsCsvIngestorOpen}
-          csvIngestPhase={csvIngestPhase}
-          setCsvIngestPhase={setCsvIngestPhase}
-          isProcessingCsv={isProcessingCsv}
-          setIsProcessingCsv={setIsProcessingCsv}
-          auditorFilterDateStart={auditorFilterDateStart}
-          setAuditorFilterDateStart={setAuditorFilterDateStart}
-          auditorFilterDateEnd={auditorFilterDateEnd}
-          setAuditorFilterDateEnd={setAuditorFilterDateEnd}
-          auditorFilterEngineer={auditorFilterEngineer}
-          setAuditorFilterEngineer={setAuditorFilterEngineer}
-          auditorFilterStatus={auditorFilterStatus}
-          setAuditorFilterStatus={setAuditorFilterStatus}
-          handleOpenAudit={handleOpenAudit}
-          handleQuickApproveWO={handleQuickApproveWO}
-          handleQuickRejectWO={handleQuickRejectWO}
-          handleCsvFileUpload={handleCsvFileUpload}
-          handleConfirmCsvImport={handleConfirmCsvImport}
-          filteredWorkOrdersLog={filteredWorkOrdersLog}
-          handleOpenRETE04Report={handleOpenRETE04Report}
-          setModalRETE04={setModalRETE04}
-          handleAssignEngineerSubmit={handleAssignEngineerSubmit}
-          isAssigning={isAssigning}
-          selectedWO={selectedWO}
-          setSelectedWO={setSelectedWO}
-          selectedTech={selectedTech}
-          setSelectedTech={setSelectedTech}
-          assignedDate={assignedDate}
-          setAssignedDate={setAssignedDate}
-          assignedTime={assignedTime}
-          setAssignedTime={setAssignedTime}
-          setAssignNote={setAssignNote}
-        />
-      )}
+      {activeAdminTab === 'agendamiento' && renderAgendamientoTab()}
 
       {activeAdminTab === 'clientes' && renderClientesTab()}
       {activeAdminTab === 'equipos' && renderEquiposTab()}
