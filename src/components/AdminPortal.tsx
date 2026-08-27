@@ -3443,8 +3443,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         .calendar-week-container > div:nth-child(2) {
           display: grid !important;
           grid-template-columns: repeat(7, 1fr) !important;
-          border-bottom: 1px solid #94a3b8 !important;
+          border-bottom: 1.5px solid #475569 !important;
           background: #f1f5f9 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-sizing: border-box !important;
+        }
+
+        .calendar-week-container > div:nth-child(2) > div {
+          text-align: center !important;
+          font-weight: 800 !important;
+          font-size: 9px !important;
+          color: #0f172a !important;
+          padding: 5px 2px !important;
+          border-right: 1px solid #cbd5e1 !important;
+          box-sizing: border-box !important;
+        }
+
+        .calendar-week-container > div:nth-child(2) > div:last-child {
+          border-right: none !important;
         }
 
         /* Calendar day grid */
@@ -3452,6 +3469,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           display: grid !important;
           grid-template-columns: repeat(7, 1fr) !important;
           background: #ffffff !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-sizing: border-box !important;
         }
 
         /* Compact & legible day cells */
@@ -10638,9 +10658,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </span>
                     </div>
 
-                    <div className="hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 text-center font-bold text-[8px] uppercase py-0.5 bg-slate-50">
+                    <div className="hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 text-center font-bold text-[8px] uppercase bg-slate-50">
                       {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dayName => (
-                        <div key={dayName} className="text-slate-500 py-1">
+                        <div key={dayName} className="text-slate-700 py-1.5 border-r border-slate-200 last:border-r-0 font-extrabold">
                           {dayName}
                         </div>
                       ))}
@@ -13093,9 +13113,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
 
                           {/* Print-only weekday column headers */}
-                          <div className="hidden print:grid grid-cols-7 gap-0 border-b border-slate-200">
+                          <div className="hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 bg-slate-50">
                             {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dayName => (
-                              <div key={dayName} className="text-center font-bold text-[9px] text-slate-500 uppercase py-1">
+                              <div key={dayName} className="text-center font-extrabold text-[9px] text-slate-700 uppercase py-1 border-r border-slate-200 last:border-r-0">
                                 {dayName}
                               </div>
                             ))}
