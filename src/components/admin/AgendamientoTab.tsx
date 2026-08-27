@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, UserCheck, Plus, Database, Printer, FileSpreadsheet, Sparkles, AlertTriangle, Trash2, Search, X, RotateCcw, Check, FileText, Filter, Users, PieChart, Percent, Award, TrendingUp, Briefcase, ExternalLink, ShieldAlert, Send } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, UserCheck, Plus, Database, Printer, FileSpreadsheet, Sparkles, AlertTriangle, Trash2, Search, X, RotateCcw, Check, FileText, Filter, Users, PieChart, Percent, Award, TrendingUp, Briefcase, ExternalLink, ShieldAlert, Send, BarChart3, CalendarRange } from 'lucide-react';
 import { motion } from 'motion/react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, UserPermissions } from '../../types';
 
