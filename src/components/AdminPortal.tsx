@@ -51,7 +51,7 @@ import { ContratosTab } from './admin/ContratosTab';
 import { CronogramaTab } from './admin/CronogramaTab';
 import { VacacionesTab } from './admin/VacacionesTab';
 import { AgendamientoTab } from './admin/AgendamientoTab';
-import { uploadFileToCloudinary, getCleanCloudinaryUrl } from '../utils/cloudinary';
+import { uploadFileToCloudinary, getCleanCloudinaryUrl, triggerDirectDownload } from '../utils/cloudinary';
 
 const cleanStr = (s: string) => (s || '')
   .toLowerCase()

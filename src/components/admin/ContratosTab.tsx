@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Briefcase, Database, Plus, Search, FileSpreadsheet, Building, AlertCircle, Calendar, Tag, ShieldCheck, Clock, Shield, CheckCircle2, ChevronRight, Sparkles, Filter, ExternalLink, Eye, Pencil, Trash2, ArrowUpRight, Folder, Hourglass, BellRing, Ban, AlertTriangle, FileText } from 'lucide-react';
-import { Contract, Client, ContractGE } from '../../types';
+import { Contract, Client, ContractGE, WorkOrder } from '../../types';
+import { triggerDirectDownload } from '../../utils/cloudinary';
 
 interface ContratosTabProps {
   workOrders?: WorkOrder[];
@@ -850,7 +851,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                                 type="button"
                                 onClick={() => {
                                   if (targetPdf) {
-                                    window.open(targetPdf, '_blank');
+                                    triggerDirectDownload(targetPdf, `Contrato_${con.id}.pdf`);
                                   } else if (onEditContract) {
                                     onEditContract(con);
                                   } else {
@@ -859,7 +860,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                                   }
                                 }}
                                 className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
-                                title={targetPdf ? "Ver Documento del Contrato PDF" : "Abrir ficha de contrato para adjuntar o ver documento"}
+                                title={targetPdf ? "Descargar Documento del Contrato PDF" : "Abrir ficha de contrato para adjuntar o ver documento"}
                               >
                                 📄 Contrato <ExternalLink className="w-2.5 h-2.5 text-emerald-600" />
                               </button>
@@ -871,7 +872,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             type="button"
                             onClick={() => {
                               if (con.schedulePdfUrl) {
-                                window.open(con.schedulePdfUrl, '_blank');
+                                triggerDirectDownload(con.schedulePdfUrl, `Cronograma_${con.id}.pdf`);
                               } else if (onEditContract) {
                                 onEditContract(con);
                               } else {
@@ -880,7 +881,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                               }
                             }}
                             className="inline-flex items-center gap-1 text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
-                            title={con.schedulePdfUrl ? "Ver Cronograma PDF" : "Abrir ficha de contrato para ver mantenimientos o adjuntar cronograma"}
+                            title={con.schedulePdfUrl ? "Descargar Cronograma PDF" : "Abrir ficha de contrato para ver mantenimientos o adjuntar cronograma"}
                           >
                             📅 Cronograma <ExternalLink className="w-2.5 h-2.5 text-purple-600" />
                           </button>

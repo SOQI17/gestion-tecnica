@@ -21,6 +21,34 @@ export const getCleanCloudinaryUrl = (rawUrl: string): string => {
   return url;
 };
 
+export const triggerDirectDownload = async (rawUrl: string, defaultFilename: string) => {
+  if (!rawUrl) return;
+  const cleanUrl = getCleanCloudinaryUrl(rawUrl);
+
+  try {
+    const res = await fetch(cleanUrl);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    const hasExt = /\.(pdf|png|jpg|jpeg|webp)$/i.test(defaultFilename);
+    a.download = hasExt ? defaultFilename : `${defaultFilename}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+  } catch (err) {
+    const a = document.createElement('a');
+    a.href = cleanUrl;
+    a.download = defaultFilename;
+    a.target = '_self';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+};
+
 export const uploadFileToCloudinary = async (
   file: File,
   onProgress?: (percent: number) => void
