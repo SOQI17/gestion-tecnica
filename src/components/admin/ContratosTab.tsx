@@ -1118,14 +1118,20 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             );
                           })()}
 
+                          {expAlert?.level === 'expired' && (
+                            <span className="text-[10px] font-black text-rose-800 bg-rose-100/90 px-2.5 py-0.5 rounded-lg border border-rose-300 flex items-center gap-1 shadow-2xs">
+                              🚨 VENCIDO ({expAlert.daysRemaining}d)
+                            </span>
+                          )}
+
                           {expAlert?.level === 'urgent_1m' && (
-                            <span className="text-[10px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                            <span className="text-[10px] font-black text-rose-800 bg-rose-100/90 px-2.5 py-0.5 rounded-lg border border-rose-300 flex items-center gap-1 shadow-2xs">
                               ⚠️ Vence en {expAlert.daysRemaining}d
                             </span>
                           )}
 
                           {expAlert?.level === 'warning_3m' && (
-                            <span className="text-[10px] font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                            <span className="text-[10px] font-black text-amber-800 bg-amber-100/90 px-2.5 py-0.5 rounded-lg border border-amber-300 flex items-center gap-1 shadow-2xs">
                               ⌛ Vence en {expAlert.daysRemaining}d
                             </span>
                           )}
@@ -1139,13 +1145,14 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             <span className="text-slate-600 font-semibold text-3xs line-clamp-1 block mb-0.5">{con.coverage}</span>
                           )}
 
+                          {/* ✨ Equipo Nuevo Badge */}
                           {con.isNewEquipment && (
-                            <span className="inline-flex items-center gap-1 text-amber-900 bg-amber-100/90 border border-amber-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold shadow-2xs w-max">
+                            <span className="inline-flex items-center gap-1 text-amber-900 bg-amber-100/90 border border-amber-300 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold shadow-2xs w-max">
                               ✨ Equipo Nuevo
                             </span>
                           )}
 
-                          {/* Contrato PDF Button (ONLY rendered if document URL exists) */}
+                          {/* 📄 Contrato PDF Button */}
                           {(() => {
                             const targetPdf = con.contractPdfUrl || con.pdfUrl;
                             if (!targetPdf) return null;
@@ -1161,7 +1168,62 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             );
                           })()}
 
-                          {/* Cronograma PDF Button (ONLY rendered if schedule URL exists) */}
+                          {/* 🛠 Service Record (SR) PDF Button */}
+                          {(() => {
+                            const getValidUrl = (url?: string) => (url && typeof url === 'string' && url.trim().length > 5) ? url.trim() : null;
+                            const srPdf = getValidUrl(con.serviceRecordPdfUrl) || 
+                              getValidUrl(con.srPdfUrl) || 
+                              con.equipmentItems?.map(e => getValidUrl(e.serviceRecordPdfUrl) || getValidUrl((e as any).srPdfUrl)).find(Boolean);
+                            if (!srPdf) return null;
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => triggerDirectDownload(srPdf, `SR_${con.id}.pdf`)}
+                                className="inline-flex items-center gap-1 text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all w-max shadow-2xs cursor-pointer"
+                                title="Descargar Service Record (SR) PDF"
+                              >
+                                🛠 SR <ExternalLink className="w-2.5 h-2.5 text-amber-600" />
+                              </button>
+                            );
+                          })()}
+
+                          {/* 📜 Certificate of Acceptance (CA) PDF Button */}
+                          {(() => {
+                            const getValidUrl = (url?: string) => (url && typeof url === 'string' && url.trim().length > 5) ? url.trim() : null;
+                            const caPdf = getValidUrl(con.caPdfUrl) || 
+                              con.equipmentItems?.map(e => getValidUrl(e.caPdfUrl)).find(Boolean);
+                            if (!caPdf) return null;
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => triggerDirectDownload(caPdf, `CA_${con.id}.pdf`)}
+                                className="inline-flex items-center gap-1 text-orange-950 bg-orange-50 hover:bg-orange-100 border border-orange-300 px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all w-max shadow-2xs cursor-pointer"
+                                title="Descargar Certificate of Acceptance (CA) PDF"
+                              >
+                                📜 CA <ExternalLink className="w-2.5 h-2.5 text-orange-600" />
+                              </button>
+                            );
+                          })()}
+
+                          {/* 📦 Proof of Delivery (POD) PDF Button */}
+                          {(() => {
+                            const getValidUrl = (url?: string) => (url && typeof url === 'string' && url.trim().length > 5) ? url.trim() : null;
+                            const podPdf = getValidUrl(con.podPdfUrl) || 
+                              con.equipmentItems?.map(e => getValidUrl(e.podPdfUrl)).find(Boolean);
+                            if (!podPdf) return null;
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => triggerDirectDownload(podPdf, `POD_${con.id}.pdf`)}
+                                className="inline-flex items-center gap-1 text-sky-950 bg-sky-50 hover:bg-sky-100 border border-sky-300 px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all w-max shadow-2xs cursor-pointer"
+                                title="Descargar Proof of Delivery (POD) PDF"
+                              >
+                                📦 POD <ExternalLink className="w-2.5 h-2.5 text-sky-600" />
+                              </button>
+                            );
+                          })()}
+
+                          {/* 📅 Cronograma PDF Button */}
                           {con.schedulePdfUrl && (
                             <button
                               type="button"
@@ -1173,24 +1235,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             </button>
                           )}
 
-                          {/* Service Record (SR) PDF Button (ONLY rendered if SR URL exists) */}
-                          {(() => {
-                            const srPdf = con.serviceRecordPdfUrl || con.srPdfUrl;
-                            if (!srPdf) return null;
-                            return (
-                              <button
-                                type="button"
-                                onClick={() => triggerDirectDownload(srPdf, `ServiceRecord_${con.id}.pdf`)}
-                                className="inline-flex items-center gap-1 text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
-                                title="Descargar Service Record (SR) PDF"
-                              >
-                                📜 Service Record (SR) <ExternalLink className="w-2.5 h-2.5 text-blue-600" />
-                              </button>
-                            );
-                          })()}
-
                           {/* Fallback if no coverage badges or PDFs exist */}
-                          {!con.coverage && !con.isNewEquipment && !(con.contractPdfUrl || con.pdfUrl) && !con.schedulePdfUrl && !(con.serviceRecordPdfUrl || con.srPdfUrl) && (
+                          {!con.coverage && !con.isNewEquipment && !(con.contractPdfUrl || con.pdfUrl) && !con.schedulePdfUrl && !(con.serviceRecordPdfUrl || con.srPdfUrl || con.equipmentItems?.some(e => e.serviceRecordPdfUrl || e.srPdfUrl || e.caPdfUrl || e.podPdfUrl)) && (
                             <span className="text-slate-400 font-normal text-center block">-</span>
                           )}
                         </div>

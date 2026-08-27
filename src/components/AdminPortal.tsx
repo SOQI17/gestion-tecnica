@@ -6744,7 +6744,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setContractClientSearchQuery(client ? `${client.name} - ${client.city || ''}` : con.clientId || '');
     setIsContractClientDropdownOpen(false);
     setIsCreatingNewClientForContract(false);
-    setContractFormEquipmentItems(con.equipmentItems || []);
+    const validEquipments = (con.equipmentItems || []).map(item => ({
+      ...item,
+      serviceRecordPdfUrl: (item.serviceRecordPdfUrl && item.serviceRecordPdfUrl.trim()) || ((item as any).srPdfUrl && (item as any).srPdfUrl.trim()) || undefined,
+      srPdfUrl: (item.serviceRecordPdfUrl && item.serviceRecordPdfUrl.trim()) || ((item as any).srPdfUrl && (item as any).srPdfUrl.trim()) || undefined,
+      caPdfUrl: (item.caPdfUrl && item.caPdfUrl.trim()) || undefined,
+      podPdfUrl: (item.podPdfUrl && item.podPdfUrl.trim()) || undefined,
+    }));
+    setContractFormEquipmentItems(validEquipments);
     setTempEquipName('');
     setTempEquipBrand('');
     setTempEquipModality('');
@@ -6759,9 +6766,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setContractFormQcDates(con.qcDates || []);
     const pdfUrlVal = con.contractPdfUrl || con.pdfUrl || (con as any).contractPdf || '';
     const schedulePdfUrlVal = con.schedulePdfUrl || (con as any).cronogramaPdfUrl || '';
-    const srPdfUrlVal = con.serviceRecordPdfUrl || con.srPdfUrl || '';
-    const caPdfUrlVal = con.caPdfUrl || '';
-    const podPdfUrlVal = con.podPdfUrl || '';
+    const srPdfUrlVal = con.serviceRecordPdfUrl || con.srPdfUrl || validEquipments.find(e => e.serviceRecordPdfUrl)?.serviceRecordPdfUrl || '';
+    const caPdfUrlVal = con.caPdfUrl || validEquipments.find(e => e.caPdfUrl)?.caPdfUrl || '';
+    const podPdfUrlVal = con.podPdfUrl || validEquipments.find(e => e.podPdfUrl)?.podPdfUrl || '';
 
     setContractFormPdfUrl(pdfUrlVal);
     setContractFormSchedulePdfUrl(schedulePdfUrlVal);
@@ -11744,7 +11751,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
 
                           {/* Adjuntos Opcionales para Equipo Nuevo: SR, CA, POD (General y Por Equipo) */}
-                          {contractFormIsNewEquipment && (
+                          {(contractFormIsNewEquipment || contractFormEquipmentItems.length > 0 || contractFormSrPdfUrl || contractFormCaPdfUrl || contractFormPodPdfUrl) && (
                             <div className="space-y-3 pt-2 border-t border-amber-200/60 bg-amber-50/40 p-2.5 rounded-xl">
                               <div className="flex items-center justify-between">
                                 <span className="block text-[9px] font-extrabold text-amber-900 uppercase tracking-wider">
