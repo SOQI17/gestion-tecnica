@@ -101,6 +101,8 @@ export interface WorkOrder {
   durationDays?: number; // duration in days
   isEquipmentDown?: boolean; // indicates if the equipment is down / stopped
   clientConfirmed?: boolean; // true when client has confirmed the scheduled visit
+  contractId?: string; // ID del contrato al que pertenece esta orden de agendamiento
+  equipmentSerial?: string; // Número de serie del equipo vinculado
 }
 
 export interface MaterialUsed {

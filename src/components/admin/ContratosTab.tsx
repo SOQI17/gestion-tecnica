@@ -1153,11 +1153,30 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
                           {/* MTOS PENDIENTES Pill (Linked strictly to Contract & Agendamiento) */}
                           {(() => {
-                            // Strict Work Orders matching this specific contract ID or serial number
-                            const contractWOs = workOrders.filter(w => 
-                              (w.contractId && (w.contractId === con.id || (con.linkedContractId && w.contractId === con.linkedContractId))) ||
-                              (con.equipmentItems && con.equipmentItems.some(e => e.serialNumber && e.serialNumber.trim() !== '' && e.serialNumber === w.equipmentSerial))
-                            );
+                            // Comprehensive Work Orders matching this specific contract by ID, Serial, Equipment Name, or Client Date Range
+                            const contractWOs = workOrders.filter(w => {
+                              if (w.contractId && (w.contractId === con.id || (con.linkedContractId && w.contractId === con.linkedContractId))) {
+                                return true;
+                              }
+                              if (w.equipmentSerial && con.equipmentItems && con.equipmentItems.some(e => 
+                                (e.serialNumber && e.serialNumber.trim() !== '' && e.serialNumber === w.equipmentSerial) ||
+                                (e.serial && e.serial.trim() !== '' && e.serial === w.equipmentSerial)
+                              )) {
+                                return true;
+                              }
+                              if (w.clientId === con.clientId) {
+                                const woDate = w.plannedDate;
+                                const inDateRange = (!con.startDate || !woDate || woDate >= con.startDate) && (!con.endDate || !woDate || woDate <= con.endDate);
+                                const matchesEquipment = !con.equipmentItems || con.equipmentItems.length === 0 || con.equipmentItems.some(e => 
+                                  e.name && w.equipmentName && (
+                                    e.name.toLowerCase().includes(w.equipmentName.toLowerCase()) || 
+                                    w.equipmentName.toLowerCase().includes(e.name.toLowerCase())
+                                  )
+                                );
+                                if (inDateRange && matchesEquipment) return true;
+                              }
+                              return false;
+                            });
 
                             const scheduledDates = con.maintenanceDates || [];
                             
