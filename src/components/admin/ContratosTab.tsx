@@ -962,17 +962,17 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   const client = clients.find(c => c.id === con.clientId);
                   const expAlert = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
 
-                  // Extract Brands for Column 5
-                  const brands = Array.from(new Set((con.equipmentItems || []).map(e => e.brand).filter(Boolean)));
-                  
-                  // Equipment Summary list for Column 8
-                  const equipSummary = (con.equipmentItems || [])
-                    .map(e => `${e.name || ''} ${e.brand ? `(${e.brand})` : ''}`.trim())
-                    .filter(Boolean)
-                    .join(' • ');
+                  // Expiration Alert & Row Styling
+                  const rowBorderClass = expAlert?.level === 'warning_3m'
+                    ? 'border-l-4 border-l-amber-500 bg-amber-50/20 hover:bg-amber-50/30'
+                    : expAlert?.level === 'urgent_1m'
+                    ? 'border-l-4 border-l-rose-500 bg-rose-50/20 hover:bg-rose-50/30'
+                    : expAlert?.level === 'expired'
+                    ? 'border-l-4 border-l-red-600 bg-red-50/20 hover:bg-red-50/30'
+                    : 'hover:bg-slate-50/60';
 
                   return (
-                    <tr key={con.id} className="hover:bg-slate-50/60 transition-colors">
+                    <tr key={con.id} className={`transition-colors ${rowBorderClass}`}>
                       {/* 1. Nº CONTRATO */}
                       <td className="p-3.5">
                         <div className="flex flex-col">
@@ -1032,20 +1032,51 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
                       {/* 7. FECHA VENCIMIENTO */}
                       <td className="p-3.5 text-center font-mono text-xs font-bold text-slate-900">
-                        {con.endDate || '-'}
+                        <div className="flex flex-col items-center">
+                          <span>{con.endDate || '-'}</span>
+                          {expAlert?.level === 'warning_3m' && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-amber-900 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-md shadow-2xs mt-1">
+                              ⚠️ 3 MESES ({expAlert.daysRemaining}d)
+                            </span>
+                          )}
+                          {expAlert?.level === 'urgent_1m' && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-rose-900 bg-rose-100/90 border border-rose-300 px-2 py-0.5 rounded-md shadow-2xs mt-1">
+                              ⚠️ 1 MES ({expAlert.daysRemaining}d)
+                            </span>
+                          )}
+                          {expAlert?.level === 'expired' && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-red-950 bg-red-100/90 border border-red-300 px-2 py-0.5 rounded-md shadow-2xs mt-1">
+                              🚨 VENCIDO ({expAlert.daysRemaining}d)
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* 8. ESTADO */}
                       <td className="p-3.5 text-center">
                         <div className="flex flex-col items-center gap-1.5 min-w-[170px]">
                           {/* Status pill */}
-                          <span className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                            con.status === 'Activo'
-                              ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                              : 'bg-rose-100 text-rose-900 border border-rose-300'
-                          }`}>
-                            {con.status}
-                          </span>
+                          {expAlert?.level === 'warning_3m' ? (
+                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-950 border border-amber-300 w-full shadow-2xs">
+                              ⚠️ 3 MESES (POR VENCER)
+                            </span>
+                          ) : expAlert?.level === 'urgent_1m' ? (
+                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-950 border border-rose-300 w-full shadow-2xs">
+                              ⚠️ 1 MES (POR VENCER)
+                            </span>
+                          ) : expAlert?.level === 'expired' ? (
+                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-950 border border-red-300 w-full shadow-2xs">
+                              🚨 VENCIDO
+                            </span>
+                          ) : (
+                            <span className={`inline-flex items-center justify-center px-3 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                              con.status === 'Activo'
+                                ? 'bg-emerald-100 text-emerald-950 border border-emerald-300'
+                                : 'bg-rose-100 text-rose-950 border border-rose-300'
+                            }`}>
+                              {con.status || 'ACTIVO'}
+                            </span>
+                          )}
 
                           {/* MTOS PENDIENTES Pill (Linked strictly to Contract & Agendamiento) */}
                           {(() => {
@@ -1096,7 +1127,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             return (
                               <div className="bg-slate-100/90 border border-slate-200 text-slate-700 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full">
                                 <FileText className="w-3 h-3 text-slate-500 shrink-0" />
-                                <span>{pendingMtos} MTOS PENDIENTES ({completedMtos}/{totalMtos})</span>
+                                <span>{pendingMtos} {pendingMtos === 1 ? 'MTO PENDIENTE' : 'MTOS PENDIENTES'} ({completedMtos}/{totalMtos})</span>
                               </div>
                             );
                           })()}
@@ -1117,24 +1148,6 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                               </div>
                             );
                           })()}
-
-                          {expAlert?.level === 'expired' && (
-                            <span className="text-[10px] font-black text-rose-800 bg-rose-100/90 px-2.5 py-0.5 rounded-lg border border-rose-300 flex items-center gap-1 shadow-2xs">
-                              🚨 VENCIDO ({expAlert.daysRemaining}d)
-                            </span>
-                          )}
-
-                          {expAlert?.level === 'urgent_1m' && (
-                            <span className="text-[10px] font-black text-rose-800 bg-rose-100/90 px-2.5 py-0.5 rounded-lg border border-rose-300 flex items-center gap-1 shadow-2xs">
-                              ⚠️ Vence en {expAlert.daysRemaining}d
-                            </span>
-                          )}
-
-                          {expAlert?.level === 'warning_3m' && (
-                            <span className="text-[10px] font-black text-amber-800 bg-amber-100/90 px-2.5 py-0.5 rounded-lg border border-amber-300 flex items-center gap-1 shadow-2xs">
-                              ⌛ Vence en {expAlert.daysRemaining}d
-                            </span>
-                          )}
                         </div>
                       </td>
 
