@@ -187,7 +187,7 @@ export interface ContractEquipmentItem {
 export interface Contract {
   id: string; // Contract Number
   clientId: string; // references Client.id
-  type: 'Garantía extendida/Contrato' | 'Garantía de compra' | 'Facturable' | 'Otro';
+  type: 'Garantía extendida/Contrato' | 'Garantía de compra' | 'Vigencia Tecnológica' | 'Facturable' | 'Otro' | string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   status: 'Activo' | 'Vencido' | 'Pendiente' | 'Inactivo';

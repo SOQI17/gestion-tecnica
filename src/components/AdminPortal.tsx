@@ -1486,7 +1486,7 @@ export default function AdminPortal({
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [contractFormId, setContractFormId] = useState('');
   const [contractFormClientId, setContractFormClientId] = useState('');
-  const [contractFormType, setContractFormType] = useState<'Garantía extendida/Contrato' | 'Garantía de compra' | 'Facturable' | 'Otro'>('Garantía extendida/Contrato');
+  const [contractFormType, setContractFormType] = useState<string>('Garantía extendida/Contrato');
   const [contractFormStart, setContractFormStart] = useState('');
   const [contractFormEnd, setContractFormEnd] = useState('');
   const [contractFormStatus, setContractFormStatus] = useState<'Activo' | 'Vencido' | 'Pendiente' | 'Inactivo'>('Activo');
@@ -11271,30 +11271,50 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Tipo de Cobertura</label>
-                        <select
-                          value={contractFormType}
-                          disabled={isSalesReadOnly}
-                          onChange={(e) => {
-                            const newType = e.target.value as any;
-                            setContractFormType(newType);
-                            if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
-                              const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency, newType);
-                              setContractFormMaintenanceDates(generated);
-                              if (generated.length > 0) {
-                                setContractFormQcDate(generated[generated.length - 1]);
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Tipo de Cobertura / Contrato</label>
+                        <div className="space-y-1.5">
+                          <select
+                            value={['Garantía extendida/Contrato', 'Garantía de compra', 'Vigencia Tecnológica', 'Facturable'].includes(contractFormType) ? contractFormType : 'Otro'}
+                            disabled={isSalesReadOnly}
+                            onChange={(e) => {
+                              const newType = e.target.value;
+                              if (newType !== 'Otro') {
+                                setContractFormType(newType);
+                                if (contractFormFrequency !== 'Ninguno' && contractFormFrequency !== 'Personalizado') {
+                                  const generated = generateMaintenanceDates(contractFormStart, contractFormEnd, contractFormFrequency, newType);
+                                  setContractFormMaintenanceDates(generated);
+                                  if (generated.length > 0) {
+                                    setContractFormQcDate(generated[generated.length - 1]);
+                                  }
+                                }
+                              } else {
+                                if (['Garantía extendida/Contrato', 'Garantía de compra', 'Vigencia Tecnológica', 'Facturable'].includes(contractFormType)) {
+                                  setContractFormType('');
+                                }
                               }
-                            }
-                          }}
-                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-bold ${
-                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
-                          }`}
-                        >
-                          <option value="Garantía extendida/Contrato">Garantía extendida / Contrato</option>
-                          <option value="Garantía de compra">Garantía de compra</option>
-                          <option value="Facturable">Facturable</option>
-                          <option value="Otro">Otro</option>
-                        </select>
+                            }}
+                            className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-bold ${
+                              isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
+                            }`}
+                          >
+                            <option value="Garantía extendida/Contrato">Garantía extendida / Contrato</option>
+                            <option value="Garantía de compra">Garantía de compra</option>
+                            <option value="Vigencia Tecnológica">⚡ Vigencia Tecnológica</option>
+                            <option value="Facturable">Facturable</option>
+                            <option value="Otro">✍️ Personalizado / Escribir texto libre...</option>
+                          </select>
+
+                          {(!['Garantía extendida/Contrato', 'Garantía de compra', 'Vigencia Tecnológica', 'Facturable'].includes(contractFormType) || contractFormType === '') && (
+                            <input
+                              type="text"
+                              disabled={isSalesReadOnly}
+                              value={contractFormType}
+                              onChange={(e) => setContractFormType(e.target.value)}
+                              placeholder="Escribe el tipo de cobertura personalizado..."
+                              className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-xs font-bold text-indigo-950 bg-white focus:ring-2 focus:ring-indigo-500/20 outline-hidden shadow-2xs placeholder-slate-400"
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
 
