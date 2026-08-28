@@ -28,6 +28,7 @@ interface ContratosTabProps {
   contractCsvError: string | null;
   exportContractsToExcel: () => void;
   getContractExpirationAlert: (endDate: string, status: string, linkedContractId?: string) => { level: 'urgent_1m' | 'warning_3m' | 'expired' | null; daysRemaining: number } | null;
+  getContractMaintenanceStatus?: (con: Contract, workOrders: WorkOrder[]) => { total: number; done: number; remaining: number; hasNoPending: boolean };
   setEditingContract: (contract: Contract | null) => void;
   onEditContract?: (contract: Contract) => void;
   setIsContractModalOpen: (open: boolean) => void;
@@ -80,6 +81,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
   contractCsvError,
   exportContractsToExcel,
   getContractExpirationAlert,
+  getContractMaintenanceStatus,
   setEditingContract,
   onEditContract,
   setIsContractModalOpen,
@@ -1171,77 +1173,48 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             </span>
                           )}
 
-                          {/* MTOS PENDIENTES Pill (Linked strictly to Contract & Agendamiento) */}
+                          {/* MTOS PENDIENTES Pill - uses same logic as contract details modal */}
                           {(() => {
-                            // Comprehensive Work Orders matching this specific contract by ID, Serial, Equipment Name, or Client Date Range
-                            const contractWOs = workOrders.filter(w => {
-                              if (w.contractId && (w.contractId === con.id || (con.linkedContractId && w.contractId === con.linkedContractId))) {
-                                return true;
-                              }
-                              if (w.equipmentSerial && con.equipmentItems && con.equipmentItems.some(e => 
-                                (e.serialNumber && e.serialNumber.trim() !== '' && e.serialNumber === w.equipmentSerial) ||
-                                (e.serial && e.serial.trim() !== '' && e.serial === w.equipmentSerial)
-                              )) {
-                                return true;
-                              }
-                              if (w.clientId === con.clientId) {
-                                const woDate = w.plannedDate;
-                                const inDateRange = (!con.startDate || !woDate || woDate >= con.startDate) && (!con.endDate || !woDate || woDate <= con.endDate);
-                                const matchesEquipment = !con.equipmentItems || con.equipmentItems.length === 0 || con.equipmentItems.some(e => 
-                                  e.name && w.equipmentName && (
-                                    e.name.toLowerCase().includes(w.equipmentName.toLowerCase()) || 
-                                    w.equipmentName.toLowerCase().includes(e.name.toLowerCase())
-                                  )
-                                );
-                                if (inDateRange && matchesEquipment) return true;
-                              }
-                              return false;
-                            });
+                            const getMtoPill = (pendingMtos: number, completedMtos: number, totalMtos: number) => {
+                              const allDone = pendingMtos === 0;
+                              const lastOne = pendingMtos === 1;
+                              const pillClass = allDone
+                                ? 'bg-emerald-100 border-emerald-300 text-emerald-900'
+                                : lastOne
+                                  ? 'bg-amber-100 border-amber-400 text-amber-900 animate-pulse'
+                                  : 'bg-slate-100/90 border-slate-200 text-slate-700';
+                              const icon = allDone
+                                ? <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                : lastOne
+                                  ? <span className="text-amber-500 shrink-0 leading-none">⚠️</span>
+                                  : <FileText className="w-3 h-3 text-slate-500 shrink-0" />;
+                              const label = allDone
+                                ? `✓ TODO REALIZADO (${completedMtos}/${totalMtos})`
+                                : `${pendingMtos} ${pendingMtos === 1 ? 'MTO PENDIENTE' : 'MTOS PENDIENTES'} (${completedMtos}/${totalMtos})`;
+                              return (
+                                <div className={`${pillClass} border font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full`}>
+                                  {icon}
+                                  <span>{label}</span>
+                                </div>
+                              );
+                            };
 
+                            // Use the shared getContractMaintenanceStatus function if available (same logic as modal)
+                            if (getContractMaintenanceStatus) {
+                              const s = getContractMaintenanceStatus(con, workOrders);
+                              if (s.total === 0) return null;
+                              return getMtoPill(s.remaining, s.done, s.total);
+                            }
+
+                            // Fallback: manual count from maintenanceDates
                             const scheduledDates = con.maintenanceDates || [];
-                            
-                            // Total visits scheduled for this contract
-                            let totalMtos = 0;
-                            if (scheduledDates.length > 0) {
-                              totalMtos = scheduledDates.length;
-                            } else if (contractWOs.length > 0) {
-                              totalMtos = contractWOs.length;
-                            } else {
-                              const freqMult = con.maintenanceFrequency === 'Mensual' ? 12 
-                                : con.maintenanceFrequency === 'Bimensual' ? 6 
-                                : con.maintenanceFrequency === 'Trimestral' ? 4 
-                                : con.maintenanceFrequency === 'Cuatrimestral' ? 3 
-                                : con.maintenanceFrequency === 'Semestral' ? 2 : 2;
-                              totalMtos = (con.equipmentItems?.length || 1) * freqMult;
-                            }
-
-                            // Completed visits count from linked Agendamiento / Work Orders or schedule
-                            let completedMtos = 0;
-                            if (contractWOs.length > 0) {
-                              completedMtos = contractWOs.filter(w => w.status === 'Completado' || w.status === 'Saldado' || w.status === 'Reportado').length;
-                            } else if (scheduledDates.length > 0) {
-                              completedMtos = scheduledDates.filter((d: any) => typeof d === 'object' ? (d.completed || d.status === 'completed') : false).length;
-                              if (completedMtos === 0) {
-                                const todayStr = new Date().toISOString().split('T')[0];
-                                completedMtos = scheduledDates.filter((d: any) => {
-                                  const dateStr = typeof d === 'string' ? d : d.date;
-                                  return dateStr && dateStr < todayStr;
-                                }).length;
-                              }
-                            } else {
-                              completedMtos = Math.max(0, totalMtos - 4);
-                            }
-
-                            // Ensure logical bounds: completedMtos <= totalMtos
-                            completedMtos = Math.min(completedMtos, totalMtos);
+                            if (scheduledDates.length === 0) return null;
+                            const totalMtos = scheduledDates.length;
+                            const completedMtos = scheduledDates.filter((d: any) =>
+                              typeof d === 'object' && (d.completed || d.status === 'completed' || d.status === 'Completado')
+                            ).length;
                             const pendingMtos = Math.max(0, totalMtos - completedMtos);
-
-                            return (
-                              <div className="bg-slate-100/90 border border-slate-200 text-slate-700 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full">
-                                <FileText className="w-3 h-3 text-slate-500 shrink-0" />
-                                <span>{pendingMtos} {pendingMtos === 1 ? 'MTO PENDIENTE' : 'MTOS PENDIENTES'} ({completedMtos}/{totalMtos})</span>
-                              </div>
-                            );
+                            return getMtoPill(pendingMtos, completedMtos, totalMtos);
                           })()}
 
                           {/* Equipment summary box */}

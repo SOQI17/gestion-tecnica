@@ -907,8 +907,8 @@ const isWorkOrderQc = (wo: WorkOrder, contractsList: Contract[] = []) => {
         if (con.qcDate) {
           return con.qcDate === cleanDate || con.qcDate === rawDate;
         }
-        // Fallback default: last date of contract
-        return idx === con.maintenanceDates.length - 1;
+        // No qcDates/qcDate defined → this date is NOT a QC visit
+        return false;
       });
 
       if (isMatchingQc) return true;
@@ -3647,7 +3647,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
           // Determine the effective date where this commitment badge should be displayed
           const effectiveDate = matchingWO ? matchingWO.plannedDate : contractDate;
-
           if (effectiveDate === dateStr) {
             // Unify: If there is already a Work Order agendated on dateStr for this contract/client,
             // skip rendering a separate top blue badge since contract details are integrated inside the Work Order card.
@@ -3663,10 +3662,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             const client = clients.find(c => c.id === con.clientId);
             const isDone = matchingWO ? (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado') : false;
             
-            // Is it QC date?
+            // Is it QC date? Only mark QC if explicitly configured on the contract
             const isQc = (con.qcDates && con.qcDates.some(qd => qd === contractDate || qd === effectiveDate || qd.startsWith(contractDate) || qd.startsWith(effectiveDate))) ||
-              con.qcDate === contractDate || con.qcDate === effectiveDate ||
-              (!con.qcDate && (!con.qcDates || con.qcDates.length === 0) && idx === con.maintenanceDates.length - 1);
+              con.qcDate === contractDate || con.qcDate === effectiveDate;
 
             // Avoid duplicate badges for the same contract on the same day
             const alreadyAdded = dayCommitments.some(item => item.contract.id === con.id && item.isQc === isQc);
@@ -6876,6 +6874,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         contractCsvError={contractCsvError}
         exportContractsToExcel={exportContractsToExcel}
         getContractExpirationAlert={getContractExpirationAlert}
+        getContractMaintenanceStatus={(con, wos) => getContractMaintenanceStatus(con, wos)}
         setEditingContract={setEditingContract}
         onEditContract={handleEditContract}
         setIsContractModalOpen={setIsContractModalOpen}
