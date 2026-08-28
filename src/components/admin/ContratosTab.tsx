@@ -962,6 +962,9 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   const client = clients.find(c => c.id === con.clientId);
                   const expAlert = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
 
+                  // Extract Brands for Column 5
+                  const brands = Array.from(new Set((con.equipmentItems || []).map(e => e.brand).filter(Boolean)));
+
                   // Expiration Alert & Row Styling
                   const rowBorderClass = expAlert?.level === 'warning_3m'
                     ? 'border-l-4 border-l-amber-500 bg-amber-50/20 hover:bg-amber-50/30'
