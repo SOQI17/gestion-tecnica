@@ -895,7 +895,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
         </div>
 
-        {/* Brand Filter & Date Sort Dropdowns */}
+        {/* Brand Filter, Valor Filter & Date Sort Dropdowns */}
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={contractFilterBrand}
@@ -909,6 +909,19 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
             {Array.from(new Set(contracts.flatMap(c => (c.equipmentItems || []).map(e => e.brand).filter(Boolean)))).map(b => (
               <option key={b} value={b}>{b}</option>
             ))}
+          </select>
+
+          <select
+            value={contractValueFilter}
+            onChange={(e) => {
+              setContractValueFilter(e.target.value as any);
+              setContractPage(1);
+            }}
+            className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-hidden focus:border-indigo-500 cursor-pointer uppercase"
+          >
+            <option value="all">💲 VALOR: Todos los Valores</option>
+            <option value="valued">💲 Con Valor ($ &gt; 0)</option>
+            <option value="unvalued">💲 Sin Valor ($0 / Sin Precio)</option>
           </select>
 
           <select
@@ -926,7 +939,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
             <option value="end_desc">Fecha Vencimiento (Lejana a Vencer)</option>
           </select>
 
-          <span className="text-3xs text-slate-400 font-bold uppercase tracking-wider px-2">
+          <span className="text-3xs text-slate-500 font-extrabold uppercase tracking-wider px-2.5 py-1.5 bg-slate-100 rounded-lg border border-slate-200">
             Mostrando {paginated.length} de {sorted.length} contratos
           </span>
         </div>
