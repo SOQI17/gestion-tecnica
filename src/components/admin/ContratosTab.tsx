@@ -878,10 +878,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
         </div>
       )}
 
-      {/* Filters and Search Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white border border-slate-200 p-3 rounded-xl shadow-2xs">
-        {/* Search input */}
-        <div className="relative flex-1 max-w-md">
+      {/* Executive Search & Filter Control Bar */}
+      <div className="bg-gradient-to-r from-slate-50 via-white to-slate-50 border border-slate-200/90 p-3.5 rounded-2xl shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3.5">
+        {/* Search input with active indicator */}
+        <div className="relative flex-1 min-w-[280px]">
           <input
             type="text"
             placeholder="Buscar por contrato, cliente, marca o equipo..."
@@ -890,58 +890,115 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
               setContractSearch(e.target.value);
               setContractPage(1);
             }}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-4 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-400"
+            className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-slate-800 outline-hidden transition-all shadow-2xs placeholder-slate-400"
           />
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-indigo-600 absolute left-3 top-1/2 -translate-y-1/2" />
+          {contractSearch && (
+            <button
+              type="button"
+              onClick={() => {
+                setContractSearch('');
+                setContractPage(1);
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
-        {/* Brand Filter, Valor Filter & Date Sort Dropdowns */}
+        {/* Executive Filter Controls */}
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={contractFilterBrand}
-            onChange={(e) => {
-              setContractFilterBrand(e.target.value);
-              setContractPage(1);
-            }}
-            className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-hidden focus:border-indigo-500 cursor-pointer uppercase"
-          >
-            <option value="all">🏷️ MARCA: Todas las Marcas</option>
-            {Array.from(new Set(contracts.flatMap(c => (c.equipmentItems || []).map(e => e.brand).filter(Boolean)))).map(b => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
+          {/* Marca Dropdown */}
+          <div className="relative">
+            <select
+              value={contractFilterBrand}
+              onChange={(e) => {
+                setContractFilterBrand(e.target.value);
+                setContractPage(1);
+              }}
+              className={`appearance-none bg-white border text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                contractFilterBrand !== 'all'
+                  ? 'border-indigo-400 bg-indigo-50/50 text-indigo-950 ring-2 ring-indigo-500/10'
+                  : 'border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <option value="all">🏷️ MARCA: Todas las Marcas</option>
+              {Array.from(new Set(contracts.flatMap(c => (c.equipmentItems || []).map(e => e.brand).filter(Boolean)))).map(b => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+          </div>
 
-          <select
-            value={contractValueFilter}
-            onChange={(e) => {
-              setContractValueFilter(e.target.value as any);
-              setContractPage(1);
-            }}
-            className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-hidden focus:border-indigo-500 cursor-pointer uppercase"
-          >
-            <option value="all">💲 VALOR: Todos los Valores</option>
-            <option value="valued">💲 Con Valor ($ &gt; 0)</option>
-            <option value="unvalued">💲 Sin Valor ($0 / Sin Precio)</option>
-          </select>
+          {/* Valor Dropdown */}
+          <div className="relative">
+            <select
+              value={contractValueFilter}
+              onChange={(e) => {
+                setContractValueFilter(e.target.value as any);
+                setContractPage(1);
+              }}
+              className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                contractValueFilter !== 'all'
+                  ? 'bg-emerald-100/80 border border-emerald-400 text-emerald-950 ring-2 ring-emerald-500/10'
+                  : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <option value="all">💲 VALOR: Todos los Valores</option>
+              <option value="valued">💲 Con Valor ($ &gt; 0)</option>
+              <option value="unvalued">💲 Sin Valor ($0 / Sin Precio)</option>
+            </select>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+          </div>
 
-          <select
-            value={contractDateSort}
-            onChange={(e) => {
-              setContractDateSort(e.target.value as any);
-              setContractPage(1);
-            }}
-            className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-hidden focus:border-indigo-500 cursor-pointer uppercase"
-          >
-            <option value="none">📅 ORDENAR POR FECHA: Por Defecto</option>
-            <option value="start_asc">Fecha Inicio (Más Antigua primero)</option>
-            <option value="start_desc">Fecha Inicio (Más Reciente primero)</option>
-            <option value="end_asc">Fecha Vencimiento (Más Próxima a Vencer)</option>
-            <option value="end_desc">Fecha Vencimiento (Lejana a Vencer)</option>
-          </select>
+          {/* Orden por Fecha Dropdown */}
+          <div className="relative">
+            <select
+              value={contractDateSort}
+              onChange={(e) => {
+                setContractDateSort(e.target.value as any);
+                setContractPage(1);
+              }}
+              className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                contractDateSort !== 'none'
+                  ? 'bg-purple-100/80 border border-purple-400 text-purple-950 ring-2 ring-purple-500/10'
+                  : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <option value="none">📅 ORDENAR: Por Defecto</option>
+              <option value="start_asc">Fecha Inicio (Más Antigua primero)</option>
+              <option value="start_desc">Fecha Inicio (Más Reciente primero)</option>
+              <option value="end_asc">Fecha Vencimiento (Más Próxima a Vencer)</option>
+              <option value="end_desc">Fecha Vencimiento (Lejana a Vencer)</option>
+            </select>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+          </div>
 
-          <span className="text-3xs text-slate-500 font-extrabold uppercase tracking-wider px-2.5 py-1.5 bg-slate-100 rounded-lg border border-slate-200">
-            Mostrando {paginated.length} de {sorted.length} contratos
-          </span>
+          {/* Reset Filters Pill */}
+          {(contractFilterBrand !== 'all' || contractValueFilter !== 'all' || contractDateSort !== 'none' || contractSearch.trim() !== '' || contractFilterExpiration !== null) && (
+            <button
+              type="button"
+              onClick={() => {
+                setContractFilterBrand('all');
+                setContractValueFilter('all');
+                setContractDateSort('none');
+                setContractSearch('');
+                setContractFilterExpiration(null);
+                setContractPage(1);
+              }}
+              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold px-3 py-2 rounded-xl transition-all cursor-pointer shadow-2xs flex items-center gap-1"
+              title="Limpiar todos los filtros"
+            >
+              <span>✕ Limpiar</span>
+            </button>
+          )}
+
+          {/* Results Badge Counter */}
+          <div className="bg-slate-900 text-white font-mono text-[10px] font-black uppercase tracking-wider px-3.5 py-2 rounded-xl shadow-xs border border-slate-800 flex items-center gap-1.5 shrink-0 ml-auto xl:ml-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Mostrando {paginated.length} de {sorted.length} contratos</span>
+          </div>
         </div>
       </div>
 
