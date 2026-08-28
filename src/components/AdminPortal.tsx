@@ -921,9 +921,12 @@ const isWorkOrderQc = (wo: WorkOrder, contractsList: Contract[] = []) => {
 const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], allContracts: Contract[] = []) => {
   if (!con.maintenanceDates || con.maintenanceDates.length === 0) {
     return { 
-      isCompleted: false, 
+      isCompleted: false,
+      isAllScheduled: false,
       total: 0, 
       done: 0, 
+      scheduled: 0,
+      unScheduled: 0,
       remaining: 0, 
       hasNoPending: false,
       eqBreakdown: [],
@@ -939,10 +942,11 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
   );
 
   let doneCount = 0;
+  let scheduledCount = 0;
   const usedWoIds = new Set<string>();
 
-  const eqMap: Record<string, { name: string; modality?: string; total: number; done: number; remaining: number }> = {};
-  const modalityMap: Record<string, { modality: string; total: number; done: number; remaining: number }> = {};
+  const eqMap: Record<string, { name: string; modality?: string; total: number; done: number; scheduled: number; unScheduled: number; remaining: number }> = {};
+  const modalityMap: Record<string, { modality: string; total: number; done: number; scheduled: number; unScheduled: number; remaining: number }> = {};
 
   con.maintenanceDates.forEach((rawEntry, idx) => {
     const [cleanDate, specificEquipInDate] = rawEntry.split('|');
@@ -973,7 +977,7 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
       }
     }
 
-    // Determine modality (explicit or auto-inferred from equipment name e.g. VCT, CTE, RX, MG, CT)
+    // Determine modality
     const eqItem = con.equipmentItems?.find(item => item.name && targetEqName && (item.name.trim().toLowerCase().includes(targetEqName.trim().toLowerCase()) || targetEqName.trim().toLowerCase().includes(item.name.trim().toLowerCase())));
     
     let modality = eqItem?.modality?.trim();
@@ -995,29 +999,41 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
     const eqKey = targetEqName || 'Equipo General';
 
     if (!eqMap[eqKey]) {
-      eqMap[eqKey] = { name: eqKey, modality, total: 0, done: 0, remaining: 0 };
+      eqMap[eqKey] = { name: eqKey, modality, total: 0, done: 0, scheduled: 0, unScheduled: 0, remaining: 0 };
     }
     eqMap[eqKey].total++;
 
     const modKey = modality || eqKey;
     if (!modalityMap[modKey]) {
-      modalityMap[modKey] = { modality: modKey, total: 0, done: 0, remaining: 0 };
+      modalityMap[modKey] = { modality: modKey, total: 0, done: 0, scheduled: 0, unScheduled: 0, remaining: 0 };
     }
     modalityMap[modKey].total++;
 
     let isDone = false;
+    let isScheduled = false;
+
     if (matchingWO) {
       usedWoIds.add(matchingWO.id);
       if (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado' || matchingWO.status === 'Reportado') {
         doneCount++;
         isDone = true;
+      } else {
+        scheduledCount++;
+        isScheduled = true;
       }
     }
 
     if (isDone) {
       eqMap[eqKey].done++;
       modalityMap[modKey].done++;
+    } else if (isScheduled) {
+      eqMap[eqKey].scheduled++;
+      modalityMap[modKey].scheduled++;
+      eqMap[eqKey].remaining++;
+      modalityMap[modKey].remaining++;
     } else {
+      eqMap[eqKey].unScheduled++;
+      modalityMap[modKey].unScheduled++;
       eqMap[eqKey].remaining++;
       modalityMap[modKey].remaining++;
     }
@@ -1025,25 +1041,30 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
 
   const total = con.maintenanceDates.length;
   const isAllCompleted = total > 0 && doneCount >= total;
+  const isAllScheduled = total > 0 && (doneCount + scheduledCount) >= total;
   const remaining = Math.max(0, total - doneCount);
+  const unScheduledCount = Math.max(0, total - doneCount - scheduledCount);
 
   const eqBreakdown = Object.values(eqMap);
   const modalityBreakdown = Object.values(modalityMap);
 
   const pendingByModalityText = modalityBreakdown
     .filter(m => m.remaining > 0)
-    .map(m => `${m.remaining} ${m.modality}`)
+    .map(m => `${m.unScheduled > 0 ? `${m.unScheduled} por agendar` : `${m.scheduled} agendado`} ${m.modality}`)
     .join(' · ');
 
   const pendingByEquipmentText = eqBreakdown
     .filter(e => e.remaining > 0)
-    .map(e => `${e.remaining} ${e.name}${e.modality && e.modality !== e.name ? ` (${e.modality})` : ''}`)
+    .map(e => `${e.unScheduled > 0 ? `${e.unScheduled} por agendar` : `${e.scheduled} agendado`} ${e.name}${e.modality && e.modality !== e.name ? ` (${e.modality})` : ''}`)
     .join(' · ');
 
   return {
     isCompleted: isAllCompleted,
+    isAllScheduled,
     total,
     done: doneCount,
+    scheduled: scheduledCount,
+    unScheduled: unScheduledCount,
     remaining,
     hasNoPending: isAllCompleted,
     eqBreakdown,
@@ -13145,33 +13166,47 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <div className={`flex flex-col gap-1.5 text-[11px] ${exp && exp.level !== 'ok' ? 'pt-2 border-t border-slate-200/60' : ''}`}>
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm">{maintStatus.hasNoPending ? '⚡' : '📋'}</span>
+                            <span className="text-sm">{maintStatus.hasNoPending ? '⚡' : maintStatus.isAllScheduled ? '📅' : '📋'}</span>
                             <span>
                               {maintStatus.hasNoPending ? (
                                 <strong className="text-purple-900 font-extrabold">
                                   Mantenimientos al Día: ¡Se realizaron todos los MTOs ({maintStatus.done}/{maintStatus.total})! No quedan mantenimientos pendientes.
                                 </strong>
+                              ) : maintStatus.isAllScheduled ? (
+                                <strong className="text-sky-900 font-extrabold">
+                                  Mantenimientos Agendados: Los {maintStatus.total} MTOs están agendados en el calendario ({maintStatus.done} realizados).
+                                </strong>
                               ) : (
                                 <span>
-                                  <strong>Estado de Mantenimientos:</strong> {maintStatus.done} de {maintStatus.total} realizados · <strong className="text-amber-800">{maintStatus.remaining} {maintStatus.remaining === 1 ? 'MTO pendiente' : 'MTOs pendientes'}</strong>
+                                  <strong>Estado de Mantenimientos:</strong> {maintStatus.done} de {maintStatus.total} realizados · <strong className="text-sky-800">{maintStatus.scheduled} agendados</strong> · <strong className="text-amber-800">{maintStatus.unScheduled} por agendar</strong>
                                 </span>
                               )}
                             </span>
                           </div>
-                          <span className={`text-[9px] uppercase px-2 py-0.5 rounded font-black shadow-2xs shrink-0 ${maintStatus.hasNoPending ? 'bg-purple-200 text-purple-950' : 'bg-slate-200 text-slate-800'}`}>
-                            {maintStatus.hasNoPending ? '⚡ 0 PENDIENTES' : `📋 ${maintStatus.remaining} PENDIENTES`}
+                          <span className={`text-[9px] uppercase px-2 py-0.5 rounded font-black shadow-2xs shrink-0 ${
+                            maintStatus.hasNoPending 
+                              ? 'bg-purple-200 text-purple-950' 
+                              : maintStatus.isAllScheduled
+                                ? 'bg-sky-200 text-sky-950'
+                                : 'bg-slate-200 text-slate-800'
+                          }`}>
+                            {maintStatus.hasNoPending ? '⚡ 0 PENDIENTES' : maintStatus.isAllScheduled ? `📅 ${maintStatus.scheduled} AGENDADOS` : `📋 ${maintStatus.unScheduled} POR AGENDAR`}
                           </span>
                         </div>
 
                         {/* Sectioned breakdown of pending maintenance by equipment */}
                         {!maintStatus.hasNoPending && maintStatus.eqBreakdown && maintStatus.eqBreakdown.some(e => e.remaining > 0) && (
                           <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-slate-200/50 pl-6">
-                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">MTOs faltantes por equipo:</span>
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">MTOs por equipo:</span>
                             {maintStatus.eqBreakdown.filter(e => e.remaining > 0).map((eq, idx) => (
                               <span key={idx} className="bg-white text-indigo-950 border border-indigo-200 font-bold text-[9px] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-3xs font-mono">
                                 <span>{eq.name}</span>
                                 {eq.modality && <span className="bg-indigo-600 text-white font-black text-[7.5px] px-1 py-0.1 rounded uppercase">{eq.modality}</span>}
-                                <span className="text-amber-700 font-extrabold ml-0.5">: {eq.remaining} {eq.remaining === 1 ? 'pendiente' : 'pendientes'}</span>
+                                {eq.unScheduled > 0 ? (
+                                  <span className="text-amber-700 font-extrabold ml-0.5">: {eq.unScheduled} por agendar</span>
+                                ) : (
+                                  <span className="text-sky-700 font-extrabold ml-0.5">: {eq.scheduled} agendado{eq.scheduled > 1 ? 's' : ''} (pendiente de realizar)</span>
+                                )}
                               </span>
                             ))}
                           </div>
@@ -13227,9 +13262,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </span>
                       );
                     }
+                    if (maintStatus.isAllScheduled) {
+                      return (
+                        <span className="font-extrabold text-sky-750 text-[10px] flex items-center gap-1">
+                          📅 {maintStatus.total}/{maintStatus.total} Agendados ({maintStatus.done} realizados)
+                        </span>
+                      );
+                    }
                     return (
                       <span className="font-bold text-slate-700 text-[10px]">
-                        📋 {maintStatus.done}/{maintStatus.total} Realizados ({maintStatus.remaining} {maintStatus.remaining === 1 ? 'pendiente' : 'pendientes'})
+                        📋 {maintStatus.done}/{maintStatus.total} Realizados ({maintStatus.unScheduled} por agendar)
                       </span>
                     );
                   })()}

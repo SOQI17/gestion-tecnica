@@ -28,7 +28,7 @@ interface ContratosTabProps {
   contractCsvError: string | null;
   exportContractsToExcel: () => void;
   getContractExpirationAlert: (endDate: string, status: string, linkedContractId?: string) => { level: 'urgent_1m' | 'warning_3m' | 'expired' | null; daysRemaining: number } | null;
-  getContractMaintenanceStatus?: (con: Contract, workOrders: WorkOrder[]) => { total: number; done: number; remaining: number; hasNoPending: boolean };
+  getContractMaintenanceStatus?: (con: Contract, workOrders: WorkOrder[]) => { total: number; done: number; scheduled: number; unScheduled: number; remaining: number; hasNoPending: boolean; isAllScheduled: boolean };
   setEditingContract: (contract: Contract | null) => void;
   onEditContract?: (contract: Contract) => void;
   setIsContractModalOpen: (open: boolean) => void;
@@ -1175,35 +1175,40 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
                           {/* MTOS PENDIENTES Pill - uses same logic as contract details modal */}
                           {(() => {
-                            const getMtoPill = (pendingMtos: number, completedMtos: number, totalMtos: number) => {
-                              const allDone = pendingMtos === 0;
-                              const lastOne = pendingMtos === 1;
-                              const pillClass = allDone
-                                ? 'bg-emerald-100 border-emerald-300 text-emerald-900'
-                                : lastOne
-                                  ? 'bg-amber-100 border-amber-400 text-amber-900 animate-pulse'
-                                  : 'bg-slate-100/90 border-slate-200 text-slate-700';
-                              const icon = allDone
-                                ? <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                                : lastOne
-                                  ? <span className="text-amber-500 shrink-0 leading-none">⚠️</span>
-                                  : <FileText className="w-3 h-3 text-slate-500 shrink-0" />;
-                              const label = allDone
-                                ? `✓ TODO REALIZADO (${completedMtos}/${totalMtos})`
-                                : `${pendingMtos} ${pendingMtos === 1 ? 'MTO PENDIENTE' : 'MTOS PENDIENTES'} (${completedMtos}/${totalMtos})`;
-                              return (
-                                <div className={`${pillClass} border font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full`}>
-                                  {icon}
-                                  <span>{label}</span>
-                                </div>
-                              );
-                            };
-
                             // Use the shared getContractMaintenanceStatus function if available (same logic as modal)
                             if (getContractMaintenanceStatus) {
                               const s = getContractMaintenanceStatus(con, workOrders);
                               if (s.total === 0) return null;
-                              return getMtoPill(s.remaining, s.done, s.total);
+
+                              if (s.hasNoPending) {
+                                return (
+                                  <div className="bg-emerald-100 border border-emerald-300 text-emerald-900 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                    <span>✓ TODO REALIZADO ({s.done}/{s.total})</span>
+                                  </div>
+                                );
+                              }
+
+                              if (s.isAllScheduled) {
+                                return (
+                                  <div className="bg-sky-100 border border-sky-300 text-sky-900 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full" title="Todas las visitas se encuentran agendadas en el calendario">
+                                    <Calendar className="w-3 h-3 text-sky-600 shrink-0" />
+                                    <span>📅 {s.scheduled} AGENDADO{s.scheduled > 1 ? 'S' : ''} ({s.done}/{s.total})</span>
+                                  </div>
+                                );
+                              }
+
+                              const lastOne = s.unScheduled === 1;
+                              const pillClass = lastOne
+                                ? 'bg-amber-100 border-amber-400 text-amber-900 animate-pulse'
+                                : 'bg-slate-100/90 border-slate-200 text-slate-700';
+
+                              return (
+                                <div className={`${pillClass} border font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full`}>
+                                  {lastOne ? <span className="text-amber-500 shrink-0 leading-none">⚠️</span> : <FileText className="w-3 h-3 text-slate-500 shrink-0" />}
+                                  <span>{s.unScheduled} {s.unScheduled === 1 ? 'POR AGENDAR' : 'POR AGENDAR'} ({s.done}/{s.total})</span>
+                                </div>
+                              );
                             }
 
                             // Fallback: manual count from maintenanceDates
@@ -1214,7 +1219,12 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                               typeof d === 'object' && (d.completed || d.status === 'completed' || d.status === 'Completado')
                             ).length;
                             const pendingMtos = Math.max(0, totalMtos - completedMtos);
-                            return getMtoPill(pendingMtos, completedMtos, totalMtos);
+                            return (
+                              <div className="bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full">
+                                <FileText className="w-3 h-3 text-slate-500 shrink-0" />
+                                <span>{pendingMtos} POR AGENDAR ({completedMtos}/{totalMtos})</span>
+                              </div>
+                            );
                           })()}
 
                           {/* Equipment summary box */}
