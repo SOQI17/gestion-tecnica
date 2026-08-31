@@ -1589,6 +1589,8 @@ export default function AdminPortal({
   const [contractFormEnd, setContractFormEnd] = useState('');
   const [contractFormStatus, setContractFormStatus] = useState<'Activo' | 'Vencido' | 'Pendiente' | 'Inactivo'>('Activo');
   const [contractFormCity, setContractFormCity] = useState('');
+  const [contractFormSector, setContractFormSector] = useState<'Público' | 'Privado'>('Privado');
+  const [contractSectorFilter, setContractSectorFilter] = useState<'all' | 'Público' | 'Privado'>('all');
   const [contractFormValue, setContractFormValue] = useState<string>('');
   const [contractFormCoverage, setContractFormCoverage] = useState('');
   const [contractClientSearchQuery, setContractClientSearchQuery] = useState('');
@@ -6196,6 +6198,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       srPdfUrl: contractFormIsNewEquipment ? (contractFormSrPdfUrl.trim() || undefined) : undefined,
       caPdfUrl: contractFormIsNewEquipment ? (contractFormCaPdfUrl.trim() || undefined) : undefined,
       podPdfUrl: contractFormIsNewEquipment ? (contractFormPodPdfUrl.trim() || undefined) : undefined,
+      sector: isSalesReadOnly && editingContract ? editingContract.sector : contractFormSector,
       pendingAdminSchedule: isSalesReadOnly && editingContract ? editingContract.pendingAdminSchedule : (hasSchedule ? false : isPendingSchedule),
       linkedContractId: contractFormLinkedId.trim() || undefined,
     };
@@ -6806,9 +6809,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setContractFormEnd(con.endDate || '');
     setContractFormStatus(con.status || 'Activo');
     setContractFormCity(con.city || '');
+    const client = clients.find(c => c.id === con.clientId);
+    const inferredSector = con.sector || (client?.industry?.toLowerCase().includes('público') || client?.industry?.toLowerCase().includes('publico') || client?.name.toUpperCase().includes('MSP') || client?.name.toUpperCase().includes('IESS') || client?.name.toUpperCase().includes('SOLCA') || client?.name.toUpperCase().includes('HOSPITAL') ? 'Público' : 'Privado');
+    setContractFormSector(inferredSector);
     setContractFormValue(con.contractValue ? String(con.contractValue) : '');
     setContractFormCoverage(con.coverage || '');
-    const client = clients.find(c => c.id === con.clientId);
     setContractClientSearchQuery(client ? `${client.name} - ${client.city || ''}` : con.clientId || '');
     setIsContractClientDropdownOpen(false);
     setIsCreatingNewClientForContract(false);
@@ -6881,6 +6886,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         setContractSearch={setContractSearch}
         contractValueFilter={contractValueFilter}
         setContractValueFilter={setContractValueFilter}
+        contractSectorFilter={contractSectorFilter}
+        setContractSectorFilter={setContractSectorFilter}
         contractFilterBrand={contractFilterBrand}
         setContractFilterBrand={setContractFilterBrand}
         contractFilterExpiration={contractFilterExpiration}
@@ -6928,6 +6935,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           setContractFormEnd(nextYearStr);
           setContractFormStatus('Activo');
           setContractFormCity('');
+          setContractFormSector('Privado');
           setContractFormValue('');
           setContractFormCoverage('');
           setContractClientSearchQuery('');
@@ -11678,6 +11686,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">🏢 Sector Cliente</label>
+                        <select
+                          value={contractFormSector}
+                          disabled={isSalesReadOnly}
+                          onChange={(e) => setContractFormSector(e.target.value as 'Público' | 'Privado')}
+                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-bold ${
+                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
+                          }`}
+                        >
+                          <option value="Privado">🏢 Privado</option>
+                          <option value="Público">🏛️ Público (MSP / IESS / FFAA)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
                         <label className="block text-[10px] font-bold text-slate-500 uppercase">💵 Valor Contrato ($ USD)</label>
                         <input
                           type="number"
@@ -11692,20 +11715,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           }`}
                         />
                       </div>
+                    </div>
 
-                      <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Especificaciones</label>
-                        <textarea
-                          value={contractFormCoverage}
-                          disabled={isSalesReadOnly}
-                          onChange={(e) => setContractFormCoverage(e.target.value)}
-                          rows={1}
-                          placeholder="Límites de repuestos o coberturas..."
-                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all ${
-                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
-                          }`}
-                        />
-                      </div>
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Especificaciones</label>
+                      <textarea
+                        value={contractFormCoverage}
+                        disabled={isSalesReadOnly}
+                        onChange={(e) => setContractFormCoverage(e.target.value)}
+                        rows={1}
+                        placeholder="Límites de repuestos o coberturas..."
+                        className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all ${
+                          isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                        }`}
+                      />
                     </div>
 
                     {/* Casilla de Selección: Equipo Nuevo */}

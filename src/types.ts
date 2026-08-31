@@ -214,6 +214,7 @@ export interface Contract {
   podPdfUrl?: string; // Documento Proof of Delivery (POD)
   pendingAdminSchedule?: boolean; // Indica si fue cargado por vendedor sin cronograma, a la espera de asignación por Admin
   linkedContractId?: string; // ID del contrato sucesor (siguiente contrato del mismo cliente)
+  sector?: 'Público' | 'Privado'; // Sector del cliente: Público (MSP, IESS, FFAA) o Privado
 }
 
 export interface Vacation {

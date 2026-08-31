@@ -14,6 +14,8 @@ interface ContratosTabProps {
   setContractSearch: (val: string) => void;
   contractValueFilter: 'all' | 'valued' | 'unvalued';
   setContractValueFilter: (val: 'all' | 'valued' | 'unvalued') => void;
+  contractSectorFilter?: 'all' | 'Público' | 'Privado';
+  setContractSectorFilter?: (val: 'all' | 'Público' | 'Privado') => void;
   contractFilterBrand: string;
   setContractFilterBrand: (val: string) => void;
   contractFilterExpiration: '1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null;
@@ -67,6 +69,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
   setContractSearch,
   contractValueFilter,
   setContractValueFilter,
+  contractSectorFilter = 'all',
+  setContractSectorFilter,
   contractFilterBrand,
   setContractFilterBrand,
   contractFilterExpiration,
@@ -626,6 +630,11 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
       if (!hasBrand) return false;
     }
 
+    if (contractSectorFilter !== 'all') {
+      const conSector = con.sector || (client?.industry?.toLowerCase().includes('público') || client?.industry?.toLowerCase().includes('publico') || client?.name.toUpperCase().includes('MSP') || client?.name.toUpperCase().includes('IESS') || client?.name.toUpperCase().includes('SOLCA') || client?.name.toUpperCase().includes('HOSPITAL') ? 'Público' : 'Privado');
+      if (conSector !== contractSectorFilter) return false;
+    }
+
     if (contractFilterExpiration) {
       const expAlert = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
       if (contractFilterExpiration === '1m' && expAlert?.level !== 'urgent_1m') return false;
@@ -958,6 +967,27 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
             <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
           </div>
 
+          {/* Sector Dropdown */}
+          <div className="relative">
+            <select
+              value={contractSectorFilter}
+              onChange={(e) => {
+                if (setContractSectorFilter) setContractSectorFilter(e.target.value as any);
+                setContractPage(1);
+              }}
+              className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                contractSectorFilter !== 'all'
+                  ? 'bg-blue-100/80 border border-blue-400 text-blue-950 ring-2 ring-blue-500/10'
+                  : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <option value="all">🏢 SECTOR: Todos los Sectores</option>
+              <option value="Público">🏛️ Público (MSP / IESS / FFAA)</option>
+              <option value="Privado">🏢 Privado</option>
+            </select>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+          </div>
+
           {/* Orden por Fecha Dropdown */}
           <div className="relative">
             <select
@@ -982,12 +1012,13 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           </div>
 
           {/* Reset Filters Pill */}
-          {(contractFilterBrand !== 'all' || contractValueFilter !== 'all' || contractDateSort !== 'none' || contractSearch.trim() !== '' || contractFilterExpiration !== null) && (
+          {(contractFilterBrand !== 'all' || contractValueFilter !== 'all' || contractSectorFilter !== 'all' || contractDateSort !== 'none' || contractSearch.trim() !== '' || contractFilterExpiration !== null) && (
             <button
               type="button"
               onClick={() => {
                 setContractFilterBrand('all');
                 setContractValueFilter('all');
+                if (setContractSectorFilter) setContractSectorFilter('all');
                 setContractDateSort('none');
                 setContractSearch('');
                 setContractFilterExpiration(null);
@@ -1082,9 +1113,21 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                       <td className="px-3 py-2.5 font-bold text-slate-800">
                         <div className="flex flex-col justify-center">
                           <span className="font-black text-xs text-slate-950 leading-snug tracking-tight">{client?.name || con.clientId}</span>
-                          <span className="text-[10px] text-slate-500 font-bold flex items-center gap-1 mt-0.5">
-                            <span>📍 {client?.city || con.city || 'Quito'}</span>
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] text-slate-500 font-bold">📍 {client?.city || con.city || 'Quito'}</span>
+                            {(() => {
+                              const sec = con.sector || (client?.industry?.toLowerCase().includes('público') || client?.industry?.toLowerCase().includes('publico') || client?.name.toUpperCase().includes('MSP') || client?.name.toUpperCase().includes('IESS') || client?.name.toUpperCase().includes('SOLCA') || client?.name.toUpperCase().includes('HOSPITAL') ? 'Público' : 'Privado');
+                              return (
+                                <span className={`text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded border ${
+                                  sec === 'Público'
+                                    ? 'bg-purple-100/80 text-purple-950 border-purple-300'
+                                    : 'bg-blue-50 text-blue-900 border-blue-200'
+                                }`}>
+                                  {sec === 'Público' ? '🏛️ Público' : '🏢 Privado'}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </div>
                       </td>
 
