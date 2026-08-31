@@ -575,40 +575,6 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
               <option value="cliente">Por Cliente</option>
             </select>
           </div>
-          <div className="h-4 w-px bg-slate-200 shrink-0" />
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Prioridad:</span>
-            <button
-              onClick={() => setProjPriorityFilter('todas')}
-              className={`px-2.5 py-1 text-[11px] font-bold rounded-md cursor-pointer transition-all ${
-                projPriorityFilter === 'todas'
-                  ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                  : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-100'
-              }`}
-            >
-              Todas
-            </button>
-            <button
-              onClick={() => setProjPriorityFilter('Alta')}
-              className={`px-2.5 py-1 text-[11px] font-extrabold rounded-md cursor-pointer transition-all ${
-                projPriorityFilter === 'Alta'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-white text-rose-700 border border-rose-200 hover:bg-rose-50'
-              }`}
-            >
-              🔥 Alta
-            </button>
-            <button
-              onClick={() => setProjPriorityFilter('Media')}
-              className={`px-2.5 py-1 text-[11px] font-extrabold rounded-md cursor-pointer transition-all ${
-                projPriorityFilter === 'Media'
-                  ? 'bg-amber-500 text-white shadow-xs'
-                  : 'bg-white text-amber-700 border border-amber-200 hover:bg-amber-50'
-              }`}
-            >
-              ⚡ Media
-            </button>
-          </div>
           <div className="ml-auto shrink-0 text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md">
             <span className="text-indigo-600 font-extrabold">{filtered.length}</span> / {allProjections.length} registros
           </div>
