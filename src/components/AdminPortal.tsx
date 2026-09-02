@@ -13444,10 +13444,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         setIsContractSchedulePdfOpen(true);
                       }}
                       className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[8.5px] px-2.5 py-1 rounded-md cursor-pointer transition-all flex items-center gap-1 shadow-2xs active:scale-95 shrink-0"
-                      title="Generar e imprimir cronograma oficial en PDF para el cliente"
+                      title="Generar e imprimir cronograma oficial en PDF o Word (.doc) para el cliente"
                     >
                       <Printer className="w-3 h-3" />
-                      <span>📄 Descargar Cronograma Oficial (PDF)</span>
+                      <span>📄 Descargar Cronograma Oficial (PDF / Word)</span>
                     </button>
                     {userRole === 'admin' && onAddWorkOrder && selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.some(d => !workOrders.some(wo => isWoMatchingContractDate(wo, selectedContractForDetails, d, contracts))) && (
                     <button
@@ -13821,32 +13821,167 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           setTimeout(cleanup, 2500);
         };
 
+        const periodicityVal = con.maintenanceFrequency || 'CUATRIMESTRAL';
+        const periodicityMonths = periodicityVal.toLowerCase().includes('mensual') ? '1' 
+          : periodicityVal.toLowerCase().includes('bimestral') ? '2'
+          : periodicityVal.toLowerCase().includes('trimestral') ? '3'
+          : periodicityVal.toLowerCase().includes('cuatrimestral') ? '4'
+          : periodicityVal.toLowerCase().includes('semestral') ? '6'
+          : periodicityVal.toLowerCase().includes('anual') ? '12' : '4';
+
         const handleDownloadWordContractSchedule = () => {
-          const sourceEl = document.getElementById('contract-schedule-printable-area-card');
-          if (!sourceEl) return;
+          const cleanClientName = (clientName || 'Cliente').replace(/[^a-zA-Z0-9_-]/g, '_');
+          const fileName = `Cronograma_Mantenimiento_${cleanClientName}_${con.id}.doc`;
+
+          const equipRowsHtml = displayedEquipments.map(eq => `
+            <tr>
+              <td style="border: 1.5pt solid #000000; padding: 8px; font-weight: bold; text-align: center; text-transform: uppercase;">${eq.name || 'EQUIPO'}</td>
+              <td style="border: 1.5pt solid #000000; padding: 8px; font-weight: bold; text-align: center; text-transform: uppercase;">${eq.brand || 'GE'}</td>
+              <td style="border: 1.5pt solid #000000; padding: 8px; font-weight: bold; text-align: center; text-transform: uppercase;">${eq.modality || eq.serial || 'S/N'}</td>
+              <td style="border: 1.5pt solid #000000; padding: 8px; font-weight: bold; text-align: center; text-transform: uppercase;">${periodicityVal.toUpperCase()}</td>
+            </tr>
+          `).join('');
+
+          const dateRowsHtml = rawDates.length > 0 ? rawDates.map(dStr => {
+            const cleanDate = dStr.split('|')[0].trim();
+            const formattedDate = formatCronogramaDateMonthYear(cleanDate);
+            return `
+              <tr>
+                <td style="border: 1.5pt solid #000000; padding: 8px; font-weight: bold; text-align: center; text-transform: capitalize;">${formattedDate}</td>
+                <td style="border: 1.5pt solid #000000; padding: 8px; font-weight: bold; text-align: center;">4 horas</td>
+                <td style="border: 1.5pt solid #000000; padding: 8px; font-weight: bold; text-align: center;">Preventivo</td>
+              </tr>
+            `;
+          }).join('') : `
+            <tr>
+              <td colspan="3" style="border: 1.5pt solid #000000; padding: 12px; font-style: italic; text-align: center; color: #64748b;">
+                No hay fechas de mantenimiento programadas en este contrato.
+              </td>
+            </tr>
+          `;
 
           const htmlContent = `
             <html xmlns:o='urn:schemas-microsoft-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head>
               <meta charset='utf-8'>
               <title>Cronograma de Mantenimiento ORIMEC</title>
+              <!--[if gte mso 9]>
+              <xml>
+                <w:WordDocument>
+                  <w:View>Print</w:View>
+                  <w:Zoom>100</w:Zoom>
+                  <w:DoNotOptimizeForBrowser/>
+                </w:WordDocument>
+              </xml>
+              <![endif]-->
               <style>
-                body { font-family: Arial, sans-serif; font-size: 10.5pt; color: #000000; line-height: 1.4; }
-                h1 { font-size: 18pt; font-weight: bold; color: #0f172a; margin: 0; }
-                h2 { font-size: 11pt; font-weight: bold; color: #0f172a; text-transform: uppercase; margin-top: 10pt; }
-                h3 { font-size: 10pt; font-weight: bold; color: #0f172a; text-transform: uppercase; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 15pt; }
-                th { background-color: #f1f5f9; color: #000000; font-weight: bold; border: 1.5pt solid #000000; padding: 6pt; text-align: center; text-transform: uppercase; font-size: 9.5pt; }
-                td { border: 1pt solid #000000; padding: 6pt; text-align: center; font-size: 9.5pt; }
-                .text-left { text-align: left; }
-                .font-bold { font-weight: bold; }
-                ul { margin-top: 5pt; margin-bottom: 15pt; }
-                li { margin-bottom: 3pt; }
-                .signature-box { border: 1.5pt solid #1e1b4b; background-color: #f5f3ff; padding: 8pt; width: 180pt; margin-top: 10pt; }
+                @page {
+                  size: A4 portrait;
+                  margin: 1.5cm 1.5cm 1.5cm 1.5cm;
+                }
+                body { font-family: Arial, sans-serif; font-size: 10pt; color: #000000; line-height: 1.4; }
+                h1 { font-size: 20pt; font-weight: bold; color: #0f172a; margin: 0; text-align: center; }
+                h2 { font-size: 11pt; font-weight: bold; color: #0f172a; text-transform: uppercase; text-align: center; letter-spacing: 1pt; margin-top: 10pt; }
+                h3 { font-size: 10pt; font-weight: bold; color: #0f172a; text-transform: uppercase; text-align: center; letter-spacing: 1pt; margin-top: 16pt; margin-bottom: 12pt; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 16pt; }
+                th { background-color: #f1f5f9; color: #000000; font-weight: bold; border: 1.5pt solid #000000; padding: 7pt; text-align: center; text-transform: uppercase; font-size: 9.5pt; }
+                td { border: 1.5pt solid #000000; padding: 7pt; text-align: center; font-size: 9.5pt; }
+                .client-line { font-size: 11pt; font-weight: normal; margin-top: 14pt; margin-bottom: 16pt; }
+                .client-line strong { font-size: 12pt; font-weight: bold; text-transform: uppercase; }
+                .notes-block { margin-top: 16pt; margin-bottom: 24pt; font-size: 9.5pt; }
+                .notes-block p { font-style: italic; font-weight: bold; margin-bottom: 6pt; }
+                .notes-block ul { margin-top: 4pt; padding-left: 20pt; }
+                .notes-block li { margin-bottom: 3pt; font-weight: normal; }
+                .notes-block li strong { font-weight: bold; }
+                .stamp-table { width: 100%; border: none; margin-top: 24pt; }
+                .stamp-table td { border: none; text-align: left; vertical-align: bottom; }
+                .stamp-box { border: 1.5pt solid #312e81; background-color: #eef2ff; padding: 8pt 12pt; width: 180pt; font-family: Arial, sans-serif; font-size: 8.5pt; line-height: 1.3; }
               </style>
             </head>
             <body>
-              ${sourceEl.innerHTML}
+              <!-- Encabezado ORIMEC -->
+              <div style="text-align: center; margin-bottom: 12pt;">
+                <h1 style="font-size: 22pt; font-weight: bold; color: #020617; margin: 0;">ORIMEC</h1>
+                <p style="font-size: 8.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 1.5pt; margin-top: 2pt;">ORIENTAL MEDICAL DEL ECUADOR C.A.</p>
+              </div>
+
+              <div style="border-top: 1.5pt solid #0f172a; border-bottom: 2pt solid #0f172a; padding: 6pt 0; text-align: center; margin-bottom: 14pt;">
+                <h2 style="font-size: 11pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1pt; margin: 0;">
+                  CRONOGRAMA DE MANTENIMIENTOS PREVENTIVOS
+                </h2>
+              </div>
+
+              <div class="client-line">
+                Cliente: <strong>${clientName}</strong>
+              </div>
+
+              <!-- Tabla 1: Información del Equipo -->
+              <table>
+                <thead>
+                  <tr>
+                    <th>EQUIPO</th>
+                    <th>MARCA</th>
+                    <th>MODELO</th>
+                    <th>PERIODICIDAD</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${equipRowsHtml}
+                </tbody>
+              </table>
+
+              <!-- Subtítulo Tabla 2 -->
+              <h3>
+                <span style="border-bottom: 1pt solid #94a3b8; padding-bottom: 2pt;">
+                  CRONOGRAMA ${eqModalityName ? eqModalityName.toUpperCase() : eqTitleName.toUpperCase()}
+                </span>
+              </h3>
+
+              <!-- Tabla 2: Fechas Propuestas -->
+              <table>
+                <thead>
+                  <tr>
+                    <th>FECHA</th>
+                    <th>TIEMPO REQUERIDO</th>
+                    <th>TIPO</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${dateRowsHtml}
+                </tbody>
+              </table>
+
+              <!-- Cláusulas y Notas -->
+              <div class="notes-block">
+                <p>Los horarios serán determinados de manera flexible, sujetos a la disponibilidad y coordinación entre ambas partes.</p>
+                <ul>
+                  <li>Plazo de ejecución: 12 meses a partir de la instalación de los equipos o vigencia del contrato.</li>
+                  <li>Fecha de inicio de garantía / contrato: <strong>${con.startDate}</strong>.</li>
+                  <li>Mantenimientos preventivos: cada <strong>${periodicityMonths}</strong> meses.</li>
+                  <li>Mantenimientos correctivos ilimitados bajo demanda.</li>
+                </ul>
+              </div>
+
+              <!-- Bloque de Firma Oficial -->
+              <table class="stamp-table">
+                <tr>
+                  <td style="width: 220pt;">
+                    <div class="stamp-box">
+                      <strong style="font-size: 10pt; color: #1e1b4b;">ORIMEC C.A.</strong><br/>
+                      <span style="font-size: 8pt; color: #374151;">RUC: 1791271750001</span><br/>
+                      <div style="border-top: 1pt solid #c7d2fe; margin: 4pt 0;"></div>
+                      <strong style="font-size: 9pt; color: #1e1b4b; text-transform: uppercase;">ING. SORAYA CARRASCO R.</strong><br/>
+                      <span style="font-size: 8pt; color: #374151; font-weight: bold; text-transform: uppercase;">GERENCIA TÉCNICA</span>
+                    </div>
+                  </td>
+                  <td style="padding-left: 16pt;">
+                    <p style="font-weight: bold; font-size: 10pt; margin-bottom: 12pt;">Atentamente,</p>
+                    <strong style="font-size: 11pt; color: #020617;">Ing. Soraya Carrasco R.</strong><br/>
+                    <strong style="font-size: 9.5pt; color: #1e293b; text-transform: uppercase;">GERENTE TÉCNICA</strong><br/>
+                    <strong style="font-size: 9.5pt; color: #475569;">ORIMEC C.A.</strong>
+                  </td>
+                </tr>
+              </table>
             </body>
             </html>
           `;
@@ -13855,9 +13990,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             type: 'application/msword;charset=utf-8'
           });
 
-          const cleanClientName = (clientName || 'Cliente').replace(/[^a-zA-Z0-9_-]/g, '_');
-          const fileName = `Cronograma_Mantenimiento_${cleanClientName}_${con.id}.doc`;
-
           const link = document.createElement('a');
           link.href = URL.createObjectURL(blob);
           link.download = fileName;
@@ -13865,14 +13997,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           link.click();
           document.body.removeChild(link);
         };
-
-        const periodicityVal = con.maintenanceFrequency || 'CUATRIMESTRAL';
-        const periodicityMonths = periodicityVal.toLowerCase().includes('mensual') ? '1' 
-          : periodicityVal.toLowerCase().includes('bimestral') ? '2'
-          : periodicityVal.toLowerCase().includes('trimestral') ? '3'
-          : periodicityVal.toLowerCase().includes('cuatrimestral') ? '4'
-          : periodicityVal.toLowerCase().includes('semestral') ? '6'
-          : periodicityVal.toLowerCase().includes('anual') ? '12' : '4';
 
         return (
           <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 overflow-y-auto no-print" id="contract-schedule-pdf-modal">
