@@ -769,15 +769,14 @@ const findContractForWorkOrder = (
   return null;
 };
 
-const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate: string, allContracts: Contract[] = []) => {
+const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate: string, allContracts: Contract[] = [], clientsList: Client[] = []) => {
   if (!wo || !con || !rawContractDate) return false;
   const cleanTargetDate = rawContractDate.split('|')[0].trim();
   const eqNameInEntry = rawContractDate.split('|')[1]?.trim();
 
-  // 1. Check client match: either wo.clientId equals con.clientId, OR wo.clientId equals client name, OR con.clientId equals client name
-  const isSameClient = 
-    wo.clientId === con.clientId ||
-    (wo.clientId && con.clientId && wo.clientId.trim().toLowerCase() === con.clientId.trim().toLowerCase());
+  // 1. Check client match: using isClientMatch helper to handle Name vs ID matching
+  const activeClientsList = clientsList.length > 0 ? clientsList : (typeof clients !== 'undefined' ? clients : []);
+  const isSameClient = isClientMatch(wo.clientId, con.clientId, activeClientsList);
 
   if (!isSameClient) return false;
 
@@ -918,8 +917,8 @@ const isWorkOrderQc = (wo: WorkOrder, contractsList: Contract[] = []) => {
   return false;
 };
 
-const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], allContracts: Contract[] = []) => {
-  if (!con.maintenanceDates || con.maintenanceDates.length === 0) {
+const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], allContracts: Contract[] = [], clientsList: Client[] = []) => {
+  if (!con || !con.maintenanceDates || con.maintenanceDates.length === 0) {
     return { 
       isCompleted: false,
       isAllScheduled: false,
@@ -936,9 +935,11 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
     };
   }
 
+  const activeClients = clientsList.length > 0 ? clientsList : (typeof clients !== 'undefined' ? clients : []);
+  const activeContracts = allContracts.length > 0 ? allContracts : (typeof contracts !== 'undefined' ? contracts : []);
+
   const clientWOs = workOrders.filter(wo => 
-    wo.clientId === con.clientId || 
-    (wo.clientId && con.clientId && wo.clientId.trim().toLowerCase() === con.clientId.trim().toLowerCase())
+    isClientMatch(wo.clientId, con.clientId, activeClients)
   );
 
   let doneCount = 0;
@@ -952,7 +953,7 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
     const [cleanDate, specificEquipInDate] = rawEntry.split('|');
 
     // 1. Try matching using isWoMatchingContractDate (excluding already claimed WOs)
-    let matchingWO = clientWOs.find(wo => !usedWoIds.has(wo.id) && isWoMatchingContractDate(wo, con, rawEntry, allContracts));
+    let matchingWO = clientWOs.find(wo => !usedWoIds.has(wo.id) && isWoMatchingContractDate(wo, con, rawEntry, activeContracts, activeClients));
 
     // 2. Fallback: match by plannedDate directly among clientWOs for matching equipment
     if (!matchingWO) {
@@ -6902,7 +6903,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         contractCsvError={contractCsvError}
         exportContractsToExcel={exportContractsToExcel}
         getContractExpirationAlert={getContractExpirationAlert}
-        getContractMaintenanceStatus={(con, wos) => getContractMaintenanceStatus(con, wos)}
+        getContractMaintenanceStatus={(con, wos) => getContractMaintenanceStatus(con, wos, contracts, clients)}
         setEditingContract={setEditingContract}
         onEditContract={handleEditContract}
         setIsContractModalOpen={setIsContractModalOpen}
