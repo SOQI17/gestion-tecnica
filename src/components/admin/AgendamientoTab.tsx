@@ -2469,19 +2469,37 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                             <th className="p-2.5">Ingeniero</th>
                             <th className="p-2.5 text-center">Completadas</th>
                             <th className="p-2.5 text-center">Pendientes</th>
-                            <th className="p-2.5 text-right">Tasa de Cierre</th>
+                            <th className="p-2.5 text-center">Cierre Prev.</th>
+                            <th className="p-2.5 text-center">Cierre Corr.</th>
+                            <th className="p-2.5 text-right">Tasa Total</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800">
                           {engineerStats.map(st => {
                             const done = (st.statusCounts.Conciliado || 0) + (st.statusCounts.Realizado || 0) + (st.statusCounts.Reportado || 0);
-                            const pending = (st.statusCounts.Pendiente || 0) + (st.statusCounts.EnProceso || 0);
+                            const pending = (st.statusCounts.Pendiente || 0) + (st.statusCounts['En Proceso'] || 0);
                             const rate = st.total > 0 ? Math.round((done / st.total) * 100) : 0;
+                            const ratePrev = (st as any).preventiveCount > 0 ? Math.round(((st as any).preventiveCompletedCount / (st as any).preventiveCount) * 100) : null;
+                            const rateCorr = (st as any).correctiveCount > 0 ? Math.round(((st as any).correctiveCompletedCount / (st as any).correctiveCount) * 100) : null;
                             return (
                               <tr key={st.engineer.id} className="hover:bg-slate-800/50">
                                 <td className="p-2.5 font-bold text-white">{st.engineer.name}</td>
                                 <td className="p-2.5 text-center font-bold text-emerald-400">{done}</td>
                                 <td className="p-2.5 text-center font-bold text-amber-400">{pending}</td>
+                                <td className="p-2.5 text-center font-bold text-xs">
+                                  {ratePrev !== null ? (
+                                    <span className={ratePrev >= 80 ? 'text-emerald-400' : 'text-amber-400'}>{ratePrev}%</span>
+                                  ) : (
+                                    <span className="text-slate-500">-</span>
+                                  )}
+                                </td>
+                                <td className="p-2.5 text-center font-bold text-xs">
+                                  {rateCorr !== null ? (
+                                    <span className={rateCorr >= 80 ? 'text-emerald-400' : 'text-amber-400'}>{rateCorr}%</span>
+                                  ) : (
+                                    <span className="text-slate-500">-</span>
+                                  )}
+                                </td>
                                 <td className="p-2.5 text-right">
                                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                                     rate >= 80 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'

@@ -4628,7 +4628,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       installationsCount: number;
       installationDays: number;
       preventiveCount: number;
+      preventiveCompletedCount: number;
       correctiveCount: number;
+      correctiveCompletedCount: number;
       statusCounts: Record<WorkOrderStatus, number>;
     }> = {};
 
@@ -4644,7 +4646,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         installationsCount: 0,
         installationDays: 0,
         preventiveCount: 0,
+        preventiveCompletedCount: 0,
         correctiveCount: 0,
+        correctiveCompletedCount: 0,
         statusCounts: {
           Pendiente: 0,
           'En Proceso': 0,
@@ -4659,6 +4663,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     filteredDashOrders.forEach(wo => {
       const effStatus = getWOEffectiveStatus(wo);
+      const isCompleted = effStatus === 'Realizado' || effStatus === 'Reportado' || effStatus === 'Conciliado';
       const matchedReport = reportsList.find(r => r.workOrderId === wo.id);
       const scheduledHours = getWOScheduledHours(wo, matchedReport);
       const isInstallation = isInstallationWO(wo);
@@ -4669,8 +4674,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         statsMap[wo.engineerId].asPrimary++;
         statsMap[wo.engineerId].statusCounts[effStatus]++;
         statsMap[wo.engineerId].hoursSpent += scheduledHours;
-        if (wo.type === 'Preventivo') statsMap[wo.engineerId].preventiveCount++;
-        if (wo.type === 'Correctivo') statsMap[wo.engineerId].correctiveCount++;
+        if (wo.type === 'Preventivo') {
+          statsMap[wo.engineerId].preventiveCount++;
+          if (isCompleted) statsMap[wo.engineerId].preventiveCompletedCount++;
+        }
+        if (wo.type === 'Correctivo') {
+          statsMap[wo.engineerId].correctiveCount++;
+          if (isCompleted) statsMap[wo.engineerId].correctiveCompletedCount++;
+        }
       }
       const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
         ? wo.supportEngineerIds
@@ -4681,8 +4692,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           statsMap[id].asSupport++;
           statsMap[id].statusCounts[effStatus]++;
           statsMap[id].hoursSpent += scheduledHours;
-          if (wo.type === 'Preventivo') statsMap[id].preventiveCount++;
-          if (wo.type === 'Correctivo') statsMap[id].correctiveCount++;
+          if (wo.type === 'Preventivo') {
+            statsMap[id].preventiveCount++;
+            if (isCompleted) statsMap[id].preventiveCompletedCount++;
+          }
+          if (wo.type === 'Correctivo') {
+            statsMap[id].correctiveCount++;
+            if (isCompleted) statsMap[id].correctiveCompletedCount++;
+          }
         }
       });
     });
@@ -4869,13 +4886,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <th>Horas Campo</th>
                 <th>Instalaciones (Días)</th>
                 <th>Preventivos / Correctivos</th>
-                <th>Tasa Cierre</th>
+                <th>Tasa Cierre Prev.</th>
+                <th>Tasa Cierre Corr.</th>
+                <th>Tasa Cierre Total</th>
               </tr>
             </thead>
             <tbody>
               ${engineerStats.map(st => {
                 const totalCompleted = st.statusCounts.Conciliado + st.statusCounts.Realizado + st.statusCounts.Reportado;
-                const rate = st.total > 0 ? Math.round((totalCompleted / st.total) * 100) : 0;
+                const rateTotal = st.total > 0 ? Math.round((totalCompleted / st.total) * 100) : 0;
+                const ratePrev = st.preventiveCount > 0 ? Math.round((st.preventiveCompletedCount / st.preventiveCount) * 100) : null;
+                const rateCorr = st.correctiveCount > 0 ? Math.round((st.correctiveCompletedCount / st.correctiveCount) * 100) : null;
                 return `
                   <tr>
                     <td><strong>${st.engineer.name}</strong></td>
@@ -4885,7 +4906,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <td><strong>${st.hoursSpent} hrs</strong></td>
                     <td>${st.installationDays} días (${st.installationDays * 8}h laborables)</td>
                     <td>${st.preventiveCount} Prev / ${st.correctiveCount} Corr</td>
-                    <td><span class="${rate >= 80 ? 'badge-ok' : 'badge-pending'}">${rate}%</span></td>
+                    <td>${ratePrev !== null ? `<span class="${ratePrev >= 80 ? 'badge-ok' : 'badge-pending'}">${ratePrev}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>
+                    <td>${rateCorr !== null ? `<span class="${rateCorr >= 80 ? 'badge-ok' : 'badge-pending'}">${rateCorr}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>
+                    <td><span class="${rateTotal >= 80 ? 'badge-ok' : 'badge-pending'}">${rateTotal}%</span></td>
                   </tr>
                 `;
               }).join('')}
@@ -4915,6 +4938,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       'Mantenimientos Totales',
       'Como Principal',
       'Como Apoyo',
+      'Horas Campo',
+      'Preventivos Totales',
+      'Preventivos Completados',
+      'Tasa Cierre Preventivo (%)',
+      'Correctivos Totales',
+      'Correctivos Completados',
+      'Tasa Cierre Correctivo (%)',
+      'Tasa Cierre Total (%)',
       'Conciliados',
       'Realizados',
       'Reportados',
@@ -4922,19 +4953,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       'Pendientes'
     ];
 
-    const rows = engineerStats.map(st => [
-      st.engineer.name,
-      st.engineer.specialty,
-      st.engineer.sede || 'N/D',
-      st.total,
-      st.asPrimary,
-      st.asSupport,
-      st.statusCounts.Conciliado,
-      st.statusCounts.Realizado,
-      st.statusCounts.Reportado,
-      st.statusCounts['En Proceso'],
-      st.statusCounts.Pendiente
-    ]);
+    const rows = engineerStats.map(st => {
+      const totalCompleted = st.statusCounts.Conciliado + st.statusCounts.Realizado + st.statusCounts.Reportado;
+      const rateTotal = st.total > 0 ? Math.round((totalCompleted / st.total) * 100) : 0;
+      const ratePrev = st.preventiveCount > 0 ? Math.round((st.preventiveCompletedCount / st.preventiveCount) * 100) : 'N/A';
+      const rateCorr = st.correctiveCount > 0 ? Math.round((st.correctiveCompletedCount / st.correctiveCount) * 100) : 'N/A';
+
+      return [
+        st.engineer.name,
+        st.engineer.specialty,
+        st.engineer.sede || 'N/D',
+        st.total,
+        st.asPrimary,
+        st.asSupport,
+        st.hoursSpent,
+        st.preventiveCount,
+        st.preventiveCompletedCount,
+        ratePrev,
+        st.correctiveCount,
+        st.correctiveCompletedCount,
+        rateCorr,
+        rateTotal,
+        st.statusCounts.Conciliado,
+        st.statusCounts.Realizado,
+        st.statusCounts.Reportado,
+        st.statusCounts['En Proceso'],
+        st.statusCounts.Pendiente
+      ];
+    });
 
     const csvContent = [
       headers.join(';'),
