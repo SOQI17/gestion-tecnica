@@ -4631,6 +4631,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       preventiveCompletedCount: number;
       correctiveCount: number;
       correctiveCompletedCount: number;
+      installationWOCount: number;
+      installationCompletedCount: number;
       statusCounts: Record<WorkOrderStatus, number>;
     }> = {};
 
@@ -4649,6 +4651,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         preventiveCompletedCount: 0,
         correctiveCount: 0,
         correctiveCompletedCount: 0,
+        installationWOCount: 0,
+        installationCompletedCount: 0,
         statusCounts: {
           Pendiente: 0,
           'En Proceso': 0,
@@ -4682,6 +4686,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           statsMap[wo.engineerId].correctiveCount++;
           if (isCompleted) statsMap[wo.engineerId].correctiveCompletedCount++;
         }
+        if (isInstallation) {
+          statsMap[wo.engineerId].installationWOCount++;
+          if (isCompleted) statsMap[wo.engineerId].installationCompletedCount++;
+        }
       }
       const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
         ? wo.supportEngineerIds
@@ -4699,6 +4707,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           if (wo.type === 'Correctivo') {
             statsMap[id].correctiveCount++;
             if (isCompleted) statsMap[id].correctiveCompletedCount++;
+          }
+          if (isInstallation) {
+            statsMap[id].installationWOCount++;
+            if (isCompleted) statsMap[id].installationCompletedCount++;
           }
         }
       });
@@ -4888,15 +4900,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <th>Preventivos / Correctivos</th>
                 <th>Tasa Cierre Prev.</th>
                 <th>Tasa Cierre Corr.</th>
+                <th>Tasa Cierre Inst.</th>
                 <th>Tasa Cierre Total</th>
               </tr>
             </thead>
             <tbody>
               ${engineerStats.map(st => {
                 const totalCompleted = st.statusCounts.Conciliado + st.statusCounts.Realizado + st.statusCounts.Reportado;
-                const rateTotal = st.total > 0 ? Math.round((totalCompleted / st.total) * 100) : 0;
+                const rateTotal = st.total > 0 ? Math.round((totalCompleted / st.total) * 100) : null;
                 const ratePrev = st.preventiveCount > 0 ? Math.round((st.preventiveCompletedCount / st.preventiveCount) * 100) : null;
                 const rateCorr = st.correctiveCount > 0 ? Math.round((st.correctiveCompletedCount / st.correctiveCount) * 100) : null;
+                const rateInst = st.installationWOCount > 0 ? Math.round((st.installationCompletedCount / st.installationWOCount) * 100) : null;
                 return `
                   <tr>
                     <td><strong>${st.engineer.name}</strong></td>
@@ -4908,7 +4922,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <td>${st.preventiveCount} Prev / ${st.correctiveCount} Corr</td>
                     <td>${ratePrev !== null ? `<span class="${ratePrev >= 80 ? 'badge-ok' : 'badge-pending'}">${ratePrev}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>
                     <td>${rateCorr !== null ? `<span class="${rateCorr >= 80 ? 'badge-ok' : 'badge-pending'}">${rateCorr}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>
-                    <td><span class="${rateTotal >= 80 ? 'badge-ok' : 'badge-pending'}">${rateTotal}%</span></td>
+                    <td>${rateInst !== null ? `<span class="${rateInst >= 80 ? 'badge-ok' : 'badge-pending'}">${rateInst}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>
+                    <td>${rateTotal !== null ? `<span class="${rateTotal >= 80 ? 'badge-ok' : 'badge-pending'}">${rateTotal}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>
                   </tr>
                 `;
               }).join('')}
@@ -4945,6 +4960,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       'Correctivos Totales',
       'Correctivos Completados',
       'Tasa Cierre Correctivo (%)',
+      'Instalaciones Totales',
+      'Instalaciones Completadas',
+      'Tasa Cierre Instalaciones (%)',
       'Tasa Cierre Total (%)',
       'Conciliados',
       'Realizados',
@@ -4955,9 +4973,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     const rows = engineerStats.map(st => {
       const totalCompleted = st.statusCounts.Conciliado + st.statusCounts.Realizado + st.statusCounts.Reportado;
-      const rateTotal = st.total > 0 ? Math.round((totalCompleted / st.total) * 100) : 0;
-      const ratePrev = st.preventiveCount > 0 ? Math.round((st.preventiveCompletedCount / st.preventiveCount) * 100) : 'N/A';
-      const rateCorr = st.correctiveCount > 0 ? Math.round((st.correctiveCompletedCount / st.correctiveCount) * 100) : 'N/A';
+      const rateTotal = st.total > 0 ? Math.round((totalCompleted / st.total) * 100) : '-';
+      const ratePrev = st.preventiveCount > 0 ? Math.round((st.preventiveCompletedCount / st.preventiveCount) * 100) : '-';
+      const rateCorr = st.correctiveCount > 0 ? Math.round((st.correctiveCompletedCount / st.correctiveCount) * 100) : '-';
+      const rateInst = st.installationWOCount > 0 ? Math.round((st.installationCompletedCount / st.installationWOCount) * 100) : '-';
 
       return [
         st.engineer.name,
@@ -4973,6 +4992,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         st.correctiveCount,
         st.correctiveCompletedCount,
         rateCorr,
+        st.installationWOCount,
+        st.installationCompletedCount,
+        rateInst,
         rateTotal,
         st.statusCounts.Conciliado,
         st.statusCounts.Realizado,
