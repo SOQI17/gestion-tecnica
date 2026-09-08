@@ -1416,7 +1416,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between" id="app-root">
       {/* Top Banner Branding */}
-      <header className="sticky top-0 bg-white border-b border-slate-200 z-50 px-4 md:px-6 py-2 flex items-center justify-between shadow-2xs no-print">
+      <header className="sticky top-0 bg-white border-b border-slate-200 z-50 px-2 sm:px-4 md:px-6 py-2 flex items-center justify-between shadow-2xs no-print">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-700 via-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-500/25 flex items-center justify-center border border-indigo-400/30 shrink-0">
             <Activity className="w-5 h-5 text-white" />
@@ -1463,7 +1463,7 @@ export default function App() {
               {/* User Status and Logout Button */}
               <div className="flex items-center gap-2 border-r border-slate-200 pr-3 mr-1">
                 <div className="text-right">
-                  <p className="text-[9px] font-extrabold text-slate-900 leading-none">{currentUser.email}</p>
+                  <p className="hidden sm:block text-[9px] font-extrabold text-slate-900 leading-none">{currentUser.email}</p>
                   <p className="text-[8px] font-bold text-indigo-650 mt-1 leading-none uppercase tracking-wide">
                     {currentUser.role === 'admin' 
                       ? 'Administrador' 
@@ -1510,14 +1510,15 @@ export default function App() {
                           key={tab.id}
                           id={`btn-global-tab-${tab.id}`}
                           onClick={() => setActiveTab(tab.id as any)}
-                          className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
+                          title={tab.label}
+                          className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
                             isActive
                               ? 'bg-white text-indigo-950 shadow-2xs font-extrabold border border-slate-200/30'
                               : 'text-slate-500 hover:text-slate-800 hover:bg-white/20'
                           }`}
                         >
                           <Icon className="w-3.5 h-3.5 shrink-0 text-slate-400" />
-                          <span>{tab.label}</span>
+                          <span className="hidden sm:inline">{tab.label}</span>
                         </button>
                       );
                     })}
