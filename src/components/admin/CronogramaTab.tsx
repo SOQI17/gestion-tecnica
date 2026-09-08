@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Search, Printer } from 'lucide-react';
 import { Engineer, WorkOrder, Client } from '../../types';
+import { ScrollToTopButton } from './ScrollToTopButton';
 
 interface CronogramaTabProps {
   calendarMonth: number;
@@ -185,6 +186,7 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
           });
 
           return (
+            <>
             <div className="sm:hidden print:hidden -mx-4 px-4 divide-y divide-slate-100">
               {monthDayList.map(({ dateStr, dayNum, weekdayLabel, isToday }) => {
                 const dayWOs = workOrders
@@ -264,6 +266,8 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                 );
               })}
             </div>
+            <ScrollToTopButton />
+            </>
           );
         })()}
 
