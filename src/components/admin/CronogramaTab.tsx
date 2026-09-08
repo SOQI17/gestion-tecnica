@@ -156,7 +156,118 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
           </div>
         </div>
 
-        {/* Standalone Calendar Grid split by weeks */}
+        {/* Mobile-only Day-by-Day Agenda View */}
+        {(() => {
+          const WEEKDAY_SHORT = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+          const daysInMonth = new Date(calendarYear, calendarMonth, 0).getDate();
+          const todayStr = (() => {
+            const t = new Date();
+            return `${t.getFullYear()}-${(t.getMonth() + 1).toString().padStart(2, '0')}-${t.getDate().toString().padStart(2, '0')}`;
+          })();
+          const isWOActiveOnDate = (wo: WorkOrder, dateStr: string) => {
+            if (!wo.durationDays || wo.durationDays <= 1) return wo.plannedDate === dateStr;
+            const start = new Date(wo.plannedDate + 'T00:00:00');
+            const target = new Date(dateStr + 'T00:00:00');
+            const end = new Date(start);
+            end.setDate(start.getDate() + (wo.durationDays - 1));
+            return target >= start && target <= end;
+          };
+
+          const monthDayList = Array.from({ length: daysInMonth }, (_, i) => {
+            const dayNum = i + 1;
+            const dateStr = `${calendarYear}-${calendarMonth.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
+            return {
+              dateStr,
+              dayNum,
+              weekdayLabel: WEEKDAY_SHORT[new Date(calendarYear, calendarMonth - 1, dayNum).getDay()],
+              isToday: dateStr === todayStr,
+            };
+          });
+
+          return (
+            <div className="sm:hidden print:hidden -mx-4 px-4 divide-y divide-slate-100">
+              {monthDayList.map(({ dateStr, dayNum, weekdayLabel, isToday }) => {
+                const dayWOs = workOrders
+                  .filter(wo => isWOActiveOnDate(wo, dateStr))
+                  .filter(wo => (searchQuery ? matchesSearch(wo) : true))
+                  .filter(wo => (highlightedEngineerId
+                    ? (wo.engineerId === highlightedEngineerId || wo.supportEngineerId === highlightedEngineerId || wo.supportEngineerIds?.includes(highlightedEngineerId))
+                    : true))
+                  .sort((a, b) => (a.plannedTime || '').localeCompare(b.plannedTime || ''));
+
+                return (
+                  <div key={dateStr} className="py-2.5">
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl shrink-0 ${isToday ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-100 text-slate-500'}`}>
+                        <span className="text-[8px] font-black uppercase leading-none opacity-80">{weekdayLabel}</span>
+                        <span className="text-sm font-black leading-none mt-0.5">{dayNum}</span>
+                      </div>
+                      {isToday && (
+                        <span className="text-[10px] font-black text-indigo-700 uppercase tracking-wide">Hoy</span>
+                      )}
+                      {dayWOs.length > 0 && (
+                        <span className="ml-auto text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full shrink-0">
+                          {dayWOs.length} {dayWOs.length === 1 ? 'tarea' : 'tareas'}
+                        </span>
+                      )}
+                    </div>
+
+                    {dayWOs.length === 0 ? (
+                      <div className="text-[11px] text-slate-300 italic pl-[54px] pb-1">Sin actividad programada</div>
+                    ) : (
+                      <div className="space-y-1.5 pl-[54px]">
+                        {dayWOs.map(wo => {
+                          const eng = engineers.find(e => e.id === wo.engineerId);
+                          const client = clients.find(c => c.id === wo.clientId);
+                          const engColor = eng ? getEngineerColorClasses(eng.id) : null;
+                          const cardStyle = wo.isEquipmentDown
+                            ? 'bg-red-50 border-red-200 border-l-4 border-l-red-500'
+                            : (engColor
+                              ? `${engColor.lightBg} ${engColor.border} border-l-4 ${engColor.borderL}`
+                              : 'bg-slate-50 border-slate-200 border-l-4 border-l-slate-400');
+                          return (
+                            <button
+                              type="button"
+                              key={wo.id}
+                              onClick={() => setInfoWO(wo)}
+                              className={`w-full text-left rounded-lg border px-2.5 py-2 flex items-start gap-2 transition-all active:scale-[0.98] cursor-pointer ${cardStyle}`}
+                            >
+                              <span className="text-sm shrink-0 mt-0.5">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1.5">
+                                  <span className="text-[11px] font-extrabold text-slate-800 truncate">
+                                    {client?.name || 'Cliente'}
+                                  </span>
+                                  <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${
+                                    wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200' :
+                                    wo.status === 'Conciliado' ? 'bg-emerald-100/60 text-emerald-800 border-emerald-200' :
+                                    wo.status === 'Reportado' ? 'bg-indigo-100/60 text-indigo-800 border-indigo-200' :
+                                    wo.status === 'Realizado' ? 'bg-blue-100/60 text-blue-800 border-blue-200' :
+                                    wo.status === 'En Proceso' ? 'bg-sky-100/60 text-sky-800 border-sky-200' :
+                                    'bg-yellow-100/60 text-yellow-800 border-yellow-200'
+                                  }`}>
+                                    {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-slate-500 truncate">{wo.equipmentName}</div>
+                                <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-slate-400 font-semibold">
+                                  {wo.plannedTime && <span>{wo.plannedTime}</span>}
+                                  {eng && <span className="truncate">{eng.name}</span>}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* Standalone Calendar Grid split by weeks (desktop/tablet) */}
         {(() => {
           const paddedDays = calendarDays;
           const weeks = [];
@@ -165,7 +276,8 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
           }
 
           return (
-            <div className="space-y-2 print:space-y-0 calendar-weeks-wrapper">
+            <div className="hidden sm:block print:block overflow-x-auto print:overflow-visible -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="space-y-2 print:space-y-0 calendar-weeks-wrapper min-w-[980px] print:min-w-0">
               <div className="grid grid-cols-7 gap-0 print:hidden text-center mb-1">
                 {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dayName => (
                   <div key={dayName} className="font-bold text-3xs text-slate-400 uppercase py-1.5">
@@ -382,6 +494,7 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                   </div>
                 );
               })}
+            </div>
             </div>
           );
         })()}
