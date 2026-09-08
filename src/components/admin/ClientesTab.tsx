@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useDeferredValue } from 'react';
 import { Users, Database, Plus, AlertCircle, Search } from 'lucide-react';
 import { Client } from '../../types';
 
@@ -36,19 +36,26 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
   setIsClientModalOpen,
 }) => {
   const [clientSearch, setClientSearch] = useState('');
+  const deferredClientSearch = useDeferredValue(clientSearch);
   const [clientPage, setClientPage] = useState(1);
 
-  const query = clientSearch.toLowerCase().trim();
-  const filtered = clients.filter(c =>
-    c.name.toLowerCase().includes(query) ||
-    c.id.toLowerCase().includes(query) ||
-    c.address.toLowerCase().includes(query) ||
-    (c.contactName || '').toLowerCase().includes(query)
-  );
+  const filtered = useMemo(() => {
+    const query = deferredClientSearch.toLowerCase().trim();
+    if (!query) return clients;
+    return clients.filter(c =>
+      c.name.toLowerCase().includes(query) ||
+      c.id.toLowerCase().includes(query) ||
+      c.address.toLowerCase().includes(query) ||
+      (c.contactName && c.contactName.toLowerCase().includes(query)) ||
+      (c.city && c.city.toLowerCase().includes(query))
+    );
+  }, [clients, deferredClientSearch]);
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-  const paginated = filtered.slice((clientPage - 1) * itemsPerPage, clientPage * itemsPerPage);
+  const paginated = useMemo(() => {
+    return filtered.slice((clientPage - 1) * itemsPerPage, clientPage * itemsPerPage);
+  }, [filtered, clientPage, itemsPerPage]);
 
   return (
     <div className="space-y-6 font-sans">

@@ -1,6 +1,5 @@
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signOut as authSignOut } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
 
 // Configuración de Firebase provista directamente por el usuario
 export const firebaseConfig = {
@@ -12,9 +11,17 @@ export const firebaseConfig = {
   appId: "1:927102023453:web:5af9acce750582a25b13f4"
 };
 
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
+
 // Inicialización
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+// Inicializar Firestore con persistencia de caché local IndexedDB multi-pestaña para máxima velocidad
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
 export const auth = getAuth(app);
 
 /**
@@ -38,22 +45,6 @@ export async function registerFirebaseUserSecondary(email: string, password: str
     }
   }
 }
-
-
-// Validar Conexión a Firestore según la directiva
-import { doc, getDocFromServer } from 'firebase/firestore';
-
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    console.log("Firestore connection verified successfully.");
-  } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. Client is offline.");
-    }
-  }
-}
-testConnection();
 
 // Tipos de operaciones según los requerimientos del sistema
 export enum OperationType {

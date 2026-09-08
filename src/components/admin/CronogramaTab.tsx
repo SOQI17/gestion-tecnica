@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Search, Printer } from 'lucide-react';
 import { Engineer, WorkOrder, Client } from '../../types';
 
@@ -43,6 +43,21 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
   matchesSearch,
   setInfoWO,
 }) => {
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearchQuery !== searchQuery) {
+        setSearchQuery(localSearchQuery);
+      }
+    }, 180);
+    return () => clearTimeout(timer);
+  }, [localSearchQuery, searchQuery, setSearchQuery]);
+
   return (
     <div className="space-y-4 font-sans relative" id="cronograma-standalone-view">
       <div id="printable-calendar" className="space-y-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
@@ -120,11 +135,23 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
               <input
                 type="text"
                 placeholder="Buscar en calendario..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={localSearchQuery}
+                onChange={(e) => setLocalSearchQuery(e.target.value)}
                 className="bg-white border border-indigo-200 rounded-lg pl-8 pr-7 py-1 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 w-48 transition-all"
               />
               <Search className="w-3.5 h-3.5 text-indigo-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              {localSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocalSearchQuery('');
+                    setSearchQuery('');
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 cursor-pointer text-xs font-bold"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
         </div>

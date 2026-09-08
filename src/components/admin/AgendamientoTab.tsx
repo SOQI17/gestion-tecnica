@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, UserCheck, Plus, Database, Printer, FileSpreadsheet, Sparkles, AlertTriangle, Trash2, Search, X, RotateCcw, Check, FileText, Filter, Users, PieChart, Percent, Award, TrendingUp, Briefcase, ExternalLink, ShieldAlert, Send, BarChart3, CalendarRange } from 'lucide-react';
 import { motion } from 'motion/react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, UserPermissions } from '../../types';
@@ -254,6 +254,35 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
   setSelectedEngForMetrics,
   setIsEngMetricsModalOpen,
 }) => {
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearchQuery !== searchQuery) {
+        setSearchQuery(localSearchQuery);
+      }
+    }, 180);
+    return () => clearTimeout(timer);
+  }, [localSearchQuery, searchQuery, setSearchQuery]);
+
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearchTerm !== searchTerm) {
+        setSearchTerm(localSearchTerm);
+      }
+    }, 180);
+    return () => clearTimeout(timer);
+  }, [localSearchTerm, searchTerm, setSearchTerm]);
+
   return (
     <>
       {/* KPI Overview Row */}
@@ -769,15 +798,18 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     <input
                       type="text"
                       placeholder="Buscar cliente, técnico, equipo..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      value={localSearchQuery}
+                      onChange={(e) => setLocalSearchQuery(e.target.value)}
                       className="bg-white border border-indigo-200 rounded-lg pl-8 pr-7 py-1 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 w-44 md:w-56 transition-all"
                     />
                     <Search className="w-3.5 h-3.5 text-indigo-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                    {searchQuery && (
+                    {localSearchQuery && (
                       <button
                         type="button"
-                        onClick={() => setSearchQuery('')}
+                        onClick={() => {
+                          setLocalSearchQuery('');
+                          setSearchQuery('');
+                        }}
                         className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 cursor-pointer"
                       >
                         <X className="w-3 h-3" />
@@ -1739,8 +1771,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                 <input
                   id="search-orders"
                   type="text"
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
+                  value={localSearchTerm}
+                  onChange={e => setLocalSearchTerm(e.target.value)}
                   placeholder="Buscar equipo, cliente o técnico..."
                   className="w-full text-xs pl-9 pr-4 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
@@ -1928,7 +1960,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                             />
                             <div>
                               <span className="font-bold text-xs text-slate-800 block">{eng.name}</span>
-                              <span className="text-3xs text-slate-400">{eng.specialty || 'Ingeniero Biomédico'} • {eng.location || 'Sede'}</span>
+                              <span className="text-3xs text-slate-400">{eng.specialty || 'Ingeniero Biomédico'} • {eng.sede || 'Sede'}</span>
                             </div>
                           </div>
 

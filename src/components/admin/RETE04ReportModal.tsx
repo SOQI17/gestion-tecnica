@@ -107,7 +107,7 @@ export const RETE04ReportModal: React.FC<RETE04ReportModalProps> = ({
 
             {/* Report Control Info Bar */}
             <div className="flex justify-between items-center bg-slate-100 p-2 border border-slate-300 rounded mb-4 font-mono text-[9px]">
-              <div><span className="font-bold text-slate-600">Nº REPORTE TÉCNICO:</span> <span className="font-bold text-blue-900">{report.id || report.reportId || 'N/A'}</span></div>
+              <div><span className="font-bold text-slate-600">Nº REPORTE TÉCNICO:</span> <span className="font-bold text-blue-900">{report.numRegistro || report.id || 'N/A'}</span></div>
               <div><span className="font-bold text-slate-600">ORDEN DE TRABAJO (WO):</span> <span className="font-bold text-indigo-700">{task.id}</span></div>
             </div>
 
@@ -127,23 +127,19 @@ export const RETE04ReportModal: React.FC<RETE04ReportModalProps> = ({
 
               {/* Row 3: Equipment Name / Brand / Model */}
               <div className="col-span-2 border-r border-b border-slate-400 p-1 font-bold bg-slate-50">Equipo:</div>
-              <div className="col-span-4 border-r border-b border-slate-400 p-1 font-bold">{task.equipmentName || report.equipmentName || '-'}</div>
+              <div className="col-span-4 border-r border-b border-slate-400 p-1 font-bold">{task.equipmentName || '-'}</div>
               <div className="col-span-1 border-r border-b border-slate-400 p-1 font-bold bg-slate-50">Marca</div>
-              <div className="col-span-2 border-r border-b border-slate-400 p-1">{report.eqBrand || 'GE Healthcare'}</div>
+              <div className="col-span-2 border-r border-b border-slate-400 p-1">{report.equipoMarca || 'GENERAL ELECTRIC'}</div>
               <div className="col-span-1 border-r border-b border-slate-400 p-1 font-bold bg-slate-50">Modelo</div>
-              <div className="col-span-2 border-b border-slate-400 p-1 font-bold">{report.eqModel || '-'}</div>
+              <div className="col-span-2 border-b border-slate-400 p-1 font-bold">{report.equipoModelo || '-'}</div>
 
-              {/* Row 4: Serial / Tubo Details */}
+              {/* Row 4: Serial */}
               <div className="col-span-2 border-r border-b border-slate-400 p-1 font-bold bg-slate-50">Serie Equipo:</div>
-              <div className="col-span-4 border-r border-b border-slate-400 p-1 font-mono font-bold">{report.eqSerial || '-'}</div>
-              <div className="col-span-1 border-r border-b border-slate-400 p-1 font-bold bg-slate-50">Serie Tubo</div>
-              <div className="col-span-5 border-b border-slate-400 p-1 font-mono">{report.tuboSerial || 'N/A'}</div>
+              <div className="col-span-10 border-b border-slate-400 p-1 font-mono font-bold">{report.equipoSerie || '-'}</div>
 
-              {/* Row 5: Software / System ID */}
-              <div className="col-span-2 border-r border-b border-slate-400 p-1 font-bold bg-slate-50">System ID:</div>
-              <div className="col-span-4 border-r border-b border-slate-400 p-1 font-mono">{report.systemId || '-'}</div>
+              {/* Row 5: Software */}
               <div className="col-span-2 border-r border-b border-slate-400 p-1 font-bold bg-slate-50">Versión S.O / SW:</div>
-              <div className="col-span-4 border-b border-slate-400 p-1 font-mono">{report.swVersion || '-'}</div>
+              <div className="col-span-10 border-b border-slate-400 p-1 font-mono">{report.equipoSoftware || '-'}</div>
 
               {/* Row 6: Area / Date / Time */}
               <div className="col-span-2 border-r border-b border-slate-400 p-1 font-bold bg-slate-50">Atención por:</div>
@@ -202,25 +198,21 @@ export const RETE04ReportModal: React.FC<RETE04ReportModalProps> = ({
               <table className="w-full text-left border-collapse text-[8.5px]">
                 <thead>
                   <tr className="bg-slate-100 border-b border-slate-300 font-bold text-slate-700">
-                    <th className="p-1 border-r border-slate-300">Código / P/N</th>
                     <th className="p-1 border-r border-slate-300">Descripción del Repuesto</th>
-                    <th className="p-1 border-r border-slate-300 text-center">Cant.</th>
-                    <th className="p-1 text-center">Nº Serie / Lote</th>
+                    <th className="p-1 text-center">Cant.</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {report.partsUsed && report.partsUsed.length > 0 ? (
-                    report.partsUsed.map((p, idx) => (
+                  {report.repuestosRequeridos && report.repuestosRequeridos.length > 0 ? (
+                    report.repuestosRequeridos.map((p, idx) => (
                       <tr key={idx}>
-                        <td className="p-1 border-r border-slate-200 font-mono">{p.partNumber || '-'}</td>
-                        <td className="p-1 border-r border-slate-200 font-semibold">{p.description}</td>
-                        <td className="p-1 border-r border-slate-200 text-center font-bold">{p.quantity}</td>
-                        <td className="p-1 text-center font-mono">{p.serialNumber || '-'}</td>
+                        <td className="p-1 border-r border-slate-200 font-semibold">{p.item}</td>
+                        <td className="p-1 text-center font-bold">{p.qty}</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="p-2 text-center text-slate-400 italic">Sin repuestos registrados para esta intervención.</td>
+                      <td colSpan={2} className="p-2 text-center text-slate-400 italic">Sin repuestos registrados para esta intervención.</td>
                     </tr>
                   )}
                 </tbody>
@@ -235,8 +227,8 @@ export const RETE04ReportModal: React.FC<RETE04ReportModalProps> = ({
                   <div className="font-bold text-slate-900">{eng?.name || 'Ing. Especialista Biomédico'}</div>
                   <div className="text-[8px] text-slate-500">{eng?.specialty || 'Ingeniería de Servicio'}</div>
                 </div>
-                {report.signatures?.engineerSignatureUrl ? (
-                  <img src={report.signatures.engineerSignatureUrl} alt="Firma Ingeniero" className="h-10 object-contain my-1" />
+                {report.technicianSignatureData ? (
+                  <img src={report.technicianSignatureData} alt="Firma Ingeniero" className="h-10 object-contain my-1" />
                 ) : (
                   <div className="h-8 border-b border-dashed border-slate-300 my-1"></div>
                 )}
@@ -246,11 +238,11 @@ export const RETE04ReportModal: React.FC<RETE04ReportModalProps> = ({
               <div className="p-3 flex flex-col justify-between min-h-[110px]">
                 <div>
                   <span className="font-extrabold uppercase text-slate-700 block border-b border-slate-200 pb-1 mb-2 text-[8px]">Recibido Conforme (Cliente):</span>
-                  <div className="font-bold text-slate-900">{report.signatures?.clientRepresentativeName || client?.contactName || 'Responsable de Servicio / Físico'}</div>
+                  <div className="font-bold text-slate-900">{report.clientSignatureName || client?.contactName || 'Responsable de Servicio / Físico'}</div>
                   <div className="text-[8px] text-slate-500">{client?.name}</div>
                 </div>
-                {report.signatures?.clientSignatureUrl ? (
-                  <img src={report.signatures.clientSignatureUrl} alt="Firma Cliente" className="h-10 object-contain my-1" />
+                {report.clientSignatureData ? (
+                  <img src={report.clientSignatureData} alt="Firma Cliente" className="h-10 object-contain my-1" />
                 ) : (
                   <div className="h-8 border-b border-dashed border-slate-300 my-1"></div>
                 )}

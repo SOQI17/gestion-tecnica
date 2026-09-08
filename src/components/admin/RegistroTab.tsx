@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useDeferredValue } from 'react';
 import { FileSpreadsheet, Download, Database, Plus, Trash2, Search, Pencil } from 'lucide-react';
 import { MaintenanceRegistry, WorkOrder, Client, Engineer } from '../../types';
 
@@ -60,6 +60,7 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
   findBestEquipmentMatch,
 }) => {
   const [registrySearch, setRegistrySearch] = useState('');
+  const deferredRegistrySearch = useDeferredValue(registrySearch);
   const [registryPage, setRegistryPage] = useState(1);
   const [registrySortField, setRegistrySortField] = useState<'fecha' | 'institution' | 'responsable' | 'equipment'>('fecha');
   const [registrySortDir, setRegistrySortDir] = useState<'asc' | 'desc'>('desc');
@@ -225,117 +226,121 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const query = registrySearch.toLowerCase().trim();
+  // 1. Memoizar el cálculo pesado de registros una sola vez cuando cambien los datos de Firestore
+  const effectiveRegistries = useMemo(() => {
+    const virtualRegistriesFromWorkOrders = workOrders
+      .filter(wo => (wo.status === 'Realizado' || wo.status === 'Conciliado') && !(maintenanceRegistries || []).some(reg => reg.workOrderId === wo.id))
+      .map(wo => {
+        const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
+        const eng = engineers.find(e => e.id === wo.engineerId);
+        const instName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'S/N Institución');
+        const eqName = wo.equipmentName || '';
+        
+        const matchedEq = findBestEquipmentMatch(instName, eqName);
 
-  const virtualRegistriesFromWorkOrders = workOrders
-    .filter(wo => (wo.status === 'Realizado' || wo.status === 'Conciliado') && !(maintenanceRegistries || []).some(reg => reg.workOrderId === wo.id))
-    .map(wo => {
-      const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
-      const eng = engineers.find(e => e.id === wo.engineerId);
-      const instName = client ? client.name : (wo.clientId && wo.clientId !== 'fsm_placeholder' ? wo.clientId : 'S/N Institución');
-      const eqName = wo.equipmentName || '';
-      
-      const matchedEq = findBestEquipmentMatch(instName, eqName);
+        let brand = matchedEq?.eqBrand || '-';
+        let model = matchedEq?.eqModel || eqName || '-';
+        let serial = matchedEq?.eqSerial || '-';
+        let tBrand = matchedEq?.tuboBrand || '-';
+        let tModel = matchedEq?.tuboModel || '-';
+        let tSerial = matchedEq?.tuboSerial || '-';
 
-      let brand = matchedEq?.eqBrand || '-';
-      let model = matchedEq?.eqModel || eqName || '-';
-      let serial = matchedEq?.eqSerial || '-';
-      let tBrand = matchedEq?.tuboBrand || '-';
-      let tModel = matchedEq?.tuboModel || '-';
-      let tSerial = matchedEq?.tuboSerial || '-';
+        if (!brand || brand === '-' || !serial || serial === '-') {
+          const serialMatch = eqName.match(/\(([^)]+)\)/);
+          if (serialMatch) serial = serialMatch[1];
+        }
 
-      if (!brand || brand === '-' || !serial || serial === '-') {
-        const serialMatch = eqName.match(/\(([^)]+)\)/);
-        if (serialMatch) serial = serialMatch[1];
+        const virtReg: MaintenanceRegistry = {
+          id: `VIRT-REG-${wo.id}`,
+          institutionName: instName,
+          eqBrand: brand,
+          eqModel: model,
+          eqSerial: serial,
+          tuboBrand: tBrand,
+          tuboModel: tModel,
+          tuboSerial: tSerial,
+          fecha: wo.plannedDate || new Date().toISOString().split('T')[0],
+          responsable: eng ? eng.name : 'S/N Responsable',
+          createdAt: new Date().toISOString(),
+          workOrderId: wo.id,
+        };
+        return getEffectiveRegistryFields(virtReg);
+      });
+
+    const all = [
+      ...(maintenanceRegistries || []).map(getEffectiveRegistryFields),
+      ...virtualRegistriesFromWorkOrders
+    ];
+
+    // Pre-calcular string de búsqueda en minúsculas para comparaciones O(1)
+    return all.map(reg => ({
+      ...reg,
+      _searchStr: `${reg.institutionName} ${reg.eqBrand} ${reg.eqModel} ${reg.eqSerial} ${reg.tuboBrand} ${reg.tuboModel} ${reg.tuboSerial} ${reg.fecha} ${reg.responsable}`.toLowerCase()
+    }));
+  }, [maintenanceRegistries, workOrders, clients, engineers]);
+
+  // 2. Filtrado y ordenamiento de ultra alta velocidad
+  const filtered = useMemo(() => {
+    const query = deferredRegistrySearch.toLowerCase().trim();
+
+    return effectiveRegistries.filter(reg => {
+      if (!query) return true;
+      return reg._searchStr.includes(query);
+    }).sort((a, b) => {
+      if (registrySortField === 'fecha') {
+        const timeA = parseRegistryDateMs(a.fecha);
+        const timeB = parseRegistryDateMs(b.fecha);
+        if (timeA === 0 && timeB === 0) return 0;
+        if (timeA === 0) return 1;
+        if (timeB === 0) return -1;
+        return registrySortDir === 'asc' ? timeA - timeB : timeB - timeA;
       }
 
-      const virtReg: MaintenanceRegistry = {
-        id: `VIRT-REG-${wo.id}`,
-        institutionName: instName,
-        eqBrand: brand,
-        eqModel: model,
-        eqSerial: serial,
-        tuboBrand: tBrand,
-        tuboModel: tModel,
-        tuboSerial: tSerial,
-        fecha: wo.plannedDate || new Date().toISOString().split('T')[0],
-        responsable: eng ? eng.name : 'S/N Responsable',
-        createdAt: new Date().toISOString(),
-        workOrderId: wo.id,
-      };
-      return getEffectiveRegistryFields(virtReg);
+      if (registrySortField === 'institution') {
+        const valA = a.institutionName.trim();
+        const valB = b.institutionName.trim();
+        const isDashA = !valA || valA === '-';
+        const isDashB = !valB || valB === '-';
+        if (isDashA && isDashB) return 0;
+        if (isDashA) return 1;
+        if (isDashB) return -1;
+        const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base', numeric: true });
+        return registrySortDir === 'asc' ? cmp : -cmp;
+      }
+
+      if (registrySortField === 'responsable') {
+        const valA = a.responsable.trim();
+        const valB = b.responsable.trim();
+        const isDashA = !valA || valA === '-';
+        const isDashB = !valB || valB === '-';
+        if (isDashA && isDashB) return 0;
+        if (isDashA) return 1;
+        if (isDashB) return -1;
+        const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base', numeric: true });
+        return registrySortDir === 'asc' ? cmp : -cmp;
+      }
+
+      if (registrySortField === 'equipment') {
+        const eqA = `${a.eqBrand !== '-' ? a.eqBrand : ''} ${a.eqModel !== '-' ? a.eqModel : ''} ${a.eqSerial !== '-' ? a.eqSerial : ''}`.trim();
+        const eqB = `${b.eqBrand !== '-' ? b.eqBrand : ''} ${b.eqModel !== '-' ? b.eqModel : ''} ${b.eqSerial !== '-' ? b.eqSerial : ''}`.trim();
+        const isDashA = !eqA;
+        const isDashB = !eqB;
+        if (isDashA && isDashB) return 0;
+        if (isDashA) return 1;
+        if (isDashB) return -1;
+        const cmp = eqA.localeCompare(eqB, 'es', { sensitivity: 'base', numeric: true });
+        return registrySortDir === 'asc' ? cmp : -cmp;
+      }
+
+      return 0;
     });
-
-  const effectiveRegistries = [
-    ...(maintenanceRegistries || []).map(getEffectiveRegistryFields),
-    ...virtualRegistriesFromWorkOrders
-  ];
-
-  const filtered = effectiveRegistries.filter(reg => {
-    if (!query) return true;
-    return (
-      reg.institutionName.toLowerCase().includes(query) ||
-      reg.eqBrand.toLowerCase().includes(query) ||
-      reg.eqModel.toLowerCase().includes(query) ||
-      reg.eqSerial.toLowerCase().includes(query) ||
-      reg.tuboBrand.toLowerCase().includes(query) ||
-      reg.tuboModel.toLowerCase().includes(query) ||
-      reg.tuboSerial.toLowerCase().includes(query) ||
-      reg.fecha.toLowerCase().includes(query) ||
-      reg.responsable.toLowerCase().includes(query)
-    );
-  }).sort((a, b) => {
-    if (registrySortField === 'fecha') {
-      const timeA = parseRegistryDateMs(a.fecha);
-      const timeB = parseRegistryDateMs(b.fecha);
-      if (timeA === 0 && timeB === 0) return 0;
-      if (timeA === 0) return 1;
-      if (timeB === 0) return -1;
-      return registrySortDir === 'asc' ? timeA - timeB : timeB - timeA;
-    }
-
-    if (registrySortField === 'institution') {
-      const valA = a.institutionName.trim();
-      const valB = b.institutionName.trim();
-      const isDashA = !valA || valA === '-';
-      const isDashB = !valB || valB === '-';
-      if (isDashA && isDashB) return 0;
-      if (isDashA) return 1;
-      if (isDashB) return -1;
-      const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base', numeric: true });
-      return registrySortDir === 'asc' ? cmp : -cmp;
-    }
-
-    if (registrySortField === 'responsable') {
-      const valA = a.responsable.trim();
-      const valB = b.responsable.trim();
-      const isDashA = !valA || valA === '-';
-      const isDashB = !valB || valB === '-';
-      if (isDashA && isDashB) return 0;
-      if (isDashA) return 1;
-      if (isDashB) return -1;
-      const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base', numeric: true });
-      return registrySortDir === 'asc' ? cmp : -cmp;
-    }
-
-    if (registrySortField === 'equipment') {
-      const eqA = `${a.eqBrand !== '-' ? a.eqBrand : ''} ${a.eqModel !== '-' ? a.eqModel : ''} ${a.eqSerial !== '-' ? a.eqSerial : ''}`.trim();
-      const eqB = `${b.eqBrand !== '-' ? b.eqBrand : ''} ${b.eqModel !== '-' ? b.eqModel : ''} ${b.eqSerial !== '-' ? b.eqSerial : ''}`.trim();
-      const isDashA = !eqA;
-      const isDashB = !eqB;
-      if (isDashA && isDashB) return 0;
-      if (isDashA) return 1;
-      if (isDashB) return -1;
-      const cmp = eqA.localeCompare(eqB, 'es', { sensitivity: 'base', numeric: true });
-      return registrySortDir === 'asc' ? cmp : -cmp;
-    }
-
-    return 0;
-  });
+  }, [effectiveRegistries, deferredRegistrySearch, registrySortField, registrySortDir]);
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-  const paginated = filtered.slice((registryPage - 1) * itemsPerPage, registryPage * itemsPerPage);
+  const paginated = useMemo(() => {
+    return filtered.slice((registryPage - 1) * itemsPerPage, registryPage * itemsPerPage);
+  }, [filtered, registryPage, itemsPerPage]);
 
   return (
     <div className="space-y-6 font-sans">

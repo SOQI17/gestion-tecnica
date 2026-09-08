@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useDeferredValue } from 'react';
 import { Cpu, Database, Plus, Search, Building, ShieldCheck, Zap } from 'lucide-react';
 import { Equipment, Client } from '../../types';
 
@@ -46,25 +46,36 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
   setIsEquipModalOpen,
 }) => {
   const [equipSearch, setEquipSearch] = useState('');
+  const deferredEquipSearch = useDeferredValue(equipSearch);
   const [equipPage, setEquipPage] = useState(1);
 
-  const query = equipSearch.toLowerCase().trim();
-  const filtered = equipments.filter(eq => {
-    const client = clients.find(c => c.id === eq.clientId);
-    return (
-      eq.name.toLowerCase().includes(query) ||
-      eq.id.toLowerCase().includes(query) ||
-      eq.brand.toLowerCase().includes(query) ||
-      eq.model.toLowerCase().includes(query) ||
-      eq.serialNumber.toLowerCase().includes(query) ||
-      (eq.sucursal || '').toLowerCase().includes(query) ||
-      (client?.name || '').toLowerCase().includes(query)
-    );
-  });
+  // Mapa de nombres de clientes para lookup instantáneo O(1)
+  const clientNamesMap = useMemo(() => {
+    const map = new Map<string, string>();
+    clients.forEach(c => map.set(c.id, (c.name || '').toLowerCase()));
+    return map;
+  }, [clients]);
+
+  // Lista de equipos con string de búsqueda precalculado para búsquedas instantáneas
+  const indexedEquipments = useMemo(() => {
+    return equipments.map(eq => ({
+      ...eq,
+      _clientName: clientNamesMap.get(eq.clientId) || '',
+      _searchStr: `${eq.name} ${eq.id} ${eq.brand} ${eq.model} ${eq.serialNumber} ${eq.sucursal || ''} ${clientNamesMap.get(eq.clientId) || ''}`.toLowerCase()
+    }));
+  }, [equipments, clientNamesMap]);
+
+  const filtered = useMemo(() => {
+    const query = deferredEquipSearch.toLowerCase().trim();
+    if (!query) return indexedEquipments;
+    return indexedEquipments.filter(eq => eq._searchStr.includes(query));
+  }, [indexedEquipments, deferredEquipSearch]);
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-  const paginated = filtered.slice((equipPage - 1) * itemsPerPage, equipPage * itemsPerPage);
+  const paginated = useMemo(() => {
+    return filtered.slice((equipPage - 1) * itemsPerPage, equipPage * itemsPerPage);
+  }, [filtered, equipPage, itemsPerPage]);
 
   return (
     <div className="space-y-6 font-sans">
@@ -248,8 +259,6 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-3xs font-bold ${
                           eq.status === 'Operativo'
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : eq.status === 'En Servicio'
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
                             : 'bg-rose-50 text-rose-700 border border-rose-200'
                         }`}>
                           {eq.status === 'Operativo' ? <ShieldCheck className="w-3 h-3" /> : <Zap className="w-3 h-3" />}

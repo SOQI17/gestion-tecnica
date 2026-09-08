@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { Briefcase, Database, Plus, Search, FileSpreadsheet, Building, AlertCircle, Calendar, Tag, ShieldCheck, Clock, Shield, CheckCircle2, ChevronRight, Sparkles, Filter, ExternalLink, Eye, Pencil, Trash2, ArrowUpRight, Folder, Hourglass, BellRing, Ban, AlertTriangle, FileText, TrendingUp, CalendarRange } from 'lucide-react';
+import React, { useState, useMemo, useDeferredValue, useEffect, useRef, useCallback } from 'react';
+import { Briefcase, Database, Plus, Search, FileSpreadsheet, Building, AlertCircle, Calendar, Tag, ShieldCheck, Clock, Shield, CheckCircle2, ChevronRight, Sparkles, Filter, ExternalLink, Eye, Pencil, Trash2, ArrowUpRight, Folder, Hourglass, BellRing, Ban, AlertTriangle, FileText, TrendingUp, CalendarRange, Users } from 'lucide-react';
 import { Contract, Client, ContractGE, WorkOrder } from '../../types';
 import { triggerDirectDownload } from '../../utils/cloudinary';
 
 interface ContratosTabProps {
   workOrders?: WorkOrder[];
-  contractsSubTab: 'garantias' | 'ge';
+  contractsSubTab: 'garantias' | 'ge' | 'proyeccion';
   contracts: Contract[];
   clients: Client[];
   userRole: string;
@@ -29,7 +29,7 @@ interface ContratosTabProps {
   handleContractCsvUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   contractCsvError: string | null;
   exportContractsToExcel: () => void;
-  getContractExpirationAlert: (endDate: string, status: string, linkedContractId?: string) => { level: 'urgent_1m' | 'warning_3m' | 'expired' | null; daysRemaining: number } | null;
+  getContractExpirationAlert: (endDate: string, status: string, linkedContractId?: string) => { level: 'renewed' | 'expired' | 'urgent_1m' | 'warning_3m' | 'ok'; days: number; text: string; badgeText: string; colorClass: string } | null;
   getContractMaintenanceStatus?: (con: Contract, workOrders: WorkOrder[]) => { total: number; done: number; scheduled: number; unScheduled: number; remaining: number; hasNoPending: boolean; isAllScheduled: boolean };
   setEditingContract: (contract: Contract | null) => void;
   onEditContract?: (contract: Contract) => void;
@@ -127,22 +127,104 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
   const [isGeDashboardExpanded, setIsGeDashboardExpanded] = useState(true);
 
-  if (contractsSubTab === 'ge') {
-    const query = contractGeSearch.toLowerCase().trim();
-    const filteredGE = contractsGE.filter(c => {
+  // Autonomous local search states with debouncing so typing is ultra-fluid
+  const [localContractSearch, setLocalContractSearch] = useState(contractSearch);
+  const [debouncedContractSearch, setDebouncedContractSearch] = useState(contractSearch);
+  const [localContractGeSearch, setLocalContractGeSearch] = useState(contractGeSearch);
+  const [debouncedContractGeSearch, setDebouncedContractGeSearch] = useState(contractGeSearch);
+
+  // New filters requested by user: Tipo de contrato, Estado, Fechas Inicio & Vencimiento
+  const [contractTypeFilter, setContractTypeFilter] = useState<string>('all');
+  const [contractStatusFilter, setContractStatusFilter] = useState<string>('all');
+  const [contractStartDate, setContractStartDate] = useState<string>('');
+  const [contractEndDate, setContractEndDate] = useState<string>('');
+
+  // 150ms debouncing for instant keystroke rendering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedContractSearch(localContractSearch);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [localContractSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedContractGeSearch(localContractGeSearch);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [localContractGeSearch]);
+
+  useEffect(() => {
+    if (contractSearch === '') {
+      setLocalContractSearch('');
+      setDebouncedContractSearch('');
+    }
+  }, [contractSearch]);
+
+  useEffect(() => {
+    if (contractGeSearch === '') {
+      setLocalContractGeSearch('');
+      setDebouncedContractGeSearch('');
+    }
+  }, [contractGeSearch]);
+
+  // Sync contractStatusFilter with contractFilterExpiration
+  useEffect(() => {
+    if (contractFilterExpiration) {
+      setContractStatusFilter(contractFilterExpiration);
+    } else if (contractStatusFilter !== 'activo') {
+      setContractStatusFilter('all');
+    }
+  }, [contractFilterExpiration]);
+
+  // Distinct contract types extracted from actual contracts
+  const contractTypesList = useMemo(() => {
+    const types = new Set<string>();
+    contracts.forEach(c => {
+      if (c.type && c.type.trim()) types.add(c.type.trim());
+    });
+    return Array.from(types).sort();
+  }, [contracts]);
+
+  // Persistent cache for getContractMaintenanceStatus to avoid recomputing on render/typing
+  const maintStatusCacheRef = useRef<Map<string, any>>(new Map());
+  useEffect(() => {
+    maintStatusCacheRef.current.clear();
+  }, [contracts, workOrders, getContractMaintenanceStatus]);
+
+  const getCachedMaintenanceStatus = useCallback((con: Contract) => {
+    if (!getContractMaintenanceStatus) return null;
+    if (maintStatusCacheRef.current.has(con.id)) {
+      return maintStatusCacheRef.current.get(con.id);
+    }
+    const res = getContractMaintenanceStatus(con, workOrders || []);
+    maintStatusCacheRef.current.set(con.id, res);
+    return res;
+  }, [workOrders, getContractMaintenanceStatus]);
+
+  const deferredContractSearch = debouncedContractSearch;
+  const deferredContractGeSearch = debouncedContractGeSearch;
+
+  const queryGE = deferredContractGeSearch.toLowerCase().trim();
+  const filteredGE = useMemo(() => {
+    if (!queryGE) return contractsGE;
+    return contractsGE.filter(c => {
       let name = (c.cliente || 'Desconocido').trim();
       name = name.replace(/\uFFFD/g, 'í').replace(/Mara/g, 'María').trim();
       return (
-        name.toLowerCase().includes(query) ||
-        (c.sid || '').toLowerCase().includes(query) ||
-        (c.modalidad || '').toLowerCase().includes(query) ||
-        (c.equipo || '').toLowerCase().includes(query) ||
-        c.invoice.toLowerCase().includes(query) ||
-        (c.contractNum || '').toLowerCase().includes(query) ||
-        (c.paymentPeriod || '').toLowerCase().includes(query) ||
-        (c.observaciones || '').toLowerCase().includes(query)
+        name.toLowerCase().includes(queryGE) ||
+        (c.sid || '').toLowerCase().includes(queryGE) ||
+        (c.modalidad || '').toLowerCase().includes(queryGE) ||
+        (c.equipo || '').toLowerCase().includes(queryGE) ||
+        c.invoice.toLowerCase().includes(queryGE) ||
+        (c.contractNum || '').toLowerCase().includes(queryGE) ||
+        (c.paymentPeriod || '').toLowerCase().includes(queryGE) ||
+        (c.observaciones || '').toLowerCase().includes(queryGE)
       );
     });
+  }, [contractsGE, queryGE]);
+
+  if (contractsSubTab === 'ge') {
 
     const totalAmount = filteredGE.reduce((sum, item) => sum + (item.invoiceAmount || 0), 0);
     const withObsCount = filteredGE.filter(item => item.observaciones && item.observaciones.trim().length > 0).length;
@@ -177,7 +259,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
     let dur25Plus = 0;
 
     contractsGE.forEach(c => {
-      const m = c.months || 0;
+      const m = Number(c.months) || 0;
       if (m >= 1 && m <= 6) dur1_6++;
       else if (m >= 7 && m <= 12) dur7_12++;
       else if (m >= 13 && m <= 24) dur13_24++;
@@ -441,11 +523,23 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
             <input
               type="text"
               placeholder="Buscar por cliente, SID, modalidad, equipo, invoice, periodo, observaciones..."
-              value={contractGeSearch}
-              onChange={(e) => setContractGeSearch(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-4 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-400"
+              value={localContractGeSearch}
+              onChange={(e) => setLocalContractGeSearch(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-8 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-400"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            {localContractGeSearch && (
+              <button
+                type="button"
+                onClick={() => {
+                  setLocalContractGeSearch('');
+                  setContractGeSearch('');
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer text-xs font-bold"
+              >
+                ✕
+              </button>
+            )}
           </div>
           <span className="text-3xs font-mono font-black text-slate-500 uppercase tracking-wider px-2">
             {filteredGE.length} REGISTROS GE ENCONTRADOS
@@ -600,55 +694,112 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
   }
 
   // Garantías Subview
-  const query = contractSearch.toLowerCase().trim();
-  const filtered = contracts.filter(con => {
-    const client = clients.find(c => c.id === con.clientId);
-    const matchesQuery = (
-      con.id.toLowerCase().includes(query) ||
-      con.type.toLowerCase().includes(query) ||
-      (con.coverage || '').toLowerCase().includes(query) ||
-      (client?.name || '').toLowerCase().includes(query) ||
-      (con.equipmentItems || []).some(e =>
-        (e.brand || '').toLowerCase().includes(query) ||
-        normalizeBrandName(e.brand).toLowerCase().includes(query) ||
-        (e.name || '').toLowerCase().includes(query)
-      )
-    );
+  const query = deferredContractSearch.toLowerCase().trim();
 
-    if (!matchesQuery) return false;
+  // Mapa de clientes para lookup O(1) de alto rendimiento
+  const clientsByIdMap = useMemo(() => {
+    const map = new Map<string, Client>();
+    clients.forEach(c => map.set(c.id, c));
+    return map;
+  }, [clients]);
 
-    if (contractValueFilter === 'unvalued') {
-      if (con.contractValue && con.contractValue > 0) return false;
-    } else if (contractValueFilter === 'valued') {
-      if (!con.contractValue || con.contractValue <= 0) return false;
-    }
+  // Pre-index contracts for instant client name search
+  const indexedContracts = useMemo(() => {
+    return contracts.map(con => {
+      const client = clientsByIdMap.get(con.clientId);
+      const clientName = client?.name || '';
+      const _clientSearchStr = `${clientName} ${con.clientId} ${con.id} ${client?.city || con.city || ''}`.toLowerCase();
+      return {
+        con,
+        client,
+        _clientSearchStr
+      };
+    });
+  }, [contracts, clientsByIdMap]);
 
-    if (contractFilterBrand !== 'all') {
-      const hasBrand = (con.equipmentItems || []).some(
-        e => normalizeBrandName(e.brand).toLowerCase() === contractFilterBrand.toLowerCase()
-      );
-      if (!hasBrand) return false;
-    }
+  const filtered = useMemo(() => {
+    return indexedContracts
+      .filter(({ con, client, _clientSearchStr }) => {
+        // 1. Buscador centrado en el cliente
+        if (query && !_clientSearchStr.includes(query)) return false;
 
-    if (contractSectorFilter !== 'all') {
-      const conSector = con.sector || (client?.industry?.toLowerCase().includes('público') || client?.industry?.toLowerCase().includes('publico') || client?.name.toUpperCase().includes('MSP') || client?.name.toUpperCase().includes('IESS') || client?.name.toUpperCase().includes('SOLCA') || client?.name.toUpperCase().includes('HOSPITAL') ? 'Público' : 'Privado');
-      if (conSector !== contractSectorFilter) return false;
-    }
+        // 2. Filtro por Tipo de Contrato
+        if (contractTypeFilter !== 'all' && con.type !== contractTypeFilter) return false;
 
-    if (contractFilterExpiration) {
-      const expAlert = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
-      if (contractFilterExpiration === '1m' && expAlert?.level !== 'urgent_1m') return false;
-      if (contractFilterExpiration === '3m' && expAlert?.level !== 'warning_3m') return false;
-      if (contractFilterExpiration === 'expired' && (expAlert?.level !== 'expired' || (con.linkedContractId && con.linkedContractId.trim() !== ''))) return false;
-      if (contractFilterExpiration === 'pending_admin') {
-        const isPending = !con.schedulePdfUrl && (con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0)));
-        if (!isPending) return false;
-      }
-      if (contractFilterExpiration === 'inactivo' && con.status !== 'Inactivo') return false;
-    }
+        // 3. Filtro por Fecha de Inicio y Fecha de Vencimiento
+        if (contractStartDate && contractEndDate) {
+          if (contractStartDate === contractEndDate) {
+            if (!con.startDate?.startsWith(contractStartDate) && !con.endDate?.startsWith(contractEndDate)) return false;
+          } else if (contractStartDate < contractEndDate) {
+            if (!con.startDate || con.startDate < contractStartDate) return false;
+            if (!con.endDate || con.endDate > contractEndDate) return false;
+          } else {
+            if (!con.startDate?.startsWith(contractStartDate)) return false;
+            if (!con.endDate?.startsWith(contractEndDate)) return false;
+          }
+        } else if (contractStartDate) {
+          if (!con.startDate || !con.startDate.startsWith(contractStartDate)) return false;
+        } else if (contractEndDate) {
+          if (!con.endDate || !con.endDate.startsWith(contractEndDate)) return false;
+        }
 
-    return true;
-  });
+        // 4. Filtro por Estado
+        const effectiveStatus = contractStatusFilter !== 'all' ? contractStatusFilter : contractFilterExpiration;
+        if (effectiveStatus && effectiveStatus !== 'all') {
+          const expAlert = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
+          if (effectiveStatus === 'activo') {
+            if (con.status === 'Inactivo' || expAlert?.level === 'expired') return false;
+          } else if (effectiveStatus === '1m' && expAlert?.level !== 'urgent_1m') {
+            return false;
+          } else if (effectiveStatus === '3m' && expAlert?.level !== 'warning_3m') {
+            return false;
+          } else if (effectiveStatus === 'expired' && (expAlert?.level !== 'expired' || (con.linkedContractId && con.linkedContractId.trim() !== ''))) {
+            return false;
+          } else if (effectiveStatus === 'pending_admin') {
+            const isPending = !con.schedulePdfUrl && (con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0)));
+            if (!isPending) return false;
+          } else if (effectiveStatus === 'inactivo' && con.status !== 'Inactivo') {
+            return false;
+          }
+        }
+
+        // 5. Filtro por Valor
+        if (contractValueFilter === 'unvalued') {
+          if (con.contractValue && con.contractValue > 0) return false;
+        } else if (contractValueFilter === 'valued') {
+          if (!con.contractValue || con.contractValue <= 0) return false;
+        }
+
+        // 6. Filtro por Marca
+        if (contractFilterBrand !== 'all') {
+          const hasBrand = (con.equipmentItems || []).some(
+            e => normalizeBrandName(e.brand).toLowerCase() === contractFilterBrand.toLowerCase()
+          );
+          if (!hasBrand) return false;
+        }
+
+        // 7. Filtro por Sector
+        if (contractSectorFilter !== 'all') {
+          const conSector = con.sector || (client?.industry?.toLowerCase().includes('público') || client?.industry?.toLowerCase().includes('publico') || client?.name.toUpperCase().includes('MSP') || client?.name.toUpperCase().includes('IESS') || client?.name.toUpperCase().includes('SOLCA') || client?.name.toUpperCase().includes('HOSPITAL') ? 'Público' : 'Privado');
+          if (conSector !== contractSectorFilter) return false;
+        }
+
+        return true;
+      })
+      .map(item => item.con);
+  }, [
+    indexedContracts,
+    query,
+    contractTypeFilter,
+    contractStatusFilter,
+    contractStartDate,
+    contractEndDate,
+    contractValueFilter,
+    contractFilterBrand,
+    contractSectorFilter,
+    contractFilterExpiration,
+    getContractExpirationAlert
+  ]);
 
   const sorted = [...filtered].sort((a, b) => {
     if (contractDateSort === 'start_asc') return (a.startDate || '').localeCompare(b.startDate || '');
@@ -661,6 +812,29 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
   const itemsPerPage = 10;
   const totalPages = Math.ceil(sorted.length / itemsPerPage) || 1;
   const paginated = sorted.slice((contractPage - 1) * itemsPerPage, contractPage * itemsPerPage);
+
+  // Memoize KPI counts to avoid 5 full array scans with date math on every render
+  const contractKpiCounts = useMemo(() => {
+    let pendingAdmin = 0;
+    let urgent1m = 0;
+    let warning3m = 0;
+    let inactivo = 0;
+    let expired = 0;
+
+    for (let i = 0; i < contracts.length; i++) {
+      const c = contracts[i];
+      if (!c.schedulePdfUrl && (c.pendingAdminSchedule || (c.maintenanceFrequency === 'Ninguno' && (!c.maintenanceDates || c.maintenanceDates.length === 0)))) {
+        pendingAdmin++;
+      }
+      const expAlert = getContractExpirationAlert ? getContractExpirationAlert(c.endDate, c.status, c.linkedContractId) : null;
+      if (expAlert?.level === 'urgent_1m') urgent1m++;
+      if (expAlert?.level === 'warning_3m') warning3m++;
+      if (c.status === 'Inactivo') inactivo++;
+      if (expAlert?.level === 'expired' && (!c.linkedContractId || c.linkedContractId.trim() === '')) expired++;
+    }
+
+    return { pendingAdmin, urgent1m, warning3m, inactivo, expired };
+  }, [contracts, getContractExpirationAlert]);
 
   return (
     <div className="space-y-6 font-sans">
@@ -714,7 +888,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           </div>
           <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 opacity-80">SIN CRONOGRAMA</p>
           <h4 className="text-lg font-black mt-0.5">
-            {contracts.filter(c => !c.schedulePdfUrl && (c.pendingAdminSchedule || (c.maintenanceFrequency === 'Ninguno' && (!c.maintenanceDates || c.maintenanceDates.length === 0)))).length} <span className="text-3xs font-semibold opacity-70">Contratos</span>
+            {contractKpiCounts.pendingAdmin} <span className="text-3xs font-semibold opacity-70">Contratos</span>
           </h4>
         </button>
 
@@ -741,7 +915,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           </div>
           <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 text-rose-900 opacity-90">POR VENCER (1M)</p>
           <h4 className="text-lg font-black mt-0.5 text-rose-950">
-            {contracts.filter(c => getContractExpirationAlert(c.endDate, c.status, c.linkedContractId)?.level === 'urgent_1m').length} <span className="text-3xs font-semibold opacity-70">Contratos</span>
+            {contractKpiCounts.urgent1m} <span className="text-3xs font-semibold opacity-70">Contratos</span>
           </h4>
         </button>
 
@@ -768,7 +942,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           </div>
           <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 text-amber-900 opacity-90">POR VENCER (3M)</p>
           <h4 className="text-lg font-black mt-0.5 text-amber-950">
-            {contracts.filter(c => getContractExpirationAlert(c.endDate, c.status, c.linkedContractId)?.level === 'warning_3m').length} <span className="text-3xs font-semibold opacity-70">Contratos</span>
+            {contractKpiCounts.warning3m} <span className="text-3xs font-semibold opacity-70">Contratos</span>
           </h4>
         </button>
 
@@ -795,7 +969,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           </div>
           <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 opacity-80">NO RENOVADOS</p>
           <h4 className="text-lg font-black mt-0.5">
-            {contracts.filter(c => c.status === 'Inactivo').length} <span className="text-3xs font-semibold opacity-70">Contratos</span>
+            {contractKpiCounts.inactivo} <span className="text-3xs font-semibold opacity-70">Contratos</span>
           </h4>
         </button>
 
@@ -822,7 +996,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           </div>
           <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 text-red-900 opacity-90">VENCIDOS TOTAL</p>
           <h4 className="text-lg font-black mt-0.5 text-red-950">
-            {contracts.filter(c => getContractExpirationAlert(c.endDate, c.status, c.linkedContractId)?.level === 'expired' && (!c.linkedContractId || c.linkedContractId.trim() === '')).length} <span className="text-3xs font-semibold opacity-70">Contratos</span>
+            {contractKpiCounts.expired} <span className="text-3xs font-semibold opacity-70">Contratos</span>
           </h4>
         </button>
       </div>
@@ -894,147 +1068,274 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
       )}
 
       {/* Executive Search & Filter Control Bar */}
-      <div className="bg-gradient-to-r from-slate-50 via-white to-slate-50 border border-slate-200/90 p-3.5 rounded-2xl shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3.5">
-        {/* Search input with active indicator */}
-        <div className="relative flex-1 min-w-[280px]">
-          <input
-            type="text"
-            placeholder="Buscar por contrato, cliente, marca o equipo..."
-            value={contractSearch}
-            onChange={(e) => {
-              setContractSearch(e.target.value);
-              setContractPage(1);
-            }}
-            className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-slate-800 outline-hidden transition-all shadow-2xs placeholder-slate-400"
-          />
-          <Search className="w-4 h-4 text-indigo-600 absolute left-3 top-1/2 -translate-y-1/2" />
-          {contractSearch && (
-            <button
-              type="button"
-              onClick={() => {
-                setContractSearch('');
+      <div className="bg-gradient-to-r from-slate-50 via-white to-slate-50 border border-slate-200/90 p-3.5 rounded-2xl shadow-xs space-y-3">
+        {/* Row 1: Buscador de Cliente + Dropdowns Principales */}
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
+          {/* Search input specifically for Client Name */}
+          <div className="relative flex-1 min-w-[280px]">
+            <input
+              type="text"
+              placeholder="Buscar por nombre de cliente..."
+              value={localContractSearch}
+              onChange={(e) => {
+                setLocalContractSearch(e.target.value);
                 setContractPage(1);
               }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
-            >
-              ✕
-            </button>
-          )}
+              className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-slate-800 outline-hidden transition-all shadow-2xs placeholder-slate-400"
+            />
+            <Users className="w-4 h-4 text-indigo-600 absolute left-3 top-1/2 -translate-y-1/2" />
+            {localContractSearch && (
+              <button
+                type="button"
+                onClick={() => {
+                  setLocalContractSearch('');
+                  setDebouncedContractSearch('');
+                  setContractSearch('');
+                  setContractPage(1);
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Quick Dropdown Filters */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Tipo de Contrato Dropdown */}
+            <div className="relative">
+              <select
+                value={contractTypeFilter}
+                onChange={(e) => {
+                  setContractTypeFilter(e.target.value);
+                  setContractPage(1);
+                }}
+                className={`appearance-none bg-white border text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                  contractTypeFilter !== 'all'
+                    ? 'border-amber-400 bg-amber-50/60 text-amber-950 ring-2 ring-amber-500/10'
+                    : 'border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <option value="all">📑 TIPO: Todos los Tipos</option>
+                {contractTypesList.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+            </div>
+
+            {/* Estado Dropdown */}
+            <div className="relative">
+              <select
+                value={contractStatusFilter}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setContractStatusFilter(val);
+                  if (val === 'all') setContractFilterExpiration(null);
+                  else if (val === 'activo') setContractFilterExpiration(null);
+                  else setContractFilterExpiration(val as any);
+                  setContractPage(1);
+                }}
+                className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                  contractStatusFilter !== 'all'
+                    ? 'bg-indigo-100/80 border border-indigo-400 text-indigo-950 ring-2 ring-indigo-500/10'
+                    : 'border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <option value="all">🛡️ ESTADO: Todos los Estados</option>
+                <option value="activo">✓ Solo Activos</option>
+                <option value="inactivo">🚫 Inactivos / No Renovados</option>
+                <option value="1m">⏰ Por Vencer (1 Mes)</option>
+                <option value="3m">⚠️ Por Vencer (3 Meses)</option>
+                <option value="expired">🔴 Vencidos</option>
+                <option value="pending_admin">⏳ Sin Cronograma</option>
+              </select>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+            </div>
+
+            {/* Marca Dropdown */}
+            <div className="relative">
+              <select
+                value={contractFilterBrand}
+                onChange={(e) => {
+                  setContractFilterBrand(e.target.value);
+                  setContractPage(1);
+                }}
+                className={`appearance-none bg-white border text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                  contractFilterBrand !== 'all'
+                    ? 'border-indigo-400 bg-indigo-50/50 text-indigo-950 ring-2 ring-indigo-500/10'
+                    : 'border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <option value="all">🏷️ MARCA: Todas las Marcas</option>
+                {Array.from(new Set(contracts.flatMap(c => (c.equipmentItems || []).map(e => e.brand).filter(Boolean)))).map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+            </div>
+
+            {/* Valor Dropdown */}
+            <div className="relative">
+              <select
+                value={contractValueFilter}
+                onChange={(e) => {
+                  setContractValueFilter(e.target.value as any);
+                  setContractPage(1);
+                }}
+                className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                  contractValueFilter !== 'all'
+                    ? 'bg-emerald-100/80 border border-emerald-400 text-emerald-950 ring-2 ring-emerald-500/10'
+                    : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <option value="all">💲 VALOR: Todos los Valores</option>
+                <option value="valued">💲 Con Valor ($ &gt; 0)</option>
+                <option value="unvalued">💲 Sin Valor ($0 / Sin Precio)</option>
+              </select>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+            </div>
+
+            {/* Sector Dropdown */}
+            <div className="relative">
+              <select
+                value={contractSectorFilter}
+                onChange={(e) => {
+                  if (setContractSectorFilter) setContractSectorFilter(e.target.value as any);
+                  setContractPage(1);
+                }}
+                className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                  contractSectorFilter !== 'all'
+                    ? 'bg-blue-100/80 border border-blue-400 text-blue-950 ring-2 ring-blue-500/10'
+                    : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <option value="all">🏢 SECTOR: Todos los Sectores</option>
+                <option value="Público">🏛️ Público (MSP / IESS / FFAA)</option>
+                <option value="Privado">🏢 Privado</option>
+              </select>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+            </div>
+
+            {/* Orden por Fecha Dropdown */}
+            <div className="relative">
+              <select
+                value={contractDateSort}
+                onChange={(e) => {
+                  setContractDateSort(e.target.value as any);
+                  setContractPage(1);
+                }}
+                className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                  contractDateSort !== 'none'
+                    ? 'bg-purple-100/80 border border-purple-400 text-purple-950 ring-2 ring-purple-500/10'
+                    : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <option value="none">📅 ORDENAR: Por Defecto</option>
+                <option value="start_asc">Fecha Inicio (Antigua primero)</option>
+                <option value="start_desc">Fecha Inicio (Reciente primero)</option>
+                <option value="end_asc">Fecha Vencimiento (Próxima a Vencer)</option>
+                <option value="end_desc">Fecha Vencimiento (Lejana a Vencer)</option>
+              </select>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+            </div>
+          </div>
         </div>
 
-        {/* Executive Filter Controls */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Marca Dropdown */}
-          <div className="relative">
-            <select
-              value={contractFilterBrand}
-              onChange={(e) => {
-                setContractFilterBrand(e.target.value);
-                setContractPage(1);
-              }}
-              className={`appearance-none bg-white border text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
-                contractFilterBrand !== 'all'
-                  ? 'border-indigo-400 bg-indigo-50/50 text-indigo-950 ring-2 ring-indigo-500/10'
-                  : 'border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <option value="all">🏷️ MARCA: Todas las Marcas</option>
-              {Array.from(new Set(contracts.flatMap(c => (c.equipmentItems || []).map(e => e.brand).filter(Boolean)))).map(b => (
-                <option key={b} value={b}>{b}</option>
-              ))}
-            </select>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+        {/* Row 2: Filtros de Fecha de Inicio y Vencimiento + Botón Limpiar y Contador */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-200/60">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Fecha Inicio */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl px-2.5 py-1.5 shadow-2xs">
+              <Calendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Inicio:</span>
+              <input
+                type="date"
+                value={contractStartDate}
+                onChange={(e) => {
+                  setContractStartDate(e.target.value);
+                  setContractPage(1);
+                }}
+                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-3xs font-bold text-slate-700 outline-hidden hover:border-indigo-400 focus:border-indigo-500 focus:bg-white transition-colors"
+                title="Filtrar por Fecha de Inicio"
+              />
+              {contractStartDate && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContractStartDate('');
+                    setContractPage(1);
+                  }}
+                  className="text-slate-400 hover:text-rose-600 text-xs ml-0.5 cursor-pointer font-bold"
+                  title="Limpiar fecha de inicio"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Fecha Vencimiento */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl px-2.5 py-1.5 shadow-2xs">
+              <Clock className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Vencimiento:</span>
+              <input
+                type="date"
+                value={contractEndDate}
+                onChange={(e) => {
+                  setContractEndDate(e.target.value);
+                  setContractPage(1);
+                }}
+                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-3xs font-bold text-slate-700 outline-hidden hover:border-rose-400 focus:border-rose-500 focus:bg-white transition-colors"
+                title="Filtrar por Fecha de Vencimiento"
+              />
+              {contractEndDate && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContractEndDate('');
+                    setContractPage(1);
+                  }}
+                  className="text-slate-400 hover:text-rose-600 text-xs ml-0.5 cursor-pointer font-bold"
+                  title="Limpiar fecha de vencimiento"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Valor Dropdown */}
-          <div className="relative">
-            <select
-              value={contractValueFilter}
-              onChange={(e) => {
-                setContractValueFilter(e.target.value as any);
-                setContractPage(1);
-              }}
-              className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
-                contractValueFilter !== 'all'
-                  ? 'bg-emerald-100/80 border border-emerald-400 text-emerald-950 ring-2 ring-emerald-500/10'
-                  : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <option value="all">💲 VALOR: Todos los Valores</option>
-              <option value="valued">💲 Con Valor ($ &gt; 0)</option>
-              <option value="unvalued">💲 Sin Valor ($0 / Sin Precio)</option>
-            </select>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
-          </div>
+          <div className="flex items-center gap-2">
+            {/* Reset Filters Pill */}
+            {(contractFilterBrand !== 'all' || contractValueFilter !== 'all' || contractSectorFilter !== 'all' || contractDateSort !== 'none' || localContractSearch.trim() !== '' || contractFilterExpiration !== null || contractTypeFilter !== 'all' || contractStatusFilter !== 'all' || contractStartDate || contractEndDate) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setContractFilterBrand('all');
+                  setContractValueFilter('all');
+                  if (setContractSectorFilter) setContractSectorFilter('all');
+                  setContractDateSort('none');
+                  setLocalContractSearch('');
+                  setDebouncedContractSearch('');
+                  setContractSearch('');
+                  setContractTypeFilter('all');
+                  setContractStatusFilter('all');
+                  setContractStartDate('');
+                  setContractEndDate('');
+                  setContractFilterExpiration(null);
+                  setContractPage(1);
+                }}
+                className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs flex items-center gap-1"
+                title="Limpiar todos los filtros"
+              >
+                <span>✕ Limpiar</span>
+              </button>
+            )}
 
-          {/* Sector Dropdown */}
-          <div className="relative">
-            <select
-              value={contractSectorFilter}
-              onChange={(e) => {
-                if (setContractSectorFilter) setContractSectorFilter(e.target.value as any);
-                setContractPage(1);
-              }}
-              className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
-                contractSectorFilter !== 'all'
-                  ? 'bg-blue-100/80 border border-blue-400 text-blue-950 ring-2 ring-blue-500/10'
-                  : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <option value="all">🏢 SECTOR: Todos los Sectores</option>
-              <option value="Público">🏛️ Público (MSP / IESS / FFAA)</option>
-              <option value="Privado">🏢 Privado</option>
-            </select>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
-          </div>
-
-          {/* Orden por Fecha Dropdown */}
-          <div className="relative">
-            <select
-              value={contractDateSort}
-              onChange={(e) => {
-                setContractDateSort(e.target.value as any);
-                setContractPage(1);
-              }}
-              className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
-                contractDateSort !== 'none'
-                  ? 'bg-purple-100/80 border border-purple-400 text-purple-950 ring-2 ring-purple-500/10'
-                  : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <option value="none">📅 ORDENAR: Por Defecto</option>
-              <option value="start_asc">Fecha Inicio (Más Antigua primero)</option>
-              <option value="start_desc">Fecha Inicio (Más Reciente primero)</option>
-              <option value="end_asc">Fecha Vencimiento (Más Próxima a Vencer)</option>
-              <option value="end_desc">Fecha Vencimiento (Lejana a Vencer)</option>
-            </select>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
-          </div>
-
-          {/* Reset Filters Pill */}
-          {(contractFilterBrand !== 'all' || contractValueFilter !== 'all' || contractSectorFilter !== 'all' || contractDateSort !== 'none' || contractSearch.trim() !== '' || contractFilterExpiration !== null) && (
-            <button
-              type="button"
-              onClick={() => {
-                setContractFilterBrand('all');
-                setContractValueFilter('all');
-                if (setContractSectorFilter) setContractSectorFilter('all');
-                setContractDateSort('none');
-                setContractSearch('');
-                setContractFilterExpiration(null);
-                setContractPage(1);
-              }}
-              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold px-3 py-2 rounded-xl transition-all cursor-pointer shadow-2xs flex items-center gap-1"
-              title="Limpiar todos los filtros"
-            >
-              <span>✕ Limpiar</span>
-            </button>
-          )}
-
-          {/* Results Badge Counter */}
-          <div className="bg-slate-900 text-white font-mono text-[10px] font-black uppercase tracking-wider px-3.5 py-2 rounded-xl shadow-xs border border-slate-800 flex items-center gap-1.5 shrink-0 ml-auto xl:ml-0">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Mostrando {paginated.length} de {sorted.length} contratos</span>
+            {/* Results Badge Counter */}
+            <div className="bg-slate-900 text-white font-mono text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-xl shadow-xs border border-slate-800 flex items-center gap-1.5 shrink-0 ml-auto xl:ml-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Mostrando {paginated.length} de {sorted.length} contratos</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1174,17 +1475,17 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                           <span>{con.endDate || '-'}</span>
                           {expAlert?.level === 'warning_3m' && (
                             <span className="inline-flex items-center gap-1 text-[9px] font-black text-amber-900 bg-amber-100/90 border border-amber-300 px-1.5 py-0.5 rounded-md shadow-2xs mt-1">
-                              ⚠️ 3 MESES ({expAlert.daysRemaining}d)
+                              ⚠️ 3 MESES ({expAlert.days}d)
                             </span>
                           )}
                           {expAlert?.level === 'urgent_1m' && (
                             <span className="inline-flex items-center gap-1 text-[9px] font-black text-rose-900 bg-rose-100/90 border border-rose-300 px-1.5 py-0.5 rounded-md shadow-2xs mt-1">
-                              ⚠️ 1 MES ({expAlert.daysRemaining}d)
+                              ⚠️ 1 MES ({expAlert.days}d)
                             </span>
                           )}
                           {expAlert?.level === 'expired' && (
                             <span className="inline-flex items-center gap-1 text-[9px] font-black text-red-950 bg-red-100/90 border border-red-300 px-1.5 py-0.5 rounded-md shadow-2xs mt-1">
-                              🚨 VENCIDO ({expAlert.daysRemaining}d)
+                              🚨 VENCIDO ({expAlert.days}d)
                             </span>
                           )}
                         </div>
@@ -1220,8 +1521,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                           {(() => {
                             // Use the shared getContractMaintenanceStatus function if available (same logic as modal)
                             if (getContractMaintenanceStatus) {
-                              const s = getContractMaintenanceStatus(con, workOrders);
-                              if (s.total === 0) return null;
+                              const s = getCachedMaintenanceStatus(con);
+                              if (!s || s.total === 0) return null;
 
                               if (s.hasNoPending) {
                                 return (

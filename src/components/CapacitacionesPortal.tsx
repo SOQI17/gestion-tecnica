@@ -324,7 +324,7 @@ export default function CapacitacionesPortal({
       // Upsert to engineers collection
       for (const ing of parsedPreview.ingenieros) {
         const existing = engineers.find(e => e.id === ing.id);
-        const nameVal = ing.nombre || '';
+        const nameVal = ing.name || '';
         const cleanNameVal = nameVal.replace(/^ing\.\s+/i, '');
         const newEngData = {
           id: ing.id,
@@ -2482,7 +2482,7 @@ service cloud.firestore {
                                         onClick={async () => {
                                           if (window.confirm(`¿Eliminar la capacitación "${st.title}"?`)) {
                                             try {
-                                              await deleteDoc(doc(db, 'scheduledTrainings', st.id));
+                                              await setDoc(doc(db, 'scheduledTrainings', st.id), { deleted: true, deletedAt: new Date().toISOString() }, { merge: true });
                                             } catch (e) {
                                               console.error("Error al eliminar de Firestore:", e);
                                             }
@@ -2999,7 +2999,7 @@ service cloud.firestore {
                                 <div className="flex flex-wrap gap-1 max-h-[80px] overflow-y-auto border border-slate-200 p-2 rounded bg-white">
                                   {parsedPreview.ingenieros.map(ing => (
                                     <span key={ing.id} className="text-[9px] font-mono font-medium bg-slate-100 text-[#001f3f] px-2 py-0.5 rounded border border-slate-150">
-                                      {ing.nombre} ({ing.sede})
+                                      {ing.name} ({ing.sede})
                                     </span>
                                   ))}
                                 </div>

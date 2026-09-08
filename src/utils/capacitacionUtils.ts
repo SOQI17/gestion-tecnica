@@ -296,7 +296,7 @@ export interface RutaRecomendacion {
 }
 
 export function obtenerProximoCursoIngeniero(
-  ingeniero: Engineer,
+  ingeniero: { id: string },
   cursos: Curso[],
   historial: HistorialEntrenamiento[]
 ): RutaRecomendacion {
@@ -449,7 +449,13 @@ export function getSimilarity(str1: string, str2: string): number {
 /**
  * Resolves an engineer name from a PDF/CSV to a registered engineer ID if they are close matches.
  */
-export function resolveEngineerId(parsedName: string, engineersList: Engineer[]): string {
+export interface EngineerRef {
+  id: string;
+  name?: string;
+  nombre?: string;
+}
+
+export function resolveEngineerId(parsedName: string, engineersList: EngineerRef[]): string {
   const cleanString = (s: string) => {
     if (!s) return '';
     return s
@@ -465,12 +471,12 @@ export function resolveEngineerId(parsedName: string, engineersList: Engineer[])
   if (!cleanParsed) return sanitizeId(parsedName || '');
   
   // 1. Exact or substring match in sanitized names
-  let bestMatch: Engineer | null = null;
+  let bestMatch: EngineerRef | null = null;
   let longestMatchLength = 0;
-  
+
   const list = engineersList || [];
   for (const ing of list) {
-    const ingName = ing.name || (ing as any).nombre;
+    const ingName = ing.name || ing.nombre || '';
     const cleanIng = cleanString(ingName);
     if (!cleanIng) continue;
     
@@ -489,9 +495,9 @@ export function resolveEngineerId(parsedName: string, engineersList: Engineer[])
   
   // 2. Similarity fallback using Dice coefficient
   let bestSim = 0;
-  let bestSimIng: Engineer | null = null;
+  let bestSimIng: EngineerRef | null = null;
   for (const ing of list) {
-    const ingName = ing.name || (ing as any).nombre;
+    const ingName = ing.name || ing.nombre || '';
     const sim = getSimilarity(parsedName || '', ingName || '');
     if (sim > bestSim && sim > 0.4) {
       bestSim = sim;

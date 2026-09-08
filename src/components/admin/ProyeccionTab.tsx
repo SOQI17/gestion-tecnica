@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useDeferredValue } from 'react';
 import {
   TrendingUp,
   FileSpreadsheet,
@@ -51,6 +51,7 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
   // Local state for Projection Tab
   const [contractValueFilter, setContractValueFilter] = useState<'all' | 'unvalued' | 'valued'>('all');
   const [projSearch, setProjSearch] = useState('');
+  const deferredProjSearch = useDeferredValue(projSearch);
   const [projFilter, setProjFilter] = useState<'todos' | 'vencidos' | 'criticos' | 'proximos' | 'futuros' | 'renovados'>('todos');
   const [projStageFilter, setProjStageFilter] = useState<string>('all');
   const [projPriorityFilter, setProjPriorityFilter] = useState<'todas' | 'Alta' | 'Media' | 'Baja'>('todas');
@@ -113,6 +114,8 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
         else priority = 'Baja';
       }
 
+      const _searchStr = `${con.id} ${clientName} ${con.type || ''} ${(con.equipmentItems || []).map(e => e.name || '').join(' ')}`.toLowerCase();
+
       return {
         contract: con,
         client,
@@ -123,7 +126,8 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
         proposalStatus,
         priority,
         closingProbability,
-        hasSuccessor
+        hasSuccessor,
+        _searchStr
       };
     });
   }, [contracts, clients]);
@@ -170,49 +174,47 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
   };
 
   // Filter & Sort
-  let filtered = allProjections.filter(p => {
-    if (projFilter === 'vencidos') return p.urgencyCategory === 'vencidos';
-    if (projFilter === 'criticos') return p.urgencyCategory === 'criticos';
-    if (projFilter === 'proximos') return p.urgencyCategory === 'proximos';
-    if (projFilter === 'futuros') return p.urgencyCategory === 'futuros';
-    if (projFilter === 'renovados') return p.proposalStatus === 'Renovado';
-    return true;
-  });
+  const filtered = useMemo(() => {
+    let list = allProjections.filter(p => {
+      if (projFilter === 'vencidos') return p.urgencyCategory === 'vencidos';
+      if (projFilter === 'criticos') return p.urgencyCategory === 'criticos';
+      if (projFilter === 'proximos') return p.urgencyCategory === 'proximos';
+      if (projFilter === 'futuros') return p.urgencyCategory === 'futuros';
+      if (projFilter === 'renovados') return p.proposalStatus === 'Renovado';
+      return true;
+    });
 
-  if (projStageFilter !== 'all') {
-    filtered = filtered.filter(p => p.proposalStatus === projStageFilter);
-  }
+    if (projStageFilter !== 'all') {
+      list = list.filter(p => p.proposalStatus === projStageFilter);
+    }
 
-  if (projPriorityFilter !== 'todas') {
-    filtered = filtered.filter(p => p.priority === projPriorityFilter);
-  }
+    if (projPriorityFilter !== 'todas') {
+      list = list.filter(p => p.priority === projPriorityFilter);
+    }
 
-  if (contractValueFilter === 'unvalued') {
-    filtered = filtered.filter(p => !p.valUSD || p.valUSD <= 0);
-  } else if (contractValueFilter === 'valued') {
-    filtered = filtered.filter(p => p.valUSD && p.valUSD > 0);
-  }
+    if (contractValueFilter === 'unvalued') {
+      list = list.filter(p => !p.valUSD || p.valUSD <= 0);
+    } else if (contractValueFilter === 'valued') {
+      list = list.filter(p => p.valUSD && p.valUSD > 0);
+    }
 
-  if (projSearch.trim()) {
-    const q = projSearch.trim().toLowerCase();
-    filtered = filtered.filter(p =>
-      p.contract.id.toLowerCase().includes(q) ||
-      p.clientName.toLowerCase().includes(q) ||
-      (p.contract.type || '').toLowerCase().includes(q) ||
-      (p.contract.equipmentItems || []).some(e => (e.name || '').toLowerCase().includes(q))
-    );
-  }
+    if (deferredProjSearch.trim()) {
+      const q = deferredProjSearch.trim().toLowerCase();
+      list = list.filter(p => p._searchStr.includes(q));
+    }
 
-  if (projSort === 'vencimiento') {
-    filtered.sort((a, b) => a.diffDays - b.diffDays);
-  } else if (projSort === 'valor') {
-    filtered.sort((a, b) => b.valUSD - a.valUSD);
-  } else if (projSort === 'cliente') {
-    filtered.sort((a, b) => a.clientName.localeCompare(b.clientName));
-  } else if (projSort === 'prioridad') {
-    const pOrder = { Alta: 1, Media: 2, Baja: 3 };
-    filtered.sort((a, b) => pOrder[a.priority] - pOrder[b.priority]);
-  }
+    if (projSort === 'vencimiento') {
+      return [...list].sort((a, b) => a.diffDays - b.diffDays);
+    } else if (projSort === 'valor') {
+      return [...list].sort((a, b) => b.valUSD - a.valUSD);
+    } else if (projSort === 'cliente') {
+      return [...list].sort((a, b) => a.clientName.localeCompare(b.clientName));
+    } else if (projSort === 'prioridad') {
+      const pOrder = { Alta: 1, Media: 2, Baja: 3 };
+      return [...list].sort((a, b) => pOrder[a.priority] - pOrder[b.priority]);
+    }
+    return list;
+  }, [allProjections, projFilter, projStageFilter, projPriorityFilter, contractValueFilter, deferredProjSearch, projSort]);
 
   const handleSaveContractValue = (contractId: string, val: number) => {
     const con = contracts.find(c => c.id === contractId);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useDeferredValue } from 'react';
 import { 
   Palmtree, 
   Search, 
@@ -122,6 +122,22 @@ export const VacacionesTab: React.FC<VacacionesTabProps> = ({
   setModalVacIncludeWeekends,
   EditableNumberInput,
 }) => {
+  const [localVacEngSearch, setLocalVacEngSearch] = useState(vacEngSearchQuery);
+
+  useEffect(() => {
+    setLocalVacEngSearch(vacEngSearchQuery);
+  }, [vacEngSearchQuery]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localVacEngSearch !== vacEngSearchQuery) {
+        setVacEngSearchQuery(localVacEngSearch);
+      }
+    }, 180);
+    return () => clearTimeout(timer);
+  }, [localVacEngSearch, vacEngSearchQuery, setVacEngSearchQuery]);
+
+  const deferredVacEngSearch = useDeferredValue(localVacEngSearch);
   const pendingRequestsCount = (vacations || []).filter(v => v.status === 'Solicitado').length;
 
   const schedulingConflicts = (() => {
@@ -713,14 +729,17 @@ export const VacacionesTab: React.FC<VacacionesTabProps> = ({
                   <input
                     type="text"
                     placeholder="Buscar técnico o especialidad..."
-                    value={vacEngSearchQuery}
-                    onChange={(e) => setVacEngSearchQuery(e.target.value)}
+                    value={localVacEngSearch}
+                    onChange={(e) => setLocalVacEngSearch(e.target.value)}
                     className="bg-white border border-slate-200 rounded-lg pl-8 pr-7 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 w-full sm:w-56 transition-all"
                   />
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                  {vacEngSearchQuery && (
+                  {localVacEngSearch && (
                     <button
-                      onClick={() => setVacEngSearchQuery('')}
+                      onClick={() => {
+                        setLocalVacEngSearch('');
+                        setVacEngSearchQuery('');
+                      }}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold p-1 cursor-pointer"
                     >
                       ✕
@@ -746,9 +765,9 @@ export const VacacionesTab: React.FC<VacacionesTabProps> = ({
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-xs">
                     {(() => {
+                      const query = deferredVacEngSearch.toLowerCase().trim();
                       const filteredEngs = engineers.filter(eng => {
-                        if (!vacEngSearchQuery) return true;
-                        const query = vacEngSearchQuery.toLowerCase();
+                        if (!query) return true;
                         return (
                           eng.name.toLowerCase().includes(query) ||
                           eng.specialty.toLowerCase().includes(query) ||

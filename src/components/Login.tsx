@@ -25,6 +25,20 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
   const [demoRole, setDemoRole] = useState<'admin' | 'engineer' | 'sales'>('admin');
   const [demoEngineerId, setDemoEngineerId] = useState(engineers[0]?.id || 'ENG-001');
 
+  // Security notification for auto-logout / session expiry
+  const [sessionExpiredNotice] = useState<boolean>(() => {
+    try {
+      const expired = sessionStorage.getItem('fsm_session_expired');
+      if (expired === 'true') {
+        sessionStorage.removeItem('fsm_session_expired');
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  });
+
+  const ALLOWED_EMAIL_DOMAINS = ['@orimec.com.ec', '@soporte.com'];
+
   const cleanEmail = (emailStr: string) => emailStr.trim().toLowerCase();
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -40,6 +54,16 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
       return;
     }
 
+    // Validación de dominio corporativo en registro
+    if (isSignUp) {
+      const isAllowedDomain = ALLOWED_EMAIL_DOMAINS.some(domain => targetEmail.endsWith(domain));
+      if (!isAllowedDomain) {
+        setError('Acceso restringido por seguridad: Solo se permiten registros con cuentas corporativas (@orimec.com.ec).');
+        setLoading(false);
+        return;
+      }
+    }
+
     if (isSignUp && password !== confirmPassword) {
       setError('Las contraseñas no coinciden.');
       setLoading(false);
@@ -52,84 +76,72 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
       return;
     }
 
-    // Role detection by email: check local engineers, masterEngineers, or query Firestore directly
-    let matchedEngineer: Engineer | undefined = engineers.find(eng => eng.email && cleanEmail(eng.email) === targetEmail) ||
-                                              masterEngineers.find(eng => eng.email && cleanEmail(eng.email) === targetEmail);
-
-    if (!matchedEngineer) {
-      try {
-        const engSnap = await getDocs(collection(db, 'engineers'));
-        engSnap.forEach(d => {
-          const data = d.data() as Engineer;
-          if (data.email && cleanEmail(data.email) === targetEmail) {
-            matchedEngineer = data;
-          }
-        });
-      } catch (err) {
-        console.warn("Could not query engineers collection directly in Login:", err);
-      }
-    }
-
-    let role: 'admin' | 'engineer' | 'sales' = 'sales';
-
-    if (targetEmail === 'alexis.guerra@orimec.com.ec') {
-      role = 'admin';
-    } else if (matchedEngineer) {
-      const specLower = (matchedEngineer.specialty || '').toLowerCase();
-      const isVentas = specLower.includes('ventas') || specLower.includes('vendedor') || specLower.includes('comercial');
-      if (isVentas) {
-        role = 'sales';
-      } else {
-        role = 'engineer';
-      }
-    } else {
-      role = 'sales';
-    }
-
     try {
-      // Check if there is an existing pre-assigned user profile in Firestore
-      let existingUserProfile: AppUser | null = null;
-      try {
-        const usersSnap = await getDocs(collection(db, 'users'));
-        usersSnap.forEach(uDoc => {
-          const uData = uDoc.data() as AppUser;
-          if (uData.email && cleanEmail(uData.email) === targetEmail) {
-            existingUserProfile = { ...uData, uid: uDoc.id };
-          }
-        });
-      } catch (err) {
-        console.warn("Could not query users collection in Login:", err);
-      }
-
       if (isSignUp) {
-        // Register in Firebase Auth
+        // 1. Register in Firebase Auth first
         const userCredential = await createUserWithEmailAndPassword(auth, targetEmail, password);
         const firebaseUser = userCredential.user;
 
-        // Determine role: prioritize existing pre-assigned profile, then master admin, then matched engineer
-        const finalRole = existingUserProfile?.role || (targetEmail === 'alexis.guerra@orimec.com.ec' ? 'admin' : role);
-        const finalEngId = existingUserProfile?.engineerId || (finalRole === 'engineer' ? matchedEngineer?.id : undefined);
+        // 2. Role detection (authenticated)
+        let matchedEngineer: Engineer | undefined = engineers.find(eng => eng.email && cleanEmail(eng.email) === targetEmail) ||
+                                                  masterEngineers.find(eng => eng.email && cleanEmail(eng.email) === targetEmail);
+
+        if (!matchedEngineer) {
+          try {
+            const engSnap = await getDocs(collection(db, 'engineers'));
+            engSnap.forEach(d => {
+              const data = d.data() as Engineer;
+              if (data.email && cleanEmail(data.email) === targetEmail) {
+                matchedEngineer = data;
+              }
+            });
+          } catch (err) {
+            console.warn("Could not query engineers collection in signUp:", err);
+          }
+        }
+
+        let role: 'admin' | 'engineer' | 'sales' = 'sales';
+        if (targetEmail === 'alexis.guerra@orimec.com.ec') {
+          role = 'admin';
+        } else if (matchedEngineer) {
+          const specLower = (matchedEngineer.specialty || '').toLowerCase();
+          const isVentas = specLower.includes('ventas') || specLower.includes('vendedor') || specLower.includes('comercial');
+          role = isVentas ? 'sales' : 'engineer';
+        }
+
+        const finalEngId = role === 'engineer' ? matchedEngineer?.id : undefined;
 
         const userProfile: AppUser = {
           uid: firebaseUser.uid,
           email: targetEmail,
-          name: existingUserProfile?.name,
-          role: finalRole,
+          name: matchedEngineer?.name || targetEmail.split('@')[0].toUpperCase().replace(/[._]/g, ' '),
+          role,
           ...(finalEngId ? { engineerId: finalEngId } : {})
         };
 
         await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
         onLoginSuccess(userProfile, false);
       } else {
-        // Sign In via Firebase Auth
+        // 1. Sign In via Firebase Auth first
         const userCredential = await signInWithEmailAndPassword(auth, targetEmail, password);
         const firebaseUser = userCredential.user;
 
-        // Fetch profile
+        // 2. Fetch or create profile (authenticated)
+        let matchedEngineer: Engineer | undefined = engineers.find(eng => eng.email && cleanEmail(eng.email) === targetEmail) ||
+                                                  masterEngineers.find(eng => eng.email && cleanEmail(eng.email) === targetEmail);
+
+        let role: 'admin' | 'engineer' | 'sales' = 'sales';
+        if (targetEmail === 'alexis.guerra@orimec.com.ec') {
+          role = 'admin';
+        } else if (matchedEngineer) {
+          const specLower = (matchedEngineer.specialty || '').toLowerCase();
+          const isVentas = specLower.includes('ventas') || specLower.includes('vendedor') || specLower.includes('comercial');
+          role = isVentas ? 'sales' : 'engineer';
+        }
+
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
           const fetchedProfile = userDoc.data() as AppUser;
-          // Respect existing role in Firestore; only default if undefined
           const effectiveRole = (targetEmail === 'alexis.guerra@orimec.com.ec') ? 'admin' : (fetchedProfile.role || role);
           const effectiveEngId = fetchedProfile.engineerId || (effectiveRole === 'engineer' ? matchedEngineer?.id : undefined);
           
@@ -147,15 +159,12 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
             onLoginSuccess(fetchedProfile, false);
           }
         } else {
-          // If auth worked but direct uid profile doesn't exist, check pre-assigned or default
-          const finalRole = existingUserProfile?.role || (targetEmail === 'alexis.guerra@orimec.com.ec' ? 'admin' : role);
-          const finalEngId = existingUserProfile?.engineerId || (finalRole === 'engineer' ? matchedEngineer?.id : undefined);
-
+          const finalEngId = role === 'engineer' ? matchedEngineer?.id : undefined;
           const userProfile: AppUser = {
             uid: firebaseUser.uid,
             email: targetEmail,
-            name: existingUserProfile?.name,
-            role: finalRole,
+            name: matchedEngineer?.name || targetEmail.split('@')[0].toUpperCase().replace(/[._]/g, ' '),
+            role,
             ...(finalEngId ? { engineerId: finalEngId } : {})
           };
           await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
@@ -227,6 +236,19 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
             {isDemoMode ? 'Simulador de Acceso Local (Pruebas)' : 'Plataforma de Gestión Técnica Biomédica ORIMEC'}
           </p>
         </div>
+
+        {/* Security Notification for Session Expiry */}
+        {sessionExpiredNotice && (
+          <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-start gap-3 text-amber-200">
+            <Shield className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
+            <div>
+              <p className="text-xs font-bold text-amber-300">Sesión cerrada por seguridad</p>
+              <p className="text-2xs font-medium text-amber-200/80 mt-0.5">
+                Tu sesión se ha cerrado automáticamente tras 30 minutos de inactividad para proteger la información institucional.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Error Alert Box */}
         {error && (

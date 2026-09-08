@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useDeferredValue, useCallback } from 'react';
 import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag, UserPlus, Mail, Lock, Shield, Phone, MapPin, KeyRound, Pencil, Clock, DollarSign, Eye } from 'lucide-react';
 
 export const OFFICIAL_MODALITIES = [
@@ -39,7 +39,7 @@ const EQUIPMENT_MODALITIES = [
   'US',
   'Otros'
 ];
-import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, ECUADOR_HOLIDAYS, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, UserPermissions, RoleTemplates, AppUser } from '../types';
+import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, WorkOrderStatus, Specialty, Equipment, Contract, ContractEquipmentItem, Vacation, ECUADOR_HOLIDAYS, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, UserPermissions, RoleTemplates, AppUser, EngineerEvaluation360, WorkOrderType } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import CapacitacionesPortal from './CapacitacionesPortal';
 import { ProyeccionTab } from './admin/ProyeccionTab';
@@ -199,7 +199,7 @@ interface AdminPortalProps {
   onSubmitTechnicalReport: (report: TechnicalReport) => void;
   onValidateReport: (woId: string, state: 'aprobado' | 'rechazado', notes: string) => void;
   onImportData: (newOrders: WorkOrder[], newReports: TechnicalReport[], newClients: Client[], newEngineers: Engineer[]) => void;
-  onUpdateEngineer?: (updatedEng: Engineer) => void;
+  onUpdateEngineer?: (updatedEng: Engineer) => Promise<void>;
   onDeleteEngineer?: (engId: string) => void;
   onDeleteWorkOrders?: (woIds: string[]) => void;
   onMergeEngineers?: (sourceId: string, targetId: string) => void;
@@ -214,12 +214,12 @@ interface AdminPortalProps {
   onBulkUploadEquipments?: (equipments: Equipment[]) => void;
   onBulkUploadContracts?: (contracts: Contract[]) => void;
   onClearEquipments?: () => void;
-  onAddVacation?: (vac: Vacation) => void;
-  onUpdateVacation?: (vac: Vacation) => void;
-  onDeleteVacation?: (vacId: string) => void;
+  onAddVacation?: (vac: Vacation) => Promise<void>;
+  onUpdateVacation?: (vac: Vacation) => Promise<void>;
+  onDeleteVacation?: (vacId: string) => Promise<void>;
   permissions?: EngineerPermission[];
-  onAddPermission?: (perm: EngineerPermission) => void;
-  onDeletePermission?: (permId: string) => void;
+  onAddPermission?: (perm: EngineerPermission) => Promise<void>;
+  onDeletePermission?: (permId: string) => Promise<void>;
   onSendPasswordReset?: (email: string) => void;
   maintenanceRegistries?: MaintenanceRegistry[];
   onAddMaintenanceRegistry?: (reg: MaintenanceRegistry) => void;
@@ -605,7 +605,7 @@ const checkTimeOverlap = (timeStr1: string, timeStr2: string): boolean => {
   return start1 < end2 && start2 < end1;
 };
 
-const getContractExpirationAlert = (endDateStr: string, status?: string, linkedContractId?: string) => {
+const getContractExpirationAlert = (endDateStr: string, status?: string, linkedContractId?: string): { level: 'ok' | 'renewed' | 'expired' | 'urgent_1m' | 'warning_3m'; days: number; text: string; badgeText: string; colorClass: string } | null => {
   if (linkedContractId && linkedContractId.trim() !== '') {
     return {
       level: 'renewed',
@@ -679,16 +679,41 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
   };
 };
 
+let clientCacheMap = new Map<string, Client>();
+let lastClientsRef: Client[] | null = null;
+const getClientMap = (clientsList: Client[]) => {
+  if (clientsList === lastClientsRef && clientCacheMap.size > 0) return clientCacheMap;
+  lastClientsRef = clientsList;
+  clientCacheMap = new Map();
+  for (let i = 0; i < clientsList.length; i++) {
+    const c = clientsList[i];
+    if (c.id) clientCacheMap.set(c.id, c);
+    if (c.name) clientCacheMap.set(c.name.trim().toLowerCase(), c);
+  }
+  return clientCacheMap;
+};
+
 const isClientMatch = (woClientId: string | undefined, conClientId: string | undefined, clientsList: Client[] = []) => {
   if (!woClientId || !conClientId) return false;
+  if (woClientId === conClientId) return true;
   const c1 = woClientId.trim().toLowerCase();
   const c2 = conClientId.trim().toLowerCase();
   if (c1 === c2) return true;
-  const client1 = clientsList.find(c => c.id === woClientId || c.name.trim().toLowerCase() === c1);
-  const client2 = clientsList.find(c => c.id === conClientId || c.name.trim().toLowerCase() === c2);
+  if (clientsList.length === 0) return false;
+
+  const map = getClientMap(clientsList);
+  const client1 = map.get(woClientId) || map.get(c1);
+  const client2 = map.get(conClientId) || map.get(c2);
+
   if (client1 && client2 && client1.id === client2.id) return true;
-  if (client1 && (client1.name.trim().toLowerCase().includes(c2) || c2.includes(client1.name.trim().toLowerCase()))) return true;
-  if (client2 && (client2.name.trim().toLowerCase().includes(c1) || c1.includes(client2.name.trim().toLowerCase()))) return true;
+  if (client1 && client1.name) {
+    const n1 = client1.name.trim().toLowerCase();
+    if (n1.includes(c2) || c2.includes(n1)) return true;
+  }
+  if (client2 && client2.name) {
+    const n2 = client2.name.trim().toLowerCase();
+    if (n2.includes(c1) || c1.includes(n2)) return true;
+  }
   return false;
 };
 
@@ -769,16 +794,25 @@ const findContractForWorkOrder = (
   return null;
 };
 
-const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate: string, allContracts: Contract[] = [], clientsList: Client[] = []) => {
+const isWoMatchingContractDate = (
+  wo: WorkOrder, 
+  con: Contract, 
+  rawContractDate: string, 
+  allContracts: Contract[] = [], 
+  clientsList: Client[] = [],
+  skipClientCheck: boolean = false,
+  precomputedOtherContracts?: Contract[]
+) => {
   if (!wo || !con || !rawContractDate) return false;
   const cleanTargetDate = rawContractDate.split('|')[0].trim();
   const eqNameInEntry = rawContractDate.split('|')[1]?.trim();
 
-  // 1. Check client match: using isClientMatch helper to handle Name vs ID matching
-  const activeClientsList = clientsList.length > 0 ? clientsList : (typeof clients !== 'undefined' ? clients : []);
-  const isSameClient = isClientMatch(wo.clientId, con.clientId, activeClientsList);
-
-  if (!isSameClient) return false;
+  // 1. Check client match: skip if already filtered
+  if (!skipClientCheck) {
+    const activeClientsList = clientsList;
+    const isSameClient = wo.clientId === con.clientId || isClientMatch(wo.clientId, con.clientId, activeClientsList);
+    if (!isSameClient) return false;
+  }
 
   // 2. Equipment validation:
   if (wo.equipmentName) {
@@ -795,9 +829,9 @@ const isWoMatchingContractDate = (wo: WorkOrder, con: Contract, rawContractDate:
         return wEq.includes(cEq) || cEq.includes(wEq);
       });
       if (!matchesAnyContractEq) return false;
-    } else if (allContracts.length > 0) {
+    } else if (precomputedOtherContracts ? precomputedOtherContracts.length > 0 : allContracts.length > 0) {
       // If con has NO equipmentItems specified, check if wo.equipmentName explicitly belongs to ANOTHER contract of the same client
-      const otherContractsOfClient = allContracts.filter(c => 
+      const otherContractsOfClient = precomputedOtherContracts || allContracts.filter(c => 
         c.id !== con.id && 
         (c.clientId === con.clientId || (c.clientId && con.clientId && c.clientId.trim().toLowerCase() === con.clientId.trim().toLowerCase()))
       );
@@ -935,12 +969,42 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
     };
   }
 
-  const activeClients = clientsList.length > 0 ? clientsList : (typeof clients !== 'undefined' ? clients : []);
-  const activeContracts = allContracts.length > 0 ? allContracts : (typeof contracts !== 'undefined' ? contracts : []);
+  const activeClients = clientsList;
+  const activeContracts = allContracts;
 
-  const clientWOs = workOrders.filter(wo => 
-    isClientMatch(wo.clientId, con.clientId, activeClients)
-  );
+  // Pre-filter other contracts of this client to avoid filtering allContracts in loop
+  const conHasEquip = Boolean(con.equipmentItems && con.equipmentItems.length > 0);
+  const conCIdLower = con.clientId ? con.clientId.trim().toLowerCase() : '';
+  const otherContractsOfClient = (!conHasEquip && activeContracts.length > 0)
+    ? activeContracts.filter(c => 
+        c.id !== con.id && 
+        (c.clientId === con.clientId || (c.clientId && conCIdLower && c.clientId.trim().toLowerCase() === conCIdLower))
+      )
+    : [];
+
+  // Fast client matching resolution via Set
+  const conClient = activeClients.find(c => c.id === con.clientId || (c.name && conCIdLower && c.name.trim().toLowerCase() === conCIdLower));
+  const matchedClientNamesOrIds = new Set<string>();
+  if (con.clientId) {
+    matchedClientNamesOrIds.add(con.clientId);
+    matchedClientNamesOrIds.add(conCIdLower);
+  }
+  if (conClient) {
+    if (conClient.id) {
+      matchedClientNamesOrIds.add(conClient.id);
+      matchedClientNamesOrIds.add(conClient.id.toLowerCase());
+    }
+    if (conClient.name) {
+      matchedClientNamesOrIds.add(conClient.name.trim().toLowerCase());
+    }
+  }
+
+  const clientWOs = workOrders.filter(wo => {
+    if (!wo.clientId) return false;
+    const woCId = wo.clientId.trim().toLowerCase();
+    if (matchedClientNamesOrIds.has(wo.clientId) || matchedClientNamesOrIds.has(woCId)) return true;
+    return isClientMatch(wo.clientId, con.clientId, activeClients);
+  });
 
   let doneCount = 0;
   let scheduledCount = 0;
@@ -952,8 +1016,8 @@ const getContractMaintenanceStatus = (con: Contract, workOrders: WorkOrder[], al
   con.maintenanceDates.forEach((rawEntry, idx) => {
     const [cleanDate, specificEquipInDate] = rawEntry.split('|');
 
-    // 1. Try matching using isWoMatchingContractDate (excluding already claimed WOs)
-    let matchingWO = clientWOs.find(wo => !usedWoIds.has(wo.id) && isWoMatchingContractDate(wo, con, rawEntry, activeContracts, activeClients));
+    // 1. Try matching using isWoMatchingContractDate (excluding already claimed WOs, skipping client check)
+    let matchingWO = clientWOs.find(wo => !usedWoIds.has(wo.id) && isWoMatchingContractDate(wo, con, rawEntry, activeContracts, activeClients, true, otherContractsOfClient));
 
     // 2. Fallback: match by plannedDate directly among clientWOs for matching equipment
     if (!matchingWO) {
@@ -1431,7 +1495,7 @@ export default function AdminPortal({
         con.equipmentItems.forEach(item => {
           if (!item.name) return;
           const brand = item.brand || 'GE';
-          const serial = item.serialNumber || '-';
+          const serial = item.serial || '-';
           const k = `${clientName.trim()}|${brand.trim()}|${item.name.trim()}|${serial.trim()}`;
           if (!seenKeys.has(k)) {
             seenKeys.add(k);
@@ -1795,37 +1859,45 @@ export default function AdminPortal({
   const [newWOTimeEnd, setNewWOTimeEnd] = useState('11:00');
   const [newWODurationDays, setNewWODurationDays] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  const clientNamesMap = useMemo(() => {
+    const map = new Map<string, string>();
+    clients.forEach(c => map.set(c.id, (c.name || '').toLowerCase()));
+    return map;
+  }, [clients]);
+
+  const engineerNamesMap = useMemo(() => {
+    const map = new Map<string, string>();
+    engineers.forEach(e => map.set(e.id, (e.name || '').toLowerCase()));
+    return map;
+  }, [engineers]);
 
   const matchesSearch = React.useCallback((wo: WorkOrder) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase().trim();
+    if (!deferredSearchQuery) return true;
+    const q = deferredSearchQuery.toLowerCase().trim();
+    if (!q) return true;
     
-    const eng = engineers.find(e => e.id === wo.engineerId);
-    const engName = eng ? eng.name.toLowerCase() : '';
+    const engName = engineerNamesMap.get(wo.engineerId) || '';
+    if (engName.includes(q)) return true;
     
     const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
       ? wo.supportEngineerIds
       : (wo.supportEngineerId ? [wo.supportEngineerId] : []);
-    const supportNames = supportIds
-      .map(id => engineers.find(e => e.id === id)?.name.toLowerCase() || '')
-      .join(' ');
+    for (let i = 0; i < supportIds.length; i++) {
+      if ((engineerNamesMap.get(supportIds[i]) || '').includes(q)) return true;
+    }
     
-    const client = clients.find(c => c.id === wo.clientId);
-    const clientName = client ? client.name.toLowerCase() : '';
+    const clientName = clientNamesMap.get(wo.clientId) || '';
+    if (clientName.includes(q)) return true;
     
-    const equipment = wo.equipmentName ? wo.equipmentName.toLowerCase() : '';
-    const type = wo.type ? wo.type.toLowerCase() : '';
-    const notes = wo.notes ? wo.notes.toLowerCase() : '';
+    if (wo.equipmentName && wo.equipmentName.toLowerCase().includes(q)) return true;
+    if (wo.type && wo.type.toLowerCase().includes(q)) return true;
+    if (wo.notes && wo.notes.toLowerCase().includes(q)) return true;
+    if (wo.id && wo.id.toLowerCase().includes(q)) return true;
     
-    return (
-      clientName.includes(q) ||
-      engName.includes(q) ||
-      supportNames.includes(q) ||
-      equipment.includes(q) ||
-      type.includes(q) ||
-      notes.includes(q)
-    );
-  }, [searchQuery, engineers, clients]);
+    return false;
+  }, [deferredSearchQuery, engineerNamesMap, clientNamesMap]);
 
   // CSV Import states
   const [isImporterOpen, setIsImporterOpen] = useState(false);
@@ -3641,71 +3713,82 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
   const calendarDays = useMemo(() => {
     const days = [];
 
-    const getContractCommitmentsForDate = (dateStr: string) => {
-      const dayCommitments: { contract: Contract; client: Client | undefined; isQc: boolean; isDone: boolean; woStatus: string | null }[] = [];
-      
-      contracts.forEach(con => {
-        if (!con.maintenanceDates || con.maintenanceDates.length === 0) return;
+    // Pre-calcular compromisos de contratos indexados por fecha O(N) una sola vez
+    const commitmentsByDateMap = new Map<string, { contract: Contract; client: Client | undefined; isQc: boolean; isDone: boolean; woStatus: string | null }[]>();
 
-        // Find work orders for this contract's client
-        const clientWOs = workOrders.filter(wo => wo.clientId === con.clientId);
+    // Pre-agrupar órdenes por cliente y fecha para búsquedas O(1) ultra rápidas
+    const clientWOsMap = new Map<string, WorkOrder[]>();
+    workOrders.forEach(wo => {
+      if (wo.clientId) {
+        const list = clientWOsMap.get(wo.clientId) || [];
+        list.push(wo);
+        clientWOsMap.set(wo.clientId, list);
+      }
+    });
 
-        con.maintenanceDates.forEach((entry, idx) => {
-          const parts = entry.split('|');
-          const contractDate = parts[0];
-          const eqName = parts[1];
+    const activeWOsByDateMap = new Map<string, WorkOrder[]>();
+    activeWorkOrdersList.forEach(wo => {
+      if (wo.plannedDate) {
+        const list = activeWOsByDateMap.get(wo.plannedDate) || [];
+        list.push(wo);
+        activeWOsByDateMap.set(wo.plannedDate, list);
+      }
+    });
 
-          // Check if a work order corresponds to this contract date entry
-          let matchingWO = clientWOs.find(wo => {
-            if (eqName) {
-              return wo.equipmentName.trim().toLowerCase() === eqName.trim().toLowerCase() && 
-                     (wo.plannedDate === contractDate || Math.abs(new Date(wo.plannedDate + 'T00:00:00').getTime() - new Date(contractDate + 'T00:00:00').getTime()) <= 45 * 86400000);
-            }
-            return wo.plannedDate === contractDate;
-          });
+    contracts.forEach(con => {
+      if (!con.maintenanceDates || con.maintenanceDates.length === 0) return;
+      const clientWOs = (con.clientId ? clientWOsMap.get(con.clientId) : undefined) || [];
+      const client = clients.find(c => c.id === con.clientId);
 
-          // Fallback: match by index if work orders list matches maintenanceDates length
-          if (!matchingWO && clientWOs.length === con.maintenanceDates.length) {
-            matchingWO = clientWOs[idx];
+      con.maintenanceDates.forEach((entry, idx) => {
+        const parts = entry.split('|');
+        const contractDate = parts[0];
+        const eqName = parts[1];
+
+        let matchingWO = clientWOs.find(wo => {
+          if (eqName) {
+            return wo.equipmentName.trim().toLowerCase() === eqName.trim().toLowerCase() && 
+                   (wo.plannedDate === contractDate || Math.abs(new Date(wo.plannedDate + 'T00:00:00').getTime() - new Date(contractDate + 'T00:00:00').getTime()) <= 45 * 86400000);
           }
-
-          // Determine the effective date where this commitment badge should be displayed
-          const effectiveDate = matchingWO ? matchingWO.plannedDate : contractDate;
-          if (effectiveDate === dateStr) {
-            // Unify: If there is already a Work Order agendated on dateStr for this contract/client,
-            // skip rendering a separate top blue badge since contract details are integrated inside the Work Order card.
-            const hasAgendatedWO = activeWorkOrdersList.some(wo => 
-              wo.plannedDate === dateStr && (
-                (wo.clientId && con.clientId && isClientMatch(wo.clientId, con.clientId, clients)) ||
-                findContractForWorkOrder(wo, contracts, clients)?.id === con.id
-              )
-            );
-
-            if (hasAgendatedWO) return;
-
-            const client = clients.find(c => c.id === con.clientId);
-            const isDone = matchingWO ? (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado') : false;
-            
-            // Is it QC date? Only mark QC if explicitly configured on the contract
-            const isQc = (con.qcDates && con.qcDates.some(qd => qd === contractDate || qd === effectiveDate || qd.startsWith(contractDate) || qd.startsWith(effectiveDate))) ||
-              con.qcDate === contractDate || con.qcDate === effectiveDate;
-
-            // Avoid duplicate badges for the same contract on the same day
-            const alreadyAdded = dayCommitments.some(item => item.contract.id === con.id && item.isQc === isQc);
-            if (!alreadyAdded) {
-              dayCommitments.push({
-                contract: con,
-                client,
-                isQc,
-                isDone,
-                woStatus: matchingWO ? matchingWO.status : null
-              });
-            }
-          }
+          return wo.plannedDate === contractDate;
         });
-      });
 
-      return dayCommitments;
+        if (!matchingWO && clientWOs.length === con.maintenanceDates.length) {
+          matchingWO = clientWOs[idx];
+        }
+
+        const effectiveDate = matchingWO ? matchingWO.plannedDate : contractDate;
+        if (!effectiveDate) return;
+
+        const dayActiveWOs = activeWOsByDateMap.get(effectiveDate) || [];
+        const hasAgendatedWO = dayActiveWOs.some(wo => 
+          (wo.clientId && con.clientId && isClientMatch(wo.clientId, con.clientId, clients)) ||
+          findContractForWorkOrder(wo, contracts, clients)?.id === con.id
+        );
+
+        if (hasAgendatedWO) return;
+
+        const isDone = matchingWO ? (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado') : false;
+        const isQc = (con.qcDates && con.qcDates.some(qd => qd === contractDate || qd === effectiveDate || qd.startsWith(contractDate) || qd.startsWith(effectiveDate))) ||
+          con.qcDate === contractDate || con.qcDate === effectiveDate;
+
+        const existingList = commitmentsByDateMap.get(effectiveDate) || [];
+        const alreadyAdded = existingList.some(item => item.contract.id === con.id && item.isQc === isQc);
+        if (!alreadyAdded) {
+          existingList.push({
+            contract: con,
+            client,
+            isQc,
+            isDone,
+            woStatus: matchingWO ? matchingWO.status : null
+          });
+          commitmentsByDateMap.set(effectiveDate, existingList);
+        }
+      });
+    });
+
+    const getContractCommitmentsForDate = (dateStr: string) => {
+      return commitmentsByDateMap.get(dateStr) || [];
     };
 
     // Days in current month
@@ -4106,14 +4189,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150');
               }
 
-              const matchesQuery = searchQuery ? matchesSearch(wo) : true;
+              const matchesQuery = deferredSearchQuery ? matchesSearch(wo) : true;
               const matchesEng = highlightedEngineerId
                 ? (wo.engineerId === highlightedEngineerId || wo.supportEngineerId === highlightedEngineerId || wo.supportEngineerIds?.includes(highlightedEngineerId))
                 : true;
               const matchesConflict = filterOnlyConflicting ? conflictingWOIds.has(wo.id) : true;
 
               const isHighlighted = matchesQuery && matchesEng && matchesConflict;
-              const hasHighlightActive = !!highlightedEngineerId || !!searchQuery || filterOnlyConflicting;
+              const hasHighlightActive = !!highlightedEngineerId || !!deferredSearchQuery || filterOnlyConflicting;
 
               const conflictDetail = getWoConflictDetails(wo);
               const isConflicting = conflictingWOIds.has(wo.id) || !!conflictDetail;
@@ -4480,23 +4563,31 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
     return days;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeWorkOrdersList, calendarMonth, calendarYear, contracts, clients, engineers, workOrders, vacations, scheduledTrainings, conflictingWOIds, reassignedWOIds, highlightedEngineerId, searchQuery, filterOnlyConflicting, userRole, onToggleClientConfirmed]);
+  }, [activeWorkOrdersList, calendarMonth, calendarYear, contracts, clients, engineers, workOrders, vacations, scheduledTrainings, conflictingWOIds, reassignedWOIds, highlightedEngineerId, deferredSearchQuery, filterOnlyConflicting, userRole, onToggleClientConfirmed]);
 
   // Filtered orders for the lists
-  const filteredOrders = workOrders.filter(wo => {
-    const client = clients.find(c => c.id === wo.clientId);
-    const eng = engineers.find(e => e.id === wo.engineerId);
-    
-    const matchesSearch = 
-      wo.equipmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      eng?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wo.id.toLowerCase().includes(searchTerm.toLowerCase());
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
-    const matchesStatus = statusFilter === 'todos' || wo.status === statusFilter;
+  const filteredOrders = useMemo(() => {
+    const term = deferredSearchTerm.toLowerCase().trim();
+    return workOrders.filter(wo => {
+      const matchesStatus = statusFilter === 'todos' || wo.status === statusFilter;
+      if (!matchesStatus) return false;
+      if (!term) return true;
 
-    return matchesSearch && matchesStatus;
-  });
+      const clientName = clientNamesMap.get(wo.clientId) || '';
+      const engName = engineerNamesMap.get(wo.engineerId) || '';
+      const equip = (wo.equipmentName || '').toLowerCase();
+      const id = (wo.id || '').toLowerCase();
+
+      return (
+        equip.includes(term) ||
+        clientName.includes(term) ||
+        engName.includes(term) ||
+        id.includes(term)
+      );
+    });
+  }, [workOrders, deferredSearchTerm, statusFilter, clientNamesMap, engineerNamesMap]);
 
   // Get all work orders that overlap with the selected dashboard period
   const filteredDashOrders = React.useMemo(() => {
@@ -6307,8 +6398,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     // Auto-schedule work orders for each of the maintenance dates
     if (onAddWorkOrder && con.maintenanceDates && con.maintenanceDates.length > 0) {
       const activeQcDates = (con.qcDates && con.qcDates.length > 0) ? con.qcDates : (con.qcDate ? [con.qcDate] : computeDefaultQcDates(con.maintenanceDates));
+      const wosToCreate: WorkOrder[] = [];
 
-      for (const rawDate of con.maintenanceDates) {
+      con.maintenanceDates.forEach((rawDate, idx) => {
         const cleanDate = rawDate.split('|')[0].trim();
         const eqNameInEntry = rawDate.split('|')[1]?.trim();
 
@@ -6342,9 +6434,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             notes: `Mantenimiento preventivo autogenerado bajo Contrato: ${con.id}${isQc ? ' (Visita de Control de Calidad)' : ''}`
           };
           
-          await onAddWorkOrder(newWO);
+          wosToCreate.push(newWO);
         }
-      }
+      });
+
+      // Crear todas las órdenes de forma inmediata
+      wosToCreate.forEach(wo => onAddWorkOrder(wo));
     }
 
     if (editingContract) {
@@ -6913,7 +7008,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setTempEquipSerial('');
     setTempEquipGon('');
     setContractFormFrequency(con.maintenanceFrequency || 'Ninguno');
-    setContractFormPreferredDay(con.preferredDay ? String(con.preferredDay) : '');
+    setContractFormPreferredDay(con.preferredDay ? Number(con.preferredDay) : '');
     setContractFormSelectedEquipForFreq('all');
     setContractFormMaintenanceDates(con.maintenanceDates || []);
     setTempMaintenanceDate('');
@@ -6955,6 +7050,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setIsContractGeModalOpen(true);
   };
 
+  const memoizedGetContractMaintenanceStatus = useCallback(
+    (con: Contract, wos: WorkOrder[]) => getContractMaintenanceStatus(con, wos, contracts, clients),
+    [contracts, clients]
+  );
+
   const renderContratosSubView = () => {
     return (
       <ContratosTab
@@ -6984,7 +7084,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         contractCsvError={contractCsvError}
         exportContractsToExcel={exportContractsToExcel}
         getContractExpirationAlert={getContractExpirationAlert}
-        getContractMaintenanceStatus={(con, wos) => getContractMaintenanceStatus(con, wos, contracts, clients)}
+        getContractMaintenanceStatus={memoizedGetContractMaintenanceStatus}
         setEditingContract={setEditingContract}
         onEditContract={handleEditContract}
         setIsContractModalOpen={setIsContractModalOpen}
@@ -13544,6 +13644,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         if (!confirm(`¿Desea agendar automáticamente ${unagendedDates.length} visitas pendientes en el calendario de Agendamiento?`)) return;
 
                         const defaultEngineer = engineers[0]?.id || 'ENG-001';
+                        const wosToBatch: WorkOrder[] = [];
                         for (let uIdx = 0; uIdx < unagendedDates.length; uIdx++) {
                           const rawDate = unagendedDates[uIdx];
                           const cleanDate = rawDate.split('|')[0].trim();
@@ -13578,8 +13679,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             notes: `Mantenimiento preventivo autogenerado bajo Contrato: ${selectedContractForDetails.id}${isQc ? ' (Visita de Control de Calidad)' : ''}`
                           };
 
-                          await onAddWorkOrder(newWO);
+                          wosToBatch.push(newWO);
                         }
+
+                        wosToBatch.forEach(wo => onAddWorkOrder(wo));
                       }}
                       className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[8.5px] px-2.5 py-1 rounded-md cursor-pointer transition-all flex items-center gap-1 shadow-2xs active:scale-95 shrink-0"
                       title="Agendar automáticamente todas las visitas sin orden asignada en el calendario"
@@ -13782,7 +13885,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   } else {
                                     setNewWOEquipment('');
                                   }
-                                  setNewWOType(isQc ? 'Especial' : 'Preventivo');
+                                  setNewWOType(isQc ? 'Calibración' : 'Preventivo');
                                   setNewWONotes(`Visita programada bajo Contrato ${selectedContractForDetails.id}${isQc ? ' - Control de Calidad' : ''}`);
                                   
                                   // Close contract details view and open work order creation

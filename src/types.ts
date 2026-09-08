@@ -1,6 +1,7 @@
 export type Specialty = 'Ingeniería' | 'Aplicaciones' | 'Ventas' | 'IT';
 
 export type MaintenanceType = 'Preventivo' | 'Correctivo' | 'Instalación' | 'Calibración' | 'Soporte' | 'FMI' | 'Capacitación' | 'Inspección';
+export type WorkOrderType = MaintenanceType;
 
 export type WorkOrderStatus = 'Pendiente' | 'En Proceso' | 'Realizado' | 'Reportado' | 'Conciliado';
 
@@ -55,7 +56,13 @@ export interface RoleTemplates {
   Admin: UserPermissions;
 }
 
-export interface Engineer {
+export interface SoftDeletable {
+  deleted?: boolean;
+  deletedAt?: string;
+  deletedBy?: string;
+}
+
+export interface Engineer extends SoftDeletable {
   id: string;
   name: string;
   specialty: Specialty;
@@ -74,7 +81,7 @@ export interface Engineer {
   customPermissions?: UserPermissions;
 }
 
-export interface Client {
+export interface Client extends SoftDeletable {
   id: string;
   name: string;
   address: string;
@@ -86,7 +93,7 @@ export interface Client {
   coordinates?: { lat: number; lng: number };
 }
 
-export interface WorkOrder {
+export interface WorkOrder extends SoftDeletable {
   id: string;
   clientId: string;
   engineerId: string;
@@ -103,6 +110,11 @@ export interface WorkOrder {
   clientConfirmed?: boolean; // true when client has confirmed the scheduled visit
   contractId?: string; // ID del contrato al que pertenece esta orden de agendamiento
   equipmentSerial?: string; // Número de serie del equipo vinculado
+  // Campos legacy: presentes en documentos antiguos de Firestore que guardaban estos datos
+  // inline en lugar de resolverlos por clientId; se mantienen como fallback de compatibilidad.
+  clientName?: string;
+  location?: string;
+  siteName?: string;
 }
 
 export interface MaterialUsed {
@@ -110,7 +122,7 @@ export interface MaterialUsed {
   qty: number;
 }
 
-export interface TechnicalReport {
+export interface TechnicalReport extends SoftDeletable {
   id: string;
   workOrderId: string;
   executionDate: string;
@@ -162,7 +174,7 @@ export interface TechnicalReport {
   clientCedula?: string;
 }
 
-export interface Equipment {
+export interface Equipment extends SoftDeletable {
   id: string;
   name: string;
   clientId: string; // references Client.id
@@ -184,9 +196,10 @@ export interface ContractEquipmentItem {
   serviceRecordPdfUrl?: string; // Documento Service Record (SR) específico del equipo
   caPdfUrl?: string; // Documento Certificate of Acceptance (CA) específico del equipo
   podPdfUrl?: string; // Documento Proof of Delivery (POD) específico del equipo
+  srPdfUrl?: string; // Alias legacy de serviceRecordPdfUrl (documentos antiguos en Firestore)
 }
 
-export interface Contract {
+export interface Contract extends SoftDeletable {
   id: string; // Contract Number
   clientId: string; // references Client.id
   type: 'Garantía extendida/Contrato' | 'Garantía de compra' | 'Vigencia Tecnológica' | 'Facturable' | 'Otro' | string;
@@ -215,9 +228,13 @@ export interface Contract {
   pendingAdminSchedule?: boolean; // Indica si fue cargado por vendedor sin cronograma, a la espera de asignación por Admin
   linkedContractId?: string; // ID del contrato sucesor (siguiente contrato del mismo cliente)
   sector?: 'Público' | 'Privado'; // Sector del cliente: Público (MSP, IESS, FFAA) o Privado
+  // Alias legacy de campos renombrados, presentes en documentos antiguos de Firestore
+  pdfUrl?: string; // Alias legacy de contractPdfUrl
+  srPdfUrl?: string; // Alias legacy de serviceRecordPdfUrl
+  preferredDay?: string | number; // Día preferido de mantenimiento (formato legacy)
 }
 
-export interface Vacation {
+export interface Vacation extends SoftDeletable {
   id: string;
   engineerId: string;
   startDate: string; // YYYY-MM-DD
@@ -252,7 +269,7 @@ export const ECUADOR_HOLIDAYS = [
   { id: 'FERIADO-EC-2026-12-25', startDate: '2026-12-25', endDate: '2026-12-25', notes: 'Feriado Nacional: Navidad 🇪🇨' }
 ];
 
-export interface EngineerPermission {
+export interface EngineerPermission extends SoftDeletable {
   id: string;
   engineerId: string;
   date: string; // YYYY-MM-DD
@@ -285,7 +302,7 @@ export interface HistorialEntrenamiento {
   fecha_completado: string; // ej. "11/14/2011"
 }
 
-export interface MaintenanceRegistry {
+export interface MaintenanceRegistry extends SoftDeletable {
   id: string;
   institutionName: string;
   eqBrand: string;
@@ -301,7 +318,7 @@ export interface MaintenanceRegistry {
   documentUrl?: string; // Documento o Acta de entrega adjunta (PDF/Imagen en Cloudinary)
 }
 
-export interface ScheduledTraining {
+export interface ScheduledTraining extends SoftDeletable {
   id: string;
   title: string;          // Título de la capacitación
   courseCode?: string;     // Código del curso (ej: GE-01)
@@ -317,7 +334,7 @@ export interface ScheduledTraining {
   certificateUrl?: string; // Diploma / Certificado de capacitación (PDF/Imagen en Cloudinary)
 }
 
-export interface ContractGE {
+export interface ContractGE extends SoftDeletable {
   id: string;
   cliente: string;
   sid?: string;              // SID (System ID / Serial ID: ej. CE6XG22000)

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, startTransition } from 'react';
 import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
-import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty } from './types';
+import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360 } from './types';
 import AdminPortal, { getDefaultPermissionsForSpecialty } from './components/AdminPortal';
 import EngineerPortal from './components/EngineerPortal';
 import Login from './components/Login';
@@ -208,8 +208,9 @@ export default function App() {
     const unsubEngineers = onSnapshot(collection(db, 'engineers'), (snapshot) => {
       const list: Engineer[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as Engineer);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as Engineer);
         }
       });
       
@@ -237,8 +238,9 @@ export default function App() {
     const unsubClients = onSnapshot(collection(db, 'clients'), (snapshot) => {
       const list: Client[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as Client);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as Client);
         }
       });
       startTransition(() => setClients(list));
@@ -252,8 +254,9 @@ export default function App() {
     const unsubOrders = onSnapshot(collection(db, 'workOrders'), (snapshot) => {
       const list: WorkOrder[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as WorkOrder);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as WorkOrder);
         }
       });
       const sorted = list.sort((a, b) => b.id.localeCompare(a.id));
@@ -268,8 +271,9 @@ export default function App() {
     const unsubReports = onSnapshot(collection(db, 'reports'), (snapshot) => {
       const list: TechnicalReport[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as TechnicalReport);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as TechnicalReport);
         }
       });
       startTransition(() => {
@@ -286,8 +290,9 @@ export default function App() {
     const unsubEquipments = onSnapshot(collection(db, 'equipments'), (snapshot) => {
       const list: Equipment[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as Equipment);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as Equipment);
         }
       });
       startTransition(() => setEquipments(list));
@@ -299,8 +304,9 @@ export default function App() {
     const unsubContracts = onSnapshot(collection(db, 'contracts'), (snapshot) => {
       const list: Contract[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as Contract);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as Contract);
         }
       });
       startTransition(() => setContracts(list));
@@ -312,8 +318,9 @@ export default function App() {
     const unsubVacations = onSnapshot(collection(db, 'vacations'), (snapshot) => {
       const list: Vacation[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as Vacation);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as Vacation);
         }
       });
       startTransition(() => setVacations(list));
@@ -325,8 +332,9 @@ export default function App() {
     const unsubPermissions = onSnapshot(collection(db, 'permissions'), (snapshot) => {
       const list: EngineerPermission[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as EngineerPermission);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as EngineerPermission);
         }
       });
       startTransition(() => setPermissions(list));
@@ -338,8 +346,9 @@ export default function App() {
     const unsubRegistries = onSnapshot(collection(db, 'maintenanceRegistries'), (snapshot) => {
       const list: MaintenanceRegistry[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as MaintenanceRegistry);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as MaintenanceRegistry);
         }
       });
       startTransition(() => setMaintenanceRegistries(list));
@@ -351,8 +360,9 @@ export default function App() {
     const unsubScheduledTrainings = onSnapshot(collection(db, 'scheduledTrainings'), (snapshot) => {
       const firestoreList: ScheduledTraining[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          firestoreList.push(docSnap.data() as ScheduledTraining);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          firestoreList.push(data as ScheduledTraining);
         }
       });
 
@@ -379,8 +389,9 @@ export default function App() {
     const unsubContractsGE = onSnapshot(collection(db, 'contractsGE'), (snapshot) => {
       const list: ContractGE[] = [];
       snapshot.forEach(docSnap => {
-        if (docSnap.id !== 'fsm_placeholder') {
-          list.push(docSnap.data() as ContractGE);
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as ContractGE);
         }
       });
       startTransition(() => setContractsGE(list));
@@ -394,7 +405,7 @@ export default function App() {
       const list: AppUser[] = [];
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        if (data && data.email) {
+        if (data && data.email && !data.deleted) {
           list.push({ uid: docSnap.id, ...data } as AppUser);
         }
       });
@@ -498,6 +509,8 @@ export default function App() {
   }, []);
 
   const handleAddClient = useCallback(async (newClient: Client) => {
+    // Actualización optimista inmediata
+    setClients(prev => [...prev.filter(c => c.id !== newClient.id), newClient]);
     try {
       await setDoc(doc(db, 'clients', newClient.id), cleanUndefined(newClient));
     } catch (error) {
@@ -506,11 +519,38 @@ export default function App() {
   }, []);
 
   const handleAddWorkOrder = useCallback(async (newWO: WorkOrder) => {
+    // Actualización optimista inmediata: la UI responde en < 10ms
+    setWorkOrders(prev => [newWO, ...prev.filter(w => w.id !== newWO.id)]);
     try {
       await setDoc(doc(db, 'workOrders', newWO.id), cleanUndefined(newWO));
       showNotification(`Orden de trabajo ${newWO.id} asignada y guardada con éxito en Firestore.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `workOrders/${newWO.id}`);
+    }
+  }, [showNotification]);
+
+  const handleBatchAddWorkOrders = useCallback(async (newWOs: WorkOrder[]) => {
+    if (!newWOs || newWOs.length === 0) return;
+    // Actualización optimista en bloque para todas las órdenes agendadas
+    setWorkOrders(prev => {
+      const newIds = new Set(newWOs.map(w => w.id));
+      const kept = prev.filter(w => !newIds.has(w.id));
+      return [...newWOs, ...kept];
+    });
+    try {
+      const BATCH_SIZE = 400;
+      const totalBatches = Math.ceil(newWOs.length / BATCH_SIZE);
+      for (let b = 0; b < totalBatches; b++) {
+        const slice = newWOs.slice(b * BATCH_SIZE, (b + 1) * BATCH_SIZE);
+        const batch = writeBatch(db);
+        slice.forEach(wo => {
+          batch.set(doc(db, 'workOrders', wo.id), cleanUndefined(wo));
+        });
+        await batch.commit();
+      }
+      showNotification(`Se agendaron ${newWOs.length} órdenes de trabajo en bloque en Firestore.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `batch-workOrders`);
     }
   }, [showNotification]);
 
@@ -522,25 +562,56 @@ export default function App() {
   ) => {
     try {
       showNotification(`Guardando datos importados en Firestore...`, 'info');
-      for (const cli of newClients) {
-        await setDoc(doc(db, 'clients', cli.id), cleanUndefined(cli));
+      // Actualizaciones optimistas inmediatas en el estado
+      if (newClients.length > 0) {
+        setClients(prev => {
+          const ids = new Set(newClients.map(c => c.id));
+          return [...prev.filter(c => !ids.has(c.id)), ...newClients];
+        });
       }
-      for (const eng of newEngineers) {
-        await setDoc(doc(db, 'engineers', eng.id), cleanUndefined(eng));
+      if (newEngineers.length > 0) {
+        setEngineers(prev => {
+          const ids = new Set(newEngineers.map(e => e.id));
+          return [...prev.filter(e => !ids.has(e.id)), ...newEngineers];
+        });
       }
-      for (const wo of newWOs) {
-        await setDoc(doc(db, 'workOrders', wo.id), cleanUndefined(wo));
+      if (newWOs.length > 0) {
+        setWorkOrders(prev => {
+          const ids = new Set(newWOs.map(w => w.id));
+          return [...newWOs, ...prev.filter(w => !ids.has(w.id))];
+        });
       }
-      for (const rep of newReps) {
-        await setDoc(doc(db, 'reports', rep.id), cleanUndefined(rep));
+      if (newReps.length > 0) {
+        setReports(prev => {
+          const ids = new Set(newReps.map(r => r.id));
+          return [...prev.filter(r => !ids.has(r.id)), ...newReps];
+        });
       }
-      showNotification(`¡Sincronización de CSV completa! Se guardaron ${newWOs.length} órdenes, ${newReps.length} informes, ${newClients.length} clientes y ${newEngineers.length} técnicos en Firestore.`, 'success');
+
+      // Guardado por lotes atómicos (Batch Writes) de alto rendimiento
+      const allOps: Array<{ ref: any; data: any }> = [];
+      newClients.forEach(c => allOps.push({ ref: doc(db, 'clients', c.id), data: cleanUndefined(c) }));
+      newEngineers.forEach(e => allOps.push({ ref: doc(db, 'engineers', e.id), data: cleanUndefined(e) }));
+      newWOs.forEach(w => allOps.push({ ref: doc(db, 'workOrders', w.id), data: cleanUndefined(w) }));
+      newReps.forEach(r => allOps.push({ ref: doc(db, 'reports', r.id), data: cleanUndefined(r) }));
+
+      const BATCH_SIZE = 400;
+      for (let i = 0; i < allOps.length; i += BATCH_SIZE) {
+        const batch = writeBatch(db);
+        const chunk = allOps.slice(i, i + BATCH_SIZE);
+        chunk.forEach(op => batch.set(op.ref, op.data));
+        await batch.commit();
+      }
+
+      showNotification(`¡Sincronización masiva completada! Se guardaron ${newWOs.length} órdenes, ${newReps.length} informes, ${newClients.length} clientes y ${newEngineers.length} técnicos.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'bulk-import');
     }
   }, [showNotification]);
 
   const handleAddEquipment = useCallback(async (newEquip: Equipment) => {
+    // Actualización optimista inmediata
+    setEquipments(prev => [...prev.filter(e => e.id !== newEquip.id), newEquip]);
     try {
       await setDoc(doc(db, 'equipments', newEquip.id), cleanUndefined(newEquip));
       showNotification(`Equipo ${newEquip.name} registrado con éxito.`, 'success');
@@ -550,6 +621,8 @@ export default function App() {
   }, [showNotification]);
 
   const handleUpdateEquipment = useCallback(async (updatedEquip: Equipment) => {
+    // Actualización optimista inmediata
+    setEquipments(prev => prev.map(e => e.id === updatedEquip.id ? updatedEquip : e));
     try {
       await setDoc(doc(db, 'equipments', updatedEquip.id), cleanUndefined(updatedEquip));
       showNotification(`Equipo ${updatedEquip.name} actualizado.`, 'success');
@@ -598,8 +671,12 @@ export default function App() {
       return next;
     });
     try {
-      await deleteDoc(doc(db, 'contracts', contractId));
-      showNotification(`Contrato ${contractId} eliminado por el Administrador.`, 'success');
+      await setDoc(doc(db, 'contracts', contractId), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin'
+      }, { merge: true });
+      showNotification(`Contrato ${contractId} eliminado (borrado lógico seguro).`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `contracts/${contractId}`);
     }
@@ -665,14 +742,20 @@ export default function App() {
       for (let b = 0; b < Math.ceil(docs.length / BATCH_SIZE); b++) {
         const slice = docs.slice(b * BATCH_SIZE, (b + 1) * BATCH_SIZE);
         const batch = writeBatch(db);
-        slice.forEach(d => batch.delete(doc(db, 'maintenanceRegistries', d.id)));
+        slice.forEach(d => {
+          batch.set(doc(db, 'maintenanceRegistries', d.id), {
+            deleted: true,
+            deletedAt: new Date().toISOString(),
+            deletedBy: currentUser?.email || 'admin'
+          }, { merge: true });
+        });
         await batch.commit();
       }
       showNotification("Se eliminaron todos los registros correctamente.", 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, 'clear-maintenance-registries');
     }
-  }, [showNotification]);
+  }, [currentUser, showNotification]);
 
   const handleAddMaintenanceRegistry = useCallback(async (reg: MaintenanceRegistry) => {
     try {
@@ -685,12 +768,16 @@ export default function App() {
 
   const handleDeleteMaintenanceRegistry = useCallback(async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'maintenanceRegistries', id));
+      await setDoc(doc(db, 'maintenanceRegistries', id), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin'
+      }, { merge: true });
       showNotification("Registro eliminado con éxito.", 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `maintenanceRegistries/${id}`);
     }
-  }, [showNotification]);
+  }, [currentUser, showNotification]);
 
   useEffect(() => {
     let unsub = () => {};
@@ -732,13 +819,17 @@ export default function App() {
       showNotification("Eliminando equipos de la base de datos...", 'info');
       const qSnap = await getDocs(collection(db, 'equipments'));
       for (const docSnap of qSnap.docs) {
-        await deleteDoc(doc(db, 'equipments', docSnap.id));
+        await setDoc(doc(db, 'equipments', docSnap.id), {
+          deleted: true,
+          deletedAt: new Date().toISOString(),
+          deletedBy: currentUser?.email || 'admin'
+        }, { merge: true });
       }
       showNotification("Se eliminaron todos los equipos correctamente.", 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, 'clear-equipments');
     }
-  }, [showNotification]);
+  }, [currentUser, showNotification]);
 
   const handleBulkUploadContracts = useCallback(async (newContracts: Contract[]) => {
     try {
@@ -798,13 +889,17 @@ export default function App() {
       return next;
     });
     try {
-      await deleteDoc(doc(db, 'scheduledTrainings', stId));
+      await setDoc(doc(db, 'scheduledTrainings', stId), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin'
+      }, { merge: true });
       showNotification(`Capacitación programada eliminada.`, 'success');
     } catch (error: any) {
       console.error("Error al eliminar capacitación programada:", error);
       handleFirestoreError(error, OperationType.DELETE, `scheduledTrainings/${stId}`);
     }
-  }, [showNotification]);
+  }, [currentUser, showNotification]);
 
   const handleAddContractGE = useCallback(async (cGE: ContractGE) => {
     setContractsGE(prev => {
@@ -841,12 +936,16 @@ export default function App() {
       return next;
     });
     try {
-      await deleteDoc(doc(db, 'contractsGE', id));
+      await setDoc(doc(db, 'contractsGE', id), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin'
+      }, { merge: true });
       showNotification(`Registro de GE eliminado.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `contractsGE/${id}`);
     }
-  }, [showNotification]);
+  }, [currentUser, showNotification]);
 
   const handleBulkUploadContractsGE = useCallback(async (cGEs: ContractGE[]) => {
     try {
@@ -885,12 +984,16 @@ export default function App() {
 
   const handleDeleteVacation = useCallback(async (vacId: string) => {
     try {
-      await deleteDoc(doc(db, 'vacations', vacId));
+      await setDoc(doc(db, 'vacations', vacId), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin'
+      }, { merge: true });
       showNotification(`Vacaciones eliminadas correctamente.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `vacations/${vacId}`);
     }
-  }, [showNotification]);
+  }, [currentUser, showNotification]);
 
   const handleAddPermission = useCallback(async (perm: EngineerPermission) => {
     try {
@@ -905,16 +1008,22 @@ export default function App() {
 
   const handleDeletePermission = useCallback(async (permId: string) => {
     try {
-      await deleteDoc(doc(db, 'permissions', permId));
+      await setDoc(doc(db, 'permissions', permId), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin'
+      }, { merge: true });
       showNotification(`Registro eliminado correctamente.`, 'success');
     } catch (error: any) {
       console.error("Error al eliminar permiso:", error);
       alert(`⚠️ ERROR EN FIREBASE:\nNo se pudo eliminar el registro en la colección 'permissions'.\n\nDetalle: ${error.message || String(error)}`);
       handleFirestoreError(error, OperationType.DELETE, `permissions/${permId}`);
     }
-  }, [showNotification]);
+  }, [currentUser, showNotification]);
 
   const handleUpdateWorkOrderStatus = useCallback(async (woId: string, status: WorkOrderStatus) => {
+    // Actualización optimista inmediata: el estado visual cambia sin esperar la red
+    setWorkOrders(prev => prev.map(w => w.id === woId ? { ...w, status } : w));
     try {
       await setDoc(doc(db, 'workOrders', woId), { status }, { merge: true });
     } catch (error) {
@@ -923,6 +1032,8 @@ export default function App() {
   }, []);
 
   const handleToggleClientConfirmed = useCallback(async (woId: string, confirmed: boolean) => {
+    // Actualización optimista inmediata
+    setWorkOrders(prev => prev.map(w => w.id === woId ? { ...w, clientConfirmed: confirmed } : w));
     try {
       await setDoc(doc(db, 'workOrders', woId), { clientConfirmed: confirmed }, { merge: true });
     } catch (error) {
@@ -931,6 +1042,8 @@ export default function App() {
   }, []);
 
   const handleUpdateWorkOrder = useCallback(async (updatedWO: WorkOrder) => {
+    // Actualización optimista inmediata
+    setWorkOrders(prev => prev.map(w => w.id === updatedWO.id ? updatedWO : w));
     try {
       await setDoc(doc(db, 'workOrders', updatedWO.id), cleanUndefined(updatedWO));
       showNotification(`¡Orden de servicio ${updatedWO.id} actualizada con éxito!`, 'success');
@@ -978,13 +1091,17 @@ export default function App() {
 
   const handleDeleteEngineer = useCallback(async (engId: string) => {
     try {
-      await deleteDoc(doc(db, 'engineers', engId));
+      await setDoc(doc(db, 'engineers', engId), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin'
+      }, { merge: true });
       setEngineers(prev => prev.filter(e => e.id !== engId));
       showNotification(`¡Técnico eliminado con éxito de Firestore!`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `engineers/${engId}`);
     }
-  }, [showNotification]);
+  }, [currentUser, showNotification]);
 
   const handleRegisterNewUser = useCallback(async (data: {
     name: string;
@@ -998,6 +1115,12 @@ export default function App() {
     const cleanEmail = data.email.trim().toLowerCase();
     if (!cleanEmail) {
       showNotification('Por favor ingrese un correo válido.', 'warning');
+      return;
+    }
+    const ALLOWED_EMAIL_DOMAINS = ['@orimec.com.ec', '@soporte.com'];
+    const isAllowedDomain = ALLOWED_EMAIL_DOMAINS.some(domain => cleanEmail.endsWith(domain));
+    if (!isAllowedDomain) {
+      showNotification('Acceso restringido por seguridad: Solo se permiten correos corporativos (@orimec.com.ec).', 'warning');
       return;
     }
     try {
@@ -1074,13 +1197,17 @@ export default function App() {
   const handleDeleteWorkOrders = useCallback(async (woIds: string[]) => {
     try {
       for (const id of woIds) {
-        await deleteDoc(doc(db, 'workOrders', id));
+        await setDoc(doc(db, 'workOrders', id), {
+          deleted: true,
+          deletedAt: new Date().toISOString(),
+          deletedBy: currentUser?.email || 'admin'
+        }, { merge: true });
       }
       showNotification(`¡Agendas del mes eliminadas con éxito (${woIds.length} órdenes)!`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `workOrders`);
     }
-  }, [showNotification]);
+  }, [currentUser, showNotification]);
 
   const handleMergeEngineers = useCallback(async (sourceId: string, targetId: string) => {
     try {
@@ -1091,12 +1218,17 @@ export default function App() {
         if (wo.supportEngineerId === sourceId) { updates.supportEngineerId = targetId; }
         await setDoc(doc(db, 'workOrders', wo.id), updates, { merge: true });
       }
-      await deleteDoc(doc(db, 'engineers', sourceId));
+      await setDoc(doc(db, 'engineers', sourceId), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin',
+        mergedInto: targetId
+      }, { merge: true });
       showNotification(`¡Técnicos fusionados con éxito! Se reasignaron ${sourceWOs.length} órdenes de trabajo.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `engineers/merge`);
     }
-  }, [showNotification, workOrders]);
+  }, [currentUser, showNotification, workOrders]);
 
   const handleBatchReportWorkOrders = useCallback(async (
     newReports: TechnicalReport[],
@@ -1161,9 +1293,40 @@ export default function App() {
     }
   }, []);
 
+  // ─── CIBERSEGURIDAD: Cierre de sesión automático por inactividad (30 min) ───
+  useEffect(() => {
+    if (!currentUser || isDemoMode) return;
+
+    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos de inactividad
+    let lastActivity = Date.now();
+
+    const resetTimer = () => {
+      lastActivity = Date.now();
+    };
+
+    const monitoredEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    monitoredEvents.forEach(evt => window.addEventListener(evt, resetTimer, { passive: true }));
+
+    const checkInterval = setInterval(() => {
+      const elapsed = Date.now() - lastActivity;
+      if (elapsed >= INACTIVITY_LIMIT_MS) {
+        clearInterval(checkInterval);
+        try {
+          sessionStorage.setItem('fsm_session_expired', 'true');
+        } catch (e) {}
+        handleLogout();
+      }
+    }, 30000); // Verificación periódica cada 30 segundos
+
+    return () => {
+      monitoredEvents.forEach(evt => window.removeEventListener(evt, resetTimer));
+      clearInterval(checkInterval);
+    };
+  }, [currentUser, isDemoMode, handleLogout]);
+
   const handleUpdateUserRole = useCallback(async (uid: string, role: 'admin' | 'engineer' | 'sales', engineerId?: string) => {
     try {
-      const existing = allRegisteredUsers.find(u => u.uid === uid) || { uid, email: '' };
+      const existing = allRegisteredUsers.find(u => u.uid === uid) || { uid, email: '', name: undefined as string | undefined };
       const userEmail = (existing.email || '').trim().toLowerCase();
       let finalEngId = engineerId;
       if (role === 'engineer') {

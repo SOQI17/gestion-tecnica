@@ -49,10 +49,76 @@ export const triggerDirectDownload = async (rawUrl: string, defaultFilename: str
   }
 };
 
+/**
+ * Configuración y validación de ciberseguridad para carga de archivos
+ */
+export const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 Megabytes
+
+export const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+];
+
+export const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'];
+
+export const validateFileUpload = (file: File): { isValid: boolean; error?: string } => {
+  if (!file) {
+    return { isValid: false, error: 'No se ha seleccionado ningún archivo.' };
+  }
+
+  // 1. Validar tamaño
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
+    return {
+      isValid: false,
+      error: `El archivo pesa ${sizeInMB} MB. El límite máximo de seguridad permitido es de 15 MB.`
+    };
+  }
+
+  // 2. Validar extensión
+  const filename = file.name.toLowerCase();
+  const hasAllowedExt = ALLOWED_EXTENSIONS.some(ext => filename.endsWith(ext));
+  if (!hasAllowedExt) {
+    return {
+      isValid: false,
+      error: 'Formato no permitido por políticas de seguridad. Solo se admiten archivos PDF o imágenes (JPG, PNG, WebP).'
+    };
+  }
+
+  // 3. Validar MIME type
+  const isPdf = file.type === 'application/pdf' || filename.endsWith('.pdf');
+  const isImage = file.type.startsWith('image/') || ALLOWED_MIME_TYPES.includes(file.type);
+  if (!isPdf && !isImage) {
+    return {
+      isValid: false,
+      error: 'Tipo de archivo inválido o potencialmente no seguro.'
+    };
+  }
+
+  // 4. Bloquear extensiones de ejecutables o scripts
+  const dangerousExts = ['.exe', '.bat', '.cmd', '.sh', '.msi', '.ps1', '.vbs', '.js', '.ts', '.html', '.php'];
+  if (dangerousExts.some(ext => filename.endsWith(ext))) {
+    return {
+      isValid: false,
+      error: 'Archivo bloqueado por contener una extensión no segura.'
+    };
+  }
+
+  return { isValid: true };
+};
+
 export const uploadFileToCloudinary = async (
   file: File,
   onProgress?: (percent: number) => void
 ): Promise<string> => {
+  const validation = validateFileUpload(file);
+  if (!validation.isValid) {
+    throw new Error(validation.error || 'Archivo no válido para subida');
+  }
+
   const CLOUD_NAME = 'eztjzc2k';
   const UPLOAD_PRESET = 'preset_mto_archivos';
 
@@ -101,3 +167,50 @@ export const uploadFileToCloudinary = async (
     xhr.send(formData);
   });
 };
+
+/**
+ * Comprime imágenes en el cliente (navegador) reduciendo resolución y calidad.
+ * Convierte fotos de cámara pesadas (4-10 MB) a imágenes optimizadas de ~150-250 KB en WebP/JPEG.
+ */
+export const compressImage = async (file: File, maxWidth = 1200, quality = 0.75): Promise<File> => {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) {
+      return resolve(file);
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let width = img.width;
+      let height = img.height;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(file);
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return resolve(file);
+          const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+            type: 'image/webp',
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+        },
+        'image/webp',
+        quality
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+};
+

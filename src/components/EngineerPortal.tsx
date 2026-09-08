@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Smartphone, User, ArrowLeft, CheckCircle, Navigation, Play, FileText, Check, Plus, Minus, AlertTriangle, ShieldCheck, RefreshCw, Palmtree } from 'lucide-react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaterialUsed, Specialty, Vacation, EngineerPermission } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { uploadFileToCloudinary, compressImage } from '../utils/cloudinary';
 
 interface EngineerPortalProps {
   engineers: Engineer[];
@@ -247,7 +248,8 @@ export default function EngineerPortal({
   const [observaciones, setObservaciones] = useState('');
 
   const [requiredSpares, setRequiredSpares] = useState<MaterialUsed[]>([]);
-  const [photoGallery, setPhotoGallery] = useState<string[]>([]); // Array of Base64 images
+  const [photoGallery, setPhotoGallery] = useState<string[]>([]); // URLs de Cloudinary o imágenes optimizadas
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [technicianCedula, setTechnicianCedula] = useState('');
   const [clientCedula, setClientCedula] = useState('');
 
@@ -923,21 +925,43 @@ IMSS CENTRO MEDICO,REP-404,MR355,2026-03-12,Marzo,Semana 11,SI,Aislantes térmic
     }
   };
 
-  // Photo handlers
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Photo handlers (Compresión automática en cliente y subida directa a Cloudinary)
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files) as File[];
     const remainingSlots = 5 - photoGallery.length;
     const filesToProcess = files.slice(0, remainingSlots);
-    filesToProcess.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          setPhotoGallery(prev => [...prev, reader.result as string]);
+    if (filesToProcess.length === 0) return;
+
+    setIsUploadingPhoto(true);
+    for (const file of filesToProcess) {
+      try {
+        // 1. Redimensionar y comprimir la foto en el cliente (de 5MB a ~150KB)
+        const compressed = await compressImage(file, 1200, 0.75);
+        // 2. Subir a Cloudinary para guardar únicamente una URL ligera en Firestore
+        const cloudUrl = await uploadFileToCloudinary(compressed);
+        if (cloudUrl) {
+          setPhotoGallery(prev => [...prev, cloudUrl]);
         }
-      };
-      reader.readAsDataURL(file);
-    });
+      } catch (err) {
+        console.warn("Fallo subida a Cloudinary, guardando versión comprimida local:", err);
+        try {
+          const compressed = await compressImage(file, 800, 0.65);
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (typeof reader.result === 'string') {
+              setPhotoGallery(prev => [...prev, reader.result as string]);
+            }
+          };
+          reader.readAsDataURL(compressed);
+        } catch (readErr) {
+          console.error("Error al procesar archivo fotográfico:", readErr);
+        }
+      }
+    }
+    setIsUploadingPhoto(false);
+    // Limpiar el input para permitir volver a subir si es necesario
+    e.target.value = '';
   };
   const handleRemovePhoto = (idx: number) => {
     setPhotoGallery(prev => prev.filter((_, i) => i !== idx));
@@ -2481,10 +2505,17 @@ IMSS CENTRO MEDICO,REP-404,MR355,2026-03-12,Marzo,Semana 11,SI,Aislantes térmic
                               type="file"
                               accept="image/*"
                               multiple
-                              disabled={photoGallery.length >= 5}
+                              disabled={photoGallery.length >= 5 || isUploadingPhoto}
                               onChange={handlePhotoUpload}
                               className="w-full text-3xs p-1 text-slate-600 bg-white border border-slate-200 rounded cursor-pointer disabled:bg-slate-100 disabled:cursor-not-allowed"
                             />
+
+                            {isUploadingPhoto && (
+                              <div className="flex items-center gap-2 py-1.5 px-2 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-700 text-3xs font-bold animate-pulse">
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+                                <span>Optimizando y subiendo fotografías a la nube...</span>
+                              </div>
+                            )}
                             
                             {photoGallery.length > 0 && (
                               <div className="grid grid-cols-5 gap-1.5 mt-2">

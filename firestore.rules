@@ -6,70 +6,141 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // 2. Reglas para Colección de Ingenieros
-    match /engineers/{engineerId} {
-      allow read, write: if true;
+    // Funciones de verificación de seguridad y roles
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // 3. Reglas para Colección de Clientes
-    match /clients/{clientId} {
-      allow read, write: if true;
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    // 4. Reglas para Órdenes de Trabajo (Work Orders)
-    match /workOrders/{workOrderId} {
-      allow read, write: if true;
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'alexis.guerra@orimec.com.ec' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'admin')
+      );
     }
 
-    // 5. Reglas para Reportes Técnicos
-    match /reports/{reportId} {
-      allow read, write: if true;
+    // 2. Healthcheck / Ping de conectividad
+    match /test/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // 6. Reglas para Equipos (Equipments)
-    match /equipments/{equipmentId} {
-      allow read, write: if true;
-    }
-
-    // 7. Reglas para Contratos (Contracts)
-    match /contracts/{contractId} {
-      allow read, write: if true;
-    }
-
-    // 8. Reglas para Vacaciones (Vacations)
-    match /vacations/{vacationId} {
-      allow read, write: if true;
-    }
-
-    // 9. Reglas para Permisos y Compensaciones (Permissions)
-    match /permissions/{permissionId} {
-      allow read, write: if true;
-    }
-
-    // 10. Reglas para Cursos (Capacitaciones)
-    match /cursos/{cursoId} {
-      allow read, write: if true;
-    }
-
-    // 11. Reglas para Historial de Entrenamiento (Capacitaciones)
-    match /historial_entrenamiento/{historialId} {
-      allow read, write: if true;
-    }
-    // 12. Reglas para Registros de Mantenimiento (Maintenance Registries)
-    match /maintenanceRegistries/{registryId} {
-      allow read, write: if true;
-    }
-    // 13. Reglas para Capacitaciones Programadas (Scheduled Trainings)
-    match /scheduledTrainings/{trainingId} {
-      allow read, write: if true;
-    }
-    // 14. Reglas para Contratos con GE (ContractsGE)
-    match /contractsGE/{contractGeId} {
-      allow read, write: if true;
-    }
-    // 15. Reglas para Perfiles de Usuarios Registrados (Users)
+    // 3. Perfiles de Usuarios (Users)
     match /users/{userId} {
-      allow read, write: if true;
+      allow read: if isAuthenticated();
+      // Permitir crear su propio perfil al registrarse o si es admin
+      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Permitir actualizar su propio perfil (sin auto-escalar a admin a menos que sea admin)
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        (request.auth.uid == userId && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])))
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 4. Colección de Ingenieros
+    match /engineers/{engineerId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 5. Colección de Clientes
+    match /clients/{clientId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 6. Órdenes de Trabajo (Work Orders)
+    match /workOrders/{workOrderId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 7. Reportes Técnicos
+    match /reports/{reportId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 8. Equipos (Equipments)
+    match /equipments/{equipmentId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 9. Contratos (Contracts)
+    match /contracts/{contractId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 10. Contratos con GE (ContractsGE)
+    match /contractsGE/{contractGeId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 11. Vacaciones (Vacations)
+    match /vacations/{vacationId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 12. Permisos y Compensaciones (Permissions)
+    match /permissions/{permissionId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 13. Cursos y Capacitaciones
+    match /cursos/{cursoId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /historial_entrenamiento/{historialId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    match /scheduledTrainings/{trainingId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 14. Registros de Mantenimiento (Maintenance Registries)
+    match /maintenanceRegistries/{registryId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 15. Evaluaciones 360
+    match /evaluations360/{evalId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // 16. Registros de Auditoría Inmutables (Audit Logs)
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Inmutable: nadie puede modificar ni borrar logs de auditoría
     }
   }
 }
