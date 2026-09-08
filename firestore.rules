@@ -11,15 +11,38 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function userDocExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function userRole() {
+      return userDocExists() ? getUserData().role : null;
+    }
+
+    // ID de ingeniero vinculado al usuario autenticado (null si no aplica)
+    function myEngineerId() {
+      return userDocExists() ? getUserData().engineerId : null;
     }
 
     function isAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'alexis.guerra@orimec.com.ec' ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'admin')
+        userRole() == 'admin'
       );
+    }
+
+    // Roles de "backoffice" (admin o ventas): gestionan clientes, contratos, equipos y capacitaciones
+    function isBackoffice() {
+      return isAdmin() || (isAuthenticated() && userRole() == 'sales');
+    }
+
+    // Rol de campo (admin o ingeniero): ejecuta órdenes de trabajo y reporta
+    function isFieldStaff() {
+      return isAdmin() || (isAuthenticated() && userRole() == 'engineer');
     }
 
     // 2. Healthcheck / Ping de conectividad
@@ -31,11 +54,14 @@ service cloud.firestore {
     // 3. Perfiles de Usuarios (Users)
     match /users/{userId} {
       allow read: if isAuthenticated();
-      // Permitir crear su propio perfil al registrarse o si es admin
-      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Permitir crear su propio perfil al registrarse (nunca con rol admin) o si es admin
+      allow create: if isAuthenticated() && (
+        isAdmin() ||
+        (request.auth.uid == userId && request.resource.data.role != 'admin')
+      );
       // Permitir actualizar su propio perfil (sin auto-escalar a admin a menos que sea admin)
       allow update: if isAuthenticated() && (
-        isAdmin() || 
+        isAdmin() ||
         (request.auth.uid == userId && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])))
       );
       allow delete: if isAdmin();
@@ -44,63 +70,77 @@ service cloud.firestore {
     // 4. Colección de Ingenieros
     match /engineers/{engineerId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      // Solo un admin puede dar de alta ingenieros/vendedores
+      allow create: if isAdmin();
+      // El propio ingeniero puede editar los datos de su perfil (no campos sensibles de RRHH/permisos)
+      allow update: if isAdmin() || (
+        isAuthenticated() && myEngineerId() == engineerId &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'customPermissions', 'sede', 'annualVacationDays', 'entryDate',
+          'pendingVacationsLastYear', 'standbyVacationsLastYear', 'birthdayVacationDay'
+        ])
+      );
       allow delete: if isAdmin();
     }
 
-    // 5. Colección de Clientes
+    // 5. Colección de Clientes (gestionado por Admin/Ventas)
     match /clients/{clientId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow create, update: if isBackoffice();
       allow delete: if isAdmin();
     }
 
-    // 6. Órdenes de Trabajo (Work Orders)
+    // 6. Órdenes de Trabajo (Work Orders) — operativa compartida entre Admin, Ventas e Ingeniería
     match /workOrders/{workOrderId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated();
       allow delete: if isAdmin();
     }
 
-    // 7. Reportes Técnicos
+    // 7. Reportes Técnicos (Admin/Ingeniería; Ventas no genera reportes técnicos)
     match /reports/{reportId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow create, update: if isFieldStaff();
       allow delete: if isAdmin();
     }
 
-    // 8. Equipos (Equipments)
+    // 8. Equipos (Equipments) — gestionado por Admin/Ventas
     match /equipments/{equipmentId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow create, update: if isBackoffice();
       allow delete: if isAdmin();
     }
 
-    // 9. Contratos (Contracts)
+    // 9. Contratos (Contracts) — gestionado por Admin/Ventas
     match /contracts/{contractId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow create, update: if isBackoffice();
       allow delete: if isAdmin();
     }
 
-    // 10. Contratos con GE (ContractsGE)
+    // 10. Contratos con GE (ContractsGE) — gestionado por Admin/Ventas
     match /contractsGE/{contractGeId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow create, update: if isBackoffice();
       allow delete: if isAdmin();
     }
 
     // 11. Vacaciones (Vacations)
     match /vacations/{vacationId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      // Un admin puede crear a nombre de cualquiera; el resto solo puede solicitar sus propias vacaciones
+      allow create: if isAdmin() || (
+        isAuthenticated() && myEngineerId() != null && request.resource.data.engineerId == myEngineerId()
+      );
+      // Solo un admin aprueba/rechaza o modifica solicitudes de vacaciones
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
-    // 12. Permisos y Compensaciones (Permissions)
+    // 12. Permisos y Compensaciones (Permissions) — otorgados exclusivamente por Admin
     match /permissions/{permissionId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow create, update: if isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -112,27 +152,27 @@ service cloud.firestore {
 
     match /historial_entrenamiento/{historialId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow create, update: if isBackoffice();
       allow delete: if isAdmin();
     }
 
     match /scheduledTrainings/{trainingId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow create, update: if isBackoffice();
       allow delete: if isAdmin();
     }
 
-    // 14. Registros de Mantenimiento (Maintenance Registries)
+    // 14. Registros de Mantenimiento (Maintenance Registries) — gestionado por Admin/Ventas
     match /maintenanceRegistries/{registryId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow create, update: if isBackoffice();
       allow delete: if isAdmin();
     }
 
-    // 15. Evaluaciones 360
+    // 15. Evaluaciones 360 (datos sensibles de RRHH: exclusivo de Admin)
     match /evaluations360/{evalId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow create, update: if isAdmin();
       allow delete: if isAdmin();
     }
 
