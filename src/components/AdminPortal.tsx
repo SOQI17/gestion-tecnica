@@ -9123,15 +9123,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             wo.supportEngineerId === eng.id
           );
           
-          const totalHours = reports
-            .filter(rep => {
-              const wo = workOrders.find(w => w.id === rep.workOrderId);
-              if (!wo) return false;
-              const isPeriodMatch = filteredDashOrders.some(f => f.id === wo.id);
-              const isEngMatch = wo.engineerId === eng.id || wo.supportEngineerId === eng.id || wo.supportEngineerIds?.includes(eng.id);
-              return isPeriodMatch && isEngMatch;
-            })
-            .reduce((acc, rep) => acc + (rep.hoursSpent || 0), 0);
+          // Horas de campo: usa la misma lógica que el desglose detallado (reporte > horario agendado >
+          // proyecto de instalación > 3h estándar), en vez de depender únicamente de reportes ya enviados.
+          const totalHours = engOrders.reduce((acc, wo) => {
+            const matchedReport = (reports || []).find(r => r.workOrderId === wo.id);
+            return acc + getWOScheduledHours(wo, matchedReport);
+          }, 0);
 
           const typeBreakdown: Record<MaintenanceType, number> = {
             Preventivo: 0,
