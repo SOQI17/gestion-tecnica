@@ -9289,9 +9289,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Interactive Executive Field Hours Detail Drawer */}
                       {showEngHoursDetail && (() => {
-                        const engWOs = filteredDashOrders.filter(wo => 
-                          wo.engineerId === eng.id || wo.supportEngineerId === eng.id || wo.supportEngineerIds?.includes(eng.id)
-                        );
+                        const engWOs = filteredDashOrders
+                          .filter(wo => wo.engineerId === eng.id || wo.supportEngineerId === eng.id || wo.supportEngineerIds?.includes(eng.id))
+                          .sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
 
                         let prevHours = 0, prevCount = 0;
                         let instHours = 0, instCount = 0, instDaysTotal = 0;
