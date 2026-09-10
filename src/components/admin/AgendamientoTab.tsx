@@ -344,11 +344,12 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
       {/* Sub Navigation */}
       <div className="border-b border-slate-200 no-print mb-6">
         <div className="flex gap-6 overflow-x-auto no-scrollbar py-0.5">
-          {[
+          {([
             { id: 'scheduler', label: 'Calendario y Planificador', icon: CalendarIcon },
-            { id: 'auditor', label: 'Conciliación de Reportes', count: pendingValidation, icon: ClipboardList },
+            // 'auditor' (Conciliación de Reportes) oculto del menú a pedido del usuario; el código y
+            // la lógica de aprobar/rechazar reportes siguen intactos más abajo por si se reactiva.
             { id: 'dashboard', label: 'Métricas de Ingenieros', icon: BarChart3 }
-          ].map(sb => {
+          ] as { id: string; label: string; icon: typeof CalendarIcon; count?: number }[]).map(sb => {
             const Icon = sb.icon;
             const isActive = activeSubTab === sb.id;
             return (
