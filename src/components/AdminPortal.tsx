@@ -5967,19 +5967,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     if (matchedRegistries.length > 0) {
       const eqTokens = normEq.split(' ').filter(t => t.length > 1);
 
-      let bestReg = matchedRegistries.find(reg => {
+      // Requerir que coincida la mayoría de los tokens del nombre del equipo (no solo uno),
+      // para evitar confundir equipos distintos de la misma institución (ej. Ciclotrón vs Angiógrafo).
+      const bestReg = matchedRegistries.find(reg => {
         const combined = cleanStr(`${reg.eqBrand} ${reg.eqModel} ${reg.eqSerial}`);
         if (normEq && combined.includes(normEq)) return true;
         if (eqTokens.length > 0) {
           const matches = eqTokens.filter(tok => combined.includes(tok));
-          if (matches.length >= Math.min(eqTokens.length, 1)) return true;
+          if (matches.length >= Math.ceil(eqTokens.length / 2)) return true;
         }
         return false;
       });
-
-      if (!bestReg && matchedRegistries.length > 0) {
-        bestReg = matchedRegistries[0];
-      }
 
       if (bestReg) {
         return {
@@ -6005,15 +6003,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       const clientEquips = (equipments || []).filter(e => e.clientId === matchedClient.id);
       if (clientEquips.length > 0) {
         const eqTokens = normEq.split(' ').filter(t => t.length > 1);
+        // Igual que arriba: exigir coincidencia real de la mayoría de los tokens, sin caer
+        // de vuelta al primer equipo del cliente cuando no hay una coincidencia genuina.
         const bestEq = clientEquips.find(e => {
           const combined = cleanStr(`${e.brand} ${e.model} ${e.name} ${e.serialNumber}`);
           if (normEq && combined.includes(normEq)) return true;
           if (eqTokens.length > 0) {
             const matches = eqTokens.filter(tok => combined.includes(tok));
-            if (matches.length >= Math.min(eqTokens.length, 1)) return true;
+            if (matches.length >= Math.ceil(eqTokens.length / 2)) return true;
           }
           return false;
-        }) || clientEquips[0];
+        });
 
         if (bestEq) {
           return {
