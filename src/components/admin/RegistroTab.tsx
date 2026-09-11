@@ -65,6 +65,14 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
   const [registrySortField, setRegistrySortField] = useState<'fecha' | 'institution' | 'responsable' | 'equipment'>('fecha');
   const [registrySortDir, setRegistrySortDir] = useState<'asc' | 'desc'>('desc');
 
+  // Reporte por periodo: Mensual / Anual / Total (histórico completo)
+  const todayForReport = new Date();
+  const [reportPeriod, setReportPeriod] = useState<'month' | 'year' | 'total'>('total');
+  const [reportYear, setReportYear] = useState<number>(todayForReport.getFullYear());
+  const [reportMonth, setReportMonth] = useState<number>(todayForReport.getMonth() + 1);
+
+  const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
   const getEffectiveRegistryFields = (reg: MaintenanceRegistry) => {
     let institutionName = (reg.institutionName || '').trim();
     let eqBrand = (reg.eqBrand || '').trim();
@@ -180,7 +188,7 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
     return isNaN(fallback) ? 0 : fallback;
   };
 
-  const handleExportRegistryExcel = (itemsToExport: MaintenanceRegistry[]) => {
+  const handleExportRegistryExcel = (itemsToExport: MaintenanceRegistry[], periodTag?: string) => {
     if (!itemsToExport || itemsToExport.length === 0) {
       alert("No hay registros para exportar.");
       return;
@@ -219,7 +227,8 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
     const a = document.createElement('a');
     a.href = url;
     const dateTag = new Date().toISOString().split('T')[0];
-    a.download = `Registro_Equipos_MTO_${dateTag}.csv`;
+    const suffix = periodTag ? `_${periodTag}` : '';
+    a.download = `Registro_Equipos_MTO${suffix}_${dateTag}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -279,13 +288,33 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
     }));
   }, [maintenanceRegistries, workOrders, clients, engineers]);
 
+  // Años con registros reales, para poblar el selector de Año del reporte
+  const availableReportYears = useMemo(() => {
+    const years = new Set<number>();
+    effectiveRegistries.forEach(reg => {
+      const ms = parseRegistryDateMs(reg.fecha);
+      if (ms > 0) years.add(new Date(ms).getFullYear());
+    });
+    years.add(todayForReport.getFullYear());
+    return Array.from(years).sort((a, b) => b - a);
+  }, [effectiveRegistries]);
+
   // 2. Filtrado y ordenamiento de ultra alta velocidad
   const filtered = useMemo(() => {
     const query = deferredRegistrySearch.toLowerCase().trim();
 
     return effectiveRegistries.filter(reg => {
-      if (!query) return true;
-      return reg._searchStr.includes(query);
+      if (query && !reg._searchStr.includes(query)) return false;
+
+      if (reportPeriod !== 'total') {
+        const ms = parseRegistryDateMs(reg.fecha);
+        if (ms === 0) return false; // sin fecha válida: no puede ubicarse en un periodo específico
+        const d = new Date(ms);
+        if (d.getFullYear() !== reportYear) return false;
+        if (reportPeriod === 'month' && (d.getMonth() + 1) !== reportMonth) return false;
+      }
+
+      return true;
     }).sort((a, b) => {
       if (registrySortField === 'fecha') {
         const timeA = parseRegistryDateMs(a.fecha);
@@ -334,13 +363,25 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
 
       return 0;
     });
-  }, [effectiveRegistries, deferredRegistrySearch, registrySortField, registrySortDir]);
+  }, [effectiveRegistries, deferredRegistrySearch, registrySortField, registrySortDir, reportPeriod, reportYear, reportMonth]);
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
   const paginated = useMemo(() => {
     return filtered.slice((registryPage - 1) * itemsPerPage, registryPage * itemsPerPage);
   }, [filtered, registryPage, itemsPerPage]);
+
+  const reportPeriodTag = reportPeriod === 'total'
+    ? 'Total'
+    : reportPeriod === 'year'
+    ? `${reportYear}`
+    : `${MESES[reportMonth - 1]}_${reportYear}`;
+
+  const reportPeriodLabel = reportPeriod === 'total'
+    ? 'histórico completo'
+    : reportPeriod === 'year'
+    ? `año ${reportYear}`
+    : `${MESES[reportMonth - 1]} ${reportYear}`;
 
   return (
     <div className="space-y-6 font-sans">
@@ -356,9 +397,9 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
 
         <div className="flex flex-wrap gap-2 items-center">
           <button
-            onClick={() => handleExportRegistryExcel(filtered)}
+            onClick={() => handleExportRegistryExcel(filtered, reportPeriodTag)}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-3xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-emerald-600 transition-colors"
-            title="Exportar todos los registros filtrados a formato Excel"
+            title={`Exportar el reporte de ${reportPeriodLabel} a formato Excel`}
           >
             <Download className="w-3.5 h-3.5" />
             <span>📊 Exportar Excel</span>
@@ -488,6 +529,68 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
           </div>
         </div>
       )}
+
+      {/* Report Period Selector: Mensual / Anual / Total */}
+      <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex flex-wrap items-center gap-3">
+        <span className="text-3xs text-slate-400 font-bold uppercase tracking-wide shrink-0">📊 Reporte:</span>
+        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg">
+          {(['month', 'year', 'total'] as const).map(p => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => { setReportPeriod(p); setRegistryPage(1); }}
+              className={`px-3 py-1 rounded-md text-3xs font-bold transition-all cursor-pointer ${
+                reportPeriod === p
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'text-slate-550 hover:text-slate-800'
+              }`}
+            >
+              {p === 'month' ? 'Mensual' : p === 'year' ? 'Anual' : 'Total'}
+            </button>
+          ))}
+        </div>
+
+        {reportPeriod === 'month' && (
+          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-2xs">
+            <select
+              value={reportMonth}
+              onChange={e => { setReportMonth(Number(e.target.value)); setRegistryPage(1); }}
+              className="bg-transparent text-xs font-bold text-slate-800 outline-hidden cursor-pointer"
+            >
+              {MESES.map((m, idx) => (
+                <option key={idx + 1} value={idx + 1}>{m}</option>
+              ))}
+            </select>
+            <select
+              value={reportYear}
+              onChange={e => { setReportYear(Number(e.target.value)); setRegistryPage(1); }}
+              className="bg-transparent text-xs font-bold text-slate-800 outline-hidden cursor-pointer"
+            >
+              {availableReportYears.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {reportPeriod === 'year' && (
+          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-2xs">
+            <select
+              value={reportYear}
+              onChange={e => { setReportYear(Number(e.target.value)); setRegistryPage(1); }}
+              className="bg-transparent text-xs font-bold text-slate-800 outline-hidden cursor-pointer"
+            >
+              {availableReportYears.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <span className="text-3xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full ml-auto">
+          {filtered.length} registro{filtered.length === 1 ? '' : 's'} · {reportPeriodLabel}
+        </span>
+      </div>
 
       {/* Search & Grid Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
