@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useDeferredValue } from 'react';
-import { FileSpreadsheet, Download, Database, Plus, Trash2, Search, Pencil } from 'lucide-react';
+import { FileSpreadsheet, Download, Database, Plus, Trash2, Search, Pencil, Printer } from 'lucide-react';
 import { MaintenanceRegistry, WorkOrder, Client, Engineer } from '../../types';
 
 interface RegistroTabProps {
@@ -386,7 +386,7 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
   return (
     <div className="space-y-6 font-sans">
       {/* Header Block */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+      <div className="no-print bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
         <div>
           <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
             <FileSpreadsheet className="w-4 h-4 text-pink-500" />
@@ -396,6 +396,14 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">
+          <button
+            onClick={() => window.print()}
+            className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-3xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+            title={`Imprimir / Guardar como PDF el reporte de ${reportPeriodLabel}`}
+          >
+            <Printer className="w-3.5 h-3.5 text-slate-500" />
+            <span>Imprimir PDF</span>
+          </button>
           <button
             onClick={() => handleExportRegistryExcel(filtered, reportPeriodTag)}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-3xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-emerald-600 transition-colors"
@@ -441,7 +449,7 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
 
       {/* CSV Importer Panel */}
       {isRegistryImporterOpen && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+        <div className="no-print bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
           <div className="border-b border-slate-100 pb-2 flex flex-wrap justify-between items-center gap-2">
             <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wider font-mono flex items-center gap-1.5">
               <Database className="w-4 h-4 text-indigo-500" />
@@ -531,7 +539,7 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
       )}
 
       {/* Report Period Selector: Mensual / Anual / Total */}
-      <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex flex-wrap items-center gap-3">
+      <div className="no-print bg-white border border-slate-200 rounded-xl p-3 shadow-2xs flex flex-wrap items-center gap-3">
         <span className="text-3xs text-slate-400 font-bold uppercase tracking-wide shrink-0">📊 Reporte:</span>
         <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg">
           {(['month', 'year', 'total'] as const).map(p => (
@@ -593,7 +601,7 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
       </div>
 
       {/* Search & Grid Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
@@ -640,7 +648,7 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
       </div>
 
       {/* Registries Table Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs overflow-hidden">
+      <div className="no-print bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto rounded-xl border border-slate-100">
           <table className="w-full text-left border-collapse text-[10.5px] font-semibold text-slate-655">
             <thead>
@@ -819,6 +827,43 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Printable Report: oculto en pantalla, visible solo al imprimir. Incluye TODOS los
+          registros filtrados (no solo la página visible en la tabla). */}
+      <div className="hidden print:block">
+        <h2 className="text-base font-bold text-slate-900 mb-0.5">Registro de Equipos de Mantenimiento</h2>
+        <p className="text-[10px] text-slate-600 mb-3">
+          Periodo: {reportPeriodLabel} · {filtered.length} registro{filtered.length === 1 ? '' : 's'} · Generado el {new Date().toLocaleDateString('es-EC')}
+        </p>
+        <table className="w-full text-left border-collapse text-[8.5px]">
+          <thead>
+            <tr className="border-b-2 border-slate-800">
+              <th className="p-1">Nombre de Persona o Institución</th>
+              <th className="p-1">Equipo (Marca / Modelo / Serie)</th>
+              <th className="p-1">Tubo de Rayos X (Marca / Modelo / Serie)</th>
+              <th className="p-1">Fecha</th>
+              <th className="p-1">Responsable</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="p-3 text-center text-slate-400">No se encontraron registros de mantenimiento para este periodo.</td>
+              </tr>
+            ) : (
+              filtered.map(reg => (
+                <tr key={reg.id} className="border-b border-slate-300">
+                  <td className="p-1 font-bold">{reg.institutionName}</td>
+                  <td className="p-1">{reg.eqBrand} {reg.eqModel} ({reg.eqSerial})</td>
+                  <td className="p-1">{reg.tuboBrand !== '-' ? `${reg.tuboBrand} ${reg.tuboModel} (${reg.tuboSerial})` : '-'}</td>
+                  <td className="p-1">{reg.fecha}</td>
+                  <td className="p-1">{reg.responsable}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

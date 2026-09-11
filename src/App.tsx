@@ -1576,7 +1576,7 @@ export default function App() {
         ) : (
           <>
             {dbError && (
-              <div className="max-w-7xl mx-auto mb-6 bg-rose-50 border border-rose-150 p-4 rounded-xl flex gap-3 text-rose-800">
+              <div className="no-print max-w-7xl mx-auto mb-6 bg-rose-50 border border-rose-150 p-4 rounded-xl flex gap-3 text-rose-800">
                 <ShieldAlert className="w-5 h-5 shrink-0" />
                 <div className="text-2xs">
                   <p className="font-bold">⚠️ Error de Sincronización en la Base de Datos</p>
