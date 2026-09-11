@@ -3981,16 +3981,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <button
                           type="button"
                           onClick={e => { e.stopPropagation(); onToggleClientConfirmed && onToggleClientConfirmed(wo.id, !wo.clientConfirmed); }}
-                          className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto cursor-pointer transition-all duration-200 no-print ${
-                            wo.clientConfirmed
-                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
-                              : wo.type === 'Preventivo'
-                              ? 'bg-orange-100 text-orange-800 border-orange-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
-                              : 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
-                          }`}
-                          title={wo.clientConfirmed ? 'Click para marcar como Pendiente' : 'Click para confirmar visita con cliente'}
+                          className="ml-auto shrink-0 cursor-pointer no-print"
+                          title={wo.clientConfirmed ? 'Agendado — Click para marcar como pendiente de agendar' : 'Falta agendar — Click para confirmar visita con cliente'}
                         >
-                          {wo.clientConfirmed ? '✓ Confirmado' : 'Pendiente'}
+                          <span className={`w-3.5 h-3.5 rounded-[3px] border flex items-center justify-center transition-all duration-200 ${
+                            wo.clientConfirmed
+                              ? 'bg-emerald-500 border-emerald-600'
+                              : wo.type === 'Preventivo'
+                              ? 'bg-white border-orange-300 hover:border-emerald-400'
+                              : 'bg-white border-amber-300 hover:border-emerald-400'
+                          }`}>
+                            {wo.clientConfirmed && <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />}
+                          </span>
                         </button>
                       ) : (
                         <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto ${
@@ -4324,16 +4326,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <button
                         type="button"
                         onClick={e => { e.stopPropagation(); onToggleClientConfirmed && onToggleClientConfirmed(wo.id, !wo.clientConfirmed); }}
-                        className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto cursor-pointer transition-all duration-200 no-print print:ml-auto ${
-                          wo.clientConfirmed
-                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
-                            : wo.type === 'Preventivo'
-                            ? 'bg-orange-100 text-orange-800 border-orange-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
-                            : 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
-                        }`}
-                        title={wo.clientConfirmed ? 'Click para marcar como Pendiente' : 'Click para confirmar visita con cliente'}
+                        className="ml-auto shrink-0 cursor-pointer no-print print:ml-auto"
+                        title={wo.clientConfirmed ? 'Agendado — Click para marcar como pendiente de agendar' : 'Falta agendar — Click para confirmar visita con cliente'}
                       >
-                        {wo.clientConfirmed ? '✓ Confirmado' : 'Pendiente'}
+                        <span className={`w-3.5 h-3.5 rounded-[3px] border flex items-center justify-center transition-all duration-200 ${
+                          wo.clientConfirmed
+                            ? 'bg-emerald-500 border-emerald-600'
+                            : wo.type === 'Preventivo'
+                            ? 'bg-white border-orange-300 hover:border-emerald-400'
+                            : 'bg-white border-amber-300 hover:border-emerald-400'
+                        }`}>
+                          {wo.clientConfirmed && <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />}
+                        </span>
                       </button>
                     ) : (
                       <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto print:ml-auto ${
@@ -4529,16 +4533,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <button
                           type="button"
                           onClick={e => { e.stopPropagation(); onToggleClientConfirmed && onToggleClientConfirmed(wo.id, !wo.clientConfirmed); }}
-                          className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto cursor-pointer transition-all duration-200 no-print ${
-                            wo.clientConfirmed
-                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
-                              : wo.type === 'Preventivo'
-                              ? 'bg-orange-100 text-orange-800 border-orange-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
-                              : 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
-                          }`}
-                          title={wo.clientConfirmed ? 'Click para marcar como Pendiente' : 'Click para confirmar visita con cliente'}
+                          className="ml-auto shrink-0 cursor-pointer no-print"
+                          title={wo.clientConfirmed ? 'Agendado — Click para marcar como pendiente de agendar' : 'Falta agendar — Click para confirmar visita con cliente'}
                         >
-                          {wo.clientConfirmed ? '✓ Confirmado' : 'Pendiente'}
+                          <span className={`w-3.5 h-3.5 rounded-[3px] border flex items-center justify-center transition-all duration-200 ${
+                            wo.clientConfirmed
+                              ? 'bg-emerald-500 border-emerald-600'
+                              : wo.type === 'Preventivo'
+                              ? 'bg-white border-orange-300 hover:border-emerald-400'
+                              : 'bg-white border-amber-300 hover:border-emerald-400'
+                          }`}>
+                            {wo.clientConfirmed && <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />}
+                          </span>
                         </button>
                       ) : (
                         <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto ${
