@@ -55,3 +55,12 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
+// Registrar el service worker (habilita "Instalar app" / "Agregar a pantalla de inicio" en el celular)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.warn('No se pudo registrar el service worker:', err);
+    });
+  });
+}
+
