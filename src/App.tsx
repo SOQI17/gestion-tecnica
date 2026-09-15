@@ -1418,8 +1418,9 @@ export default function App() {
       {/* Top Banner Branding */}
       <header className="sticky top-0 bg-white border-b border-slate-200 z-50 px-2 sm:px-4 md:px-6 py-2 flex items-center justify-between shadow-2xs no-print">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-700 via-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-500/25 flex items-center justify-center border border-indigo-400/30 shrink-0">
-            <Activity className="w-5 h-5 text-white" />
+          <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-gradient-to-br from-indigo-800 via-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30 flex items-center justify-center border border-indigo-400/30 shrink-0">
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/25 via-transparent to-transparent" />
+            <Activity className="w-5 h-5 text-white relative drop-shadow-[0_2px_4px_rgba(30,27,75,0.55)]" strokeWidth={2.4} />
           </div>
           <div>
             <div className="flex items-center gap-1.5 flex-wrap">

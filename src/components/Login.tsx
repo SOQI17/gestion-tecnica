@@ -228,8 +228,9 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
         
         {/* Branding Title */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-tr from-indigo-650 via-indigo-500 to-indigo-400 text-white rounded-2xl shadow-xl shadow-indigo-650/30 mb-3 flex items-center justify-center border border-indigo-400/40">
-            <Activity className="w-8 h-8 text-white" />
+          <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-800 via-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-600/30 mb-3 flex items-center justify-center border border-indigo-400/40">
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/25 via-transparent to-transparent" />
+            <Activity className="w-8 h-8 text-white relative drop-shadow-[0_2px_5px_rgba(30,27,75,0.55)]" strokeWidth={2.3} />
           </div>
           <h2 className="text-2xl font-black text-white tracking-tight">ORIMEC FSM</h2>
           <p className="text-xs text-slate-300 font-semibold mt-1">
