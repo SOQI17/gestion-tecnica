@@ -224,6 +224,140 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
     });
   }, [contractsGE, queryGE]);
 
+  // Garantías Subview: estos hooks se calculan aquí, ANTES del branch condicional de 'ge' más
+  // abajo, para que se ejecute siempre el mismo número de hooks sin importar la sub-pestaña
+  // activa (Reglas de los Hooks) — de lo contrario React lanza el error "Rendered fewer hooks
+  // than expected" al alternar entre Garantías y GE.
+  const query = deferredContractSearch.toLowerCase().trim();
+
+  // Mapa de clientes para lookup O(1) de alto rendimiento
+  const clientsByIdMap = useMemo(() => {
+    const map = new Map<string, Client>();
+    clients.forEach(c => map.set(c.id, c));
+    return map;
+  }, [clients]);
+
+  // Pre-index contracts for instant client name search
+  const indexedContracts = useMemo(() => {
+    return contracts.map(con => {
+      const client = clientsByIdMap.get(con.clientId);
+      const clientName = client?.name || '';
+      const _clientSearchStr = `${clientName} ${con.clientId} ${con.id} ${client?.city || con.city || ''}`.toLowerCase();
+      return {
+        con,
+        client,
+        _clientSearchStr
+      };
+    });
+  }, [contracts, clientsByIdMap]);
+
+  const filtered = useMemo(() => {
+    return indexedContracts
+      .filter(({ con, client, _clientSearchStr }) => {
+        // 1. Buscador centrado en el cliente
+        if (query && !_clientSearchStr.includes(query)) return false;
+
+        // 2. Filtro por Tipo de Contrato
+        if (contractTypeFilter !== 'all' && con.type !== contractTypeFilter) return false;
+
+        // 3. Filtro por Fecha de Inicio y Fecha de Vencimiento
+        if (contractStartDate && contractEndDate) {
+          if (contractStartDate === contractEndDate) {
+            if (!con.startDate?.startsWith(contractStartDate) && !con.endDate?.startsWith(contractEndDate)) return false;
+          } else if (contractStartDate < contractEndDate) {
+            if (!con.startDate || con.startDate < contractStartDate) return false;
+            if (!con.endDate || con.endDate > contractEndDate) return false;
+          } else {
+            if (!con.startDate?.startsWith(contractStartDate)) return false;
+            if (!con.endDate?.startsWith(contractEndDate)) return false;
+          }
+        } else if (contractStartDate) {
+          if (!con.startDate || !con.startDate.startsWith(contractStartDate)) return false;
+        } else if (contractEndDate) {
+          if (!con.endDate || !con.endDate.startsWith(contractEndDate)) return false;
+        }
+
+        // 4. Filtro por Estado
+        const effectiveStatus = contractStatusFilter !== 'all' ? contractStatusFilter : contractFilterExpiration;
+        if (effectiveStatus && effectiveStatus !== 'all') {
+          const expAlert = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
+          if (effectiveStatus === 'activo') {
+            if (con.status === 'Inactivo' || expAlert?.level === 'expired') return false;
+          } else if (effectiveStatus === '1m' && expAlert?.level !== 'urgent_1m') {
+            return false;
+          } else if (effectiveStatus === '3m' && expAlert?.level !== 'warning_3m') {
+            return false;
+          } else if (effectiveStatus === 'expired' && (expAlert?.level !== 'expired' || (con.linkedContractId && con.linkedContractId.trim() !== ''))) {
+            return false;
+          } else if (effectiveStatus === 'pending_admin') {
+            const isPending = !con.schedulePdfUrl && (con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0)));
+            if (!isPending) return false;
+          } else if (effectiveStatus === 'inactivo' && con.status !== 'Inactivo') {
+            return false;
+          }
+        }
+
+        // 5. Filtro por Valor
+        if (contractValueFilter === 'unvalued') {
+          if (con.contractValue && con.contractValue > 0) return false;
+        } else if (contractValueFilter === 'valued') {
+          if (!con.contractValue || con.contractValue <= 0) return false;
+        }
+
+        // 6. Filtro por Marca
+        if (contractFilterBrand !== 'all') {
+          const hasBrand = (con.equipmentItems || []).some(
+            e => normalizeBrandName(e.brand).toLowerCase() === contractFilterBrand.toLowerCase()
+          );
+          if (!hasBrand) return false;
+        }
+
+        // 7. Filtro por Sector
+        if (contractSectorFilter !== 'all') {
+          const conSector = con.sector || (client?.industry?.toLowerCase().includes('público') || client?.industry?.toLowerCase().includes('publico') || client?.name.toUpperCase().includes('MSP') || client?.name.toUpperCase().includes('IESS') || client?.name.toUpperCase().includes('SOLCA') || client?.name.toUpperCase().includes('HOSPITAL') ? 'Público' : 'Privado');
+          if (conSector !== contractSectorFilter) return false;
+        }
+
+        return true;
+      })
+      .map(item => item.con);
+  }, [
+    indexedContracts,
+    query,
+    contractTypeFilter,
+    contractStatusFilter,
+    contractStartDate,
+    contractEndDate,
+    contractValueFilter,
+    contractFilterBrand,
+    contractSectorFilter,
+    contractFilterExpiration,
+    getContractExpirationAlert
+  ]);
+
+  // Memoize KPI counts to avoid 5 full array scans with date math on every render
+  const contractKpiCounts = useMemo(() => {
+    let pendingAdmin = 0;
+    let urgent1m = 0;
+    let warning3m = 0;
+    let inactivo = 0;
+    let expired = 0;
+
+    for (let i = 0; i < contracts.length; i++) {
+      const c = contracts[i];
+      if (!c.schedulePdfUrl && (c.pendingAdminSchedule || (c.maintenanceFrequency === 'Ninguno' && (!c.maintenanceDates || c.maintenanceDates.length === 0)))) {
+        pendingAdmin++;
+      }
+      const expAlert = getContractExpirationAlert ? getContractExpirationAlert(c.endDate, c.status, c.linkedContractId) : null;
+      if (expAlert?.level === 'urgent_1m') urgent1m++;
+      if (expAlert?.level === 'warning_3m') warning3m++;
+      if (c.status === 'Inactivo') inactivo++;
+      if (expAlert?.level === 'expired' && (!c.linkedContractId || c.linkedContractId.trim() === '')) expired++;
+    }
+
+    return { pendingAdmin, urgent1m, warning3m, inactivo, expired };
+  }, [contracts, getContractExpirationAlert]);
+
   if (contractsSubTab === 'ge') {
 
     const totalAmount = filteredGE.reduce((sum, item) => sum + (item.invoiceAmount || 0), 0);
@@ -693,114 +827,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
     );
   }
 
-  // Garantías Subview
-  const query = deferredContractSearch.toLowerCase().trim();
-
-  // Mapa de clientes para lookup O(1) de alto rendimiento
-  const clientsByIdMap = useMemo(() => {
-    const map = new Map<string, Client>();
-    clients.forEach(c => map.set(c.id, c));
-    return map;
-  }, [clients]);
-
-  // Pre-index contracts for instant client name search
-  const indexedContracts = useMemo(() => {
-    return contracts.map(con => {
-      const client = clientsByIdMap.get(con.clientId);
-      const clientName = client?.name || '';
-      const _clientSearchStr = `${clientName} ${con.clientId} ${con.id} ${client?.city || con.city || ''}`.toLowerCase();
-      return {
-        con,
-        client,
-        _clientSearchStr
-      };
-    });
-  }, [contracts, clientsByIdMap]);
-
-  const filtered = useMemo(() => {
-    return indexedContracts
-      .filter(({ con, client, _clientSearchStr }) => {
-        // 1. Buscador centrado en el cliente
-        if (query && !_clientSearchStr.includes(query)) return false;
-
-        // 2. Filtro por Tipo de Contrato
-        if (contractTypeFilter !== 'all' && con.type !== contractTypeFilter) return false;
-
-        // 3. Filtro por Fecha de Inicio y Fecha de Vencimiento
-        if (contractStartDate && contractEndDate) {
-          if (contractStartDate === contractEndDate) {
-            if (!con.startDate?.startsWith(contractStartDate) && !con.endDate?.startsWith(contractEndDate)) return false;
-          } else if (contractStartDate < contractEndDate) {
-            if (!con.startDate || con.startDate < contractStartDate) return false;
-            if (!con.endDate || con.endDate > contractEndDate) return false;
-          } else {
-            if (!con.startDate?.startsWith(contractStartDate)) return false;
-            if (!con.endDate?.startsWith(contractEndDate)) return false;
-          }
-        } else if (contractStartDate) {
-          if (!con.startDate || !con.startDate.startsWith(contractStartDate)) return false;
-        } else if (contractEndDate) {
-          if (!con.endDate || !con.endDate.startsWith(contractEndDate)) return false;
-        }
-
-        // 4. Filtro por Estado
-        const effectiveStatus = contractStatusFilter !== 'all' ? contractStatusFilter : contractFilterExpiration;
-        if (effectiveStatus && effectiveStatus !== 'all') {
-          const expAlert = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
-          if (effectiveStatus === 'activo') {
-            if (con.status === 'Inactivo' || expAlert?.level === 'expired') return false;
-          } else if (effectiveStatus === '1m' && expAlert?.level !== 'urgent_1m') {
-            return false;
-          } else if (effectiveStatus === '3m' && expAlert?.level !== 'warning_3m') {
-            return false;
-          } else if (effectiveStatus === 'expired' && (expAlert?.level !== 'expired' || (con.linkedContractId && con.linkedContractId.trim() !== ''))) {
-            return false;
-          } else if (effectiveStatus === 'pending_admin') {
-            const isPending = !con.schedulePdfUrl && (con.pendingAdminSchedule || (con.maintenanceFrequency === 'Ninguno' && (!con.maintenanceDates || con.maintenanceDates.length === 0)));
-            if (!isPending) return false;
-          } else if (effectiveStatus === 'inactivo' && con.status !== 'Inactivo') {
-            return false;
-          }
-        }
-
-        // 5. Filtro por Valor
-        if (contractValueFilter === 'unvalued') {
-          if (con.contractValue && con.contractValue > 0) return false;
-        } else if (contractValueFilter === 'valued') {
-          if (!con.contractValue || con.contractValue <= 0) return false;
-        }
-
-        // 6. Filtro por Marca
-        if (contractFilterBrand !== 'all') {
-          const hasBrand = (con.equipmentItems || []).some(
-            e => normalizeBrandName(e.brand).toLowerCase() === contractFilterBrand.toLowerCase()
-          );
-          if (!hasBrand) return false;
-        }
-
-        // 7. Filtro por Sector
-        if (contractSectorFilter !== 'all') {
-          const conSector = con.sector || (client?.industry?.toLowerCase().includes('público') || client?.industry?.toLowerCase().includes('publico') || client?.name.toUpperCase().includes('MSP') || client?.name.toUpperCase().includes('IESS') || client?.name.toUpperCase().includes('SOLCA') || client?.name.toUpperCase().includes('HOSPITAL') ? 'Público' : 'Privado');
-          if (conSector !== contractSectorFilter) return false;
-        }
-
-        return true;
-      })
-      .map(item => item.con);
-  }, [
-    indexedContracts,
-    query,
-    contractTypeFilter,
-    contractStatusFilter,
-    contractStartDate,
-    contractEndDate,
-    contractValueFilter,
-    contractFilterBrand,
-    contractSectorFilter,
-    contractFilterExpiration,
-    getContractExpirationAlert
-  ]);
-
+  // Garantías Subview (query, clientsByIdMap, indexedContracts, filtered y contractKpiCounts
+  // ahora se calculan más arriba, antes del branch de 'ge', para respetar las Reglas de los Hooks)
   const sorted = [...filtered].sort((a, b) => {
     if (contractDateSort === 'start_asc') return (a.startDate || '').localeCompare(b.startDate || '');
     if (contractDateSort === 'start_desc') return (b.startDate || '').localeCompare(a.startDate || '');
@@ -812,29 +840,6 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
   const itemsPerPage = 10;
   const totalPages = Math.ceil(sorted.length / itemsPerPage) || 1;
   const paginated = sorted.slice((contractPage - 1) * itemsPerPage, contractPage * itemsPerPage);
-
-  // Memoize KPI counts to avoid 5 full array scans with date math on every render
-  const contractKpiCounts = useMemo(() => {
-    let pendingAdmin = 0;
-    let urgent1m = 0;
-    let warning3m = 0;
-    let inactivo = 0;
-    let expired = 0;
-
-    for (let i = 0; i < contracts.length; i++) {
-      const c = contracts[i];
-      if (!c.schedulePdfUrl && (c.pendingAdminSchedule || (c.maintenanceFrequency === 'Ninguno' && (!c.maintenanceDates || c.maintenanceDates.length === 0)))) {
-        pendingAdmin++;
-      }
-      const expAlert = getContractExpirationAlert ? getContractExpirationAlert(c.endDate, c.status, c.linkedContractId) : null;
-      if (expAlert?.level === 'urgent_1m') urgent1m++;
-      if (expAlert?.level === 'warning_3m') warning3m++;
-      if (c.status === 'Inactivo') inactivo++;
-      if (expAlert?.level === 'expired' && (!c.linkedContractId || c.linkedContractId.trim() === '')) expired++;
-    }
-
-    return { pendingAdmin, urgent1m, warning3m, inactivo, expired };
-  }, [contracts, getContractExpirationAlert]);
 
   return (
     <div className="space-y-6 font-sans">
