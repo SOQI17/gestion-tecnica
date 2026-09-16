@@ -334,18 +334,21 @@ const generateMaintenanceDates = (
   else if (frequency === 'Semestral') incrementMonths = 6;
   else if (frequency === 'Anual') incrementMonths = 12;
 
-  const isPurchaseWarranty = contractType === 'Garantía de compra';
-
-  const targetDay = (preferredDay && preferredDay >= 1 && preferredDay <= 31) 
-    ? preferredDay 
+  const targetDay = (preferredDay && preferredDay >= 1 && preferredDay <= 31)
+    ? preferredDay
     : start.getDate();
 
   let year = start.getFullYear();
   let month = start.getMonth();
 
+  // Tope del bucle: normalmente la fecha de vencimiento real, salvo en modo AUTO donde se
+  // recorta ~1 mes antes (ver más abajo) para que el último mantenimiento no caiga justo
+  // en el mes de expiración de la garantía/contrato.
+  let loopEnd = end;
+
   if (preferredMonth && preferredMonth >= 1 && preferredMonth <= 12) {
     month = preferredMonth - 1; // 0-indexed (e.g. Feb = 1)
-    
+
     // Find the first year on or after start where candidate date >= start
     let daysInM = new Date(year, month + 1, 0).getDate();
     let cDay = Math.min(targetDay, daysInM);
@@ -357,31 +360,40 @@ const generateMaintenanceDates = (
       cDay = Math.min(targetDay, daysInM);
       candidate = new Date(year, month, cDay);
     }
-  } else if (isPurchaseWarranty) {
-    month += incrementMonths;
-    if (month > 11) {
-      year += Math.floor(month / 12);
-      month = month % 12;
-    }
+  } else {
+    // AUTO: calcular el primer mes hacia atrás desde el vencimiento, de forma que el ÚLTIMO
+    // mantenimiento quede ~1 mes antes de que expire la garantía/contrato (en vez de caer
+    // justo en el mes de vencimiento). Ej: garantía de 12 meses, frecuencia trimestral →
+    // visitas en el mes 2, 5, 8 y 11 (no 3, 6, 9, 12).
+    const bufferMonths = 1;
+    const startIndex = start.getFullYear() * 12 + start.getMonth();
+    const endIndex = end.getFullYear() * 12 + end.getMonth();
+    let targetLastIndex = endIndex - bufferMonths;
+    if (targetLastIndex < startIndex) targetLastIndex = endIndex; // periodo muy corto: sin margen
+
+    const span = targetLastIndex - startIndex;
+    const remainder = span % incrementMonths;
+    const firstOffset = span <= 0 ? incrementMonths : (remainder === 0 ? incrementMonths : remainder);
+
+    const firstIndex = startIndex + firstOffset;
+    year = Math.floor(firstIndex / 12);
+    month = firstIndex % 12;
+
+    // El tope del bucle también debe recortarse al mes objetivo (targetLastIndex): de lo
+    // contrario, frecuencias que dividen exacto el periodo (ej. Mensual) seguirían generando
+    // visitas hasta la fecha de vencimiento real, ignorando el margen calculado arriba.
+    const cutYear = Math.floor(targetLastIndex / 12);
+    const cutMonth = targetLastIndex % 12;
+    const cutDaysInMonth = new Date(cutYear, cutMonth + 1, 0).getDate();
+    loopEnd = new Date(cutYear, cutMonth, Math.min(targetDay, cutDaysInMonth));
   }
 
   let daysInMonth = new Date(year, month + 1, 0).getDate();
   let candidateDay = Math.min(targetDay, daysInMonth);
   let current = new Date(year, month, candidateDay);
 
-  if (!preferredMonth && !isPurchaseWarranty && current < start) {
-    month += incrementMonths;
-    if (month > 11) {
-      year += Math.floor(month / 12);
-      month = month % 12;
-    }
-    daysInMonth = new Date(year, month + 1, 0).getDate();
-    candidateDay = Math.min(targetDay, daysInMonth);
-    current = new Date(year, month, candidateDay);
-  }
-
   let safety = 0;
-  while ((isPurchaseWarranty ? (current <= end) : (current <= end)) && safety < 120) {
+  while (current <= loopEnd && safety < 120) {
     safety++;
     const yyyy = current.getFullYear();
     const mm = String(current.getMonth() + 1).padStart(2, '0');
