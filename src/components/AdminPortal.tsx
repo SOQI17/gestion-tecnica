@@ -3700,25 +3700,32 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     const wo = workOrders.find(w => w.id === woId);
     if (!wo) return;
     if (wo.plannedDate === targetDateStr) return; // No change
-    
-    // Check for conflicts (Vacation, Feriado or Schedule overlap)
-    const conflictDetail = getWoConflictDetails({ ...wo, plannedDate: targetDateStr });
-    if (conflictDetail) {
-      const confirmMove = window.confirm(
-        `⚠️ ALERTA DE CONFLICTO:\n\n${conflictDetail.label}\nFecha destino: ${targetDateStr}.\n\n¿Está seguro de que desea mover esta Orden de Trabajo a esta fecha con conflicto?`
-      );
-      if (!confirmMove) return;
-    }
 
-    const oldDateStr = wo.plannedDate;
+    // El resto de la lógica (incluido el posible window.confirm de conflicto) se difiere al
+    // siguiente tick: disparar un diálogo nativo bloqueante DENTRO del evento "drop" de un
+    // drag-and-drop HTML5 nativo puede dejar el navegador sin responder a clics hasta recargar
+    // (el drag no alcanza a cerrarse correctamente). Con el setTimeout, el drop ya terminó de
+    // procesarse por completo antes de que el confirm pueda aparecer.
+    setTimeout(() => {
+      // Check for conflicts (Vacation, Feriado or Schedule overlap)
+      const conflictDetail = getWoConflictDetails({ ...wo, plannedDate: targetDateStr });
+      if (conflictDetail) {
+        const confirmMove = window.confirm(
+          `⚠️ ALERTA DE CONFLICTO:\n\n${conflictDetail.label}\nFecha destino: ${targetDateStr}.\n\n¿Está seguro de que desea mover esta Orden de Trabajo a esta fecha con conflicto?`
+        );
+        if (!confirmMove) return;
+      }
 
-    const updatedWO: WorkOrder = {
-      ...wo,
-      plannedDate: targetDateStr
-    };
-    onUpdateWorkOrder(updatedWO);
+      const oldDateStr = wo.plannedDate;
 
-    syncContractDatesForMovedWorkOrder(wo.clientId, oldDateStr, targetDateStr, wo.equipmentName);
+      const updatedWO: WorkOrder = {
+        ...wo,
+        plannedDate: targetDateStr
+      };
+      onUpdateWorkOrder(updatedWO);
+
+      syncContractDatesForMovedWorkOrder(wo.clientId, oldDateStr, targetDateStr, wo.equipmentName);
+    }, 0);
   };
 
   // Memoized calendar day cells — only recomputes when month/orders/contracts etc. change

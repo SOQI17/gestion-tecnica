@@ -11,17 +11,30 @@ export const firebaseConfig = {
   appId: "1:927102023453:web:5af9acce750582a25b13f4"
 };
 
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from "firebase/firestore";
 
 // Inicialización
 const app = initializeApp(firebaseConfig);
 
-// Inicializar Firestore con persistencia de caché local IndexedDB multi-pestaña para máxima velocidad
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
-});
+// Inicializar Firestore con persistencia de caché local IndexedDB multi-pestaña para máxima velocidad.
+// En navegación privada (Safari/algunas configs de Chrome) IndexedDB puede estar bloqueado o
+// restringido, y esta inicialización puede fallar de forma síncrona ANTES de que React monte la
+// app -- sin este try/catch, ese fallo deja la página completamente en blanco. Si falla, seguimos
+// con Firestore en memoria (sin caché offline, pero totalmente funcional).
+function initDb() {
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    });
+  } catch (e) {
+    console.warn("No se pudo habilitar la persistencia local de Firestore (posible navegación privada). Continuando sin caché offline.", e);
+    return getFirestore(app);
+  }
+}
+
+export const db = initDb();
 export const auth = getAuth(app);
 
 /**
