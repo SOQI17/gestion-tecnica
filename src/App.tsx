@@ -6,7 +6,7 @@ import AdminPortal, { getDefaultPermissionsForSpecialty } from './components/Adm
 import EngineerPortal from './components/EngineerPortal';
 import Login from './components/Login';
 import { db, auth, handleFirestoreError, OperationType, registerFirebaseUserSecondary } from './firebase';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, getDocs, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, getDocs, getDoc, enableNetwork } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 
@@ -67,6 +67,7 @@ export default function App() {
   const [dbLoading, setDbLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' | 'warning' } | null>(null);
+  const [staleConnectionWarning, setStaleConnectionWarning] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
@@ -198,6 +199,32 @@ export default function App() {
 
     return () => unsubAuth();
   }, [isDemoMode]);
+
+  // Detectar pestañas dejadas abiertas por mucho tiempo (horas/días) en segundo plano: la
+  // conexión en tiempo real de Firestore puede quedar "colgada" silenciosamente (sueño del
+  // equipo, cambios de red, límites del navegador para pestañas inactivas) sin que la app lo
+  // note, mostrando datos desactualizados indefinidamente hasta recargar. Al volver a la
+  // pestaña, forzamos un reintento de conexión y, si estuvo oculta mucho tiempo, avisamos.
+  useEffect(() => {
+    const STALE_THRESHOLD_MS = 15 * 60 * 1000; // 15 minutos
+    let hiddenAt: number | null = null;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        hiddenAt = Date.now();
+        return;
+      }
+      // La pestaña vuelve a estar visible
+      enableNetwork(db).catch(() => {});
+      if (hiddenAt !== null && Date.now() - hiddenAt >= STALE_THRESHOLD_MS) {
+        setStaleConnectionWarning(true);
+      }
+      hiddenAt = null;
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   // Sincronizar Firestore en tiempo real directamente
   useEffect(() => {
@@ -1585,6 +1612,31 @@ export default function App() {
                     La aplicación no puede escribir o sincronizar datos con Firestore. Por favor, verifique y publique las Reglas de Seguridad en su consola de Firebase ({dbError}).
                   </p>
                 </div>
+              </div>
+            )}
+            {staleConnectionWarning && (
+              <div className="no-print max-w-7xl mx-auto mb-6 bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center gap-3 text-amber-900">
+                <RefreshCw className="w-5 h-5 shrink-0" />
+                <div className="text-2xs flex-1">
+                  <p className="font-bold">Esta pestaña estuvo inactiva un buen rato</p>
+                  <p className="mt-0.5 font-semibold leading-normal">
+                    Es posible que no estés viendo los datos más recientes. Te recomendamos recargar la página para asegurarte de tener la información actualizada.
+                  </p>
+                </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white font-bold text-2xs px-3 py-1.5 rounded-lg cursor-pointer transition-colors flex items-center gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Recargar Ahora
+                </button>
+                <button
+                  onClick={() => setStaleConnectionWarning(false)}
+                  className="shrink-0 text-amber-700 hover:text-amber-900 font-bold text-xs px-1.5 cursor-pointer"
+                  title="Descartar"
+                >
+                  ✕
+                </button>
               </div>
             )}
             {(activeTab === 'admin' || activeTab === 'sales') && (

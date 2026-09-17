@@ -1349,6 +1349,7 @@ export default function AdminPortal({
   
   // Details View state
   const [infoWO, setInfoWO] = useState<WorkOrder | null>(null);
+  const [pendingConflictMove, setPendingConflictMove] = useState<{ wo: WorkOrder; targetDateStr: string; conflictLabel: string } | null>(null);
   const [isEditingWOState, setIsEditingWOState] = useState(false);
   const [editedWO, setEditedWO] = useState<WorkOrder | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -3696,36 +3697,33 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     onUpdateContract(updatedContract);
   };
 
+  const executeMoveWorkOrder = (wo: WorkOrder, targetDateStr: string) => {
+    const oldDateStr = wo.plannedDate;
+    const updatedWO: WorkOrder = {
+      ...wo,
+      plannedDate: targetDateStr
+    };
+    onUpdateWorkOrder(updatedWO);
+    syncContractDatesForMovedWorkOrder(wo.clientId, oldDateStr, targetDateStr, wo.equipmentName);
+  };
+
+  // Nota: NO usar window.confirm() aquí. Un diálogo nativo bloqueante disparado dentro (o
+  // inmediatamente después) del evento "drop" de un drag-and-drop HTML5 nativo puede dejar el
+  // navegador sin responder a clics hasta recargar la página (el navegador no alcanza a cerrar
+  // limpiamente la secuencia de arrastre). En su lugar, se muestra un modal propio de React
+  // (pendingConflictMove) que no bloquea el hilo principal.
   const handleMoveWorkOrder = (woId: string, targetDateStr: string) => {
     const wo = workOrders.find(w => w.id === woId);
     if (!wo) return;
     if (wo.plannedDate === targetDateStr) return; // No change
 
-    // El resto de la lógica (incluido el posible window.confirm de conflicto) se difiere al
-    // siguiente tick: disparar un diálogo nativo bloqueante DENTRO del evento "drop" de un
-    // drag-and-drop HTML5 nativo puede dejar el navegador sin responder a clics hasta recargar
-    // (el drag no alcanza a cerrarse correctamente). Con el setTimeout, el drop ya terminó de
-    // procesarse por completo antes de que el confirm pueda aparecer.
-    setTimeout(() => {
-      // Check for conflicts (Vacation, Feriado or Schedule overlap)
-      const conflictDetail = getWoConflictDetails({ ...wo, plannedDate: targetDateStr });
-      if (conflictDetail) {
-        const confirmMove = window.confirm(
-          `⚠️ ALERTA DE CONFLICTO:\n\n${conflictDetail.label}\nFecha destino: ${targetDateStr}.\n\n¿Está seguro de que desea mover esta Orden de Trabajo a esta fecha con conflicto?`
-        );
-        if (!confirmMove) return;
-      }
+    const conflictDetail = getWoConflictDetails({ ...wo, plannedDate: targetDateStr });
+    if (conflictDetail) {
+      setPendingConflictMove({ wo, targetDateStr, conflictLabel: conflictDetail.label });
+      return;
+    }
 
-      const oldDateStr = wo.plannedDate;
-
-      const updatedWO: WorkOrder = {
-        ...wo,
-        plannedDate: targetDateStr
-      };
-      onUpdateWorkOrder(updatedWO);
-
-      syncContractDatesForMovedWorkOrder(wo.clientId, oldDateStr, targetDateStr, wo.equipmentName);
-    }, 0);
+    executeMoveWorkOrder(wo, targetDateStr);
   };
 
   // Memoized calendar day cells — only recomputes when month/orders/contracts etc. change
@@ -9134,6 +9132,59 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
           );
         })()}
+      </AnimatePresence>
+
+      {/* Confirmación de conflicto al arrastrar una OT a una fecha con vacaciones/feriado/cruce.
+          No usa window.confirm() a propósito: ver nota junto a handleMoveWorkOrder. */}
+      <AnimatePresence>
+        {pendingConflictMove && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+              onClick={() => setPendingConflictMove(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full border border-amber-200"
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-black text-sm text-slate-900">Alerta de Conflicto</h4>
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">{pendingConflictMove.conflictLabel}</p>
+                  <p className="text-xs text-slate-600 mt-1">Fecha destino: <span className="font-bold">{pendingConflictMove.targetDateStr}</span></p>
+                  <p className="text-xs text-slate-500 mt-2">¿Está seguro de que desea mover esta Orden de Trabajo a esta fecha con conflicto?</p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPendingConflictMove(null)}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    executeMoveWorkOrder(pendingConflictMove.wo, pendingConflictMove.targetDateStr);
+                    setPendingConflictMove(null);
+                  }}
+                  className="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg cursor-pointer transition-colors shadow-xs"
+                >
+                  Mover de Todas Formas
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
 
       {/* Modal / Slide-over for detailed Engineer Metrics */}
