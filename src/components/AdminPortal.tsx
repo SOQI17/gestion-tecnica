@@ -50,7 +50,7 @@ import { EquiposTab } from './admin/EquiposTab';
 import { ContratosTab } from './admin/ContratosTab';
 import { CronogramaTab } from './admin/CronogramaTab';
 import { VacacionesTab } from './admin/VacacionesTab';
-import { AgendamientoTab } from './admin/AgendamientoTab';
+import { AgendamientoTab, DashboardPrintColumns, DEFAULT_DASHBOARD_PRINT_COLUMNS } from './admin/AgendamientoTab';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl, triggerDirectDownload } from '../utils/cloudinary';
 
 const cleanStr = (s: string) => (s || '')
@@ -4947,8 +4947,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     };
   }, [filteredDashOrders, engineerStats, engineers, reports, getWOEffectiveStatus, excludedEngIds]);
 
-  const handlePrintMainDashboard = () => {
-    const periodTitle = dashPeriod === 'month' 
+  const handlePrintMainDashboard = (columns: DashboardPrintColumns = DEFAULT_DASHBOARD_PRINT_COLUMNS) => {
+    const periodTitle = dashPeriod === 'month'
       ? `Mes: ${monthsList[dashMonth - 1]} ${dashYear}`
       : dashPeriod === 'semester'
         ? `${dashSemester}º Semestre ${dashYear}`
@@ -5011,16 +5011,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <thead>
               <tr>
                 <th>Ingeniero</th>
-                <th>Especialidad / Sede</th>
-                <th>Total Tareas</th>
-                <th>Principal / Apoyo</th>
-                <th>Horas Campo</th>
-                <th>Instalaciones (Días)</th>
-                <th>Desglose de Tareas</th>
-                <th>Tasa Cierre Prev.</th>
-                <th>Tasa Cierre Corr.</th>
-                <th>Tasa Cierre Inst.</th>
-                <th>Tasa Cierre Total</th>
+                ${columns.specialty ? '<th>Especialidad / Sede</th>' : ''}
+                ${columns.totalTasks ? '<th>Total Tareas</th>' : ''}
+                ${columns.primarySupport ? '<th>Principal / Apoyo</th>' : ''}
+                ${columns.fieldHours ? '<th>Horas Campo</th>' : ''}
+                ${columns.installDays ? '<th>Instalaciones (Días)</th>' : ''}
+                ${columns.taskBreakdown ? '<th>Desglose de Tareas</th>' : ''}
+                ${columns.ratePrev ? '<th>Tasa Cierre Prev.</th>' : ''}
+                ${columns.rateCorr ? '<th>Tasa Cierre Corr.</th>' : ''}
+                ${columns.rateInst ? '<th>Tasa Cierre Inst.</th>' : ''}
+                ${columns.rateTotal ? '<th>Tasa Cierre Total</th>' : ''}
               </tr>
             </thead>
             <tbody>
@@ -5041,16 +5041,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 return `
                   <tr>
                     <td><strong>${st.engineer.name}</strong></td>
-                    <td>${st.engineer.specialty} • ${st.engineer.sede || 'Quito'}</td>
-                    <td><strong>${st.total}</strong></td>
-                    <td>${st.asPrimary} Pr. / ${st.asSupport} Ap.</td>
-                    <td><strong>${st.hoursSpent} hrs</strong></td>
-                    <td>${st.installationDays} días (${st.installationDays * 8}h laborables)</td>
-                    <td>${typeSummary}</td>
-                    <td>${ratePrev !== null ? `<span class="${ratePrev >= 80 ? 'badge-ok' : 'badge-pending'}">${ratePrev}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>
-                    <td>${rateCorr !== null ? `<span class="${rateCorr >= 80 ? 'badge-ok' : 'badge-pending'}">${rateCorr}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>
-                    <td>${rateInst !== null ? `<span class="${rateInst >= 80 ? 'badge-ok' : 'badge-pending'}">${rateInst}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>
-                    <td>${rateTotal !== null ? `<span class="${rateTotal >= 80 ? 'badge-ok' : 'badge-pending'}">${rateTotal}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>
+                    ${columns.specialty ? `<td>${st.engineer.specialty} • ${st.engineer.sede || 'Quito'}</td>` : ''}
+                    ${columns.totalTasks ? `<td><strong>${st.total}</strong></td>` : ''}
+                    ${columns.primarySupport ? `<td>${st.asPrimary} Pr. / ${st.asSupport} Ap.</td>` : ''}
+                    ${columns.fieldHours ? `<td><strong>${st.hoursSpent} hrs</strong></td>` : ''}
+                    ${columns.installDays ? `<td>${st.installationDays} días (${st.installationDays * 8}h laborables)</td>` : ''}
+                    ${columns.taskBreakdown ? `<td>${typeSummary}</td>` : ''}
+                    ${columns.ratePrev ? `<td>${ratePrev !== null ? `<span class="${ratePrev >= 80 ? 'badge-ok' : 'badge-pending'}">${ratePrev}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>` : ''}
+                    ${columns.rateCorr ? `<td>${rateCorr !== null ? `<span class="${rateCorr >= 80 ? 'badge-ok' : 'badge-pending'}">${rateCorr}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>` : ''}
+                    ${columns.rateInst ? `<td>${rateInst !== null ? `<span class="${rateInst >= 80 ? 'badge-ok' : 'badge-pending'}">${rateInst}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>` : ''}
+                    ${columns.rateTotal ? `<td>${rateTotal !== null ? `<span class="${rateTotal >= 80 ? 'badge-ok' : 'badge-pending'}">${rateTotal}%</span>` : '<span style="color:#94a3b8;">-</span>'}</td>` : ''}
                   </tr>
                 `;
               }).join('')}

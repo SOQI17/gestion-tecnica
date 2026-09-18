@@ -1,8 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, UserCheck, Plus, Database, Printer, FileSpreadsheet, Sparkles, AlertTriangle, Trash2, Search, X, RotateCcw, Check, FileText, Filter, Users, PieChart, Percent, Award, TrendingUp, Briefcase, ExternalLink, ShieldAlert, Send, BarChart3, CalendarRange } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, UserCheck, Plus, Database, Printer, FileSpreadsheet, Sparkles, AlertTriangle, Trash2, Search, X, RotateCcw, Check, FileText, Filter, Users, PieChart, Percent, Award, TrendingUp, Briefcase, ExternalLink, ShieldAlert, Send, BarChart3, CalendarRange, Columns3 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { WorkOrder, Engineer, Client, TechnicalReport, MaintenanceType, UserPermissions } from '../../types';
 import { ScrollToTopButton } from './ScrollToTopButton';
+
+// Columnas opcionales del Informe Ejecutivo de Rendimiento (todas menos "Ingeniero", que
+// siempre se incluye). El usuario elige cuáles imprimir desde el botón "Columnas".
+export interface DashboardPrintColumns {
+  specialty: boolean;
+  totalTasks: boolean;
+  primarySupport: boolean;
+  fieldHours: boolean;
+  installDays: boolean;
+  taskBreakdown: boolean;
+  ratePrev: boolean;
+  rateCorr: boolean;
+  rateInst: boolean;
+  rateTotal: boolean;
+}
+
+export const DEFAULT_DASHBOARD_PRINT_COLUMNS: DashboardPrintColumns = {
+  specialty: true,
+  totalTasks: true,
+  primarySupport: true,
+  fieldHours: true,
+  installDays: true,
+  taskBreakdown: true,
+  ratePrev: true,
+  rateCorr: true,
+  rateInst: true,
+  rateTotal: true,
+};
+
+const DASHBOARD_COLUMN_LABELS: { id: keyof DashboardPrintColumns; label: string }[] = [
+  { id: 'specialty', label: 'Especialidad / Sede' },
+  { id: 'totalTasks', label: 'Total Tareas' },
+  { id: 'primarySupport', label: 'Principal / Apoyo' },
+  { id: 'fieldHours', label: 'Horas Campo' },
+  { id: 'installDays', label: 'Instalaciones (Días)' },
+  { id: 'taskBreakdown', label: 'Desglose de Tareas' },
+  { id: 'ratePrev', label: 'Tasa Cierre Prev.' },
+  { id: 'rateCorr', label: 'Tasa Cierre Corr.' },
+  { id: 'rateInst', label: 'Tasa Cierre Inst.' },
+  { id: 'rateTotal', label: 'Tasa Cierre Total' },
+];
 
 export interface AgendamientoTabProps {
   totalPlanned: number;
@@ -118,7 +159,7 @@ export interface AgendamientoTabProps {
   dashSemester: 1 | 2;
   setDashSemester: (s: 1 | 2) => void;
   handleExportDashboardCSV: () => void;
-  handlePrintMainDashboard: () => void;
+  handlePrintMainDashboard: (columns: DashboardPrintColumns) => void;
   expandedMainKPICard: string | null;
   setExpandedMainKPICard: React.Dispatch<React.SetStateAction<string | null>>;
   dashboardKPIs: any;
@@ -257,6 +298,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 }) => {
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+  const [dashboardColumns, setDashboardColumns] = useState<DashboardPrintColumns>(DEFAULT_DASHBOARD_PRINT_COLUMNS);
+  const [isColumnConfigOpen, setIsColumnConfigOpen] = useState(false);
 
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
@@ -1997,6 +2040,84 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
         {/* Tab D: Metrics & Performance Dashboard */}
         {activeSubTab === 'dashboard' && (
           <div className="space-y-6">
+            {/* Column Visibility Modal for Printed Dashboard */}
+            {isColumnConfigOpen && (
+              <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150 no-print">
+                <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <Columns3 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-slate-900">Columnas del Informe Impreso</h4>
+                        <p className="text-3xs text-slate-500 font-medium">Elige qué columnas incluir al imprimir o exportar a PDF el Dashboard</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsColumnConfigOpen(false)}
+                      className="text-slate-400 hover:text-slate-700 text-sm font-bold cursor-pointer p-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-1 pb-1">
+                    <button
+                      type="button"
+                      onClick={() => setDashboardColumns(DEFAULT_DASHBOARD_PRINT_COLUMNS)}
+                      className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      ✅ Incluir Todas
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDashboardColumns(prev => {
+                        const cleared = { ...prev };
+                        (Object.keys(cleared) as (keyof DashboardPrintColumns)[]).forEach(k => { cleared[k] = false; });
+                        return cleared;
+                      })}
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      Quitar Todas
+                    </button>
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto custom-scrollbar border border-slate-200 rounded-xl divide-y divide-slate-100">
+                    <div className="flex items-center justify-between p-2.5 bg-slate-50/60">
+                      <span className="text-xs font-bold text-slate-500">Ingeniero</span>
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase">Siempre incluida</span>
+                    </div>
+                    {DASHBOARD_COLUMN_LABELS.map(col => (
+                      <label
+                        key={col.id}
+                        className="flex items-center justify-between p-2.5 hover:bg-slate-50 cursor-pointer transition-colors"
+                      >
+                        <span className="text-xs font-bold text-slate-700">{col.label}</span>
+                        <input
+                          type="checkbox"
+                          checked={dashboardColumns[col.id]}
+                          onChange={() => setDashboardColumns(prev => ({ ...prev, [col.id]: !prev[col.id] }))}
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                        />
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsColumnConfigOpen(false)}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition-colors cursor-pointer shadow-xs"
+                    >
+                      Listo
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Engineer Filter & Exclusion Modal */}
             {showEngFilterModal && (
               <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150 no-print">
@@ -2207,7 +2328,17 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 
                 <button
                   type="button"
-                  onClick={handlePrintMainDashboard}
+                  onClick={() => setIsColumnConfigOpen(true)}
+                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-2xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs hover:shadow-md ml-1"
+                  title="Elegir qué columnas incluir al imprimir el Dashboard"
+                >
+                  <Columns3 className="w-3.5 h-3.5" />
+                  <span>Columnas</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePrintMainDashboard(dashboardColumns)}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-2xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
                   title="Imprimir o Guardar en PDF Dashboard Principal de Rendimiento"
                 >
