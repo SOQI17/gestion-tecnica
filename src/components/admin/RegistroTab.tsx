@@ -64,6 +64,9 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
   const [registryPage, setRegistryPage] = useState(1);
   const [registrySortField, setRegistrySortField] = useState<'fecha' | 'institution' | 'responsable' | 'equipment'>('fecha');
   const [registrySortDir, setRegistrySortDir] = useState<'asc' | 'desc'>('desc');
+  // Por defecto solo se listan los Preventivos: este registro es el documento oficial de
+  // cumplimiento de mantenimientos preventivos, y no debe mezclarse con correctivos u otros.
+  const [registryTypeFilter, setRegistryTypeFilter] = useState<'preventivo' | 'correctivo' | 'otro' | 'all'>('preventivo');
 
   // Reporte por periodo: Mensual / Anual / Total (histórico completo)
   const todayForReport = new Date();
@@ -72,6 +75,16 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
   const [reportMonth, setReportMonth] = useState<number>(todayForReport.getMonth() + 1);
 
   const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  // Clasifica el tipo de servicio de la OT vinculada en 3 grupos para poder filtrar el listado.
+  // Sin OT vinculada (registro cargado a mano / importado) se asume Preventivo, que es el uso
+  // histórico de este listado de cumplimiento normativo.
+  const bucketServiceType = (t?: string): 'preventivo' | 'correctivo' | 'otro' => {
+    if (t === 'Preventivo') return 'preventivo';
+    if (t === 'Correctivo') return 'correctivo';
+    if (!t) return 'preventivo';
+    return 'otro';
+  };
 
   const getEffectiveRegistryFields = (reg: MaintenanceRegistry) => {
     let institutionName = (reg.institutionName || '').trim();
@@ -83,10 +96,12 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
     let tuboSerial = (reg.tuboSerial || '').trim();
     let fecha = (reg.fecha || '').trim();
     let responsable = (reg.responsable || '').trim();
+    let woType: string | undefined;
 
     if (reg.workOrderId) {
       const wo = workOrders.find(w => w.id === reg.workOrderId);
       if (wo) {
+        woType = wo.type;
         const client = clients.find(c => c.id === wo.clientId || c.name.trim().toLowerCase() === (wo.clientId || '').trim().toLowerCase());
         if (client) {
           institutionName = client.name;
@@ -142,7 +157,9 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
       tuboModel: tuboModel || '-',
       tuboSerial: tuboSerial || '-',
       fecha: fecha || '-',
-      responsable: responsable || '-'
+      responsable: responsable || '-',
+      serviceType: woType,
+      serviceBucket: bucketServiceType(woType)
     };
   };
 
@@ -306,6 +323,8 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
     return effectiveRegistries.filter(reg => {
       if (query && !reg._searchStr.includes(query)) return false;
 
+      if (registryTypeFilter !== 'all' && reg.serviceBucket !== registryTypeFilter) return false;
+
       if (reportPeriod !== 'total') {
         const ms = parseRegistryDateMs(reg.fecha);
         if (ms === 0) return false; // sin fecha válida: no puede ubicarse en un periodo específico
@@ -363,7 +382,7 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
 
       return 0;
     });
-  }, [effectiveRegistries, deferredRegistrySearch, registrySortField, registrySortDir, reportPeriod, reportYear, reportMonth]);
+  }, [effectiveRegistries, deferredRegistrySearch, registryTypeFilter, registrySortField, registrySortDir, reportPeriod, reportYear, reportMonth]);
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
@@ -382,6 +401,14 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
     : reportPeriod === 'year'
     ? `año ${reportYear}`
     : `${MESES[reportMonth - 1]} ${reportYear}`;
+
+  const registryTypeLabel = registryTypeFilter === 'preventivo'
+    ? 'Preventivos'
+    : registryTypeFilter === 'correctivo'
+    ? 'Correctivos'
+    : registryTypeFilter === 'otro'
+    ? 'Otros'
+    : 'Todos los tipos';
 
   return (
     <div className="space-y-6 font-sans">
@@ -405,7 +432,7 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
             <span>Imprimir PDF</span>
           </button>
           <button
-            onClick={() => handleExportRegistryExcel(filtered, reportPeriodTag)}
+            onClick={() => handleExportRegistryExcel(filtered, `${reportPeriodTag}_${registryTypeLabel.replace(/\s+/g, '')}`)}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-3xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs border border-emerald-600 transition-colors"
             title={`Exportar el reporte de ${reportPeriodLabel} a formato Excel`}
           >
@@ -595,6 +622,25 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
           </div>
         )}
 
+        <span className="text-3xs text-slate-400 font-bold uppercase tracking-wide shrink-0">🛠 Tipo:</span>
+        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg">
+          {(['preventivo', 'correctivo', 'otro', 'all'] as const).map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => { setRegistryTypeFilter(t); setRegistryPage(1); }}
+              className={`px-3 py-1 rounded-md text-3xs font-bold transition-all cursor-pointer ${
+                registryTypeFilter === t
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'text-slate-550 hover:text-slate-800'
+              }`}
+              title={t === 'preventivo' ? 'Solo mantenimientos preventivos (comportamiento por defecto)' : t === 'correctivo' ? 'Solo correctivos' : t === 'otro' ? 'Instalación, Calibración, Soporte, FMI, Capacitación, Inspección' : 'Todos los tipos de servicio'}
+            >
+              {t === 'preventivo' ? 'Preventivo' : t === 'correctivo' ? 'Correctivo' : t === 'otro' ? 'Otros' : 'Todos'}
+            </button>
+          ))}
+        </div>
+
         <span className="text-3xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full ml-auto">
           {filtered.length} registro{filtered.length === 1 ? '' : 's'} · {reportPeriodLabel}
         </span>
@@ -735,6 +781,20 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
                             📅 OT
                           </span>
                         )}
+                        {registryTypeFilter === 'all' && (
+                          <span
+                            className={`shrink-0 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wide border ${
+                              reg.serviceBucket === 'correctivo'
+                                ? 'bg-rose-100 text-rose-700 border-rose-200'
+                                : reg.serviceBucket === 'otro'
+                                ? 'bg-amber-100 text-amber-700 border-amber-200'
+                                : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                            }`}
+                            title={reg.serviceType ? `Tipo de servicio: ${reg.serviceType}` : 'Registro manual (se asume Preventivo)'}
+                          >
+                            {reg.serviceBucket === 'correctivo' ? 'Correctivo' : reg.serviceBucket === 'otro' ? (reg.serviceType || 'Otro') : 'Preventivo'}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="p-3">
@@ -834,7 +894,7 @@ export const RegistroTab: React.FC<RegistroTabProps> = ({
       <div className="hidden print:block">
         <h2 className="text-base font-bold text-slate-900 mb-0.5">Registro de Equipos de Mantenimiento</h2>
         <p className="text-[10px] text-slate-600 mb-3">
-          Periodo: {reportPeriodLabel} · {filtered.length} registro{filtered.length === 1 ? '' : 's'} · Generado el {new Date().toLocaleDateString('es-EC')}
+          Periodo: {reportPeriodLabel} · Tipo: {registryTypeLabel} · {filtered.length} registro{filtered.length === 1 ? '' : 's'} · Generado el {new Date().toLocaleDateString('es-EC')}
         </p>
         <table className="w-full text-left border-collapse text-[8.5px]">
           <thead>
