@@ -361,22 +361,27 @@ const generateMaintenanceDates = (
       candidate = new Date(year, month, cDay);
     }
   } else {
-    // AUTO: la primera visita cae exactamente 'incrementMonths' después del inicio (o, en una
-    // renovación, después del último mantenimiento del contrato anterior vía preferredMonth), y
-    // las siguientes se reparten siempre en intervalos parejos de esa misma duración -- nunca se
-    // acorta el primer intervalo para "adelantar" visitas. El tope del bucle se recorta ~1 mes
-    // antes del vencimiento para que ninguna visita caiga justo en el mes en que expira la
-    // garantía/contrato.
+    // AUTO: calcular el primer mes hacia atrás desde el vencimiento, de forma que el ÚLTIMO
+    // mantenimiento quede ~1 mes antes de que expire la garantía/contrato (en vez de caer
+    // justo en el mes de vencimiento). Ej: garantía de 12 meses, frecuencia trimestral →
+    // visitas en el mes 2, 5, 8 y 11 (no 3, 6, 9, 12).
     const bufferMonths = 1;
     const startIndex = start.getFullYear() * 12 + start.getMonth();
     const endIndex = end.getFullYear() * 12 + end.getMonth();
     let targetLastIndex = endIndex - bufferMonths;
     if (targetLastIndex < startIndex) targetLastIndex = endIndex; // periodo muy corto: sin margen
 
-    const firstIndex = startIndex + incrementMonths;
+    const span = targetLastIndex - startIndex;
+    const remainder = span % incrementMonths;
+    const firstOffset = span <= 0 ? incrementMonths : (remainder === 0 ? incrementMonths : remainder);
+
+    const firstIndex = startIndex + firstOffset;
     year = Math.floor(firstIndex / 12);
     month = firstIndex % 12;
 
+    // El tope del bucle también debe recortarse al mes objetivo (targetLastIndex): de lo
+    // contrario, frecuencias que dividen exacto el periodo (ej. Mensual) seguirían generando
+    // visitas hasta la fecha de vencimiento real, ignorando el margen calculado arriba.
     const cutYear = Math.floor(targetLastIndex / 12);
     const cutMonth = targetLastIndex % 12;
     const cutDaysInMonth = new Date(cutYear, cutMonth + 1, 0).getDate();
