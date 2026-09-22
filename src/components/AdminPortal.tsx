@@ -14184,11 +14184,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         };
 
         const periodicityVal = con.maintenanceFrequency || 'CUATRIMESTRAL';
-        const periodicityMonths = periodicityVal.toLowerCase().includes('mensual') ? '1' 
+        // Ojo: "cuatrimestral" y "bimestral" contienen "mestral"/"trimestral" como subcadena, así
+        // que hay que revisar las variantes más específicas antes que las genéricas (o el .includes
+        // de "trimestral" haría match de forma incorrecta dentro de "cuatrimestral").
+        const periodicityMonths = periodicityVal.toLowerCase().includes('cuatrimestral') ? '4'
           : periodicityVal.toLowerCase().includes('bimestral') ? '2'
           : periodicityVal.toLowerCase().includes('trimestral') ? '3'
-          : periodicityVal.toLowerCase().includes('cuatrimestral') ? '4'
           : periodicityVal.toLowerCase().includes('semestral') ? '6'
+          : periodicityVal.toLowerCase().includes('mensual') ? '1'
           : periodicityVal.toLowerCase().includes('anual') ? '12' : '4';
 
         const handleDownloadWordContractSchedule = () => {
