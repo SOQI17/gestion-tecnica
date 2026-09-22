@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useDeferredValue, useCallback } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag, UserPlus, Mail, Lock, Shield, Phone, MapPin, KeyRound, Pencil, Clock, DollarSign, Eye } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag, UserPlus, Mail, Lock, Shield, Phone, MapPin, KeyRound, Pencil, Clock, DollarSign, Eye, ArrowUpRight } from 'lucide-react';
 
 export const OFFICIAL_MODALITIES = [
   { code: 'MR', label: 'MR: Resonancia Magnética' },
@@ -1660,6 +1660,9 @@ export default function AdminPortal({
 
   // Contratos Form states
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  // Contrato de origen cuando el formulario se abrió con "Renovar Contrato" -- al guardar,
+  // el nuevo contrato se crea como registro independiente y este se vincula como su antecesor.
+  const [renewalSourceContract, setRenewalSourceContract] = useState<Contract | null>(null);
   const [contractFormId, setContractFormId] = useState('');
   const [contractFormClientId, setContractFormClientId] = useState('');
   const [contractFormType, setContractFormType] = useState<string>('Garantía extendida/Contrato');
@@ -6476,9 +6479,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       }
     } else {
       if (onAddContract) onAddContract(con);
+      if (renewalSourceContract && onUpdateContract) {
+        // Vincula el contrato anterior como antecesor del nuevo, para que muestre el badge "RENOVADO"
+        onUpdateContract({ ...renewalSourceContract, linkedContractId: con.id });
+      }
       setContractPage(1); // Reset to page 1 so the new contract is visible
     }
     setContractFormLinkedId('');
+    setRenewalSourceContract(null);
     setIsContractModalOpen(false);
     setEditingContract(null);
   };
@@ -7054,6 +7062,91 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setIsContractModalOpen(true);
   };
 
+  const handleRenewContract = (con: Contract) => {
+    // Abre el formulario como un contrato NUEVO (no edita el original), precargado con los
+    // mismos datos de cliente/equipos/cobertura, para agilizar la renovación de contratos ya firmados.
+    setEditingContract(null);
+    setRenewalSourceContract(con);
+    setContractFormId('');
+    setContractFormClientId(con.clientId || '');
+    setContractFormType(con.type || 'Garantía extendida/Contrato');
+    const client = clients.find(c => c.id === con.clientId);
+    const inferredSector = con.sector || (client?.industry?.toLowerCase().includes('público') || client?.industry?.toLowerCase().includes('publico') || client?.name.toUpperCase().includes('MSP') || client?.name.toUpperCase().includes('IESS') || client?.name.toUpperCase().includes('SOLCA') || client?.name.toUpperCase().includes('HOSPITAL') ? 'Público' : 'Privado');
+    setContractFormSector(inferredSector);
+    setContractFormValue(con.contractValue ? String(con.contractValue) : '');
+    setContractFormCoverage(con.coverage || '');
+    setContractFormCity(con.city || '');
+    setContractClientSearchQuery(client ? `${client.name} - ${client.city || ''}` : con.clientId || '');
+    setIsContractClientDropdownOpen(false);
+    setIsCreatingNewClientForContract(false);
+
+    // La nueva cobertura arranca justo donde terminó la anterior; se sugiere la misma duración.
+    const newStart = con.endDate || new Date().toISOString().split('T')[0];
+    let newEnd = '';
+    if (con.startDate && con.endDate) {
+      const oldStart = new Date(con.startDate + 'T00:00:00');
+      const oldEnd = new Date(con.endDate + 'T00:00:00');
+      const durationMs = oldEnd.getTime() - oldStart.getTime();
+      if (durationMs > 0) {
+        const newStartDate = new Date(newStart + 'T00:00:00');
+        newEnd = new Date(newStartDate.getTime() + durationMs).toISOString().split('T')[0];
+      }
+    }
+    setContractFormStart(newStart);
+    setContractFormEnd(newEnd);
+    setContractFormStatus('Activo');
+
+    // Mismos equipos cubiertos en el contrato anterior
+    const carriedEquipments = (con.equipmentItems || []).map(item => ({ ...item }));
+    setContractFormEquipmentItems(carriedEquipments);
+    setTempEquipName('');
+    setTempEquipBrand('');
+    setTempEquipModality('');
+    setTempEquipSerial('');
+    setTempEquipGon('');
+
+    const freq = (con.maintenanceFrequency && con.maintenanceFrequency !== 'Ninguno') ? con.maintenanceFrequency : 'Trimestral';
+    setContractFormFrequency(freq);
+    setContractFormPreferredDay(con.preferredDay ? Number(con.preferredDay) : '');
+    setContractFormSelectedEquipForFreq('all');
+
+    // Precargar el Mes Inicial para que, al generar el cronograma, la primera visita continúe
+    // justo después del último mantenimiento programado del contrato anterior (no reinicia el conteo).
+    const lastOldDate = (con.maintenanceDates || [])
+      .map(d => d.split('|')[0])
+      .filter(Boolean)
+      .sort()
+      .pop();
+    if (lastOldDate && freq !== 'Personalizado') {
+      const incMonthsMap: Record<string, number> = { Mensual: 1, Bimestral: 2, Trimestral: 3, Cuatrimestral: 4, Semestral: 6, Anual: 12 };
+      const inc = incMonthsMap[freq] || 3;
+      const last = new Date(lastOldDate + 'T00:00:00');
+      const nextDate = new Date(last.getFullYear(), last.getMonth() + inc, 1);
+      setContractFormPreferredMonth(nextDate.getMonth() + 1);
+    } else {
+      setContractFormPreferredMonth('');
+    }
+
+    // El cronograma se genera de nuevo para el período renovado (no se copian las fechas viejas)
+    setContractFormMaintenanceDates([]);
+    setTempMaintenanceDate('');
+    setContractFormQcDate('');
+    setContractFormQcDates([]);
+
+    // No se arrastran adjuntos del contrato anterior: es una continuación, no una instalación nueva
+    setContractFormPdfUrl('');
+    setContractFormSchedulePdfUrl('');
+    setContractFormIsNewEquipment(false);
+    setContractFormSrPdfUrl('');
+    setContractFormCaPdfUrl('');
+    setContractFormPodPdfUrl('');
+    setContractFormPendingAdmin(false);
+    setContractFormLinkedId('');
+
+    setIsContractModalOpen(true);
+    showNotification(`Renovando ${con.id}: cliente y equipos copiados. Define el Nº de contrato, confirma las fechas y genera el cronograma.`, 'info');
+  };
+
   const handleEditContractGe = (c: ContractGE) => {
     setEditingContractGe(c);
     setGeFormCliente(c.cliente || '');
@@ -7112,6 +7205,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         onEditContract={handleEditContract}
         setIsContractModalOpen={setIsContractModalOpen}
         onDeleteContract={onDeleteContract}
+        onRenewContract={handleRenewContract}
         setSelectedContractForDetails={setSelectedContractForDetails}
         setIsContractDetailsModalOpen={setIsContractDetailsModalOpen}
         contractGeSearch={contractGeSearch}
@@ -7133,6 +7227,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           const nextYearStr = nextYear.toISOString().split('T')[0];
 
           setEditingContract(null);
+          setRenewalSourceContract(null);
           setContractFormId('');
           setContractFormClientId('');
           setContractFormType('Garantía extendida/Contrato');
@@ -11592,6 +11687,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </div>
             )}
 
+            {renewalSourceContract && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center gap-2 text-emerald-900">
+                <ArrowUpRight className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="text-xs font-bold">
+                  🔄 Renovando el contrato <span className="font-mono">{renewalSourceContract.id}</span>: cliente y equipos copiados. Al guardar, el contrato anterior quedará vinculado y marcado como "RENOVADO".
+                </span>
+              </div>
+            )}
+
             <form onSubmit={handleSaveContract} className="flex flex-col max-h-[85vh] text-xs">
               <div className="flex-1 overflow-y-auto overscroll-contain pr-3 space-y-4 max-h-[62vh]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -13373,6 +13477,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     onClick={() => {
                       setIsContractModalOpen(false);
                       setEditingContract(null);
+                      setRenewalSourceContract(null);
                     }}
                     className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
                   >
@@ -13382,7 +13487,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     type="submit"
                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer transition-colors shadow-xs"
                   >
-                    {editingContract ? 'Guardar Cambios' : 'Crear Registro'}
+                    {editingContract ? 'Guardar Cambios' : renewalSourceContract ? 'Crear Contrato Renovado' : 'Crear Registro'}
                   </button>
                 </div>
               </div>

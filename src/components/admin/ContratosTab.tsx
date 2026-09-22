@@ -1730,6 +1730,17 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                           >
                             Editar
                           </button>
+                          {onRenewContract && userRole === 'admin' && !con.linkedContractId && (
+                            <button
+                              type="button"
+                              onClick={() => onRenewContract(con)}
+                              className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs border border-emerald-200/80 shadow-2xs"
+                              title="Crear el contrato de renovación, copiando cliente y equipos"
+                            >
+                              <ArrowUpRight className="w-3.5 h-3.5" />
+                              <span>Renovar</span>
+                            </button>
+                          )}
                           {onDeleteContract && (
                             <button
                               type="button"
