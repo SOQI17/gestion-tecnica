@@ -332,60 +332,60 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
       {/* KPI Overview Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
         {/* Metric 1 */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between shadow-xs">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
           <div>
-            <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider">Total Agendados</span>
-            <h3 className="text-2xl font-bold text-slate-800 mt-1">{totalPlanned}</h3>
+            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total Agendados</span>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{totalPlanned}</h3>
             <p className="text-3xs text-slate-500 mt-1">Órdenes planificadas totales</p>
           </div>
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+          <div className="p-3 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-lg">
             <CalendarIcon className="w-5 h-5" />
           </div>
         </div>
-        
+
         {/* Metric 2 */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between shadow-xs">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
           <div>
-            <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider">Por Conciliar</span>
-            <h3 className="text-2xl font-bold text-amber-600 mt-1">{pendingValidation}</h3>
-            <p className="text-3xs text-amber-600 font-semibold mt-1 animate-pulse">Reportes subidos esperando auditoría</p>
+            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Por Conciliar</span>
+            <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{pendingValidation}</h3>
+            <p className="text-3xs text-amber-600 dark:text-amber-400 font-semibold mt-1 animate-pulse">Reportes subidos esperando auditoría</p>
           </div>
-          <div className="p-3 bg-amber-50 text-amber-600 rounded-lg">
+          <div className="p-3 bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-lg">
             <ClipboardList className="w-5 h-5" />
           </div>
         </div>
 
         {/* Metric 3 */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between shadow-xs">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
           <div>
-            <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider">Conciliados (Saldados)</span>
-            <h3 className="text-2xl font-bold text-emerald-600 mt-1">{completedConciliado}</h3>
-            <p className="text-3xs text-emerald-600 font-semibold mt-1">Verificados al 100% vs Excel</p>
+            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Conciliados (Saldados)</span>
+            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{completedConciliado}</h3>
+            <p className="text-3xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">Verificados al 100% vs Excel</p>
           </div>
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-lg">
             <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>
 
         {/* Metric 4 - Clickable to open technicians list & management modal */}
-        <div 
+        <div
           onClick={() => setIsEngsModalOpen(true)}
           title="Haga clic para ver y gestionar la lista de técnicos registrados"
-          className="bg-white border border-slate-200 hover:border-indigo-300 rounded-xl p-5 flex items-center justify-between shadow-xs cursor-pointer hover:bg-slate-50/80 transition-all select-none group"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 rounded-xl p-5 flex items-center justify-between shadow-xs cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-all select-none group"
         >
           <div>
-            <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-indigo-500 transition-colors">Ingenieros Activos</span>
-            <h3 className="text-2xl font-bold text-sky-600 mt-1 group-hover:text-sky-700">{activeFieldCount}/{engineers.length}</h3>
+            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">Ingenieros Activos</span>
+            <h3 className="text-2xl font-bold text-sky-600 dark:text-sky-400 mt-1 group-hover:text-sky-700 dark:group-hover:text-sky-300">{activeFieldCount}/{engineers.length}</h3>
             <p className="text-3xs text-slate-500 mt-1">Efectivo técnico operando en campo</p>
           </div>
-          <div className="p-3 bg-sky-50 text-sky-600 rounded-lg group-hover:bg-indigo-55 group-hover:text-indigo-600 transition-colors">
+          <div className="p-3 bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 rounded-lg group-hover:bg-indigo-55 dark:group-hover:bg-indigo-900 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
             <UserCheck className="w-5 h-5" />
           </div>
         </div>
       </div>
 
       {/* Sub Navigation */}
-      <div className="border-b border-slate-200 no-print mb-6">
+      <div className="border-b border-slate-200 dark:border-slate-700 no-print mb-6">
         <div className="flex gap-6 overflow-x-auto no-scrollbar py-0.5">
           {([
             { id: 'scheduler', label: 'Calendario y Planificador', icon: CalendarIcon },
@@ -401,7 +401,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                 id={`btn-admin-subtab-${sb.id}`}
                 onClick={() => setActiveSubTab(sb.id as any)}
                 className={`flex items-center gap-2 pb-3 text-xs font-bold relative transition-colors whitespace-nowrap ${
-                  isActive ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-800'
+                  isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-100'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -429,7 +429,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
         {activeSubTab === 'scheduler' && (
           <div className="space-y-4">
             {/* Scheduler Action Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-4 shadow-2xs no-print">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-2xs no-print">
               <div className="flex flex-wrap items-center gap-2">
                 {effectivePermissions.canCreateWorkOrders !== false && (
                   <button
@@ -437,9 +437,9 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     id="btn-toggle-importer"
                     onClick={() => setIsImporterOpen(!isImporterOpen)}
                     className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
-                      isImporterOpen 
-                        ? 'bg-amber-600 hover:bg-amber-700 text-white border-amber-600' 
-                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                      isImporterOpen
+                        ? 'bg-amber-600 hover:bg-amber-700 text-white border-amber-600'
+                        : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                     }`}
                   >
                     <Database className="w-3.5 h-3.5" />
@@ -477,20 +477,20 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                 <button
                   type="button"
                   onClick={handlePrintCalendar}
-                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                  className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                   title="Imprimir calendario a PDF"
                 >
                   <Printer className="w-3.5 h-3.5 text-slate-500" />
                   <span>Imprimir PDF</span>
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={handleExportCalendarExcel}
-                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                  className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                   title="Exportar calendario a Excel"
                 >
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   <span>Descargar Excel</span>
                 </button>
 
@@ -498,10 +498,10 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                   <button
                     type="button"
                     onClick={handleSmartReorganize}
-                    className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                    className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                     title="Reorganizar agenda inteligentemente según carga horaria e ingenieros por ciudad"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                     <span>Reorganizar Agenda</span>
                   </button>
                 )}
@@ -511,15 +511,15 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                   onClick={() => setFilterOnlyConflicting(!filterOnlyConflicting)}
                   className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
                     filterOnlyConflicting
-                      ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 font-bold'
-                      : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                      ? 'bg-amber-50 dark:bg-amber-950 hover:bg-amber-100 dark:hover:bg-amber-900 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800 font-bold'
+                      : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                   }`}
                   title="Filtrar u ocultar mantenimientos con cruce de horario"
                 >
-                  <AlertTriangle className={`w-3.5 h-3.5 ${filterOnlyConflicting ? 'text-amber-600' : 'text-amber-500'}`} />
+                  <AlertTriangle className={`w-3.5 h-3.5 ${filterOnlyConflicting ? 'text-amber-600 dark:text-amber-400' : 'text-amber-500 dark:text-amber-400'}`} />
                   <span>{filterOnlyConflicting ? 'Ver Todos' : 'Horarios Cruzados'}</span>
                   {conflictingWOIds.size > 0 && (
-                    <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.2 rounded-full border border-amber-200">
+                    <span className="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[9px] font-black px-1.5 py-0.2 rounded-full border border-amber-200 dark:border-amber-800">
                       {conflictingWOIds.size}
                     </span>
                   )}
@@ -530,8 +530,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                   disabled={currentMonthWOs.filter(wo => wo.status !== 'Reportado' && wo.status !== 'Conciliado').length === 0}
                   className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
                     currentMonthWOs.filter(wo => wo.status !== 'Reportado' && wo.status !== 'Conciliado').length === 0
-                      ? 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 hover:border-emerald-300'
+                      ? 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50'
+                      : 'bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700'
                   }`}
                   title="Reportar todas las órdenes de este mes que no tengan reporte"
                 >
@@ -546,8 +546,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     disabled={currentMonthWOs.length === 0}
                     className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
                       currentMonthWOs.length === 0
-                        ? 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                        : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200 hover:border-red-300'
+                        ? 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50'
+                        : 'bg-red-50 dark:bg-red-950 hover:bg-red-100 dark:hover:bg-red-900 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700'
                     }`}
                     title="Eliminar todas las agendas de este mes con confirmación"
                   >
@@ -560,10 +560,10 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 
             {/* Collapsible Importer Panel */}
             {isImporterOpen && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4 no-print" id="csv-import-panel">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-xs space-y-4 no-print" id="csv-import-panel">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-700 pb-3">
                   <div>
-                    <h5 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                       📥 Ingestor de Histórico y Planificación CSV
                     </h5>
@@ -574,7 +574,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                       type="button"
                       id="btn-demo-planificacion"
                       onClick={handleLoadSamplePlanificacion}
-                      className="bg-indigo-50 hover:bg-indigo-150 text-indigo-700 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-indigo-200 transition-colors cursor-pointer"
+                      className="bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-150 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer"
                     >
                       🧪 Demo Planificación
                     </button>
@@ -582,7 +582,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                       type="button"
                       id="btn-demo-reportes"
                       onClick={handleLoadSampleReportes}
-                      className="bg-emerald-50 hover:bg-emerald-150 text-emerald-700 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-emerald-200 transition-colors cursor-pointer"
+                      className="bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-150 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
                     >
                       🧪 Demo Reportes
                     </button>
@@ -598,27 +598,27 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                       onDragOver={handleDrag}
                       onDrop={handleDrop}
                       className={`h-40 border-2 border-dashed rounded-xl flex flex-col items-center justify-center p-4 transition-all text-center relative ${
-                        dragActive 
-                          ? 'border-indigo-500 bg-indigo-50/50 scale-[1.01]' 
-                          : 'border-slate-200 bg-slate-50 hover:bg-slate-100/50'
+                        dragActive
+                          ? 'border-indigo-500 dark:border-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/50 scale-[1.01]'
+                          : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100/50 dark:hover:bg-slate-700/50'
                       }`}
                     >
-                      <input 
-                        type="file" 
+                      <input
+                        type="file"
                         id="csv-file-input"
                         accept=".csv"
                         onChange={handleFileChange}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       />
                       <div className="space-y-2 pointer-events-none">
-                        <div className="mx-auto w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                        <div className="mx-auto w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                           <Database className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-2xs font-extrabold text-slate-700">Arrastra tu archivo CSV aquí</p>
-                          <p className="text-3xs text-slate-400 mt-1">O haz clic para seleccionar desde tu disco duro</p>
+                          <p className="text-2xs font-extrabold text-slate-700 dark:text-slate-300">Arrastra tu archivo CSV aquí</p>
+                          <p className="text-3xs text-slate-400 dark:text-slate-500 mt-1">O haz clic para seleccionar desde tu disco duro</p>
                         </div>
-                        <span className="inline-block bg-white border border-slate-200 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold text-slate-500">
+                        <span className="inline-block bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold text-slate-500">
                           Soporta: UTF-8, Comas, Semicolones
                         </span>
                       </div>
@@ -626,27 +626,27 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                   </div>
 
                   {/* Parse Results Preview & Summary (Col-7) */}
-                  <div className="md:col-span-7 bg-slate-50/60 rounded-xl border border-slate-150 p-4 space-y-3 flex flex-col justify-between">
+                  <div className="md:col-span-7 bg-slate-50/60 dark:bg-slate-800/60 rounded-xl border border-slate-150 dark:border-slate-700 p-4 space-y-3 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2">
                         <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                        <h6 className="font-bold text-2xs text-slate-700 uppercase tracking-wide">Estado de Interpretación</h6>
+                        <h6 className="font-bold text-2xs text-slate-700 dark:text-slate-300 uppercase tracking-wide">Estado de Interpretación</h6>
                       </div>
 
                       <div className="mt-2.5 text-3xs space-y-2.5 leading-normal">
                         {csvFileName ? (
                           <div>
-                            <p className="font-bold text-indigo-950 flex items-center gap-1.5">
-                              📄 Archivo: <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-xs font-serif font-semibold">{csvFileName}</span>
+                            <p className="font-bold text-indigo-950 dark:text-indigo-300 flex items-center gap-1.5">
+                              📄 Archivo: <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded text-xs font-serif font-semibold">{csvFileName}</span>
                             </p>
-                            
-                            <div className="flex items-center gap-4 mt-2.5 mb-2 bg-white/60 p-2 rounded-lg border border-slate-150">
+
+                            <div className="flex items-center gap-4 mt-2.5 mb-2 bg-white/60 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-150 dark:border-slate-700">
                               <div>
-                                <label className="block text-[8px] font-bold text-slate-450 uppercase mb-0.5">Año Planificación</label>
+                                <label className="block text-[8px] font-bold text-slate-450 dark:text-slate-500 uppercase mb-0.5">Año Planificación</label>
                                 <select
                                   value={importYear}
                                   onChange={(e) => handleImportYearChange(e.target.value)}
-                                  className="bg-white border border-slate-200 rounded px-2 py-0.5 text-3xs font-extrabold text-slate-700 outline-hidden"
+                                  className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-3xs font-extrabold text-slate-700 dark:text-slate-200 outline-hidden"
                                 >
                                   {['2025', '2026', '2027', '2028'].map(y => (
                                     <option key={y} value={y}>{y} Año</option>
@@ -654,11 +654,11 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[8px] font-bold text-slate-450 uppercase mb-0.5">Mes Planificación</label>
+                                <label className="block text-[8px] font-bold text-slate-450 dark:text-slate-500 uppercase mb-0.5">Mes Planificación</label>
                                 <select
                                   value={importMonth}
                                   onChange={(e) => handleImportMonthChange(e.target.value)}
-                                  className="bg-white border border-slate-200 rounded px-2 py-0.5 text-3xs font-extrabold text-slate-700 outline-hidden"
+                                  className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-3xs font-extrabold text-slate-700 dark:text-slate-200 outline-hidden"
                                 >
                                   {[
                                     { val: '01', name: 'Enero' },
@@ -684,16 +684,16 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                               <p className="mt-1.5 font-semibold">
                                 Esquema Identificado: {' '}
                                 <span className={`px-2 py-0.5 rounded font-extrabold text-[9px] uppercase ${
-                                  detectedFormatType === 'reportes' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                  detectedFormatType === 'reportes' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
                                 }`}>
                                   {detectedFormatType === 'reportes' ? 'Reportes Históricos por Ingeniero' : 'Planificación Mensual (Calendario)'}
                                 </span>
                               </p>
                             )}
-                            <p className="text-slate-600 mt-1.5 italic font-semibold">"{importFeedback}"</p>
+                            <p className="text-slate-600 dark:text-slate-300 mt-1.5 italic font-semibold">"{importFeedback}"</p>
                           </div>
                         ) : (
-                          <div className="text-slate-400 py-6 text-center italic font-semibold">
+                          <div className="text-slate-400 dark:text-slate-500 py-6 text-center italic font-semibold">
                             Sin datos cargados. Carga un archivo CSV o selecciona cualquiera de nuestros dos accesos demo rápidos para simular la importación en tiempo real.
                           </div>
                         )}
@@ -701,10 +701,10 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     </div>
 
                     {parsedOrders.length > 0 && (
-                      <div className="border-t border-slate-150 pt-3 flex items-center justify-between">
+                      <div className="border-t border-slate-150 dark:border-slate-700 pt-3 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-2xs font-bold text-slate-650">
-                            Previsualizar: <strong className="text-slate-900 bg-white px-2 py-0.5 rounded border font-mono">{parsedOrders.length} registros</strong>
+                          <span className="text-2xs font-bold text-slate-650 dark:text-slate-300">
+                            Previsualizar: <strong className="text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border font-mono">{parsedOrders.length} registros</strong>
                           </span>
                         </div>
                         <button
@@ -723,9 +723,9 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 
                 {/* Previsualización en mini-tabla opcional si hay datos parsedOrders */}
                 {parsedOrders.length > 0 && (
-                  <div className="border border-slate-150 rounded-xl overflow-hidden text-3xs max-h-48 overflow-y-auto">
+                  <div className="border border-slate-150 dark:border-slate-700 rounded-xl overflow-hidden text-3xs max-h-48 overflow-y-auto">
                     <table className="w-full text-left font-sans">
-                      <thead className="bg-slate-100 border-b border-slate-200 text-slate-500 font-extrabold sticky top-0 uppercase">
+                      <thead className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-extrabold sticky top-0 uppercase">
                         <tr>
                           <th className="p-2">Ubicación Cliente</th>
                           <th className="p-2">Equipo / Activo</th>
@@ -736,7 +736,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                           <th className="p-2">Observaciones / Tipo</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 font-semibold text-slate-650 bg-white">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-700 font-semibold text-slate-650 dark:text-slate-300 bg-white dark:bg-slate-900">
                         {parsedOrders.map((wo, i) => {
                           const cli = clients.find(c => c.id === wo.clientId) || parsedClients.find(c => c.id === wo.clientId);
                           const eng = engineers.find(e => e.id === wo.engineerId) || parsedEngineers.find(e => e.id === wo.engineerId);
@@ -744,21 +744,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                             ? (engineers.find(e => e.id === wo.supportEngineerId) || parsedEngineers.find(e => e.id === wo.supportEngineerId))
                             : null;
                           const repMatched = parsedReports.find(r => r.workOrderId === wo.id);
-                          
+
                           return (
-                            <tr key={i} className="hover:bg-slate-50/50">
-                              <td className="p-2 font-bold text-slate-800">{cli?.name || 'Cliente Nuevo'}</td>
-                              <td className="p-2 font-mono text-slate-900">{wo.equipmentName}</td>
-                              <td className="p-2 text-indigo-900 font-bold">
+                            <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                              <td className="p-2 font-bold text-slate-800 dark:text-slate-100">{cli?.name || 'Cliente Nuevo'}</td>
+                              <td className="p-2 font-mono text-slate-900 dark:text-slate-100">{wo.equipmentName}</td>
+                              <td className="p-2 text-indigo-900 dark:text-indigo-300 font-bold">
                                 👤 {eng?.name.replace('Ing. ', '') || 'Por Asignar'}
                                 {supportEng && <span className="text-[10px] font-normal text-slate-500 ml-1">(Apoyo: {supportEng.name.replace('Ing. ', '')})</span>}
                               </td>
                               <td className="p-2 font-mono">{wo.plannedDate}</td>
-                              <td className="p-2 font-mono text-indigo-700">{wo.plannedTime || '09:00 AM'}</td>
+                              <td className="p-2 font-mono text-indigo-700 dark:text-indigo-300">{wo.plannedTime || '09:00 AM'}</td>
                               {detectedFormatType === 'reportes' && (
                                 <td className="p-2">
                                   <span className={`px-1.5 py-0.2 rounded font-extrabold uppercase text-[8px] ${
-                                    repMatched ? 'bg-emerald-50 text-emerald-800 border border-emerald-150' : 'bg-amber-50 text-amber-800 border border-amber-150'
+                                    repMatched ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-150 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-150 dark:border-amber-800'
                                   }`}>
                                     {repMatched ? 'SÍ (Entregado)' : 'NO (Pendiente)'}
                                   </span>
@@ -776,17 +776,17 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
             )}
 
             <div id="printable-calendar" className="space-y-4">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-indigo-50 border border-indigo-100 p-4 rounded-xl gap-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-800 p-4 rounded-xl gap-4">
                 <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5 text-indigo-600" />
+                  <CalendarIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   <div>
-                    <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2 flex-wrap">
+                    <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2 flex-wrap">
                       <span>Cronograma Mensual -</span>
                       <div className="flex gap-2 flex-wrap items-center">
                         <select
                           value={calendarMonth}
                           onChange={(e) => setCalendarMonth(Number(e.target.value))}
-                          className="bg-white border border-indigo-200 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
+                          className="bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 dark:text-indigo-200 cursor-pointer outline-hidden"
                         >
                           {[
                             { val: 1, name: 'Enero' },
@@ -808,7 +808,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                         <select
                           value={calendarYear}
                           onChange={(e) => setCalendarYear(Number(e.target.value))}
-                          className="bg-white border border-indigo-200 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
+                          className="bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 dark:text-indigo-200 cursor-pointer outline-hidden"
                         >
                           {[2025, 2026, 2027, 2028].map(y => (
                             <option key={y} value={y}>{y}</option>
@@ -821,7 +821,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                           <select
                             value={highlightedEngineerId || ''}
                             onChange={(e) => setHighlightedEngineerId(e.target.value || null)}
-                            className="bg-white border border-indigo-200 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden focus:ring-1 focus:ring-indigo-500"
+                            className="bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 dark:text-indigo-200 cursor-pointer outline-hidden focus:ring-1 focus:ring-indigo-500"
                           >
                             <option value="">Todos 👥</option>
                             {monthEngineers.map(e => (
@@ -836,7 +836,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     <p className="text-3xs text-slate-500 mt-0.5 font-medium">Haz clic sobre un día del calendario para seleccionarlo y programar agendas directas.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end no-print">
                   {/* Buscador interactivo */}
                   <div className="relative">
@@ -845,7 +845,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                       placeholder="Buscar cliente, técnico, equipo..."
                       value={localSearchQuery}
                       onChange={(e) => setLocalSearchQuery(e.target.value)}
-                      className="bg-white border border-indigo-200 rounded-lg pl-8 pr-7 py-1 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 w-44 md:w-56 transition-all"
+                      className="bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 rounded-lg pl-8 pr-7 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 dark:placeholder-slate-500 w-44 md:w-56 transition-all"
                     />
                     <Search className="w-3.5 h-3.5 text-indigo-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                     {localSearchQuery && (
@@ -855,7 +855,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                           setLocalSearchQuery('');
                           setSearchQuery('');
                         }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 cursor-pointer"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 cursor-pointer"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -922,7 +922,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 
                 return (
                   <>
-                  <div className="sm:hidden print:hidden -mx-4 px-4 divide-y divide-slate-100">
+                  <div className="sm:hidden print:hidden -mx-4 px-4 divide-y divide-slate-100 dark:divide-slate-700">
                     {monthDayList.map(({ dateStr, dayNum, weekdayLabel, isToday }) => {
                       const dayWOs = workOrders
                         .filter(wo => isWOActiveOnDate(wo, dateStr))
@@ -935,22 +935,22 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                       return (
                         <div key={dateStr} className="py-2.5">
                           <div className="flex items-center gap-2.5 mb-2">
-                            <div className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl shrink-0 ${isToday ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-100 text-slate-500'}`}>
+                            <div className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl shrink-0 ${isToday ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                               <span className="text-[8px] font-black uppercase leading-none opacity-80">{weekdayLabel}</span>
                               <span className="text-sm font-black leading-none mt-0.5">{dayNum}</span>
                             </div>
                             {isToday && (
-                              <span className="text-[10px] font-black text-indigo-700 uppercase tracking-wide">Hoy</span>
+                              <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">Hoy</span>
                             )}
                             {dayWOs.length > 0 && (
-                              <span className="ml-auto text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full shrink-0">
+                              <span className="ml-auto text-[10px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-800 px-2 py-0.5 rounded-full shrink-0">
                                 {dayWOs.length} {dayWOs.length === 1 ? 'tarea' : 'tareas'}
                               </span>
                             )}
                           </div>
 
                           {dayWOs.length === 0 ? (
-                            <div className="text-[11px] text-slate-300 italic pl-[54px] pb-1">Sin actividad programada</div>
+                            <div className="text-[11px] text-slate-300 dark:text-slate-500 italic pl-[54px] pb-1">Sin actividad programada</div>
                           ) : (
                             <div className="space-y-1.5 pl-[54px]">
                               {dayWOs.map(wo => {
@@ -958,10 +958,10 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                 const client = clients.find(c => c.id === wo.clientId);
                                 const engColor = eng ? getEngineerColorClasses(eng.id) : null;
                                 const cardStyle = wo.isEquipmentDown
-                                  ? 'bg-red-50 border-red-200 border-l-4 border-l-red-500'
+                                  ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 border-l-4 border-l-red-500'
                                   : (engColor
                                     ? `${engColor.lightBg} ${engColor.border} border-l-4 ${engColor.borderL}`
-                                    : 'bg-slate-50 border-slate-200 border-l-4 border-l-slate-400');
+                                    : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 border-l-4 border-l-slate-400');
                                 return (
                                   <button
                                     type="button"
@@ -972,22 +972,22 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                     <span className="text-sm shrink-0 mt-0.5">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center justify-between gap-1.5">
-                                        <span className="text-[11px] font-extrabold text-slate-800 truncate">
+                                        <span className="text-[11px] font-extrabold text-slate-800 dark:text-slate-100 truncate">
                                           {client?.name || 'Cliente'}
                                         </span>
                                         <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${
-                                          wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200' :
-                                          wo.status === 'Conciliado' ? 'bg-emerald-100/60 text-emerald-800 border-emerald-200' :
-                                          wo.status === 'Reportado' ? 'bg-indigo-100/60 text-indigo-800 border-indigo-200' :
-                                          wo.status === 'Realizado' ? 'bg-blue-100/60 text-blue-800 border-blue-200' :
-                                          wo.status === 'En Proceso' ? 'bg-sky-100/60 text-sky-800 border-sky-200' :
-                                          'bg-yellow-100/60 text-yellow-800 border-yellow-200'
+                                          wo.isEquipmentDown ? 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800' :
+                                          wo.status === 'Conciliado' ? 'bg-emerald-100/60 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' :
+                                          wo.status === 'Reportado' ? 'bg-indigo-100/60 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' :
+                                          wo.status === 'Realizado' ? 'bg-blue-100/60 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800' :
+                                          wo.status === 'En Proceso' ? 'bg-sky-100/60 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800' :
+                                          'bg-yellow-100/60 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
                                         }`}>
                                           {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
                                         </span>
                                       </div>
                                       <div className="text-[10px] text-slate-500 truncate">{wo.equipmentName}</div>
-                                      <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-slate-400 font-semibold">
+                                      <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-slate-400 dark:text-slate-500 font-semibold">
                                         {wo.plannedTime && <span>{wo.plannedTime}</span>}
                                         {eng && <span className="truncate">{eng.name}</span>}
                                       </div>
@@ -1018,7 +1018,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                   paddedDays.push(
                     <div
                       key={`blank-end-${i}`}
-                      className="min-h-[115px] p-2 bg-slate-50/20 flex flex-col justify-between opacity-45 text-slate-300"
+                      className="min-h-[115px] p-2 bg-slate-50/20 dark:bg-slate-800/20 flex flex-col justify-between opacity-45 text-slate-300 dark:text-slate-500"
                     >
                       <span className="font-mono text-2xs font-semibold"></span>
                       <span className="text-4xs text-center font-mono select-none"></span>
@@ -1038,7 +1038,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     {/* Screen-only Header Row */}
                     <div className="grid grid-cols-7 gap-0 print:hidden text-center mb-1">
                       {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dayName => (
-                        <div key={dayName} className="font-bold text-3xs text-slate-400 uppercase py-1.5">
+                        <div key={dayName} className="font-bold text-3xs text-slate-400 dark:text-slate-500 uppercase py-1.5">
                           {dayName}
                         </div>
                       ))}
@@ -1137,19 +1137,19 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 
                       const shouldBreakAfter = wIndex % 2 === 1 && wIndex < weeks.length - 1;
                       return (
-                        <div key={wIndex} style={{ display: 'flex', flexDirection: 'column' }} className={`calendar-week-container bg-white rounded-xl border border-slate-200 mb-4 overflow-hidden shadow-2xs print:mb-6 print:border-slate-200 ${shouldBreakAfter ? 'print-break-after' : ''}`}>
+                        <div key={wIndex} style={{ display: 'flex', flexDirection: 'column' }} className={`calendar-week-container bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 mb-4 overflow-hidden shadow-2xs print:mb-6 print:border-slate-200 ${shouldBreakAfter ? 'print-break-after' : ''}`}>
                           {/* Print-only week header metadata */}
-                          <div className="hidden print:flex justify-between items-center p-2.5 pb-1 border-b border-slate-200">
-                            <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                          <div className="hidden print:flex justify-between items-center p-2.5 pb-1 border-b border-slate-200 dark:border-slate-700">
+                            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                               Cronograma Mensual - {calendarMonthName} {calendarYear}
                             </span>
-                            <span className="text-[10px] font-black text-indigo-700 uppercase tracking-wider">
+                            <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">
                               Semana {wIndex + 1}
                             </span>
                           </div>
 
                           {/* Print-only weekday column headers */}
-                          <div className="hidden print:grid grid-cols-7 gap-0 border-b border-slate-200">
+                          <div className="hidden print:grid grid-cols-7 gap-0 border-b border-slate-200 dark:border-slate-700">
                             {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dayName => (
                               <div key={dayName} className="text-center font-bold text-[9px] text-slate-500 uppercase py-1">
                                 {dayName}
@@ -1159,7 +1159,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 
                           {/* Multi-day events tracks (if any) */}
                           {tracks.length > 0 && (
-                            <div className="bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
+                            <div className="bg-slate-50 dark:bg-slate-800/60 py-1.5 border-b border-slate-200 dark:border-slate-700 space-y-1">
 
                               {tracks.map((track, tIdx) => (
                                 <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
@@ -1192,21 +1192,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                     if (hasHighlightActive) {
                                       if (isHighlighted) {
                                         const basePill = wo.isEquipmentDown
-                                          ? 'bg-red-50 text-red-955 border border-red-200 border-l-4 border-l-red-500'
-                                          : (engColor 
+                                          ? 'bg-red-50 dark:bg-red-950 text-red-955 dark:text-red-300 border border-red-200 dark:border-red-800 border-l-4 border-l-red-500'
+                                          : (engColor
                                             ? `${engColor.lightBg} ${engColor.text} border ${engColor.border} border-l-4 ${engColor.borderL}`
-                                            : `bg-slate-100 border-slate-200 text-slate-700 border-l-4 border-l-slate-400`);
-                                        const ringClass = highlightedEngineerId ? `ring-1 ${engColor?.ring}` : 'ring-2 ring-indigo-500';
+                                            : `bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 border-l-4 border-l-slate-400`);
+                                        const ringClass = highlightedEngineerId ? `ring-1 ${engColor?.ring}` : 'ring-2 ring-indigo-500 dark:ring-indigo-400';
                                         pillStyle = `${basePill} ${ringClass} scale-[1.02] shadow-md z-10`;
                                       } else {
-                                        pillStyle = `bg-slate-50 border-slate-100 text-slate-300 opacity-15 filter blur-[1.5px] grayscale-[40%] scale-[0.96] pointer-events-none transition-all duration-300`;
+                                        pillStyle = `bg-slate-50 dark:bg-slate-800/60 border-slate-100 dark:border-slate-700 text-slate-300 dark:text-slate-500 opacity-15 filter blur-[1.5px] grayscale-[40%] scale-[0.96] pointer-events-none transition-all duration-300`;
                                       }
                                     } else {
                                       pillStyle = wo.isEquipmentDown
-                                        ? 'bg-red-50 text-red-955 border border-red-150 border-l-4 border-l-red-500'
-                                        : (engColor 
+                                        ? 'bg-red-50 dark:bg-red-950 text-red-955 dark:text-red-300 border border-red-150 dark:border-red-800 border-l-4 border-l-red-500'
+                                        : (engColor
                                           ? `${engColor.lightBg} ${engColor.text} border ${engColor.border} border-l-4 ${engColor.borderL}`
-                                          : `bg-slate-100 border-slate-200 text-slate-700 border-l-4 border-l-slate-400`);
+                                          : `bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 border-l-4 border-l-slate-400`);
                                     }
 
                                     const firstActiveDay = weekDaysData.find(d => d.type === 'day');
@@ -1238,7 +1238,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                       >
                                         <div className="flex items-center gap-1.5 truncate flex-1 mr-1">
                                           <span className="shrink-0">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
-                                          <span className="truncate text-slate-800 uppercase tracking-wide">
+                                          <span className="truncate text-slate-800 dark:text-slate-100 uppercase tracking-wide">
                                             {client?.name || 'Cliente'} - {wo.equipmentName} {eng ? `(${getEngineerFullNameNoTitle(eng.name)})` : ''}
                                           </span>
                                           {supportIds.length > 0 && (
@@ -1257,12 +1257,12 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                         </div>
                                         
                                         <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${
-                                          wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200' :
-                                          wo.status === 'Conciliado' ? 'bg-emerald-100/60 text-emerald-800 border-emerald-200' :
-                                          wo.status === 'Reportado' ? 'bg-indigo-100/60 text-indigo-800 border-indigo-200' :
-                                          wo.status === 'Realizado' ? 'bg-blue-100/60 text-blue-800 border-blue-200' :
-                                          wo.status === 'En Proceso' ? 'bg-sky-100/60 text-sky-800 border-sky-200' :
-                                          'bg-yellow-100/60 text-yellow-800 border-yellow-200'
+                                          wo.isEquipmentDown ? 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800' :
+                                          wo.status === 'Conciliado' ? 'bg-emerald-100/60 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' :
+                                          wo.status === 'Reportado' ? 'bg-indigo-100/60 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' :
+                                          wo.status === 'Realizado' ? 'bg-blue-100/60 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800' :
+                                          wo.status === 'En Proceso' ? 'bg-sky-100/60 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800' :
+                                          'bg-yellow-100/60 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
                                         }`}>
                                           {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
                                         </span>
@@ -1275,7 +1275,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                           )}
 
                           {/* Week days grid */}
-                          <div className="grid grid-cols-7 calendar-days-grid divide-x divide-slate-200">
+                          <div className="grid grid-cols-7 calendar-days-grid divide-x divide-slate-200 dark:divide-slate-700">
                             {weekDays}
                           </div>
                         </div>
@@ -1294,10 +1294,10 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
           <div className="space-y-6" id="auditor-reconciliation-room">
             
             {/* View Selector & Header */}
-            <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
               <div>
-                <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-                  <ClipboardList className="w-4 h-4 text-indigo-600" />
+                <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   Módulo de Conciliación y Auditoría Cruzada
                 </h4>
                 <p className="text-3xs text-slate-500 mt-0.5">Concilia los reportes e informes técnicos cargados desde campo con las asignaciones planificadas del sistema.</p>
@@ -1307,21 +1307,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
               <div className="flex flex-wrap gap-2 items-center no-print">
                 <button
                   onClick={handlePrintCalendar}
-                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                 >
-                  <Printer className="w-3.5 h-3.5 text-red-500" />
+                  <Printer className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
                   <span>Imprimir PDF</span>
                 </button>
 
                 {/* Toggle layout styles */}
-                <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
                   <button
                     id="btn-auditor-style-excel"
                     onClick={() => setAuditorStyle('excelTabs')}
                     className={`px-3 py-1.5 text-3xs font-bold rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
                       auditorStyle === 'excelTabs'
                         ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
                     <UserCheck className="w-3.5 h-3.5" />
@@ -1341,7 +1341,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     className={`px-3 py-1.5 text-3xs font-bold rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
                       auditorStyle === 'auditDesk'
                         ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5" />
@@ -1400,8 +1400,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                 </div>
 
                 {/* Sheets / Engineers Tab Bar */}
-                <div className="bg-slate-50 border-x border-b border-slate-200 flex items-center px-4 overflow-x-auto gap-2 py-2.5 no-scrollbar">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-2">Técnico:</span>
+                <div className="bg-slate-50 dark:bg-slate-800 border-x border-b border-slate-200 dark:border-slate-700 flex items-center px-4 overflow-x-auto gap-2 py-2.5 no-scrollbar">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0 mr-2">Técnico:</span>
                   {engineers.map(e => {
                     const isSelected = selectedEngTab === e.id;
                     const engOrders = workOrders.filter(wo => {
@@ -1419,12 +1419,12 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                         className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 border ${
                           isSelected
                             ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm font-extrabold'
-                            : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-600'
+                            : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
                         }`}
                       >
                         <span className="truncate">{e.name.replace('Ing. ', '')}</span>
                         {engPendingReports > 0 && (
-                          <span className={`${isSelected ? 'bg-white text-indigo-700' : 'bg-amber-500 text-white'} text-[9px] leading-none font-bold px-1.5 py-0.5 rounded-full flex items-center justify-center animate-pulse`}>
+                          <span className={`${isSelected ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300' : 'bg-amber-500 text-white'} text-[9px] leading-none font-bold px-1.5 py-0.5 rounded-full flex items-center justify-center animate-pulse`}>
                             {engPendingReports}
                           </span>
                         )}
@@ -1434,21 +1434,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                 </div>
 
                 {/* Table Sheet body */}
-                <div className="bg-white border-x border-b border-slate-200 rounded-b-xl overflow-hidden shadow-xs">
+                <div className="bg-white dark:bg-slate-900 border-x border-b border-slate-200 dark:border-slate-700 rounded-b-xl overflow-hidden shadow-xs">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-3xs">
                       <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wide">
-                          <th className="p-3 border-r border-slate-200 text-center w-12 text-slate-350">#</th>
-                          <th className="p-3 border-r border-slate-200">Cliente / Hospital</th>
-                          <th className="p-3 border-r border-slate-200">Reporte Técnico</th>
-                          <th className="p-3 border-r border-slate-200">Equipo / Tarea Asignada</th>
-                          <th className="p-3 border-r border-slate-200">Fecha</th>
-                          <th className="p-3 border-r border-slate-200 text-center w-40">Reporte Entregado (SI/NO)</th>
+                        <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">
+                          <th className="p-3 border-r border-slate-200 dark:border-slate-700 text-center w-12 text-slate-350 dark:text-slate-500">#</th>
+                          <th className="p-3 border-r border-slate-200 dark:border-slate-700">Cliente / Hospital</th>
+                          <th className="p-3 border-r border-slate-200 dark:border-slate-700">Reporte Técnico</th>
+                          <th className="p-3 border-r border-slate-200 dark:border-slate-700">Equipo / Tarea Asignada</th>
+                          <th className="p-3 border-r border-slate-200 dark:border-slate-700">Fecha</th>
+                          <th className="p-3 border-r border-slate-200 dark:border-slate-700 text-center w-40">Reporte Entregado (SI/NO)</th>
                           <th className="p-3">Comentarios / Observaciones de Conciliación</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-150 font-medium font-sans text-slate-700">
+                      <tbody className="divide-y divide-slate-150 dark:divide-slate-700 font-medium font-sans text-slate-700 dark:text-slate-300">
                         {(() => {
                           const engOrders = workOrders.filter(wo => {
                             if (wo.engineerId !== selectedEngTab && wo.supportEngineerId !== selectedEngTab && !wo.supportEngineerIds?.includes(selectedEngTab)) return false;
@@ -1460,7 +1460,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                             const monthName = monthsList[auditorMonth - 1] || 'Marzo';
                             return (
                               <tr>
-                                <td colSpan={7} className="p-12 text-center text-slate-400 font-medium italic">
+                                <td colSpan={7} className="p-12 text-center text-slate-400 dark:text-slate-500 font-medium italic">
                                   No hay órdenes de servicio agendadas para este técnico en {monthName} de {auditorYear}.
                                 </td>
                               </tr>
@@ -1474,34 +1474,34 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                             const isPendingApproval = wo.status === 'Reportado';
 
                             return (
-                              <tr key={wo.id} className="hover:bg-slate-50/75 transition-colors">
-                                <td className="p-2.5 border-r border-slate-150 text-center font-mono text-slate-400 bg-slate-50/50">{index + 1}</td>
-                                
+                              <tr key={wo.id} className="hover:bg-slate-50/75 dark:hover:bg-slate-800/75 transition-colors">
+                                <td className="p-2.5 border-r border-slate-150 dark:border-slate-700 text-center font-mono text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50">{index + 1}</td>
+
                                 {/* Cliente */}
-                                <td className="p-2.5 border-r border-slate-150">
-                                  <p className="font-bold text-slate-900">{client?.name}</p>
-                                  <p className="text-[9px] text-slate-400 mt-0.5 truncate max-w-[180px]">{client?.address}</p>
+                                <td className="p-2.5 border-r border-slate-150 dark:border-slate-700">
+                                  <p className="font-bold text-slate-900 dark:text-slate-100">{client?.name}</p>
+                                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate max-w-[180px]">{client?.address}</p>
                                 </td>
 
                                 {/* Reportes Code */}
-                                <td className="p-2.5 border-r border-slate-150 font-mono font-bold">
+                                <td className="p-2.5 border-r border-slate-150 dark:border-slate-700 font-mono font-bold">
                                   {matchedReport ? (
                                     <div className="flex items-center gap-1.5">
-                                      <span className="text-emerald-700 font-extrabold bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded text-[10px]">
+                                      <span className="text-emerald-700 dark:text-emerald-300 font-extrabold bg-emerald-50 dark:bg-emerald-950 border border-emerald-100 dark:border-emerald-800 px-1.5 py-0.5 rounded text-[10px]">
                                         {matchedReport.id}
                                       </span>
                                     </div>
                                   ) : (
-                                    <span className="text-slate-400 text-4xs italic">Falta Enviar (Técnico)</span>
+                                    <span className="text-slate-400 dark:text-slate-500 text-4xs italic">Falta Enviar (Técnico)</span>
                                   )}
                                 </td>
 
                                 {/* Equipo/Tarea */}
-                                <td className="p-2.5 border-r border-slate-150">
-                                  <p className="font-bold text-slate-800">{wo.equipmentName}</p>
+                                <td className="p-2.5 border-r border-slate-150 dark:border-slate-700">
+                                  <p className="font-bold text-slate-800 dark:text-slate-100">{wo.equipmentName}</p>
                                   <div className="flex flex-wrap items-center gap-1.5 mt-1">
                                     <span className={`text-[8.5px] font-bold inline-block px-1.5 py-0.2 rounded uppercase ${
-                                      wo.type === 'Correctivo' ? 'bg-red-50 text-red-650' : 'bg-slate-100 text-slate-600'
+                                      wo.type === 'Correctivo' ? 'bg-red-50 dark:bg-red-950 text-red-650 dark:text-red-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                                     }`}>
                                       {wo.type}
                                     </span>
@@ -1509,10 +1509,10 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                       const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
                                         ? wo.supportEngineerIds
                                         : (wo.supportEngineerId ? [wo.supportEngineerId] : []);
-                                      
+
                                       if (supportIds.includes(selectedEngTab)) {
                                         return (
-                                          <span className="text-[8.5px] font-bold inline-block px-1.5 py-0.2 rounded uppercase bg-indigo-50 text-indigo-700">
+                                          <span className="text-[8.5px] font-bold inline-block px-1.5 py-0.2 rounded uppercase bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
                                             Apoyo
                                           </span>
                                         );
@@ -1521,13 +1521,13 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                           .map(id => engineers.find(e => e.id === id)?.name.replace('Ing. ', '') || '?')
                                           .join(' + ');
                                         return (
-                                          <span className="text-[8.5px] font-medium inline-block px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
+                                          <span className="text-[8.5px] font-medium inline-block px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                                             Titular (Apoyo: {supportNamesStr})
                                           </span>
                                         );
                                       } else {
                                         return (
-                                          <span className="text-[8.5px] font-medium inline-block px-1.5 py-0.2 rounded bg-slate-50 text-slate-400">
+                                          <span className="text-[8.5px] font-medium inline-block px-1.5 py-0.2 rounded bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500">
                                             Titular Único
                                           </span>
                                         );
@@ -1537,17 +1537,17 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                 </td>
 
                                 {/* Fecha */}
-                                <td className="p-2.5 border-r border-slate-150 font-mono font-bold text-slate-600">
+                                <td className="p-2.5 border-r border-slate-150 dark:border-slate-700 font-mono font-bold text-slate-600 dark:text-slate-300">
                                    {wo.plannedDate}
-                                   {wo.plannedTime && <span className="block text-4xs font-sans text-indigo-700 font-extrabold mt-0.5">🕒 {wo.plannedTime}</span>}
+                                   {wo.plannedTime && <span className="block text-4xs font-sans text-indigo-700 dark:text-indigo-300 font-extrabold mt-0.5">🕒 {wo.plannedTime}</span>}
                                  </td>
 
                                 {/* Reporte Entregado (SI / NO Switch Toggle) */}
-                                <td className="p-2.5 border-r border-slate-150 text-center">
+                                <td className="p-2.5 border-r border-slate-150 dark:border-slate-700 text-center">
                                   <div className="flex flex-col items-center justify-center gap-1">
                                     <div className="flex items-center gap-2">
-                                      <span className={`text-[9px] font-bold ${isDelivered ? 'text-emerald-600' : 'text-slate-400'}`}>NO</span>
-                                      
+                                      <span className={`text-[9px] font-bold ${isDelivered ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>NO</span>
+
                                       {/* Custom Toggle switch */}
                                       <button
                                         type="button"
@@ -1561,7 +1561,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                           }
                                         }}
                                         className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-205 focus:outline-hidden ${
-                                          isDelivered ? 'bg-emerald-600' : 'bg-slate-200'
+                                          isDelivered ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-700'
                                         } ${!matchedReport && !isDelivered ? 'opacity-40 cursor-not-allowed' : ''}`}
                                         title={!matchedReport ? "El ingeniero de soporte debe subir el reporte primero para habilitar conciliación" : "Cambiar estatus de conciliación"}
                                       >
@@ -1571,23 +1571,23 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                           }`}
                                         />
                                       </button>
-                                      
-                                      <span className={`text-[9px] font-bold ${isDelivered ? 'text-emerald-600 font-extrabold' : 'text-slate-400'}`}>SI</span>
+
+                                      <span className={`text-[9px] font-bold ${isDelivered ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-400 dark:text-slate-500'}`}>SI</span>
                                     </div>
 
                                     {/* Status Helper */}
                                     {isDelivered && (
-                                      <span className="bg-emerald-50 text-emerald-700 text-[8px] px-1.5 py-0.2 rounded font-bold uppercase border border-emerald-150">
+                                      <span className="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[8px] px-1.5 py-0.2 rounded font-bold uppercase border border-emerald-150 dark:border-emerald-800">
                                         CONCILIADO OK
                                       </span>
                                     )}
                                     {isPendingApproval && (
-                                      <span className="bg-amber-50 text-amber-600 text-[8px] px-1.5 py-0.2 rounded font-bold uppercase border border-amber-100 animate-pulse">
+                                      <span className="bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 text-[8px] px-1.5 py-0.2 rounded font-bold uppercase border border-amber-100 dark:border-amber-800 animate-pulse">
                                         PND AUDITORÍA
                                       </span>
                                     )}
                                     {!matchedReport && (
-                                      <span className="text-[8px] text-slate-400 font-semibold italic">
+                                      <span className="text-[8px] text-slate-400 dark:text-slate-500 font-semibold italic">
                                         Falta Informe Campo
                                       </span>
                                     )}
@@ -1606,12 +1606,12 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                         onBlur={(e) => {
                                           matchedReport.validationNotes = e.target.value;
                                         }}
-                                        className="w-full text-3xs p-1.5 rounded border border-slate-200 bg-white font-sans text-slate-600 focus:ring-1 focus:ring-indigo-500"
+                                        className="w-full text-3xs p-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-sans text-slate-600 dark:text-slate-200 focus:ring-1 focus:ring-indigo-500"
                                       />
-                                      <p className="text-[8px] text-slate-400">Presiona fuera o pulsa Enter para guardar observaciones directas.</p>
+                                      <p className="text-[8px] text-slate-400 dark:text-slate-500">Presiona fuera o pulsa Enter para guardar observaciones directas.</p>
                                     </div>
                                   ) : (
-                                    <p className="text-slate-400 text-4xs italic">Registro bloqueado, esperando firma de técnico...</p>
+                                    <p className="text-slate-400 dark:text-slate-500 text-4xs italic">Registro bloqueado, esperando firma de técnico...</p>
                                   )}
                                 </td>
                               </tr>
@@ -1624,8 +1624,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                 </div>
 
                 {/* Help tip card */}
-                <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 flex gap-3 text-3xs text-slate-700">
-                  <span className="text-indigo-600 font-bold text-xs shrink-0 font-mono">📢 GUÍA DE CONCILIACIÓN DE REPORTES:</span>
+                <div className="bg-indigo-50/50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-800 rounded-xl p-4 flex gap-3 text-3xs text-slate-700 dark:text-slate-300">
+                  <span className="text-indigo-600 dark:text-indigo-400 font-bold text-xs shrink-0 font-mono">📢 GUÍA DE CONCILIACIÓN DE REPORTES:</span>
                   <div className="leading-relaxed">
                     <p className="font-bold">¿Cómo conciliar reportes técnicos en el sistema?</p>
                     <p className="mt-0.5">En la tabla superior, cada fila representa una orden de mantenimiento planificada para el mes seleccionado. Cuando un técnico de soporte carga su informe digital desde campo, la orden pasa al estado <strong>PND AUDITORÍA</strong>. Al verificar los datos y pulsar el interruptor <strong>SI</strong> (Conciliado), la orden se marcará como validada y cerrada definitivamente en el sistema cloud.</p>
@@ -1647,24 +1647,24 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                   if (monthPendingValidation === 0) {
                     const monthName = monthsList[auditorMonth - 1] || 'Marzo';
                     return (
-                      <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-12 text-center max-w-lg mx-auto space-y-3">
+                      <div className="bg-slate-50 dark:bg-slate-950 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-12 text-center max-w-lg mx-auto space-y-3">
                         <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto animate-bounce" />
-                        <h4 className="font-bold text-slate-800">¡Bandeja de Conciliación Limpia!</h4>
+                        <h4 className="font-bold text-slate-800 dark:text-slate-100">¡Bandeja de Conciliación Limpia!</h4>
                         <p className="text-xs text-slate-500">
                           Todos los reportes cargados para {monthName} de {auditorYear} han sido conciliados exitosamente contra la agenda física. No hay auditorías pendientes.
                         </p>
-                        <p className="text-3xs font-semibold text-indigo-600 bg-white border border-slate-200 mx-auto w-fit px-3 py-1 rounded-full">
+                        <p className="text-3xs font-semibold text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mx-auto w-fit px-3 py-1 rounded-full">
                           Tip: Ve a la pestaña de "App del Ingeniero" para enviar un reporte nuevo y auditarlo aquí.
                         </p>
                       </div>
                     );
                   }
-                  
+
                   return (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                       {/* Left side list of orders pending report review */}
                       <div className="lg:col-span-4 space-y-3">
-                        <h4 className="font-bold text-xs text-slate-400 uppercase tracking-tight">Reportes por Validar</h4>
+                        <h4 className="font-bold text-xs text-slate-400 dark:text-slate-500 uppercase tracking-tight">Reportes por Validar</h4>
                         {workOrders
                           .filter(wo => {
                             if (wo.status !== 'Reportado') return false;
@@ -1685,20 +1685,20 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                   setValidationNotes('');
                                 }}
                                 className={`w-full text-left p-3.5 rounded-xl border transition-all text-xs flex gap-3 cursor-pointer ${
-                                  isSelected 
-                                    ? 'bg-indigo-600 border-indigo-700 text-white shadow-md scale-[1.02]' 
-                                    : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+                                  isSelected
+                                    ? 'bg-indigo-600 border-indigo-700 text-white shadow-md scale-[1.02]'
+                                    : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100'
                                 }`}
                               >
-                                <div className={`p-2 rounded-lg shrink-0 w-fit ${isSelected ? 'bg-indigo-800 text-indigo-200' : 'bg-indigo-50 text-indigo-600'}`}>
+                                <div className={`p-2 rounded-lg shrink-0 w-fit ${isSelected ? 'bg-indigo-800 text-indigo-200' : 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'}`}>
                                   <FileText className="w-4 h-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <span className="font-mono text-3xs font-bold tracking-tight opacity-80">{wo.id}</span>
-                                  <p className={`font-bold truncate mt-1 leading-tight ${isSelected ? 'text-white' : 'text-slate-900'}`}>{wo.equipmentName}</p>
+                                  <p className={`font-bold truncate mt-1 leading-tight ${isSelected ? 'text-white' : 'text-slate-900 dark:text-slate-100'}`}>{wo.equipmentName}</p>
                                   <p className="text-3xs truncate mt-1 opacity-70">{client?.name}</p>
                                   <div className="flex items-center gap-1.5 mt-2">
-                                    <span className="text-[8px] font-bold uppercase rounded px-1.5 py-0.5 bg-red-50 text-red-655 border border-red-100 animate-pulse">
+                                    <span className="text-[8px] font-bold uppercase rounded px-1.5 py-0.5 bg-red-50 dark:bg-red-950 text-red-655 dark:text-red-400 border border-red-100 dark:border-red-800 animate-pulse">
                                       PENDIENTE FIRMA ADMIN
                                     </span>
                                   </div>
@@ -1709,7 +1709,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                       </div>
 
                       {/* Right side detailed comparison view */}
-                      <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between">
+                      <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between">
                         {selectedAuditWOId ? (
                           (() => {
                             const selectedWO = workOrders.find(w => w.id === selectedAuditWOId);
@@ -1720,40 +1720,40 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                : (selectedWO?.supportEngineerId ? [selectedWO.supportEngineerId] : []);
                             const matchedReport = reports.find(rep => rep.workOrderId === selectedAuditWOId);
 
-                            if (!selectedWO || !matchedReport) return <p className="p-6 text-xs text-slate-400">Cargando reporte correspondiente...</p>;
+                            if (!selectedWO || !matchedReport) return <p className="p-6 text-xs text-slate-400 dark:text-slate-500">Cargando reporte correspondiente...</p>;
 
                             return (
                               <div className="flex flex-col h-full justify-between">
                                 {/* Split comparisons */}
                                 <div className="p-6 space-y-6">
-                                  <div className="border-b border-slate-150 pb-3 flex items-center justify-between">
+                                  <div className="border-b border-slate-150 dark:border-slate-700 pb-3 flex items-center justify-between">
                                     <div>
-                                      <h3 className="font-extrabold text-sm text-slate-900">Mesa de Auditoría y Conciliación Directa</h3>
+                                      <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">Mesa de Auditoría y Conciliación Directa</h3>
                                       <p className="text-3xs text-slate-500 mt-0.5">Control cruzado de la Orden Planificada v.s. Reporte de Trabajo Entregado en Campo.</p>
                                     </div>
-                                    <span className="font-mono font-bold text-xs bg-slate-100 px-3 py-1 rounded-md text-slate-700 border border-slate-200">{selectedWO.id}</span>
+                                    <span className="font-mono font-bold text-xs bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-md text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">{selectedWO.id}</span>
                                   </div>
 
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative">
                                     {/* Divider vertical line to highlight side-by-side verification */}
-                                    <div className="hidden sm:block absolute left-1/2 top-0 bottom-0 border-l border-dashed border-slate-200"></div>
+                                    <div className="hidden sm:block absolute left-1/2 top-0 bottom-0 border-l border-dashed border-slate-200 dark:border-slate-700"></div>
 
                                     {/* Target planned WO */}
                                     <div className="space-y-4">
-                                      <h4 className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                                      <h4 className="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider flex items-center gap-1">
                                         <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                                         1. Bloque de Planificación Programada
                                       </h4>
-                                      
-                                      <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs">
+
+                                      <div className="space-y-3 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-100 dark:border-slate-700 text-xs">
                                         <div>
-                                          <p className="text-xs text-slate-400">Cliente / Entidad del Lugar</p>
-                                          <p className="font-bold text-slate-800 mt-0.5">{client?.name}</p>
+                                          <p className="text-xs text-slate-400 dark:text-slate-500">Cliente / Entidad del Lugar</p>
+                                          <p className="font-bold text-slate-800 dark:text-slate-100 mt-0.5">{client?.name}</p>
                                           <p className="text-xs text-slate-500 mt-0.5">{client?.address}</p>
                                         </div>
                                         <div>
-                                          <p className="text-xs text-slate-400">Ingeniero Técnico Asignado</p>
-                                          <p className="font-bold text-slate-800 mt-0.5">
+                                          <p className="text-xs text-slate-400 dark:text-slate-500">Ingeniero Técnico Asignado</p>
+                                          <p className="font-bold text-slate-800 dark:text-slate-100 mt-0.5">
                                             {eng?.name}
                                             {supportIds.length > 0 && (
                                               <span className="text-[10px] text-slate-500 font-normal ml-1">
@@ -1764,58 +1764,58 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                           <p className="text-xs text-slate-500 mt-0.5">{eng?.specialty}</p>
                                         </div>
                                         <div>
-                                          <p className="text-xs text-slate-400">Equipo a Intervenir</p>
-                                          <p className="font-semibold text-slate-700 font-mono">{selectedWO.equipmentName}</p>
+                                          <p className="text-xs text-slate-400 dark:text-slate-500">Equipo a Intervenir</p>
+                                          <p className="font-semibold text-slate-700 dark:text-slate-300 font-mono">{selectedWO.equipmentName}</p>
                                         </div>
                                         <div>
-                                          <p className="text-xs text-slate-400">Tipo de Mantenimiento programado</p>
-                                          <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{selectedWO.type}</span>
+                                          <p className="text-xs text-slate-400 dark:text-slate-500">Tipo de Mantenimiento programado</p>
+                                          <span className="bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{selectedWO.type}</span>
                                         </div>
                                         <div>
-                                          <p className="text-xs text-slate-400">Notas de Agenda</p>
-                                          <p className="text-slate-600 mt-0.5 italic text-xs leading-relaxed font-serif">"{selectedWO.notes}"</p>
+                                          <p className="text-xs text-slate-400 dark:text-slate-500">Notas de Agenda</p>
+                                          <p className="text-slate-600 dark:text-slate-300 mt-0.5 italic text-xs leading-relaxed font-serif">"{selectedWO.notes}"</p>
                                         </div>
                                       </div>
                                     </div>
 
                                     {/* Report uploaded from field */}
                                     <div className="space-y-4">
-                                      <h4 className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                                      <h4 className="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider flex items-center gap-1">
                                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                                         2. Reporte capturado por Ingeniero
                                       </h4>
 
-                                      <div className="space-y-3 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 text-xs">
+                                      <div className="space-y-3 bg-indigo-50/50 dark:bg-indigo-950/50 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 text-xs">
                                         <div>
-                                          <p className="text-xs text-indigo-600 font-bold">Técnico que firma el cierre</p>
-                                          <p className="font-bold text-slate-850 mt-0.5">{matchedReport.technicianSignature}</p>
+                                          <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">Técnico que firma el cierre</p>
+                                          <p className="font-bold text-slate-850 dark:text-slate-100 mt-0.5">{matchedReport.technicianSignature}</p>
                                         </div>
                                         <div>
-                                          <p className="text-xs text-slate-400 font-semibold">Hallazgos y Diagnóstico Técnico en Sitio</p>
-                                          <p className="text-slate-700 mt-0.5 font-sans leading-relaxed text-xs">{matchedReport.technicalFindings}</p>
+                                          <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold">Hallazgos y Diagnóstico Técnico en Sitio</p>
+                                          <p className="text-slate-700 dark:text-slate-300 mt-0.5 font-sans leading-relaxed text-xs">{matchedReport.technicalFindings}</p>
                                         </div>
                                         <div>
-                                          <p className="text-xs text-slate-400 font-semibold">Acciones Ejecutadas por Soporte</p>
-                                          <p className="text-slate-700 mt-0.5 font-sans leading-relaxed text-xs">{matchedReport.actionsTaken}</p>
+                                          <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold">Acciones Ejecutadas por Soporte</p>
+                                          <p className="text-slate-700 dark:text-slate-300 mt-0.5 font-sans leading-relaxed text-xs">{matchedReport.actionsTaken}</p>
                                         </div>
-                                        
+
                                         {matchedReport.materialsUsed.length > 0 && (
                                           <div>
-                                            <p className="text-xs text-slate-400 mb-1">Repuestos y Consumibles Utilizados</p>
+                                            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Repuestos y Consumibles Utilizados</p>
                                             <div className="space-y-1">
                                               {matchedReport.materialsUsed.map((m, i) => (
-                                                <div key={i} className="flex justify-between items-center text-xs font-mono bg-white/70 px-2 py-0.5 rounded border border-slate-200">
-                                                  <span className="truncate text-slate-600 font-semibold">{m.item}</span>
-                                                  <span className="font-bold text-slate-800 shrink-0">x{m.qty}</span>
+                                                <div key={i} className="flex justify-between items-center text-xs font-mono bg-white/70 dark:bg-slate-800/70 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                                                  <span className="truncate text-slate-600 dark:text-slate-300 font-semibold">{m.item}</span>
+                                                  <span className="font-bold text-slate-800 dark:text-slate-100 shrink-0">x{m.qty}</span>
                                                 </div>
                                               ))}
                                             </div>
                                           </div>
                                         )}
 
-                                        <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center text-xs text-slate-505 font-medium flex-wrap gap-2">
-                                          <span>Horas: <span className="font-mono font-bold text-slate-850 bg-white/80 px-1.5 py-0.5 rounded border border-slate-100">{matchedReport.hoursSpent} hrs</span></span>
-                                          <span>Firma Cliente: <span className="font-bold text-emerald-650 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 inline-block">{matchedReport.clientSignatureName}</span></span>
+                                        <div className="pt-2 border-t border-slate-200/50 dark:border-slate-700/50 flex justify-between items-center text-xs text-slate-505 dark:text-slate-500 font-medium flex-wrap gap-2">
+                                          <span>Horas: <span className="font-mono font-bold text-slate-850 dark:text-slate-100 bg-white/80 dark:bg-slate-800/80 px-1.5 py-0.5 rounded border border-slate-100 dark:border-slate-700">{matchedReport.hoursSpent} hrs</span></span>
+                                          <span>Firma Cliente: <span className="font-bold text-emerald-650 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-100 dark:border-emerald-800 inline-block">{matchedReport.clientSignatureName}</span></span>
                                           <button
                                             type="button"
                                             onClick={() => {
@@ -1834,17 +1834,17 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                 </div>
 
                                 {/* Action footer */}
-                                <div className="bg-slate-50 border-t border-slate-200 p-4 md:p-6 space-y-4">
+                                <div className="bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-700 p-4 md:p-6 space-y-4">
                                   {isRechazando ? (
                                     <div className="space-y-3">
-                                      <label className="block text-xs font-bold text-red-600 uppercase">Motivo del rechazo técnico</label>
+                                      <label className="block text-xs font-bold text-red-600 dark:text-red-400 uppercase">Motivo del rechazo técnico</label>
                                       <textarea
                                         id="report-rejection-notes"
                                         rows={2}
                                         value={validationNotes}
                                         onChange={e => setValidationNotes(e.target.value)}
                                         placeholder="Ej: El técnico no reportó las refacciones completas o falta firma del cliente Gerardo..."
-                                        className="w-full text-xs p-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 bg-white"
+                                        className="w-full text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 bg-white dark:bg-slate-800 dark:text-slate-200"
                                       />
                                       <div className="flex gap-2 justify-end">
                                         <button
@@ -1854,7 +1854,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                             setIsRechazando(false);
                                             setValidationNotes('');
                                           }}
-                                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                                          className="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                                         >
                                           Cancelar
                                         </button>
@@ -1880,7 +1880,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                         type="button"
                                         id="btn-auditor-reject"
                                         onClick={() => setIsRechazando(true)}
-                                        className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 text-xs font-bold px-4 py-2 rounded-xl transition-colors shrink-0 cursor-pointer"
+                                        className="bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 border border-red-200 dark:border-red-800 text-xs font-bold px-4 py-2 rounded-xl transition-colors shrink-0 cursor-pointer"
                                       >
                                         Rechazar Reporte
                                       </button>
@@ -1903,9 +1903,9 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                             );
                           })()
                         ) : (
-                          <div className="p-12 text-center text-slate-400 space-y-2 flex-1 flex flex-col justify-center items-center h-80">
-                            <ShieldAlert className="w-8 h-8 text-indigo-200 animate-pulse" />
-                            <p className="text-xs font-bold text-slate-700">Sin elementos seleccionados para verificar</p>
+                          <div className="p-12 text-center text-slate-400 dark:text-slate-500 space-y-2 flex-1 flex flex-col justify-center items-center h-80">
+                            <ShieldAlert className="w-8 h-8 text-indigo-200 dark:text-indigo-900 animate-pulse" />
+                            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Sin elementos seleccionados para verificar</p>
                             <p className="text-xs text-slate-500 max-w-xs">Selecciona un folio de la barra lateral para iniciar la conciliación interactiva.</p>
                           </div>
                         )}
@@ -1922,16 +1922,16 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
         {activeSubTab === 'ordersList' && (
           <div className="space-y-4">
             {/* Filters panel */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
+            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
               <div className="relative w-full md:w-72">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <input
                   id="search-orders"
                   type="text"
                   value={localSearchTerm}
                   onChange={e => setLocalSearchTerm(e.target.value)}
                   placeholder="Buscar equipo, cliente o técnico..."
-                  className="w-full text-xs pl-9 pr-4 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full text-xs pl-9 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
 
@@ -1942,9 +1942,9 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     id={`btn-order-filter-${st}`}
                     onClick={() => setStatusFilter(st)}
                     className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-                      statusFilter === st 
-                        ? 'bg-indigo-600 text-white border-indigo-600' 
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      statusFilter === st
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     {st === 'todos' ? 'Mostrar Todos' : st}
@@ -1954,10 +1954,10 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
             </div>
 
             {/* List Table */}
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 font-bold text-slate-500 text-xs uppercase">
+                  <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 font-bold text-slate-500 dark:text-slate-400 text-xs uppercase">
                     <th className="p-3">Folio</th>
                     <th className="p-3">Cliente</th>
                     <th className="p-3">Equipo / Ubicación</th>
@@ -1966,10 +1966,10 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     <th className="p-3">Estatus de Conciliación</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700 font-medium">
                   {filteredOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="p-6 text-center text-slate-400">No se encontraron órdenes de trabajo para los criterios seleccionados.</td>
+                      <td colSpan={6} className="p-6 text-center text-slate-400 dark:text-slate-500">No se encontraron órdenes de trabajo para los criterios seleccionados.</td>
                     </tr>
                   ) : (
                     filteredOrders.map(wo => {
@@ -1979,35 +1979,35 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                       const supportIds = wo.supportEngineerIds && wo.supportEngineerIds.length > 0
                         ? wo.supportEngineerIds
                         : (wo.supportEngineerId ? [wo.supportEngineerId] : []);
-                      
-                      let badgeColor = 'bg-slate-100 text-slate-700';
-                      if (wo.status === 'Pendiente') badgeColor = 'bg-yellow-50 text-yellow-700 border border-yellow-100';
-                      if (wo.status === 'En Proceso') badgeColor = 'bg-sky-50 text-sky-700 border border-sky-100';
-                      if (wo.status === 'Realizado') badgeColor = 'bg-blue-50 text-blue-700 border border-blue-100';
-                      if (wo.status === 'Reportado') badgeColor = 'bg-red-50 text-red-700 border border-red-100 animate-pulse';
-                      if (wo.status === 'Conciliado') badgeColor = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+
+                      let badgeColor = 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+                      if (wo.status === 'Pendiente') badgeColor = 'bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 border border-yellow-100 dark:border-yellow-800';
+                      if (wo.status === 'En Proceso') badgeColor = 'bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-800';
+                      if (wo.status === 'Realizado') badgeColor = 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800';
+                      if (wo.status === 'Reportado') badgeColor = 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-800 animate-pulse';
+                      if (wo.status === 'Conciliado') badgeColor = 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800';
 
                       return (
-                        <tr key={wo.id} className="hover:bg-slate-50/50">
-                          <td className="p-3 font-mono font-bold text-slate-800">{wo.id}</td>
+                        <tr key={wo.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                          <td className="p-3 font-mono font-bold text-slate-800 dark:text-slate-100">{wo.id}</td>
                           <td className="p-3">
-                            <p className="font-bold text-slate-800">{clientDisplayName}</p>
-                            <p className="text-[10px] text-slate-400 font-mono mt-0.5">{client?.industry}</p>
+                            <p className="font-bold text-slate-800 dark:text-slate-100">{clientDisplayName}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">{client?.industry}</p>
                           </td>
-                          <td className="p-3 text-slate-600">
+                          <td className="p-3 text-slate-600 dark:text-slate-300">
                             <span className="font-bold">{wo.equipmentName}</span>
-                            <p className="text-[10px] text-slate-400 mt-0.5">{wo.type}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{wo.type}</p>
                           </td>
                           <td className="p-3 flex items-center gap-2">
                             {eng?.avatar ? (
-                              <img src={eng.avatar} className="w-6 h-6 rounded-full object-cover border border-slate-200" alt={eng.name} />
+                              <img src={eng.avatar} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" alt={eng.name} />
                             ) : (
-                              <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-650 flex items-center justify-center font-bold text-[10px] border border-slate-300 uppercase shrink-0">
+                              <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-650 dark:text-slate-200 flex items-center justify-center font-bold text-[10px] border border-slate-300 dark:border-slate-600 uppercase shrink-0">
                                 {eng?.name ? eng.name.replace('Ing. ', '').substring(0, 2) : 'U'}
                               </div>
                             )}
                             <div>
-                              <p className="text-slate-800 font-bold">
+                              <p className="text-slate-800 dark:text-slate-100 font-bold">
                                 {eng?.name}
                                 {supportIds.length > 0 && (
                                   <span className="text-[10px] text-slate-500 font-normal ml-1">
@@ -2015,12 +2015,12 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                   </span>
                                 )}
                               </p>
-                              <p className="text-[10px] text-slate-400 mt-0.5">{eng?.specialty}</p>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{eng?.specialty}</p>
                             </div>
                           </td>
-                          <td className="p-3 font-mono font-semibold text-slate-600">
+                          <td className="p-3 font-mono font-semibold text-slate-600 dark:text-slate-300">
                             {wo.plannedDate}
-                            {wo.plannedTime && <span className="block text-[10px] font-sans text-indigo-700 font-extrabold mt-0.5">🕒 {wo.plannedTime}</span>}
+                            {wo.plannedTime && <span className="block text-[10px] font-sans text-indigo-700 dark:text-indigo-300 font-extrabold mt-0.5">🕒 {wo.plannedTime}</span>}
                           </td>
                           <td className="p-3">
                             <span className={`text-[10px] font-bold uppercase rounded-md px-2 py-0.5 ${badgeColor}`}>
@@ -2043,21 +2043,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
             {/* Column Visibility Modal for Printed Dashboard */}
             {isColumnConfigOpen && (
               <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150 no-print">
-                <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                      <div className="p-2 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-xl">
                         <Columns3 className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-sm text-slate-900">Columnas del Informe Impreso</h4>
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">Columnas del Informe Impreso</h4>
                         <p className="text-3xs text-slate-500 font-medium">Elige qué columnas incluir al imprimir o exportar a PDF el Dashboard</p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsColumnConfigOpen(false)}
-                      className="text-slate-400 hover:text-slate-700 text-sm font-bold cursor-pointer p-1"
+                      className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 text-sm font-bold cursor-pointer p-1"
                     >
                       ✕
                     </button>
@@ -2067,7 +2067,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     <button
                       type="button"
                       onClick={() => setDashboardColumns(DEFAULT_DASHBOARD_PRINT_COLUMNS)}
-                      className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                      className="bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                     >
                       ✅ Incluir Todas
                     </button>
@@ -2078,28 +2078,28 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                         (Object.keys(cleared) as (keyof DashboardPrintColumns)[]).forEach(k => { cleared[k] = false; });
                         return cleared;
                       })}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                      className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                     >
                       Quitar Todas
                     </button>
                   </div>
 
-                  <div className="max-h-80 overflow-y-auto custom-scrollbar border border-slate-200 rounded-xl divide-y divide-slate-100">
-                    <div className="flex items-center justify-between p-2.5 bg-slate-50/60">
+                  <div className="max-h-80 overflow-y-auto custom-scrollbar border border-slate-200 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-700">
+                    <div className="flex items-center justify-between p-2.5 bg-slate-50/60 dark:bg-slate-800/60">
                       <span className="text-xs font-bold text-slate-500">Ingeniero</span>
-                      <span className="text-[9px] font-extrabold text-slate-400 uppercase">Siempre incluida</span>
+                      <span className="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase">Siempre incluida</span>
                     </div>
                     {DASHBOARD_COLUMN_LABELS.map(col => (
                       <label
                         key={col.id}
-                        className="flex items-center justify-between p-2.5 hover:bg-slate-50 cursor-pointer transition-colors"
+                        className="flex items-center justify-between p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                       >
-                        <span className="text-xs font-bold text-slate-700">{col.label}</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{col.label}</span>
                         <input
                           type="checkbox"
                           checked={dashboardColumns[col.id]}
                           onChange={() => setDashboardColumns(prev => ({ ...prev, [col.id]: !prev[col.id] }))}
-                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 dark:border-slate-600 focus:ring-indigo-500 cursor-pointer"
                         />
                       </label>
                     ))}
@@ -2121,14 +2121,14 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
             {/* Engineer Filter & Exclusion Modal */}
             {showEngFilterModal && (
               <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150 no-print">
-                <div className="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-200 space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                      <div className="p-2 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-xl">
                         <Users className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-sm text-slate-900">Selección y Filtrado de Técnicos</h4>
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">Selección y Filtrado de Técnicos</h4>
                         <p className="text-3xs text-slate-500 font-medium">Excluye técnicos inactivos o de otras áreas del Dashboard e Informe PDF</p>
                       </div>
                     </div>
@@ -2136,7 +2136,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowEngFilterModal(false)}
-                      className="text-slate-400 hover:text-slate-700 text-sm font-bold cursor-pointer p-1"
+                      className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 text-sm font-bold cursor-pointer p-1"
                     >
                       ✕
                     </button>
@@ -2161,14 +2161,14 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     <button
                       type="button"
                       onClick={() => setExcludedEngIds([])}
-                      className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                      className="bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                     >
                       <span>✅ Incluir Todos ({engineers.length})</span>
                     </button>
                   </div>
 
                   {/* Engineers Checklist List */}
-                  <div className="max-h-72 overflow-y-auto custom-scrollbar border border-slate-200 rounded-xl divide-y divide-slate-100">
+                  <div className="max-h-72 overflow-y-auto custom-scrollbar border border-slate-200 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-700">
                     {engineers.map(eng => {
                       const engOrdersCount = filteredDashOrders.filter(wo => wo.engineerId === eng.id || wo.supportEngineerId === eng.id || wo.supportEngineerIds?.includes(eng.id)).length;
                       const isIncluded = !excludedEngIds.includes(eng.id);
@@ -2176,8 +2176,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                       return (
                         <label
                           key={eng.id}
-                          className={`flex items-center justify-between p-2.5 hover:bg-slate-50 cursor-pointer transition-colors ${
-                            !isIncluded ? 'opacity-50 bg-slate-50/50' : ''
+                          className={`flex items-center justify-between p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors ${
+                            !isIncluded ? 'opacity-50 bg-slate-50/50 dark:bg-slate-800/50' : ''
                           }`}
                         >
                           <div className="flex items-center gap-3">
@@ -2191,16 +2191,16 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                   setExcludedEngIds(prev => prev.filter(id => id !== eng.id));
                                 }
                               }}
-                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 dark:border-slate-600 focus:ring-indigo-500 cursor-pointer"
                             />
                             <div>
-                              <span className="font-bold text-xs text-slate-800 block">{eng.name}</span>
-                              <span className="text-3xs text-slate-400">{eng.specialty || 'Ingeniero Biomédico'} • {eng.sede || 'Sede'}</span>
+                              <span className="font-bold text-xs text-slate-800 dark:text-slate-100 block">{eng.name}</span>
+                              <span className="text-3xs text-slate-400 dark:text-slate-500">{eng.specialty || 'Ingeniero Biomédico'} • {eng.sede || 'Sede'}</span>
                             </div>
                           </div>
 
                           <span className={`text-2xs font-extrabold px-2.5 py-0.5 rounded-full ${
-                            engOrdersCount > 0 ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-400'
+                            engOrdersCount > 0 ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
                           }`}>
                             {engOrdersCount} tareas
                           </span>
@@ -2210,9 +2210,9 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                    <span className="text-xs font-bold text-slate-600">
-                      Incluidos: <strong className="text-indigo-600">{engineers.length - excludedEngIds.length}</strong> de {engineers.length} técnicos
+                  <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-700 pt-3">
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                      Incluidos: <strong className="text-indigo-600 dark:text-indigo-400">{engineers.length - excludedEngIds.length}</strong> de {engineers.length} técnicos
                     </span>
 
                     <button
@@ -2227,10 +2227,10 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
               </div>
             )}
             {/* Filter banner */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between no-print">
+            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between no-print">
               <div>
-                <h4 className="font-extrabold text-sm text-slate-800 flex items-center gap-1.5">
-                  <BarChart3 className="w-4 h-4 text-indigo-600" />
+                <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  <BarChart3 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   <span>Dashboard de Rendimiento y Carga de Trabajo</span>
                 </h4>
                 <p className="text-xs text-slate-500 mt-0.5">Analiza el volumen de asignaciones y el avance por ingeniero para el periodo seleccionado.</p>
@@ -2238,12 +2238,12 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 
               <div className="flex flex-wrap items-center gap-3">
                 {/* Year Selector */}
-                <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-sm">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide">Año</span>
+                <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 shadow-sm">
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wide">Año</span>
                   <select
                     value={dashYear}
                     onChange={(e) => setDashYear(Number(e.target.value))}
-                    className="bg-transparent text-xs font-bold text-slate-800 cursor-pointer border-none outline-none p-0 focus:ring-0"
+                    className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer border-none outline-none p-0 focus:ring-0"
                   >
                     {[2025, 2026, 2027, 2028].map(y => (
                       <option key={y} value={y}>{y}</option>
@@ -2252,7 +2252,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                 </div>
 
                 {/* Period Selector */}
-                <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm">
+                <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 shadow-sm">
                   {(['month', 'semester', 'year'] as const).map(p => (
                     <button
                       key={p}
@@ -2261,7 +2261,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                       className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
                         dashPeriod === p
                           ? 'bg-slate-900 text-white shadow-sm'
-                          : 'text-slate-550 hover:text-slate-800 hover:bg-slate-50'
+                          : 'text-slate-550 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
                       {p === 'month' ? 'Mensual' : p === 'semester' ? 'Semestral' : 'Anual'}
@@ -2271,12 +2271,12 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 
                 {/* Sub-period select details */}
                 {dashPeriod === 'month' && (
-                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-2xs animate-fade-in">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wide">Mes</span>
+                  <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 shadow-2xs animate-fade-in">
+                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wide">Mes</span>
                     <select
                       value={dashMonth}
                       onChange={(e) => setDashMonth(Number(e.target.value))}
-                      className="bg-transparent text-xs font-bold text-slate-800 cursor-pointer border-none outline-hidden p-0 focus:ring-0"
+                      className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer border-none outline-hidden p-0 focus:ring-0"
                     >
                       {monthsList.map((m, idx) => (
                         <option key={idx + 1} value={idx + 1}>{m}</option>
@@ -2286,12 +2286,12 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                 )}
 
                 {dashPeriod === 'semester' && (
-                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-2xs animate-fade-in">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wide">Semestre</span>
+                  <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 shadow-2xs animate-fade-in">
+                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wide">Semestre</span>
                     <select
                       value={dashSemester}
                       onChange={(e) => setDashSemester(Number(e.target.value) as 1 | 2)}
-                      className="bg-transparent text-xs font-bold text-slate-800 cursor-pointer border-none outline-hidden p-0 focus:ring-0"
+                      className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer border-none outline-hidden p-0 focus:ring-0"
                     >
                       <option value={1}>1º Semestre (Ene - Jun)</option>
                       <option value={2}>2º Semestre (Jul - Dic)</option>
@@ -2305,7 +2305,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                   className={`font-bold text-2xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-xs hover:shadow-md border ${
                     excludedEngIds.length > 0
                       ? 'bg-amber-500 text-slate-950 border-amber-600 hover:bg-amber-400 font-extrabold animate-pulse'
-                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                   title="Filtrar o Excluir Técnicos del Informe"
                 >
@@ -2329,7 +2329,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsColumnConfigOpen(true)}
-                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-2xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs hover:shadow-md ml-1"
+                  className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 font-bold text-2xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs hover:shadow-md ml-1"
                   title="Elegir qué columnas incluir al imprimir el Dashboard"
                 >
                   <Columns3 className="w-3.5 h-3.5" />
@@ -2354,21 +2354,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
               <button
                 type="button"
                 onClick={() => setExpandedMainKPICard(prev => prev === 'mantenimientos' ? null : 'mantenimientos')}
-                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
-                  expandedMainKPICard === 'mantenimientos' ? 'ring-2 ring-indigo-500 border-indigo-500 bg-indigo-50/20' : 'border-slate-200 hover:border-indigo-300'
+                className={`bg-white dark:bg-slate-900 border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'mantenimientos' ? 'ring-2 ring-indigo-500 border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/20' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
                 }`}
               >
                 <div className="absolute top-0 left-0 h-1 bg-indigo-500 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Mantenimientos</span>
-                    <h3 className="text-xl font-black text-indigo-900 mt-1">{dashboardKPIs.totalOrders}</h3>
-                    <p className="text-[8.5px] text-indigo-700 mt-0.5 font-semibold flex items-center gap-1">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Mantenimientos</span>
+                    <h3 className="text-xl font-black text-indigo-900 dark:text-indigo-300 mt-1">{dashboardKPIs.totalOrders}</h3>
+                    <p className="text-[8.5px] text-indigo-700 dark:text-indigo-300 mt-0.5 font-semibold flex items-center gap-1">
                       <span>Órdenes del periodo</span>
-                      <span className="text-[7.5px] bg-indigo-100 text-indigo-800 px-1 rounded font-bold">🔍 Ver</span>
+                      <span className="text-[7.5px] bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 px-1 rounded font-bold">🔍 Ver</span>
                     </p>
                   </div>
-                  <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <CalendarRange className="w-4 h-4" />
                   </div>
                 </div>
@@ -2378,21 +2378,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
               <button
                 type="button"
                 onClick={() => setExpandedMainKPICard(prev => prev === 'horas' ? null : 'horas')}
-                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
-                  expandedMainKPICard === 'horas' ? 'ring-2 ring-blue-500 border-blue-500 bg-blue-50/20' : 'border-slate-200 hover:border-blue-300'
+                className={`bg-white dark:bg-slate-900 border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'horas' ? 'ring-2 ring-blue-500 border-blue-500 bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700'
                 }`}
               >
                 <div className="absolute top-0 left-0 h-1 bg-blue-600 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Horas Campo</span>
-                    <h3 className="text-xl font-black text-blue-700 mt-1">{dashboardKPIs.totalReportHours} hrs</h3>
-                    <p className="text-[8.5px] text-blue-800 mt-0.5 font-semibold flex items-center gap-1">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Horas Campo</span>
+                    <h3 className="text-xl font-black text-blue-700 dark:text-blue-300 mt-1">{dashboardKPIs.totalReportHours} hrs</h3>
+                    <p className="text-[8.5px] text-blue-800 dark:text-blue-300 mt-0.5 font-semibold flex items-center gap-1">
                       <span>Prom. {dashboardKPIs.avgHoursPerEngineer} h/téc</span>
-                      <span className="text-[7.5px] bg-blue-100 text-blue-800 px-1 rounded font-bold">🔍 Ver</span>
+                      <span className="text-[7.5px] bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-1 rounded font-bold">🔍 Ver</span>
                     </p>
                   </div>
-                  <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="p-2.5 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <BarChart3 className="w-4 h-4" />
                   </div>
                 </div>
@@ -2402,21 +2402,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
               <button
                 type="button"
                 onClick={() => setExpandedMainKPICard(prev => prev === 'instalaciones' ? null : 'instalaciones')}
-                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
-                  expandedMainKPICard === 'instalaciones' ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/20' : 'border-slate-200 hover:border-emerald-300'
+                className={`bg-white dark:bg-slate-900 border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'instalaciones' ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/20' : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700'
                 }`}
               >
                 <div className="absolute top-0 left-0 h-1 bg-emerald-600 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Instalaciones</span>
-                    <h3 className="text-xl font-black text-emerald-700 mt-1">{dashboardKPIs.totalInstallationCount} {dashboardKPIs.totalInstallationCount === 1 ? 'Proyecto' : 'Proyectos'}</h3>
-                    <p className="text-[8.5px] text-emerald-800 mt-0.5 font-extrabold flex items-center gap-1">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Instalaciones</span>
+                    <h3 className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1">{dashboardKPIs.totalInstallationCount} {dashboardKPIs.totalInstallationCount === 1 ? 'Proyecto' : 'Proyectos'}</h3>
+                    <p className="text-[8.5px] text-emerald-800 dark:text-emerald-300 mt-0.5 font-extrabold flex items-center gap-1">
                       <span>{dashboardKPIs.totalInstallationDays} Días ({dashboardKPIs.totalInstallationDays * 8}h)</span>
-                      <span className="text-[7.5px] bg-emerald-100 text-emerald-800 px-1 rounded font-bold">🔍 Ver</span>
+                      <span className="text-[7.5px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-1 rounded font-bold">🔍 Ver</span>
                     </p>
                   </div>
-                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <Briefcase className="w-4 h-4" />
                   </div>
                 </div>
@@ -2426,21 +2426,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
               <button
                 type="button"
                 onClick={() => setExpandedMainKPICard(prev => prev === 'carga' ? null : 'carga')}
-                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
-                  expandedMainKPICard === 'carga' ? 'ring-2 ring-teal-500 border-teal-500 bg-teal-50/20' : 'border-slate-200 hover:border-teal-300'
+                className={`bg-white dark:bg-slate-900 border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'carga' ? 'ring-2 ring-teal-500 border-teal-500 bg-teal-50/20 dark:bg-teal-950/20' : 'border-slate-200 dark:border-slate-700 hover:border-teal-300 dark:hover:border-teal-700'
                 }`}
               >
                 <div className="absolute top-0 left-0 h-1 bg-teal-500 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Promedio Carga</span>
-                    <h3 className="text-xl font-black text-teal-700 mt-1">{dashboardKPIs.averageJobs}</h3>
-                    <p className="text-[8.5px] text-teal-800 mt-0.5 font-semibold flex items-center gap-1">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Promedio Carga</span>
+                    <h3 className="text-xl font-black text-teal-700 dark:text-teal-300 mt-1">{dashboardKPIs.averageJobs}</h3>
+                    <p className="text-[8.5px] text-teal-800 dark:text-teal-300 mt-0.5 font-semibold flex items-center gap-1">
                       <span>Tareas por técnico</span>
-                      <span className="text-[7.5px] bg-teal-100 text-teal-800 px-1 rounded font-bold">🔍 Ver</span>
+                      <span className="text-[7.5px] bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 px-1 rounded font-bold">🔍 Ver</span>
                     </p>
                   </div>
-                  <div className="p-2.5 bg-teal-50 text-teal-650 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="p-2.5 bg-teal-50 dark:bg-teal-950 text-teal-650 dark:text-teal-400 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <Percent className="w-4 h-4" />
                   </div>
                 </div>
@@ -2450,21 +2450,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
               <button
                 type="button"
                 onClick={() => setExpandedMainKPICard(prev => prev === 'topPerformer' ? null : 'topPerformer')}
-                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
-                  expandedMainKPICard === 'topPerformer' ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-50/20' : 'border-slate-200 hover:border-amber-300'
+                className={`bg-white dark:bg-slate-900 border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'topPerformer' ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-50/20 dark:bg-amber-950/20' : 'border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700'
                 }`}
               >
                 <div className="absolute top-0 left-0 h-1 bg-amber-500 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Mayor Carga</span>
-                    <h3 className="text-xs font-black text-amber-800 mt-1.5 truncate max-w-[110px]">{dashboardKPIs.topEngineerName}</h3>
-                    <p className="text-[8.5px] text-amber-800 mt-0.5 font-semibold flex items-center gap-1">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Mayor Carga</span>
+                    <h3 className="text-xs font-black text-amber-800 dark:text-amber-300 mt-1.5 truncate max-w-[110px]">{dashboardKPIs.topEngineerName}</h3>
+                    <p className="text-[8.5px] text-amber-800 dark:text-amber-300 mt-0.5 font-semibold flex items-center gap-1">
                       <span>Técnico líder</span>
-                      <span className="text-[7.5px] bg-amber-100 text-amber-800 px-1 rounded font-bold">🔍 Ver</span>
+                      <span className="text-[7.5px] bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 px-1 rounded font-bold">🔍 Ver</span>
                     </p>
                   </div>
-                  <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="p-2.5 bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <Award className="w-4 h-4" />
                   </div>
                 </div>
@@ -2474,21 +2474,21 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
               <button
                 type="button"
                 onClick={() => setExpandedMainKPICard(prev => prev === 'cierre' ? null : 'cierre')}
-                className={`bg-white border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
-                  expandedMainKPICard === 'cierre' ? 'ring-2 ring-indigo-600 border-indigo-600 bg-indigo-50/20' : 'border-slate-200 hover:border-indigo-300'
+                className={`bg-white dark:bg-slate-900 border rounded-xl p-3.5 text-left shadow-xs relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${
+                  expandedMainKPICard === 'cierre' ? 'ring-2 ring-indigo-600 border-indigo-600 bg-indigo-50/20 dark:bg-indigo-950/20' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
                 }`}
               >
                 <div className="absolute top-0 left-0 h-1 bg-indigo-600 w-full" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Tasa de Cierre</span>
-                    <h3 className="text-xl font-black text-emerald-700 mt-1">{dashboardKPIs.complianceRate}%</h3>
-                    <p className="text-[8.5px] text-emerald-800 mt-0.5 font-semibold flex items-center gap-1">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Tasa de Cierre</span>
+                    <h3 className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1">{dashboardKPIs.complianceRate}%</h3>
+                    <p className="text-[8.5px] text-emerald-800 dark:text-emerald-300 mt-0.5 font-semibold flex items-center gap-1">
                       <span>Avance general</span>
-                      <span className="text-[7.5px] bg-emerald-100 text-emerald-800 px-1 rounded font-bold">🔍 Ver</span>
+                      <span className="text-[7.5px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-1 rounded font-bold">🔍 Ver</span>
                     </p>
                   </div>
-                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-lg shrink-0 group-hover:scale-110 transition-transform">
                     <TrendingUp className="w-4 h-4" />
                   </div>
                 </div>
@@ -2811,10 +2811,10 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
             {/* Chart and Table grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* SVG Donut Chart (Col-5) */}
-              <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col">
+              <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-xs flex flex-col">
                 <div>
-                  <h5 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <PieChart className="w-4 h-4 text-indigo-650" />
+                  <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                    <PieChart className="w-4 h-4 text-indigo-650 dark:text-indigo-400" />
                     <span>Distribución de Carga por Técnico</span>
                   </h5>
                   <p className="text-3xs text-slate-500 mt-0.5">Distribución porcentual del número total de órdenes (incluye apoyo).</p>
@@ -2826,8 +2826,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 
                   if (totalWorkload === 0) {
                     return (
-                      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400">
-                        <PieChart className="w-12 h-12 stroke-1 text-slate-300 mb-2" />
+                      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400 dark:text-slate-500">
+                        <PieChart className="w-12 h-12 stroke-1 text-slate-300 dark:text-slate-600 mb-2" />
                         <p className="text-xs font-semibold">Sin tareas registradas para este periodo.</p>
                       </div>
                     );
@@ -2885,12 +2885,12 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                       {/* Legend */}
                       <div className="w-full space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar pr-1">
                         {slices.map((sl, i) => (
-                          <div key={i} className="flex items-center justify-between text-3xs font-semibold text-slate-700 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                          <div key={i} className="flex items-center justify-between text-3xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-1.5 rounded-lg border border-slate-100 dark:border-slate-700">
                             <div className="flex items-center gap-2 truncate">
                               <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: sl.color }} />
                               <span className="truncate">{sl.engineer.name}</span>
                             </div>
-                            <span className="font-bold font-mono text-slate-900 shrink-0 ml-2">{sl.total} ({sl.percentage}%)</span>
+                            <span className="font-bold font-mono text-slate-900 dark:text-slate-100 shrink-0 ml-2">{sl.total} ({sl.percentage}%)</span>
                           </div>
                         ))}
                       </div>
@@ -2900,31 +2900,31 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
               </div>
 
               {/* Breakdown Table (Col-7) */}
-              <div className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+              <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
                 <div>
-                  <h5 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <ClipboardList className="w-4 h-4 text-indigo-500" />
+                  <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                    <ClipboardList className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                     <span>Desglose de Productividad de Ingenieros</span>
                   </h5>
                   <p className="text-3xs text-slate-500 mt-0.5">Avance y proporción de estados por cada técnico asignado.</p>
                 </div>
 
                 <div className="overflow-x-auto mt-4">
-                  <table className="w-full text-left border-collapse text-[10px] font-semibold text-slate-600">
+                  <table className="w-full text-left border-collapse text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                     <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200 font-bold text-slate-500 text-3xs uppercase">
+                      <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 font-bold text-slate-500 dark:text-slate-400 text-3xs uppercase">
                         <th className="p-2.5">Ingeniero</th>
                         <th className="p-2.5 text-center">Tareas</th>
-                        <th className="p-2.5 text-center font-bold text-blue-700">Horas Campo</th>
-                        <th className="p-2.5 text-center font-bold text-emerald-700">Instalaciones (Días)</th>
+                        <th className="p-2.5 text-center font-bold text-blue-700 dark:text-blue-300">Horas Campo</th>
+                        <th className="p-2.5 text-center font-bold text-emerald-700 dark:text-emerald-300">Instalaciones (Días)</th>
                         <th className="p-2.5 text-center">Como Principal / Apoyo</th>
                         <th className="p-2.5">Estado / Avance Proporcional</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white font-medium">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-900 font-medium">
                       {engineerStats.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="p-4 text-center text-slate-400 font-bold text-3xs">
+                          <td colSpan={6} className="p-4 text-center text-slate-400 dark:text-slate-500 font-bold text-3xs">
                             No se encontraron registros de ingenieros para este periodo
                           </td>
                         </tr>
@@ -2948,47 +2948,47 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                 setSelectedEngForMetrics(st.engineer);
                                 setIsEngMetricsModalOpen(true);
                               }}
-                              className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                              className="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors cursor-pointer group"
                             >
                               <td className="p-2.5 flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full bg-slate-100 text-sm flex items-center justify-center border border-slate-200 shrink-0">
+                                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-sm flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
                                   {getEngineerEmoji(st.engineer.id)}
                                 </div>
                                 <div className="truncate">
-                                  <h6 className="font-extrabold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors flex items-center gap-1">
+                                  <h6 className="font-extrabold text-slate-900 dark:text-slate-100 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-1">
                                     <span>{st.engineer.name}</span>
-                                    <ExternalLink className="w-2.5 h-2.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <ExternalLink className="w-2.5 h-2.5 text-slate-400 dark:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                   </h6>
-                                  <p className="text-[9px] text-slate-400 font-medium">
-                                    {st.engineer.specialty} • <span className="text-slate-600 font-bold">{st.engineer.sede || 'Quito'}</span>
+                                  <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium">
+                                    {st.engineer.specialty} • <span className="text-slate-600 dark:text-slate-300 font-bold">{st.engineer.sede || 'Quito'}</span>
                                   </p>
                                 </div>
                               </td>
-                              <td className="p-2.5 text-center font-black text-slate-900 text-xs">
+                              <td className="p-2.5 text-center font-black text-slate-900 dark:text-slate-100 text-xs">
                                 {st.total}
                               </td>
-                              <td className="p-2.5 text-center font-black text-blue-700 text-xs">
+                              <td className="p-2.5 text-center font-black text-blue-700 dark:text-blue-300 text-xs">
                                 {st.hoursSpent} hrs
                               </td>
                               <td className="p-2.5 text-center">
                                 <span className={`font-bold px-2 py-0.5 rounded-full text-[9px] ${
-                                  st.installationsCount > 0 
-                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
-                                    : 'text-slate-400 font-normal'
+                                  st.installationsCount > 0
+                                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                                    : 'text-slate-400 dark:text-slate-500 font-normal'
                                 }`}>
                                   {st.installationsCount > 0 ? `${st.installationsCount} proj. (${st.installationDays}d / ${st.installationDays * 8}h)` : '0'}
                                 </span>
                               </td>
                               <td className="p-2.5 text-center text-3xs font-semibold text-slate-500">
-                                <span className="font-bold text-indigo-700">{st.asPrimary} Pr.</span> / <span className="text-slate-600">{st.asSupport} Ap.</span>
+                                <span className="font-bold text-indigo-700 dark:text-indigo-300">{st.asPrimary} Pr.</span> / <span className="text-slate-600 dark:text-slate-300">{st.asSupport} Ap.</span>
                               </td>
                               <td className="p-2.5">
                                 {total === 0 ? (
-                                  <span className="text-[8px] font-bold text-slate-400">Sin tareas programadas</span>
+                                  <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500">Sin tareas programadas</span>
                                 ) : (
                                   <div className="space-y-1 w-full max-w-[200px]">
                                     {/* Stacked Progress Bar */}
-                                    <div className="h-2 rounded-full overflow-hidden flex bg-slate-100 border border-slate-200/50">
+                                    <div className="h-2 rounded-full overflow-hidden flex bg-slate-100 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50">
                                       {conciliadoPct > 0 && (
                                         <div 
                                           style={{ width: `${conciliadoPct}%` }}
@@ -3026,12 +3026,12 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                       )}
                                     </div>
                                     {/* Numeric breakdown indicators below bar */}
-                                    <div className="flex gap-1.5 flex-wrap text-[7px] font-black text-slate-450 uppercase">
-                                      {st.statusCounts.Conciliado > 0 && <span className="text-emerald-700">Con: {st.statusCounts.Conciliado}</span>}
-                                      {st.statusCounts.Realizado > 0 && <span className="text-blue-700">Re: {st.statusCounts.Realizado}</span>}
-                                      {st.statusCounts.Reportado > 0 && <span className="text-indigo-750">Rep: {st.statusCounts.Reportado}</span>}
-                                      {st.statusCounts['En Proceso'] > 0 && <span className="text-sky-700">Proc: {st.statusCounts['En Proceso']}</span>}
-                                      {st.statusCounts.Pendiente > 0 && <span className="text-yellow-700">Pend: {st.statusCounts.Pendiente}</span>}
+                                    <div className="flex gap-1.5 flex-wrap text-[7px] font-black text-slate-450 dark:text-slate-500 uppercase">
+                                      {st.statusCounts.Conciliado > 0 && <span className="text-emerald-700 dark:text-emerald-300">Con: {st.statusCounts.Conciliado}</span>}
+                                      {st.statusCounts.Realizado > 0 && <span className="text-blue-700 dark:text-blue-300">Re: {st.statusCounts.Realizado}</span>}
+                                      {st.statusCounts.Reportado > 0 && <span className="text-indigo-750 dark:text-indigo-300">Rep: {st.statusCounts.Reportado}</span>}
+                                      {st.statusCounts['En Proceso'] > 0 && <span className="text-sky-700 dark:text-sky-300">Proc: {st.statusCounts['En Proceso']}</span>}
+                                      {st.statusCounts.Pendiente > 0 && <span className="text-yellow-700 dark:text-yellow-300">Pend: {st.statusCounts.Pendiente}</span>}
                                     </div>
                                   </div>
                                 )}
