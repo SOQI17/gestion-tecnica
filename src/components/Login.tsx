@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, User, Shield, ArrowRight, Briefcase, Activity } from 'lucide-react';
+import { Layers, Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, User, Shield, ArrowRight, Briefcase, Activity, Sun, Moon } from 'lucide-react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -9,9 +9,11 @@ import { masterEngineers } from '../mockData';
 interface LoginProps {
   engineers: Engineer[];
   onLoginSuccess: (user: AppUser, isDemo: boolean) => void;
+  theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
-export default function Login({ engineers, onLoginSuccess }: LoginProps) {
+export default function Login({ engineers, onLoginSuccess, theme = 'light', onToggleTheme }: LoginProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -225,7 +227,17 @@ export default function Login({ engineers, onLoginSuccess }: LoginProps) {
       <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-purple-900/20 blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-md bg-slate-850/80 backdrop-blur-xl border border-slate-700/60 rounded-3xl shadow-2xl p-8 relative z-10">
-        
+        {onToggleTheme && (
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className="absolute top-5 right-5 text-slate-400 hover:text-white p-1.5 rounded-md hover:bg-slate-700/50 border border-slate-700/60 transition-all cursor-pointer"
+            title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          >
+            {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
+        )}
+
         {/* Branding Title */}
         <div className="flex flex-col items-center text-center mb-8">
           <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-800 via-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-600/30 mb-3 flex items-center justify-center border border-indigo-400/40">

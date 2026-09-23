@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* Modo oscuro basado en clase (.dark en <html>) en vez de solo prefers-color-scheme,
+   para poder alternarlo manualmente y recordar la preferencia del usuario. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
 @media print {
   /* Hide page elements not part of the active printable section */
   header,
