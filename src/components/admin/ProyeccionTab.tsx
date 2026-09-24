@@ -134,10 +134,10 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
 
   // CRM Funnel Stage Totals — Solicitud Enviada & Propuesta Presentada hidden from funnel display
   const stages = [
-    { id: 'Sin Contactar', label: 'Sin Contactar', color: 'bg-slate-100 border-slate-300 text-slate-800', dot: '⚪' },
-    { id: 'En Negociación', label: 'En Negociación', color: 'bg-purple-50 border-purple-300 text-purple-900', dot: '🤝' },
-    { id: 'Renovado', label: 'Renovados / Ganados', color: 'bg-emerald-50 border-emerald-300 text-emerald-900', dot: '✅' },
-    { id: 'Perdido', label: 'Perdidos', color: 'bg-rose-50 border-rose-300 text-rose-900', dot: '❌' },
+    { id: 'Sin Contactar', label: 'Sin Contactar', color: 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100', dot: '⚪' },
+    { id: 'En Negociación', label: 'En Negociación', color: 'bg-purple-50 dark:bg-purple-950 border-purple-300 dark:border-purple-700 text-purple-900 dark:text-purple-300', dot: '🤝' },
+    { id: 'Renovado', label: 'Renovados / Ganados', color: 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-300', dot: '✅' },
+    { id: 'Perdido', label: 'Perdidos', color: 'bg-rose-50 dark:bg-rose-950 border-rose-300 dark:border-rose-700 text-rose-900 dark:text-rose-300', dot: '❌' },
   ];
 
   const stageSummary = stages.map(st => {
@@ -271,13 +271,13 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
 
     return (
       <div
-        className="inline-flex items-center gap-1 bg-white border border-slate-200 px-1.5 py-1 rounded-xl shadow-2xs hover:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500 transition-all"
+        className="inline-flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-1 rounded-xl shadow-2xs hover:border-indigo-400 dark:hover:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500 transition-all"
         title="Edite el porcentaje de apertura o disposición del cliente (0-100%)"
       >
         <button
           type="button"
           onClick={() => commitVal((numVal - 5).toString())}
-          className="w-4 h-4 rounded flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-3xs cursor-pointer select-none"
+          className="w-4 h-4 rounded flex items-center justify-center bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-black text-3xs cursor-pointer select-none"
           title="Restar 5%"
         >
           -
@@ -295,13 +295,13 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
               (e.target as HTMLInputElement).blur();
             }
           }}
-          className="w-9 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none"
+          className="w-9 text-center text-xs font-black text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none"
         />
-        <span className="text-[10px] font-black text-slate-400">%</span>
+        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">%</span>
         <button
           type="button"
           onClick={() => commitVal((numVal + 5).toString())}
-          className="w-4 h-4 rounded flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-3xs cursor-pointer select-none"
+          className="w-4 h-4 rounded flex items-center justify-center bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-black text-3xs cursor-pointer select-none"
           title="Sumar 5%"
         >
           +
@@ -363,86 +363,86 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
       {/* Executive CRM KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Pipeline Total Estimado */}
-        <div className="bg-white border border-indigo-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-800 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">Pipeline Comercial Total</span>
-            <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Pipeline Comercial Total</span>
+            <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
               <DollarSign className="w-5 h-5" />
             </div>
           </div>
-          <p className="font-black text-2xl text-slate-900 mt-2">
+          <p className="font-black text-2xl text-slate-900 dark:text-slate-100 mt-2">
             ${totalPipelineVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-[10px] text-slate-500 font-semibold mt-1">
+          <p className="text-[10px] text-slate-500 dark:text-slate-500 font-semibold mt-1">
             Valor proyectado acumulado de {allProjections.length} contratos
           </p>
         </div>
 
         {/* Card 2: Valor Cartera en Riesgo */}
-        <div className="bg-white border border-amber-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-900 border border-amber-100 dark:border-amber-800 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Valor Cartera en Riesgo</span>
-            <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-300">Valor Cartera en Riesgo</span>
+            <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400">
               <AlertTriangle className="w-5 h-5" />
             </div>
           </div>
-          <p className="font-black text-2xl text-slate-900 mt-2">
+          <p className="font-black text-2xl text-slate-900 dark:text-slate-100 mt-2">
             ${totalRiskVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-[10px] font-bold text-amber-800 mt-1">
+          <p className="text-[10px] font-bold text-amber-800 dark:text-amber-300 mt-1">
             {totalRiskDeals.length} contratos en riesgo (&le;90d / Vencidos)
           </p>
         </div>
 
         {/* Card 3: Clientes Objetivo */}
-        <div className="bg-white border border-emerald-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-800 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Clientes Potenciales</span>
-            <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Clientes Potenciales</span>
+            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
               <Users className="w-5 h-5" />
             </div>
           </div>
-          <p className="font-black text-2xl text-slate-900 mt-2">{uniqueTargetClients}</p>
-          <p className="text-[10px] text-slate-500 font-semibold mt-1">
+          <p className="font-black text-2xl text-slate-900 dark:text-slate-100 mt-2">{uniqueTargetClients}</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-500 font-semibold mt-1">
             Instituciones clave para solicitud de renovación
           </p>
         </div>
 
         {/* Card 4: Ticket Promedio por Contrato */}
-        <div className="bg-white border border-purple-100 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-800 p-4 rounded-xl shadow-2xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700">Ticket Promedio Contrato</span>
-            <div className="p-2 rounded-lg bg-purple-50 text-purple-600">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300">Ticket Promedio Contrato</span>
+            <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400">
               <Award className="w-5 h-5" />
             </div>
           </div>
-          <p className="font-black text-2xl text-slate-900 mt-2">
+          <p className="font-black text-2xl text-slate-900 dark:text-slate-100 mt-2">
             ${avgTicketUSD.toLocaleString('en-US')} USD
           </p>
-          <p className="text-[10px] font-bold text-purple-800 mt-1">
+          <p className="text-[10px] font-bold text-purple-800 dark:text-purple-300 mt-1">
             Tasa de Oportunidad Activa: {conversionRate}%
           </p>
         </div>
       </div>
 
       {/* Embudo Comercial + Filter Controls + Pipeline Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100">
-          <h4 className="font-black text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-indigo-600" />
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xs overflow-hidden">
+        <div className="p-5 border-b border-slate-100 dark:border-slate-700">
+          <h4 className="font-black text-xs text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>Embudo Comercial de Ventas & Renovación (Pipeline CRM)</span>
           </h4>
           {projStageFilter !== 'all' && (
             <button
               onClick={() => setProjStageFilter('all')}
-              className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+              className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline cursor-pointer"
             >
               Ver Todas las Etapas
             </button>
           )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-5 border-b border-slate-100">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-5 border-b border-slate-100 dark:border-slate-700">
           {stageSummary.map(st => {
             const isSelected = projStageFilter === st.id;
             return (
@@ -450,17 +450,17 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
                 key={st.id}
                 onClick={() => setProjStageFilter(isSelected ? 'all' : st.id)}
                 className={`p-3 rounded-xl border transition-all cursor-pointer select-none ${st.color} ${
-                  isSelected ? 'ring-2 ring-indigo-600 scale-[1.02] shadow-md' : 'hover:shadow-xs hover:scale-[1.01]'
+                  isSelected ? 'ring-2 ring-indigo-600 dark:ring-indigo-400 scale-[1.02] shadow-md' : 'hover:shadow-xs hover:scale-[1.01]'
                 }`}
               >
                 <div className="flex items-center justify-between text-2xs font-extrabold">
                   <span>{st.dot} {st.label}</span>
-                  <span className="bg-white/80 px-1.5 py-0.2 rounded font-black text-[9px]">{st.count}</span>
+                  <span className="bg-white/80 dark:bg-slate-800/80 px-1.5 py-0.2 rounded font-black text-[9px]">{st.count}</span>
                 </div>
-                <p className="font-black text-sm text-slate-900 mt-2 leading-none">
+                <p className="font-black text-sm text-slate-900 dark:text-slate-100 mt-2 leading-none">
                   ${st.valUSD.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </p>
-                <p className="text-[8.5px] font-semibold text-slate-500 mt-1">
+                <p className="text-[8.5px] font-semibold text-slate-500 dark:text-slate-500 mt-1">
                   {allProjections.length > 0 ? Math.round((st.count / allProjections.length) * 100) : 0}% del total
                 </p>
               </div>
@@ -469,12 +469,12 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
         </div>
 
         {/* Pipeline subheader: title + Estado pills */}
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
           <div>
-            <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-2">
+            <h4 className="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
               <span>📋 Pipeline de Oportunidades &amp; Gestión Comercial ({filtered.length} registros)</span>
             </h4>
-            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
               Haz clic en el Valor (USD) para ingresar o editar el monto. Asigna la Etapa Comercial y Prioridad directamente.
             </p>
           </div>
@@ -485,7 +485,7 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
               className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
                 projFilter === 'todos'
                   ? 'bg-slate-800 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               Todos ({allProjections.length})
@@ -495,7 +495,7 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
               className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
                 projFilter === 'vencidos'
                   ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                  : 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900'
               }`}
             >
               🔴 Vencidos ({allProjections.filter(p => p.urgencyCategory === 'vencidos').length})
@@ -505,7 +505,7 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
               className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
                 projFilter === 'criticos'
                   ? 'bg-amber-600 text-white shadow-xs'
-                  : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                  : 'bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900'
               }`}
             >
               🟠 Críticos &lt;30d ({allProjections.filter(p => p.urgencyCategory === 'criticos').length})
@@ -515,7 +515,7 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
               className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
                 projFilter === 'proximos'
                   ? 'bg-yellow-500 text-white shadow-xs'
-                  : 'bg-yellow-50 text-yellow-800 border border-yellow-200 hover:bg-yellow-100'
+                  : 'bg-yellow-50 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900'
               }`}
             >
               🟡 Próximos 30-90d ({allProjections.filter(p => p.urgencyCategory === 'proximos').length})
@@ -525,7 +525,7 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
               className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
                 projFilter === 'renovados'
                   ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                  : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900'
               }`}
             >
               ✅ Renovados ({allProjections.filter(p => p.proposalStatus === 'Renovado').length})
@@ -534,28 +534,28 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
         </div>
 
         {/* Search + Valor + Ordenar + Prioridad row */}
-        <div className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 bg-white">
+        <div className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Buscar por cliente, nº contrato o equipo..."
               value={projSearch}
               onChange={(e) => setProjSearch(e.target.value)}
-              className="w-full pl-8 pr-4 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-slate-50/60 placeholder-slate-400 text-slate-700"
+              className="w-full pl-8 pr-4 py-1.5 text-xs font-semibold border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-slate-50/60 dark:bg-slate-800/60 placeholder-slate-400 dark:placeholder-slate-500 text-slate-700 dark:text-slate-200"
             />
           </div>
-          <div className="h-4 w-px bg-slate-200 shrink-0" />
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
           <div className="flex items-center gap-1.5 shrink-0">
-            <DollarSign className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Valor:</span>
+            <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-500 uppercase tracking-wide">Valor:</span>
             <select
               value={contractValueFilter}
               onChange={(e: any) => setContractValueFilter(e.target.value)}
               className={`font-extrabold text-[11px] outline-hidden cursor-pointer rounded-md px-2 py-1 border transition-colors ${
                 contractValueFilter !== 'all'
-                  ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                  : 'bg-transparent border-slate-200 text-slate-700'
+                  ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
+                  : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
               }`}
             >
               <option value="all">Todos los Valores</option>
@@ -563,13 +563,13 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
               <option value="valued">✅ Con Valor Registrado</option>
             </select>
           </div>
-          <div className="h-4 w-px bg-slate-200 shrink-0" />
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Ordenar:</span>
+            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-500 uppercase tracking-wide">Ordenar:</span>
             <select
               value={projSort}
               onChange={(e: any) => setProjSort(e.target.value)}
-              className="font-extrabold text-[11px] text-slate-700 bg-transparent border border-slate-200 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400 cursor-pointer"
+              className="font-extrabold text-[11px] text-slate-700 dark:text-slate-300 bg-transparent border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400 cursor-pointer"
             >
               <option value="vencimiento">Por Vencimiento</option>
               <option value="valor">Por Valor (USD)</option>
@@ -577,8 +577,8 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
               <option value="cliente">Por Cliente</option>
             </select>
           </div>
-          <div className="ml-auto shrink-0 text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md">
-            <span className="text-indigo-600 font-extrabold">{filtered.length}</span> / {allProjections.length} registros
+          <div className="ml-auto shrink-0 text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-md">
+            <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">{filtered.length}</span> / {allProjections.length} registros
           </div>
         </div>
 
@@ -598,10 +598,10 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
                 <th className="p-3 text-center">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-150 text-xs">
+            <tbody className="divide-y divide-slate-150 dark:divide-slate-700 text-xs">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-8 text-center text-slate-400 font-semibold">
+                  <td colSpan={10} className="p-8 text-center text-slate-400 dark:text-slate-500 font-semibold">
                     No se encontraron oportunidades con los filtros aplicados.
                   </td>
                 </tr>
@@ -617,23 +617,23 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
                     const isEditingVal = editingValContractId === con.id;
 
                     return (
-                      <tr key={con.id} className="hover:bg-slate-50/80 transition-colors">
+                      <tr key={con.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                         {/* Contract ID */}
-                        <td className="p-3 font-black text-indigo-900">
+                        <td className="p-3 font-black text-indigo-900 dark:text-indigo-300">
                           <span
                             onClick={() => { setSelectedContractForDetails(con); setIsContractDetailsModalOpen(true); }}
-                            className="cursor-pointer hover:underline text-indigo-700"
+                            className="cursor-pointer hover:underline text-indigo-700 dark:text-indigo-400"
                           >
                             {con.id}
                           </span>
                         </td>
 
                         {/* Client Name & City */}
-                        <td className="p-3 font-bold text-slate-800">
+                        <td className="p-3 font-bold text-slate-800 dark:text-slate-100">
                           <div>
                             <p className="font-extrabold">{p.clientName}</p>
                             {con.city && (
-                              <span className="inline-block bg-slate-100 text-slate-600 text-[9px] font-semibold px-1.5 py-0.2 rounded mt-0.5">
+                              <span className="inline-block bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[9px] font-semibold px-1.5 py-0.2 rounded mt-0.5">
                                 📍 {con.city}
                               </span>
                             )}
@@ -641,31 +641,31 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
                         </td>
 
                         {/* Covered Equipment */}
-                        <td className="p-3 text-slate-600 text-[11px]">
+                        <td className="p-3 text-slate-600 dark:text-slate-300 text-[11px]">
                           {con.equipmentItems && con.equipmentItems.length > 0 ? (
                             <div className="flex flex-wrap gap-1 max-w-xs">
                               {con.equipmentItems.map((item, idx) => (
-                                <span key={idx} className="bg-slate-100 text-slate-700 text-[9.5px] font-semibold px-1.5 py-0.5 rounded border border-slate-200/60">
+                                <span key={idx} className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[9.5px] font-semibold px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/60">
                                   {item.name} {item.brand ? `(${item.brand})` : ''}
                                 </span>
                               ))}
                             </div>
                           ) : (
-                            <span className="text-slate-400 italic text-[10px]">Sin equipos especificados</span>
+                            <span className="text-slate-400 dark:text-slate-500 italic text-[10px]">Sin equipos especificados</span>
                           )}
                         </td>
 
                         {/* Contract Value ($ USD) */}
-                        <td className="p-3 text-right font-black text-emerald-700">
+                        <td className="p-3 text-right font-black text-emerald-700 dark:text-emerald-300">
                           {isEditingVal ? (
                             <div className="flex items-center justify-end gap-1">
-                              <span className="text-xs text-slate-500 font-bold">$</span>
+                              <span className="text-xs text-slate-500 dark:text-slate-500 font-bold">$</span>
                               <input
                                 type="number"
                                 min={0}
                                 value={editingValInput}
                                 onChange={(e) => setEditingValInput(e.target.value)}
-                                className="w-24 p-1 text-xs font-mono font-bold border border-indigo-300 rounded focus:ring-1 focus:ring-indigo-500 bg-white"
+                                className="w-24 p-1 text-xs font-mono font-bold border border-indigo-300 dark:border-indigo-700 rounded focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                                 autoFocus
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
@@ -688,15 +688,15 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
                                 setEditingValContractId(con.id);
                                 setEditingValInput((con.contractValue || 0).toString());
                               }}
-                              className="group inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-50 p-1 rounded transition-colors"
+                              className="group inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950 p-1 rounded transition-colors"
                               title="Haga clic para editar el valor del contrato en USD"
                             >
                               <span className="text-xs">
                                 {p.valUSD > 0
                                   ? `$${p.valUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                  : <span className="text-slate-400 font-normal italic">$ Ingresar Valor</span>}
+                                  : <span className="text-slate-400 dark:text-slate-500 font-normal italic">$ Ingresar Valor</span>}
                               </span>
-                              <Pencil className="w-3 h-3 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                              <Pencil className="w-3 h-3 text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
                             </div>
                           )}
                         </td>
@@ -708,10 +708,10 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
                             onChange={(e: any) => handleSaveDealPriority(con.id, e.target.value)}
                             className={`text-[9.5px] font-extrabold px-2 py-0.5 rounded border focus:outline-none cursor-pointer ${
                               p.priority === 'Alta'
-                                ? 'bg-rose-100 text-rose-800 border-rose-300'
+                                ? 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-700'
                                 : p.priority === 'Media'
-                                ? 'bg-amber-100 text-amber-800 border-amber-300'
-                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                                ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                             }`}
                           >
                             <option value="Alta">🔥 Alta</option>
@@ -729,29 +729,29 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
                         </td>
 
                         {/* End Date */}
-                        <td className="p-3 text-center font-bold text-slate-700">
+                        <td className="p-3 text-center font-bold text-slate-700 dark:text-slate-300">
                           {con.endDate}
                         </td>
 
                         {/* Days Remaining & Urgency Badge */}
                         <td className="p-3 text-center">
                           {p.urgencyCategory === 'vencidos' && (
-                            <span className="bg-rose-50 text-rose-800 border border-rose-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                            <span className="bg-rose-50 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
                               🔴 Vencido ({Math.abs(p.diffDays)}d)
                             </span>
                           )}
                           {p.urgencyCategory === 'criticos' && (
-                            <span className="bg-amber-50 text-amber-800 border border-amber-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                            <span className="bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
                               🟠 {p.diffDays} días (Crítico)
                             </span>
                           )}
                           {p.urgencyCategory === 'proximos' && (
-                            <span className="bg-yellow-50 text-yellow-800 border border-yellow-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                            <span className="bg-yellow-50 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
                               🟡 {p.diffDays} días (Próximo)
                             </span>
                           )}
                           {p.urgencyCategory === 'futuros' && (
-                            <span className="bg-blue-50 text-blue-800 border border-blue-200 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
+                            <span className="bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-extrabold text-[9.5px] px-2 py-1 rounded-lg inline-block shadow-2xs">
                               🔵 {p.diffDays} días
                             </span>
                           )}
@@ -764,16 +764,16 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
                             onChange={(e: any) => handleSaveProposalStatus(con.id, e.target.value)}
                             className={`text-[10px] font-extrabold px-2 py-1 rounded-lg border focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer ${
                               p.proposalStatus === 'Renovado'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
                                 : p.proposalStatus === 'En Negociación'
-                                ? 'bg-purple-50 text-purple-800 border-purple-300'
+                                ? 'bg-purple-50 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-700'
                                 : p.proposalStatus === 'Propuesta Presentada'
-                                ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
+                                ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700'
                                 : p.proposalStatus === 'Solicitud Enviada'
-                                ? 'bg-sky-50 text-sky-800 border-sky-300'
+                                ? 'bg-sky-50 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-700'
                                 : p.proposalStatus === 'Perdido'
-                                ? 'bg-rose-50 text-rose-800 border-rose-300'
-                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                                ? 'bg-rose-50 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-700'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                             }`}
                           >
                             <option value="Sin Contactar">⚪ Sin Contactar</option>
@@ -789,7 +789,7 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
                         <td className="p-3 text-center">
                           <button
                             onClick={() => { setSelectedContractForDetails(con); setIsContractDetailsModalOpen(true); }}
-                            className="text-[10px] font-extrabold px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
+                            className="text-[10px] font-extrabold px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
                           >
                             <Eye className="w-3 h-3" />
                             <span>Detalle</span>
@@ -811,22 +811,22 @@ export const ProyeccionTab: React.FC<ProyeccionTabProps> = ({
           if (totalProjPages <= 1) return null;
 
           return (
-            <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 flex items-center justify-between font-sans">
-              <span className="text-3xs text-slate-500 font-medium">
+            <div className="bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between font-sans">
+              <span className="text-3xs text-slate-500 dark:text-slate-500 font-medium">
                 Página {projPage} de {totalProjPages} ({filtered.length} Oportunidades Totales)
               </span>
               <div className="flex gap-1">
                 <button
                   onClick={() => setProjPage(prev => Math.max(prev - 1, 1))}
                   disabled={projPage === 1}
-                  className="px-3 py-1 text-xs font-extrabold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  className="px-3 py-1 text-xs font-extrabold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   Anterior
                 </button>
                 <button
                   onClick={() => setProjPage(prev => Math.min(prev + 1, totalProjPages))}
                   disabled={projPage === totalProjPages}
-                  className="px-3 py-1 text-xs font-extrabold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  className="px-3 py-1 text-xs font-extrabold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   Siguiente
                 </button>

@@ -1192,7 +1192,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                     if (hasHighlightActive) {
                                       if (isHighlighted) {
                                         const basePill = wo.isEquipmentDown
-                                          ? 'bg-red-50 dark:bg-red-950 text-red-955 dark:text-red-300 border border-red-200 dark:border-red-800 border-l-4 border-l-red-500'
+                                          ? 'bg-red-50 dark:bg-red-950 text-red-950 dark:text-red-300 border border-red-200 dark:border-red-800 border-l-4 border-l-red-500'
                                           : (engColor
                                             ? `${engColor.lightBg} ${engColor.text} border ${engColor.border} border-l-4 ${engColor.borderL}`
                                             : `bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 border-l-4 border-l-slate-400`);
@@ -1203,7 +1203,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                       }
                                     } else {
                                       pillStyle = wo.isEquipmentDown
-                                        ? 'bg-red-50 dark:bg-red-950 text-red-955 dark:text-red-300 border border-red-150 dark:border-red-800 border-l-4 border-l-red-500'
+                                        ? 'bg-red-50 dark:bg-red-950 text-red-950 dark:text-red-300 border border-red-150 dark:border-red-800 border-l-4 border-l-red-500'
                                         : (engColor
                                           ? `${engColor.lightBg} ${engColor.text} border ${engColor.border} border-l-4 ${engColor.borderL}`
                                           : `bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 border-l-4 border-l-slate-400`);

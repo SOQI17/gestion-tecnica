@@ -2959,7 +2959,7 @@ service cloud.firestore {
                           value={rawCsvText}
                           onChange={(e) => setRawCsvText(e.target.value)}
                           placeholder="CÓDIGO,TÍTULO,MODALIDAD,INGENIERO 1,INGENIERO 2..."
-                          className="w-full text-xs font-mono bg-slate-900 text-emerald-400 p-4 rounded-xl border border-slate-955 focus:ring-1 focus:ring-teal-400 focus:outline-none shadow-inner"
+                          className="w-full text-xs font-mono bg-slate-900 text-emerald-400 p-4 rounded-xl border border-slate-950 focus:ring-1 focus:ring-teal-400 focus:outline-none shadow-inner"
                         />
                         
                         <p className="text-[10px] text-slate-450 leading-relaxed font-medium">
@@ -4926,7 +4926,7 @@ service cloud.firestore {
               id="course-completions-modal-card"
             >
               {/* Header */}
-              <div className="bg-[#001f3f] text-white px-6 py-4 flex justify-between items-center border-b border-sky-955">
+              <div className="bg-[#001f3f] text-white px-6 py-4 flex justify-between items-center border-b border-sky-950">
                 <div>
                   <span className="text-[10px] font-bold text-sky-300 tracking-wider uppercase font-mono">Detalle del Curso</span>
                   <h3 className="text-sm sm:text-base font-bold text-white font-display">Acreditaciones de Capacitación</h3>
@@ -5108,7 +5108,7 @@ service cloud.firestore {
               id="modality-courses-modal-card"
             >
               {/* Header */}
-              <div className="bg-[#001f3f] text-white px-6 py-4 flex justify-between items-center border-b border-sky-955">
+              <div className="bg-[#001f3f] text-white px-6 py-4 flex justify-between items-center border-b border-sky-950">
                 <div>
                   <span className="text-[10px] font-bold text-sky-300 tracking-wider uppercase font-mono">Plan de Capacitación</span>
                   <h3 className="text-sm sm:text-base font-bold text-white font-display">

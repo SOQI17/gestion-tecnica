@@ -61,19 +61,19 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
 
   return (
     <div className="space-y-4 font-sans relative" id="cronograma-standalone-view">
-      <div id="printable-calendar" className="space-y-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+      <div id="printable-calendar" className="space-y-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-xs">
         {/* Standalone Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-indigo-50 border border-indigo-100 p-4 rounded-xl gap-4 no-print">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-800 p-4 rounded-xl gap-4 no-print">
           <div className="flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 text-indigo-600" />
+            <CalendarIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             <div>
-              <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2 flex-wrap">
+              <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2 flex-wrap">
                 <span>Cronograma Mensual Oficial -</span>
                 <div className="flex gap-2 flex-wrap items-center">
                   <select
                     value={calendarMonth}
                     onChange={(e) => setCalendarMonth(Number(e.target.value))}
-                    className="bg-white border border-indigo-200 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
+                    className="bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 dark:text-indigo-200 cursor-pointer outline-hidden"
                   >
                     {[
                       { val: 1, name: 'Enero' },
@@ -95,7 +95,7 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                   <select
                     value={calendarYear}
                     onChange={(e) => setCalendarYear(Number(e.target.value))}
-                    className="bg-white border border-indigo-200 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden"
+                    className="bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 dark:text-indigo-200 cursor-pointer outline-hidden"
                   >
                     {[2025, 2026, 2027, 2028].map(y => (
                       <option key={y} value={y}>{y}</option>
@@ -103,11 +103,11 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                   </select>
 
                   <div className="flex items-center gap-1.5 ml-2 no-print">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Ingeniero:</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-tight">Ingeniero:</span>
                     <select
                       value={highlightedEngineerId || ''}
                       onChange={(e) => setHighlightedEngineerId(e.target.value || null)}
-                      className="bg-white border border-indigo-200 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 cursor-pointer outline-hidden focus:ring-1 focus:ring-indigo-500"
+                      className="bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 rounded px-2 py-0.5 text-xs font-extrabold text-indigo-900 dark:text-indigo-200 cursor-pointer outline-hidden focus:ring-1 focus:ring-indigo-500"
                     >
                       <option value="">Todos 👥</option>
                       {engineers.map(e => (
@@ -126,10 +126,10 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
             <button
               type="button"
               onClick={handlePrintCalendar}
-              className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
               title="Imprimir calendario a PDF"
             >
-              <Printer className="w-3.5 h-3.5 text-slate-500" />
+              <Printer className="w-3.5 h-3.5 text-slate-500 dark:text-slate-500" />
               <span>Imprimir PDF</span>
             </button>
             <div className="relative">
@@ -138,9 +138,9 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                 placeholder="Buscar en calendario..."
                 value={localSearchQuery}
                 onChange={(e) => setLocalSearchQuery(e.target.value)}
-                className="bg-white border border-indigo-200 rounded-lg pl-8 pr-7 py-1 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 w-48 transition-all"
+                className="bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 rounded-lg pl-8 pr-7 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 dark:placeholder-slate-500 w-48 transition-all"
               />
-              <Search className="w-3.5 h-3.5 text-indigo-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               {localSearchQuery && (
                 <button
                   type="button"
@@ -148,7 +148,7 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                     setLocalSearchQuery('');
                     setSearchQuery('');
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 cursor-pointer text-xs font-bold"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 cursor-pointer text-xs font-bold"
                 >
                   ✕
                 </button>
@@ -187,7 +187,7 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
 
           return (
             <>
-            <div className="sm:hidden print:hidden -mx-4 px-4 divide-y divide-slate-100">
+            <div className="sm:hidden print:hidden -mx-4 px-4 divide-y divide-slate-100 dark:divide-slate-700">
               {monthDayList.map(({ dateStr, dayNum, weekdayLabel, isToday }) => {
                 const dayWOs = workOrders
                   .filter(wo => isWOActiveOnDate(wo, dateStr))
@@ -200,22 +200,22 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                 return (
                   <div key={dateStr} className="py-2.5">
                     <div className="flex items-center gap-2.5 mb-2">
-                      <div className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl shrink-0 ${isToday ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-100 text-slate-500'}`}>
+                      <div className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl shrink-0 ${isToday ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                         <span className="text-[8px] font-black uppercase leading-none opacity-80">{weekdayLabel}</span>
                         <span className="text-sm font-black leading-none mt-0.5">{dayNum}</span>
                       </div>
                       {isToday && (
-                        <span className="text-[10px] font-black text-indigo-700 uppercase tracking-wide">Hoy</span>
+                        <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">Hoy</span>
                       )}
                       {dayWOs.length > 0 && (
-                        <span className="ml-auto text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full shrink-0">
+                        <span className="ml-auto text-[10px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-800 px-2 py-0.5 rounded-full shrink-0">
                           {dayWOs.length} {dayWOs.length === 1 ? 'tarea' : 'tareas'}
                         </span>
                       )}
                     </div>
 
                     {dayWOs.length === 0 ? (
-                      <div className="text-[11px] text-slate-300 italic pl-[54px] pb-1">Sin actividad programada</div>
+                      <div className="text-[11px] text-slate-300 dark:text-slate-500 italic pl-[54px] pb-1">Sin actividad programada</div>
                     ) : (
                       <div className="space-y-1.5 pl-[54px]">
                         {dayWOs.map(wo => {
@@ -223,10 +223,10 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                           const client = clients.find(c => c.id === wo.clientId);
                           const engColor = eng ? getEngineerColorClasses(eng.id) : null;
                           const cardStyle = wo.isEquipmentDown
-                            ? 'bg-red-50 border-red-200 border-l-4 border-l-red-500'
+                            ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 border-l-4 border-l-red-500'
                             : (engColor
                               ? `${engColor.lightBg} ${engColor.border} border-l-4 ${engColor.borderL}`
-                              : 'bg-slate-50 border-slate-200 border-l-4 border-l-slate-400');
+                              : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 border-l-4 border-l-slate-400');
                           return (
                             <button
                               type="button"
@@ -237,22 +237,22 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                               <span className="text-sm shrink-0 mt-0.5">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-1.5">
-                                  <span className="text-[11px] font-extrabold text-slate-800 truncate">
+                                  <span className="text-[11px] font-extrabold text-slate-800 dark:text-slate-100 truncate">
                                     {client?.name || 'Cliente'}
                                   </span>
                                   <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${
-                                    wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200' :
-                                    wo.status === 'Conciliado' ? 'bg-emerald-100/60 text-emerald-800 border-emerald-200' :
-                                    wo.status === 'Reportado' ? 'bg-indigo-100/60 text-indigo-800 border-indigo-200' :
-                                    wo.status === 'Realizado' ? 'bg-blue-100/60 text-blue-800 border-blue-200' :
-                                    wo.status === 'En Proceso' ? 'bg-sky-100/60 text-sky-800 border-sky-200' :
-                                    'bg-yellow-100/60 text-yellow-800 border-yellow-200'
+                                    wo.isEquipmentDown ? 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800' :
+                                    wo.status === 'Conciliado' ? 'bg-emerald-100/60 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' :
+                                    wo.status === 'Reportado' ? 'bg-indigo-100/60 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' :
+                                    wo.status === 'Realizado' ? 'bg-blue-100/60 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800' :
+                                    wo.status === 'En Proceso' ? 'bg-sky-100/60 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800' :
+                                    'bg-yellow-100/60 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
                                   }`}>
                                     {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
                                   </span>
                                 </div>
-                                <div className="text-[10px] text-slate-500 truncate">{wo.equipmentName}</div>
-                                <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-slate-400 font-semibold">
+                                <div className="text-[10px] text-slate-500 dark:text-slate-500 truncate">{wo.equipmentName}</div>
+                                <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-slate-400 dark:text-slate-500 font-semibold">
                                   {wo.plannedTime && <span>{wo.plannedTime}</span>}
                                   {eng && <span className="truncate">{eng.name}</span>}
                                 </div>
@@ -284,7 +284,7 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
             <div className="space-y-2 print:space-y-0 calendar-weeks-wrapper min-w-[980px] print:min-w-0">
               <div className="grid grid-cols-7 gap-0 print:hidden text-center mb-1">
                 {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dayName => (
-                  <div key={dayName} className="font-bold text-3xs text-slate-400 uppercase py-1.5">
+                  <div key={dayName} className="font-bold text-3xs text-slate-400 dark:text-slate-500 uppercase py-1.5">
                     {dayName}
                   </div>
                 ))}
@@ -382,7 +382,7 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
 
                 const shouldBreakAfter = false;
                 return (
-                  <div key={wIndex} style={{ display: 'flex', flexDirection: 'column' }} className={`calendar-week-container bg-white rounded-xl border border-slate-200 mb-4 overflow-hidden shadow-2xs print:mb-6 print:border-slate-200 ${shouldBreakAfter ? 'print-break-after' : ''}`}>
+                  <div key={wIndex} style={{ display: 'flex', flexDirection: 'column' }} className={`calendar-week-container bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 mb-4 overflow-hidden shadow-2xs print:mb-6 print:border-slate-200 ${shouldBreakAfter ? 'print-break-after' : ''}`}>
                     <div className="hidden print:flex justify-between items-center p-2.5 pb-1 border-b border-slate-200 bg-indigo-50/20">
                       <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">
                         Cronograma Mensual - {calendarMonthName} {calendarYear}
@@ -401,7 +401,7 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                     </div>
 
                     {tracks.length > 0 && (
-                      <div className="bg-slate-50 py-1.5 border-b border-slate-200 space-y-1">
+                      <div className="bg-slate-50 dark:bg-slate-800/60 py-1.5 border-b border-slate-200 dark:border-slate-700 space-y-1">
 
                         {tracks.map((track, tIdx) => (
                           <div key={tIdx} className="grid grid-cols-7 relative h-7 items-center">
@@ -431,21 +431,21 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                               if (hasHighlightActive) {
                                 if (isHighlighted) {
                                   const basePill = wo.isEquipmentDown
-                                    ? 'bg-red-50 text-red-955 border border-red-205 border-l-4 border-l-red-500'
-                                    : (engColor 
+                                    ? 'bg-red-50 dark:bg-red-950 text-red-950 dark:text-red-300 border border-red-205 dark:border-red-800 border-l-4 border-l-red-500'
+                                    : (engColor
                                       ? `${engColor.lightBg} ${engColor.text} border ${engColor.border} border-l-4 ${engColor.borderL}`
-                                      : `bg-slate-100 border-slate-200 text-slate-700 border-l-4 border-l-slate-400`);
-                                  const ringClass = highlightedEngineerId ? `ring-1 ${engColor?.ring}` : 'ring-2 ring-indigo-500';
+                                      : `bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 border-l-4 border-l-slate-400`);
+                                  const ringClass = highlightedEngineerId ? `ring-1 ${engColor?.ring}` : 'ring-2 ring-indigo-500 dark:ring-indigo-400';
                                   pillStyle = `${basePill} ${ringClass} scale-[1.02] shadow-md z-10`;
                                 } else {
-                                  pillStyle = `bg-slate-50 border-slate-100 text-slate-300 opacity-15 filter blur-[1.5px] grayscale-[40%] scale-[0.96] pointer-events-none transition-all duration-300`;
+                                  pillStyle = `bg-slate-50 dark:bg-slate-800/60 border-slate-100 dark:border-slate-700 text-slate-300 dark:text-slate-500 opacity-15 filter blur-[1.5px] grayscale-[40%] scale-[0.96] pointer-events-none transition-all duration-300`;
                                 }
                               } else {
                                 pillStyle = wo.isEquipmentDown
-                                  ? 'bg-red-50 text-red-955 border border-red-150 border-l-4 border-l-red-500'
-                                  : (engColor 
+                                  ? 'bg-red-50 dark:bg-red-950 text-red-950 dark:text-red-300 border border-red-150 dark:border-red-800 border-l-4 border-l-red-500'
+                                  : (engColor
                                     ? `${engColor.lightBg} ${engColor.text} border ${engColor.border} border-l-4 ${engColor.borderL}`
-                                    : `bg-slate-100 border-slate-200 text-slate-700 border-l-4 border-l-slate-400`);
+                                    : `bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 border-l-4 border-l-slate-400`);
                               }
 
                               const firstActiveDay = weekDaysData.find(d => d.type === 'day');
@@ -470,17 +470,17 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                                 >
                                   <div className="flex items-center gap-1.5 truncate flex-1 mr-1">
                                     <span className="shrink-0">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
-                                    <span className="truncate text-slate-800 uppercase tracking-wide">
+                                    <span className="truncate text-slate-800 dark:text-slate-100 uppercase tracking-wide">
                                       {client?.name || 'Cliente'} - {wo.equipmentName}
                                     </span>
                                   </div>
                                   <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${
-                                    wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200' :
-                                    wo.status === 'Conciliado' ? 'bg-emerald-100/60 text-emerald-800 border-emerald-200' :
-                                    wo.status === 'Reportado' ? 'bg-indigo-100/60 text-indigo-800 border-indigo-200' :
-                                    wo.status === 'Realizado' ? 'bg-blue-100/60 text-blue-800 border-blue-200' :
-                                    wo.status === 'En Proceso' ? 'bg-sky-100/60 text-sky-800 border-sky-200' :
-                                    'bg-yellow-100/60 text-yellow-800 border-yellow-200'
+                                    wo.isEquipmentDown ? 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800' :
+                                    wo.status === 'Conciliado' ? 'bg-emerald-100/60 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' :
+                                    wo.status === 'Reportado' ? 'bg-indigo-100/60 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' :
+                                    wo.status === 'Realizado' ? 'bg-blue-100/60 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800' :
+                                    wo.status === 'En Proceso' ? 'bg-sky-100/60 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800' :
+                                    'bg-yellow-100/60 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
                                   }`}>
                                     {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
                                   </span>
@@ -492,7 +492,7 @@ export const CronogramaTab: React.FC<CronogramaTabProps> = ({
                       </div>
                     )}
 
-                    <div className="grid grid-cols-7 calendar-days-grid divide-x divide-slate-200">
+                    <div className="grid grid-cols-7 calendar-days-grid divide-x divide-slate-200 dark:divide-slate-700">
                       {weekDays}
                     </div>
                   </div>

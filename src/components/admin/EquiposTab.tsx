@@ -80,13 +80,13 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
   return (
     <div className="space-y-6 font-sans">
       {/* Header Block */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
         <div>
-          <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-            <Cpu className="w-4 h-4 text-emerald-650" />
+          <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-emerald-650 dark:text-emerald-400" />
             Gestión de Equipos y Activos
           </h4>
-          <p className="text-3xs text-slate-500 mt-0.5 font-medium">Administra los equipos biomédicos, marcas, modelos, series y versiones de software instaladas.</p>
+          <p className="text-3xs text-slate-500 dark:text-slate-500 mt-0.5 font-medium">Administra los equipos biomédicos, marcas, modelos, series y versiones de software instaladas.</p>
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">
@@ -96,7 +96,7 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
               className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
                 isEquipImporterOpen
                   ? 'bg-amber-600 border-amber-600 text-white'
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                  : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
               }`}
             >
               <Database className="w-3.5 h-3.5" />
@@ -127,10 +127,10 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
 
       {/* CSV Importer Panel */}
       {isEquipImporterOpen && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
-          <div className="border-b border-slate-100 pb-2 flex flex-wrap justify-between items-center gap-2">
-            <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wider font-mono flex items-center gap-1.5">
-              <Database className="w-4 h-4 text-indigo-500" />
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-xs space-y-3">
+          <div className="border-b border-slate-100 dark:border-slate-700 pb-2 flex flex-wrap justify-between items-center gap-2">
+            <h5 className="font-bold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-1.5">
+              <Database className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
               <span>Ingestor de Equipos / Catálogo (CSV)</span>
             </h5>
             <div className="flex gap-3 text-[10px] font-bold">
@@ -146,33 +146,33 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
                   a.download = 'plantilla_modelos_mtorimec.csv';
                   a.click();
                 }}
-                className="text-indigo-600 hover:underline cursor-pointer flex items-center gap-1"
+                className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer flex items-center gap-1"
               >
                 📥 Plantilla Modelos
               </button>
             </div>
           </div>
-          <div className="text-3xs text-slate-500 font-medium leading-relaxed">
+          <div className="text-3xs text-slate-500 dark:text-slate-500 font-medium leading-relaxed">
             <p>El archivo debe ser un CSV separado por comas o punto y coma. Se actualizarán o registrarán los equipos correspondientes.</p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
               <input
                 type="file"
                 accept=".csv"
                 onChange={handleEquipCsvUpload}
-                className="block text-3xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all"
+                className="block text-3xs text-slate-500 dark:text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-950 file:text-indigo-700 dark:file:text-indigo-300 file:cursor-pointer hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900 transition-all"
               />
             </div>
 
             {equipCsvSuccess && (
-              <div className="text-3xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-150 p-2.5 rounded-lg">
+              <div className="text-3xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 border border-emerald-150 dark:border-emerald-800 p-2.5 rounded-lg">
                 {equipCsvSuccess}
               </div>
             )}
             {equipCsvError && (
-              <div className="text-3xs font-bold text-rose-700 bg-rose-50 border border-rose-150 p-2.5 rounded-lg">
+              <div className="text-3xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950 border border-rose-150 dark:border-rose-800 p-2.5 rounded-lg">
                 {equipCsvError}
               </div>
             )}
@@ -191,19 +191,19 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
               setEquipSearch(e.target.value);
               setEquipPage(1);
             }}
-            className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400"
+            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 dark:placeholder-slate-500"
           />
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
         </div>
-        <span className="text-3xs text-slate-400 font-bold uppercase tracking-wider">{filtered.length} equipos encontrados</span>
+        <span className="text-3xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{filtered.length} equipos encontrados</span>
       </div>
 
       {/* Table Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse font-sans text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-3xs font-bold uppercase text-slate-400 tracking-wider">
+              <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-3xs font-bold uppercase text-slate-400 dark:text-slate-400 tracking-wider">
                 <th className="p-4">Equipo / Nombre</th>
                 <th className="p-4">Cliente / Sucursal</th>
                 <th className="p-4">Marca / Modelo</th>
@@ -212,10 +212,10 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
                 <th className="p-4 text-center">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700 font-medium">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400 text-3xs font-bold">
+                  <td colSpan={6} className="p-8 text-center text-slate-400 dark:text-slate-500 text-3xs font-bold">
                     No se encontraron equipos registrados.
                   </td>
                 </tr>
@@ -223,43 +223,43 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
                 paginated.map(eq => {
                   const client = clients.find(c => c.id === eq.clientId);
                   return (
-                    <tr key={eq.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={eq.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="p-4">
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 text-xs">{eq.name}</span>
-                          <span className="text-3xs text-slate-400 font-mono">ID: {eq.id}</span>
+                          <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">{eq.name}</span>
+                          <span className="text-3xs text-slate-400 dark:text-slate-500 font-mono">ID: {eq.id}</span>
                         </div>
                       </td>
                       <td className="p-4">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-slate-800 flex items-center gap-1">
-                            <Building className="w-3 h-3 text-slate-400" />
+                          <span className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1">
+                            <Building className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                             {client?.name || eq.clientId}
                           </span>
                           {eq.sucursal && (
-                            <span className="text-3xs text-slate-500 font-medium">{eq.sucursal}</span>
+                            <span className="text-3xs text-slate-500 dark:text-slate-500 font-medium">{eq.sucursal}</span>
                           )}
                         </div>
                       </td>
                       <td className="p-4">
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-700">{eq.brand}</span>
-                          <span className="text-3xs text-slate-500">{eq.model || '-'}</span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300">{eq.brand}</span>
+                          <span className="text-3xs text-slate-500 dark:text-slate-500">{eq.model || '-'}</span>
                         </div>
                       </td>
                       <td className="p-4">
                         <div className="flex flex-col">
-                          <span className="font-mono text-xs font-bold text-indigo-700">{eq.serialNumber || '-'}</span>
+                          <span className="font-mono text-xs font-bold text-indigo-700 dark:text-indigo-300">{eq.serialNumber || '-'}</span>
                           {eq.softwareVersion && (
-                            <span className="text-3xs text-slate-400 font-mono">SW: {eq.softwareVersion}</span>
+                            <span className="text-3xs text-slate-400 dark:text-slate-500 font-mono">SW: {eq.softwareVersion}</span>
                           )}
                         </div>
                       </td>
                       <td className="p-4 text-center">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-3xs font-bold ${
                           eq.status === 'Operativo'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                            : 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
                         }`}>
                           {eq.status === 'Operativo' ? <ShieldCheck className="w-3 h-3" /> : <Zap className="w-3 h-3" />}
                           {eq.status}
@@ -281,7 +281,7 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
                             setEquipFormStatus(eq.status);
                             setIsEquipModalOpen(true);
                           }}
-                          className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
                         >
                           Editar
                         </button>
@@ -296,20 +296,20 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
-          <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 flex items-center justify-between font-sans">
-            <span className="text-3xs text-slate-500 font-medium">Pág. {equipPage} de {totalPages}</span>
+          <div className="bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between font-sans">
+            <span className="text-3xs text-slate-500 dark:text-slate-500 font-medium">Pág. {equipPage} de {totalPages}</span>
             <div className="flex gap-1">
               <button
                 onClick={() => setEquipPage(prev => Math.max(prev - 1, 1))}
                 disabled={equipPage === 1}
-                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setEquipPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={equipPage === totalPages}
-                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Siguiente
               </button>

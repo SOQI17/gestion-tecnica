@@ -405,13 +405,13 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
     return (
       <div className="space-y-6 font-sans">
         {/* GE Header Toolbar */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
           <div>
-            <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-              <FileSpreadsheet className="w-4.5 h-4.5 text-indigo-600" />
+            <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <FileSpreadsheet className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400" />
               Dashboard de Contratos con GE & Facturación
             </h4>
-            <p className="text-3xs text-slate-500 mt-0.5 font-medium">
+            <p className="text-3xs text-slate-500 dark:text-slate-500 mt-0.5 font-medium">
               Control ejecutivo de facturación, modalidades (CT, MR, SURGERY), coberturas y renovaciones.
             </p>
           </div>
@@ -420,18 +420,18 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
             <button
               type="button"
               onClick={() => setIsGeDashboardExpanded(!isGeDashboardExpanded)}
-              className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-200"
+              className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
             >
-              <Clock className="w-3.5 h-3.5 text-slate-500" />
+              <Clock className="w-3.5 h-3.5 text-slate-500 dark:text-slate-500" />
               <span>{isGeDashboardExpanded ? '⏱ Ocultar Dashboard' : '📊 Mostrar Dashboard'}</span>
             </button>
 
             <button
               type="button"
               onClick={exportContractsGeToExcel}
-              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-emerald-200 transition-colors cursor-pointer"
+              className="bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-300 font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>📊 Exportar Excel</span>
             </button>
 
@@ -441,7 +441,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                 className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
                   isContractGeImporterOpen
                     ? 'bg-amber-600 border-amber-600 text-white'
-                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                    : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
                 <Database className="w-3.5 h-3.5" />
@@ -461,20 +461,20 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
         {/* GE CSV Importer */}
         {isContractGeImporterOpen && (
-          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
-            <div className="border-b border-slate-100 pb-2 flex justify-between items-center">
-              <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wider font-mono">📥 Ingestor de Contratos GE (CSV)</h5>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-xs space-y-3">
+            <div className="border-b border-slate-100 dark:border-slate-700 pb-2 flex justify-between items-center">
+              <h5 className="font-bold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono">📥 Ingestor de Contratos GE (CSV)</h5>
             </div>
             <div className="flex flex-col gap-2">
               <input
                 type="file"
                 accept=".csv"
                 onChange={handleContractGeCsvUpload}
-                className="block w-full text-3xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all"
+                className="block w-full text-3xs text-slate-500 dark:text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-950 file:text-indigo-700 dark:file:text-indigo-300 file:cursor-pointer hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900 transition-all"
               />
               {contractGeCsvError && (
-                <div className="text-3xs text-rose-700 font-bold bg-rose-50 p-2 rounded-lg border border-rose-100 flex items-center gap-1.5">
-                  <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+                <div className="text-3xs text-rose-700 dark:text-rose-300 font-bold bg-rose-50 dark:bg-rose-950 p-2 rounded-lg border border-rose-100 dark:border-rose-800 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-500" />
                   <span>{contractGeCsvError}</span>
                 </div>
               )}
@@ -484,46 +484,46 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
         {/* Top 4 Metric Cards Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Total Facturado GE</span>
-              <span className="text-xl font-black text-indigo-700">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-              <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Volumen Total USD acumulado</p>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400 dark:text-slate-500">Total Facturado GE</span>
+              <span className="text-xl font-black text-indigo-700 dark:text-indigo-300">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">Volumen Total USD acumulado</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-base shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-base shadow-2xs">
               💰
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Total Registros GE</span>
-              <span className="text-xl font-black text-slate-800">{filteredGE.length} Facturas</span>
-              <p className="text-[9px] text-slate-400 font-semibold mt-0.5">{contractsGE.length} guardadas en Firestore</p>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400 dark:text-slate-500">Total Registros GE</span>
+              <span className="text-xl font-black text-slate-800 dark:text-slate-100">{filteredGE.length} Facturas</span>
+              <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">{contractsGE.length} guardadas en Firestore</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-base shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-base shadow-2xs">
               🧾
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Cliente con Más Facturas</span>
-              <span className="text-sm font-black text-indigo-700 truncate max-w-[140px] block">{topClientsByCount[0]?.name || 'N/A'}</span>
-              <p className="text-[9px] text-indigo-600 font-bold mt-0.5">{topClientsByCount[0]?.count || 0} Facturas registradas</p>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400 dark:text-slate-500">Cliente con Más Facturas</span>
+              <span className="text-sm font-black text-indigo-700 dark:text-indigo-300 truncate max-w-[140px] block">{topClientsByCount[0]?.name || 'N/A'}</span>
+              <p className="text-[9px] text-indigo-600 dark:text-indigo-400 font-bold mt-0.5">{topClientsByCount[0]?.count || 0} Facturas registradas</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-base shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-base shadow-2xs">
               🏆
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Renovaciones & Alertas</span>
-              <span className="text-xl font-black text-amber-600">{renewalAlerts.length} Pendientes</span>
-              <p className="text-[9px] text-amber-700 font-semibold mt-0.5">{withObsCount} observaciones notas</p>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400 dark:text-slate-500">Renovaciones & Alertas</span>
+              <span className="text-xl font-black text-amber-600 dark:text-amber-400">{renewalAlerts.length} Pendientes</span>
+              <p className="text-[9px] text-amber-700 dark:text-amber-300 font-semibold mt-0.5">{withObsCount} observaciones notas</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-base shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-base shadow-2xs">
               ⚠️
             </div>
           </div>
@@ -533,17 +533,17 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
         {isGeDashboardExpanded && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Card 1: Top 5 Clientes por Cantidad de Facturas */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
-                  <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-2">
+                <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  <FileSpreadsheet className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   <span>Clientes con Más Facturas (N° Facturas)</span>
                 </h5>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Top 5</span>
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Top 5</span>
               </div>
               <div className="space-y-2.5">
                 {topClientsByCount.length === 0 ? (
-                  <p className="text-3xs text-slate-400 italic">No hay datos suficientes.</p>
+                  <p className="text-3xs text-slate-400 dark:text-slate-500 italic">No hay datos suficientes.</p>
                 ) : (
                   topClientsByCount.map((client, idx) => {
                     const pct = filteredGE.length > 0 ? (client.count / filteredGE.length) * 100 : 0;
@@ -551,19 +551,19 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                       <div key={idx} className="space-y-1">
                         <div className="flex justify-between items-center text-3xs">
                           <div className="truncate max-w-[170px]">
-                            <span className="font-extrabold text-slate-900 block truncate">{client.name}</span>
-                            <span className="text-[9px] text-slate-400 font-semibold font-mono">${client.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <span className="font-extrabold text-slate-900 dark:text-slate-100 block truncate">{client.name}</span>
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold font-mono">${client.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                           <div className="text-right shrink-0">
-                            <span className="font-mono font-black text-indigo-700 block text-xs">
+                            <span className="font-mono font-black text-indigo-700 dark:text-indigo-300 block text-xs">
                               {client.count} factura{client.count !== 1 ? 's' : ''}
                             </span>
-                            <span className="text-[9px] font-bold text-indigo-500">
+                            <span className="text-[9px] font-bold text-indigo-500 dark:text-indigo-500">
                               {pct.toFixed(1)}% del total
                             </span>
                           </div>
                         </div>
-                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden flex">
                           <div
                             className="bg-gradient-to-r from-indigo-500 to-indigo-600 h-full rounded-full transition-all duration-500"
                             style={{ width: `${Math.max(pct, 5)}%` }}
@@ -577,17 +577,17 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
             </div>
 
             {/* Card 2: Clientes con Mayor Valor de Facturación ($ USD) */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-2">
+                <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Clientes con Mayor Facturación ($ USD)</span>
                 </h5>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Top 5</span>
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Top 5</span>
               </div>
               <div className="space-y-2.5">
                 {topClientsByAmount.length === 0 ? (
-                  <p className="text-3xs text-slate-400 italic">No hay datos suficientes.</p>
+                  <p className="text-3xs text-slate-400 dark:text-slate-500 italic">No hay datos suficientes.</p>
                 ) : (
                   topClientsByAmount.map((client, idx) => {
                     const pct = totalAmount > 0 ? (client.totalAmount / totalAmount) * 100 : 0;
@@ -595,19 +595,19 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                       <div key={idx} className="space-y-1">
                         <div className="flex justify-between items-center text-3xs">
                           <div className="truncate max-w-[160px]">
-                            <span className="font-extrabold text-slate-900 block truncate">{client.name}</span>
-                            <span className="text-[9px] text-slate-400 font-semibold">{client.count} factura{client.count !== 1 ? 's' : ''}</span>
+                            <span className="font-extrabold text-slate-900 dark:text-slate-100 block truncate">{client.name}</span>
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">{client.count} factura{client.count !== 1 ? 's' : ''}</span>
                           </div>
                           <div className="text-right shrink-0">
-                            <span className="font-mono font-black text-emerald-700 block text-xs">
+                            <span className="font-mono font-black text-emerald-700 dark:text-emerald-300 block text-xs">
                               ${client.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
-                            <span className="text-[9px] font-bold text-emerald-600">
+                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
                               {pct.toFixed(1)}% del total
                             </span>
                           </div>
                         </div>
-                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden flex">
                           <div
                             className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-full rounded-full transition-all duration-500"
                             style={{ width: `${Math.max(pct, 5)}%` }}
@@ -621,30 +621,30 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
             </div>
 
             {/* Card 3: Duración Cobertura (Meses) */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                <h5 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
-                  <CalendarRange className="w-4 h-4 text-emerald-600" />
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-2">
+                <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  <CalendarRange className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Duración Cobertura (Meses)</span>
                 </h5>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Rango Meses</span>
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Rango Meses</span>
               </div>
               <div className="grid grid-cols-2 gap-2.5">
-                <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl text-center">
-                  <span className="block text-[9px] font-bold text-slate-500 uppercase">1 - 6 Meses</span>
-                  <span className="text-base font-black text-slate-800">{dur1_6} Facturas</span>
+                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">1 - 6 Meses</span>
+                  <span className="text-base font-black text-slate-800 dark:text-slate-100">{dur1_6} Facturas</span>
                 </div>
-                <div className="bg-indigo-50 border border-indigo-200 p-3 rounded-xl text-center">
-                  <span className="block text-[9px] font-bold text-indigo-700 uppercase">7 - 12 Meses</span>
-                  <span className="text-base font-black text-indigo-900">{dur7_12} Facturas</span>
+                <div className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 p-3 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-indigo-700 dark:text-indigo-300 uppercase">7 - 12 Meses</span>
+                  <span className="text-base font-black text-indigo-900 dark:text-indigo-300">{dur7_12} Facturas</span>
                 </div>
-                <div className="bg-purple-50 border border-purple-200 p-3 rounded-xl text-center">
-                  <span className="block text-[9px] font-bold text-purple-700 uppercase">13 - 24 Meses</span>
-                  <span className="text-base font-black text-purple-900">{dur13_24} Facturas</span>
+                <div className="bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 p-3 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-purple-700 dark:text-purple-300 uppercase">13 - 24 Meses</span>
+                  <span className="text-base font-black text-purple-900 dark:text-purple-300">{dur13_24} Facturas</span>
                 </div>
-                <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-center">
-                  <span className="block text-[9px] font-bold text-amber-700 uppercase">&gt; 24 Meses</span>
-                  <span className="text-base font-black text-amber-900">{dur25Plus} Facturas</span>
+                <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-xl text-center">
+                  <span className="block text-[9px] font-bold text-amber-700 dark:text-amber-300 uppercase">&gt; 24 Meses</span>
+                  <span className="text-base font-black text-amber-900 dark:text-amber-300">{dur25Plus} Facturas</span>
                 </div>
               </div>
             </div>
@@ -652,16 +652,16 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
         )}
 
         {/* GE Search & Filter Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 p-3 rounded-xl shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-xl shadow-2xs">
           <div className="relative flex-1 max-w-md">
             <input
               type="text"
               placeholder="Buscar por cliente, SID, modalidad, equipo, invoice, periodo, observaciones..."
               value={localContractGeSearch}
               onChange={(e) => setLocalContractGeSearch(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-8 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-400"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-8 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-all placeholder-slate-400 dark:placeholder-slate-500"
             />
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
             {localContractGeSearch && (
               <button
                 type="button"
@@ -669,23 +669,23 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   setLocalContractGeSearch('');
                   setContractGeSearch('');
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer text-xs font-bold"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer text-xs font-bold"
               >
                 ✕
               </button>
             )}
           </div>
-          <span className="text-3xs font-mono font-black text-slate-500 uppercase tracking-wider px-2">
+          <span className="text-3xs font-mono font-black text-slate-500 dark:text-slate-500 uppercase tracking-wider px-2">
             {filteredGE.length} REGISTROS GE ENCONTRADOS
           </span>
         </div>
 
         {/* Full 12-Column GE Table */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse font-sans text-xs">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-[10px] font-black uppercase text-slate-500 dark:text-slate-500 tracking-wider">
                   <th className="p-3.5">CLIENTE</th>
                   <th className="p-3.5">SID / MODALIDAD</th>
                   <th className="p-3.5">EQUIPO</th>
@@ -699,10 +699,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   <th className="p-3.5 text-center">ACCIONES</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-xs">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700 font-medium text-xs">
                 {filteredGE.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="p-8 text-center text-slate-400 text-3xs font-bold uppercase tracking-wider">
+                    <td colSpan={11} className="p-8 text-center text-slate-400 dark:text-slate-500 text-3xs font-bold uppercase tracking-wider">
                       No se encontraron contratos GE registrados.
                     </td>
                   </tr>
@@ -712,50 +712,50 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                     cleanName = cleanName.replace(/\uFFFD/g, 'í').replace(/Mara/g, 'María').trim();
 
                     return (
-                      <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                      <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition-colors">
                         {/* 1. CLIENTE */}
-                        <td className="p-3.5 font-bold text-slate-900">{cleanName}</td>
+                        <td className="p-3.5 font-bold text-slate-900 dark:text-slate-100">{cleanName}</td>
 
                         {/* 2. SID / MODALIDAD */}
                         <td className="p-3.5">
                           <div className="flex flex-col">
-                            <span className="font-mono font-bold text-indigo-700 text-xs">{c.sid || '-'}</span>
+                            <span className="font-mono font-bold text-indigo-700 dark:text-indigo-300 text-xs">{c.sid || '-'}</span>
                             {c.modalidad && (
-                              <span className="text-[9px] text-slate-400 font-bold uppercase">{c.modalidad}</span>
+                              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase">{c.modalidad}</span>
                             )}
                           </div>
                         </td>
 
                         {/* 3. EQUIPO */}
-                        <td className="p-3.5 font-semibold text-slate-700">{c.equipo || '-'}</td>
+                        <td className="p-3.5 font-semibold text-slate-700 dark:text-slate-300">{c.equipo || '-'}</td>
 
                         {/* 4. INVOICE */}
-                        <td className="p-3.5 font-mono font-extrabold text-indigo-900 text-xs">{c.invoice}</td>
+                        <td className="p-3.5 font-mono font-extrabold text-indigo-900 dark:text-indigo-300 text-xs">{c.invoice}</td>
 
                         {/* 5. INVOICE AMOUNT */}
-                        <td className="p-3.5 text-right font-mono font-black text-emerald-700 text-xs">
+                        <td className="p-3.5 text-right font-mono font-black text-emerald-700 dark:text-emerald-300 text-xs">
                           ${(c.invoiceAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
 
                         {/* 6. MONTHS */}
-                        <td className="p-3.5 text-center font-mono font-bold text-slate-700">{c.months || '-'}</td>
+                        <td className="p-3.5 text-center font-mono font-bold text-slate-700 dark:text-slate-300">{c.months || '-'}</td>
 
                         {/* 7. FECHA FACTURA */}
                         <td className="p-3.5">
-                          <div className="flex flex-col text-[10px] font-semibold text-slate-700">
+                          <div className="flex flex-col text-[10px] font-semibold text-slate-700 dark:text-slate-300">
                             <span>{c.invoiceDate || '-'}</span>
                             {c.dueDate && (
-                              <span className="text-[9px] text-slate-400 font-bold">Venc: {c.dueDate}</span>
+                              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">Venc: {c.dueDate}</span>
                             )}
                           </div>
                         </td>
 
                         {/* 8. PERIODO / #MES */}
                         <td className="p-3.5">
-                          <div className="flex flex-col text-[10px] font-bold text-indigo-950">
+                          <div className="flex flex-col text-[10px] font-bold text-indigo-950 dark:text-indigo-300">
                             <span>{c.paymentPeriod || '-'}</span>
                             {c.monthNum && (
-                              <span className="text-[9px] text-slate-400 font-semibold">#Mes: {c.monthNum}</span>
+                              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">#Mes: {c.monthNum}</span>
                             )}
                           </div>
                         </td>
@@ -763,22 +763,22 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                         {/* 9. CONTRATO */}
                         <td className="p-3.5 text-center">
                           {c.contractNum ? (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-indigo-50 text-indigo-700 font-mono font-extrabold text-3xs border border-indigo-200">
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono font-extrabold text-3xs border border-indigo-200 dark:border-indigo-800">
                               {c.contractNum}
                             </span>
                           ) : (
-                            <span className="text-slate-400 font-normal">-</span>
+                            <span className="text-slate-400 dark:text-slate-500 font-normal">-</span>
                           )}
                         </td>
 
                         {/* 10. OBSERVACIONES / COMMENTS */}
                         <td className="p-3.5 max-w-[200px]">
                           {c.observaciones ? (
-                            <span className="text-3xs text-slate-600 font-medium line-clamp-2" title={c.observaciones}>
+                            <span className="text-3xs text-slate-600 dark:text-slate-300 font-medium line-clamp-2" title={c.observaciones}>
                               {c.observaciones}
                             </span>
                           ) : (
-                            <span className="text-slate-400 font-normal">-</span>
+                            <span className="text-slate-400 dark:text-slate-500 font-normal">-</span>
                           )}
                         </td>
 
@@ -795,7 +795,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                                   setIsContractGeModalOpen(true);
                                 }
                               }}
-                              className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs"
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs"
                             >
                               Editar
                             </button>
@@ -807,7 +807,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                                     onDeleteContractGE(c.id);
                                   }
                                 }}
-                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                                className="p-1.5 text-rose-500 dark:text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900 rounded-md transition-colors cursor-pointer"
                                 title="Eliminar Registro GE"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -855,13 +855,13 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
             contractFilterExpiration === null
               ? 'bg-indigo-600 border-indigo-600 text-white shadow-md ring-2 ring-indigo-300'
-              : 'bg-white border-slate-200 text-slate-800 hover:border-indigo-300'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:border-indigo-300 dark:hover:border-indigo-700'
           }`}
         >
           <div className="flex items-center justify-between">
-            <Folder className={`w-4 h-4 ${contractFilterExpiration === null ? 'text-indigo-200' : 'text-indigo-600'}`} />
+            <Folder className={`w-4 h-4 ${contractFilterExpiration === null ? 'text-indigo-200' : 'text-indigo-600 dark:text-indigo-400'}`} />
             <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-              contractFilterExpiration === null ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-700'
+              contractFilterExpiration === null ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
             }`}>
               ✓ ACTIVO
             </span>
@@ -880,13 +880,13 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
             contractFilterExpiration === 'pending_admin'
               ? 'bg-amber-500 border-amber-500 text-white shadow-md ring-2 ring-amber-300'
-              : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:border-amber-300 dark:hover:border-amber-700'
           }`}
         >
           <div className="flex items-center justify-between">
-            <Hourglass className={`w-4 h-4 ${contractFilterExpiration === 'pending_admin' ? 'text-amber-100' : 'text-amber-500'}`} />
+            <Hourglass className={`w-4 h-4 ${contractFilterExpiration === 'pending_admin' ? 'text-amber-100' : 'text-amber-500 dark:text-amber-500'}`} />
             <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-              contractFilterExpiration === 'pending_admin' ? 'bg-white/20 text-white' : 'bg-amber-50 text-amber-800'
+              contractFilterExpiration === 'pending_admin' ? 'bg-white/20 text-white' : 'bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
             }`}>
               PENDIENTE
             </span>
@@ -907,19 +907,19 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
             contractFilterExpiration === '1m'
               ? 'bg-rose-600 border-rose-600 text-white shadow-md ring-2 ring-rose-300'
-              : 'bg-rose-50/50 border-rose-200 text-slate-800 hover:border-rose-300'
+              : 'bg-rose-50/50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800 text-slate-800 dark:text-slate-100 hover:border-rose-300 dark:hover:border-rose-700'
           }`}
         >
           <div className="flex items-center justify-between">
-            <BellRing className={`w-4 h-4 ${contractFilterExpiration === '1m' ? 'text-rose-100' : 'text-rose-600'}`} />
+            <BellRing className={`w-4 h-4 ${contractFilterExpiration === '1m' ? 'text-rose-100' : 'text-rose-600 dark:text-rose-400'}`} />
             <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-              contractFilterExpiration === '1m' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-800'
+              contractFilterExpiration === '1m' ? 'bg-white/20 text-white' : 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300'
             }`}>
               1 MES
             </span>
           </div>
-          <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 text-rose-900 opacity-90">POR VENCER (1M)</p>
-          <h4 className="text-lg font-black mt-0.5 text-rose-950">
+          <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 text-rose-900 dark:text-rose-300 opacity-90">POR VENCER (1M)</p>
+          <h4 className="text-lg font-black mt-0.5 text-rose-950 dark:text-rose-300">
             {contractKpiCounts.urgent1m} <span className="text-3xs font-semibold opacity-70">Contratos</span>
           </h4>
         </button>
@@ -934,19 +934,19 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
             contractFilterExpiration === '3m'
               ? 'bg-amber-600 border-amber-600 text-white shadow-md ring-2 ring-amber-300'
-              : 'bg-amber-50/40 border-amber-200 text-slate-800 hover:border-amber-300'
+              : 'bg-amber-50/40 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-slate-800 dark:text-slate-100 hover:border-amber-300 dark:hover:border-amber-700'
           }`}
         >
           <div className="flex items-center justify-between">
-            <AlertTriangle className={`w-4 h-4 ${contractFilterExpiration === '3m' ? 'text-amber-100' : 'text-amber-600'}`} />
+            <AlertTriangle className={`w-4 h-4 ${contractFilterExpiration === '3m' ? 'text-amber-100' : 'text-amber-600 dark:text-amber-400'}`} />
             <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-              contractFilterExpiration === '3m' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-900'
+              contractFilterExpiration === '3m' ? 'bg-white/20 text-white' : 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-300'
             }`}>
               3 MESES
             </span>
           </div>
-          <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 text-amber-900 opacity-90">POR VENCER (3M)</p>
-          <h4 className="text-lg font-black mt-0.5 text-amber-950">
+          <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 text-amber-900 dark:text-amber-300 opacity-90">POR VENCER (3M)</p>
+          <h4 className="text-lg font-black mt-0.5 text-amber-950 dark:text-amber-300">
             {contractKpiCounts.warning3m} <span className="text-3xs font-semibold opacity-70">Contratos</span>
           </h4>
         </button>
@@ -961,13 +961,13 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
             contractFilterExpiration === 'inactivo'
               ? 'bg-slate-700 border-slate-700 text-white shadow-md ring-2 ring-slate-300'
-              : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:border-slate-300 dark:hover:border-slate-600'
           }`}
         >
           <div className="flex items-center justify-between">
-            <Ban className={`w-4 h-4 ${contractFilterExpiration === 'inactivo' ? 'text-slate-200' : 'text-slate-500'}`} />
+            <Ban className={`w-4 h-4 ${contractFilterExpiration === 'inactivo' ? 'text-slate-200' : 'text-slate-500 dark:text-slate-500'}`} />
             <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-              contractFilterExpiration === 'inactivo' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+              contractFilterExpiration === 'inactivo' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
             }`}>
               INACTIVOS
             </span>
@@ -988,41 +988,41 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
             contractFilterExpiration === 'expired'
               ? 'bg-red-700 border-red-700 text-white shadow-md ring-2 ring-red-400'
-              : 'bg-red-50/40 border-red-200 text-slate-800 hover:border-red-300'
+              : 'bg-red-50/40 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-slate-800 dark:text-slate-100 hover:border-red-300 dark:hover:border-red-700'
           }`}
         >
           <div className="flex items-center justify-between">
             <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping" />
             <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-              contractFilterExpiration === 'expired' ? 'bg-white/20 text-white' : 'bg-red-100 text-red-800'
+              contractFilterExpiration === 'expired' ? 'bg-white/20 text-white' : 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300'
             }`}>
               VENCIDOS
             </span>
           </div>
-          <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 text-red-900 opacity-90">VENCIDOS TOTAL</p>
-          <h4 className="text-lg font-black mt-0.5 text-red-950">
+          <p className="text-[10px] font-extrabold uppercase tracking-wider mt-2 text-red-900 dark:text-red-300 opacity-90">VENCIDOS TOTAL</p>
+          <h4 className="text-lg font-black mt-0.5 text-red-950 dark:text-red-300">
             {contractKpiCounts.expired} <span className="text-3xs font-semibold opacity-70">Contratos</span>
           </h4>
         </button>
       </div>
 
       {/* Header Action Toolbar */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
         <div>
-          <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-indigo-600" />
+          <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             Gestión de Contratos y Garantías
           </h4>
-          <p className="text-3xs text-slate-500 mt-0.5 font-medium">Administra los contratos de servicio, garantías comerciales y coberturas de mantenimiento.</p>
+          <p className="text-3xs text-slate-500 dark:text-slate-500 mt-0.5 font-medium">Administra los contratos de servicio, garantías comerciales y coberturas de mantenimiento.</p>
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">
           <button
             type="button"
             onClick={exportContractsToExcel}
-            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-emerald-200 transition-colors cursor-pointer"
+            className="bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-300 font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>📊 Exportar Excel</span>
           </button>
 
@@ -1032,7 +1032,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
               className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
                 isContractImporterOpen
                   ? 'bg-amber-600 border-amber-600 text-white'
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                  : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
               }`}
             >
               <Database className="w-3.5 h-3.5" />
@@ -1051,20 +1051,20 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
       {/* CSV Importer */}
       {isContractImporterOpen && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
-          <div className="border-b border-slate-100 pb-2 flex justify-between items-center">
-            <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wider font-mono">📥 Ingestor de Contratos (CSV)</h5>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-xs space-y-3">
+          <div className="border-b border-slate-100 dark:border-slate-700 pb-2 flex justify-between items-center">
+            <h5 className="font-bold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono">📥 Ingestor de Contratos (CSV)</h5>
           </div>
           <div className="flex flex-col gap-2">
             <input
               type="file"
               accept=".csv"
               onChange={handleContractCsvUpload}
-              className="block w-full text-3xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all"
+              className="block w-full text-3xs text-slate-500 dark:text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-950 file:text-indigo-700 dark:file:text-indigo-300 file:cursor-pointer hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900 transition-all"
             />
             {contractCsvError && (
-              <div className="text-3xs text-rose-700 font-bold bg-rose-50 p-2 rounded-lg border border-rose-100 flex items-center gap-1.5">
-                <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+              <div className="text-3xs text-rose-700 dark:text-rose-300 font-bold bg-rose-50 dark:bg-rose-950 p-2 rounded-lg border border-rose-100 dark:border-rose-800 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-500" />
                 <span>{contractCsvError}</span>
               </div>
             )}
@@ -1073,7 +1073,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
       )}
 
       {/* Executive Search & Filter Control Bar */}
-      <div className="bg-gradient-to-r from-slate-50 via-white to-slate-50 border border-slate-200/90 p-3.5 rounded-2xl shadow-xs space-y-3">
+      <div className="bg-gradient-to-r from-slate-50 dark:from-slate-900 via-white dark:via-slate-950 to-slate-50 dark:to-slate-900 border border-slate-200/90 dark:border-slate-700/90 p-3.5 rounded-2xl shadow-xs space-y-3">
         {/* Row 1: Buscador de Cliente + Dropdowns Principales */}
         <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
           {/* Search input specifically for Client Name */}
@@ -1086,9 +1086,9 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                 setLocalContractSearch(e.target.value);
                 setContractPage(1);
               }}
-              className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-slate-800 outline-hidden transition-all shadow-2xs placeholder-slate-400"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/15 dark:focus:ring-indigo-400/15 rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 outline-hidden transition-all shadow-2xs placeholder-slate-400 dark:placeholder-slate-500"
             />
-            <Users className="w-4 h-4 text-indigo-600 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400 absolute left-3 top-1/2 -translate-y-1/2" />
             {localContractSearch && (
               <button
                 type="button"
@@ -1098,7 +1098,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   setContractSearch('');
                   setContractPage(1);
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               >
                 ✕
               </button>
@@ -1115,10 +1115,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   setContractTypeFilter(e.target.value);
                   setContractPage(1);
                 }}
-                className={`appearance-none bg-white border text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                className={`appearance-none bg-white dark:bg-slate-900 border text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
                   contractTypeFilter !== 'all'
-                    ? 'border-amber-400 bg-amber-50/60 text-amber-950 ring-2 ring-amber-500/10'
-                    : 'border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                    ? 'border-amber-400 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-950/60 text-amber-950 dark:text-amber-300 ring-2 ring-amber-500/10 dark:ring-amber-400/10'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 <option value="all">📑 TIPO: Todos los Tipos</option>
@@ -1126,7 +1126,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
             </div>
 
             {/* Estado Dropdown */}
@@ -1143,8 +1143,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                 }}
                 className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
                   contractStatusFilter !== 'all'
-                    ? 'bg-indigo-100/80 border border-indigo-400 text-indigo-950 ring-2 ring-indigo-500/10'
-                    : 'border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                    ? 'bg-indigo-100/80 dark:bg-indigo-950/80 border border-indigo-400 dark:border-indigo-700 text-indigo-950 dark:text-indigo-300 ring-2 ring-indigo-500/10 dark:ring-indigo-400/10'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 <option value="all">🛡️ ESTADO: Todos los Estados</option>
@@ -1155,7 +1155,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                 <option value="expired">🔴 Vencidos</option>
                 <option value="pending_admin">⏳ Sin Cronograma</option>
               </select>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
             </div>
 
             {/* Marca Dropdown */}
@@ -1166,10 +1166,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   setContractFilterBrand(e.target.value);
                   setContractPage(1);
                 }}
-                className={`appearance-none bg-white border text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                className={`appearance-none bg-white dark:bg-slate-900 border text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
                   contractFilterBrand !== 'all'
-                    ? 'border-indigo-400 bg-indigo-50/50 text-indigo-950 ring-2 ring-indigo-500/10'
-                    : 'border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                    ? 'border-indigo-400 dark:border-indigo-700 bg-indigo-50/50 dark:bg-indigo-950/50 text-indigo-950 dark:text-indigo-300 ring-2 ring-indigo-500/10 dark:ring-indigo-400/10'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 <option value="all">🏷️ MARCA: Todas las Marcas</option>
@@ -1177,7 +1177,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   <option key={b} value={b}>{b}</option>
                 ))}
               </select>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
             </div>
 
             {/* Valor Dropdown */}
@@ -1190,15 +1190,15 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                 }}
                 className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
                   contractValueFilter !== 'all'
-                    ? 'bg-emerald-100/80 border border-emerald-400 text-emerald-950 ring-2 ring-emerald-500/10'
-                    : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                    ? 'bg-emerald-100/80 dark:bg-emerald-950/80 border border-emerald-400 dark:border-emerald-700 text-emerald-950 dark:text-emerald-300 ring-2 ring-emerald-500/10 dark:ring-emerald-400/10'
+                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 <option value="all">💲 VALOR: Todos los Valores</option>
                 <option value="valued">💲 Con Valor ($ &gt; 0)</option>
                 <option value="unvalued">💲 Sin Valor ($0 / Sin Precio)</option>
               </select>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
             </div>
 
             {/* Sector Dropdown */}
@@ -1211,15 +1211,15 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                 }}
                 className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
                   contractSectorFilter !== 'all'
-                    ? 'bg-blue-100/80 border border-blue-400 text-blue-950 ring-2 ring-blue-500/10'
-                    : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                    ? 'bg-blue-100/80 dark:bg-blue-950/80 border border-blue-400 dark:border-blue-700 text-blue-950 dark:text-blue-300 ring-2 ring-blue-500/10 dark:ring-blue-400/10'
+                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 <option value="all">🏢 SECTOR: Todos los Sectores</option>
                 <option value="Público">🏛️ Público (MSP / IESS / FFAA)</option>
                 <option value="Privado">🏢 Privado</option>
               </select>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
             </div>
 
             {/* Orden por Fecha Dropdown */}
@@ -1232,8 +1232,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                 }}
                 className={`appearance-none text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
                   contractDateSort !== 'none'
-                    ? 'bg-purple-100/80 border border-purple-400 text-purple-950 ring-2 ring-purple-500/10'
-                    : 'bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                    ? 'bg-purple-100/80 dark:bg-purple-950/80 border border-purple-400 dark:border-purple-700 text-purple-950 dark:text-purple-300 ring-2 ring-purple-500/10 dark:ring-purple-400/10'
+                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 <option value="none">📅 ORDENAR: Por Defecto</option>
@@ -1242,18 +1242,18 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                 <option value="end_asc">Fecha Vencimiento (Próxima a Vencer)</option>
                 <option value="end_desc">Fecha Vencimiento (Lejana a Vencer)</option>
               </select>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
             </div>
           </div>
         </div>
 
         {/* Row 2: Filtros de Fecha de Inicio y Vencimiento + Botón Limpiar y Contador */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-200/60">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/60">
           <div className="flex flex-wrap items-center gap-3">
             {/* Fecha Inicio */}
-            <div className="flex items-center gap-1.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl px-2.5 py-1.5 shadow-2xs">
-              <Calendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Inicio:</span>
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-xl px-2.5 py-1.5 shadow-2xs">
+              <Calendar className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-500 tracking-wider">Inicio:</span>
               <input
                 type="date"
                 value={contractStartDate}
@@ -1261,7 +1261,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   setContractStartDate(e.target.value);
                   setContractPage(1);
                 }}
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-3xs font-bold text-slate-700 outline-hidden hover:border-indigo-400 focus:border-indigo-500 focus:bg-white transition-colors"
+                className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-0.5 text-3xs font-bold text-slate-700 dark:text-slate-300 outline-hidden hover:border-indigo-400 dark:hover:border-indigo-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                 title="Filtrar por Fecha de Inicio"
               />
               {contractStartDate && (
@@ -1271,7 +1271,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                     setContractStartDate('');
                     setContractPage(1);
                   }}
-                  className="text-slate-400 hover:text-rose-600 text-xs ml-0.5 cursor-pointer font-bold"
+                  className="text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 text-xs ml-0.5 cursor-pointer font-bold"
                   title="Limpiar fecha de inicio"
                 >
                   ✕
@@ -1280,9 +1280,9 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
             </div>
 
             {/* Fecha Vencimiento */}
-            <div className="flex items-center gap-1.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl px-2.5 py-1.5 shadow-2xs">
-              <Clock className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Vencimiento:</span>
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-xl px-2.5 py-1.5 shadow-2xs">
+              <Clock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+              <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-500 tracking-wider">Vencimiento:</span>
               <input
                 type="date"
                 value={contractEndDate}
@@ -1290,7 +1290,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   setContractEndDate(e.target.value);
                   setContractPage(1);
                 }}
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-3xs font-bold text-slate-700 outline-hidden hover:border-rose-400 focus:border-rose-500 focus:bg-white transition-colors"
+                className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-0.5 text-3xs font-bold text-slate-700 dark:text-slate-300 outline-hidden hover:border-rose-400 dark:hover:border-rose-500 focus:border-rose-500 dark:focus:border-rose-400 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                 title="Filtrar por Fecha de Vencimiento"
               />
               {contractEndDate && (
@@ -1300,7 +1300,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                     setContractEndDate('');
                     setContractPage(1);
                   }}
-                  className="text-slate-400 hover:text-rose-600 text-xs ml-0.5 cursor-pointer font-bold"
+                  className="text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 text-xs ml-0.5 cursor-pointer font-bold"
                   title="Limpiar fecha de vencimiento"
                 >
                   ✕
@@ -1329,7 +1329,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                   setContractFilterExpiration(null);
                   setContractPage(1);
                 }}
-                className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs flex items-center gap-1"
+                className="bg-rose-50 dark:bg-rose-950 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-extrabold px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs flex items-center gap-1"
                 title="Limpiar todos los filtros"
               >
                 <span>✕ Limpiar</span>
@@ -1346,11 +1346,11 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
       </div>
 
       {/* Full 10-Column Table Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse font-sans text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase text-slate-500 tracking-wider">
+              <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-[10px] font-black uppercase text-slate-500 dark:text-slate-500 tracking-wider">
                 <th className="px-3 py-2.5">Nº CONTRATO</th>
                 <th className="px-3 py-2.5">CLIENTE</th>
                 <th className="px-3 py-2.5">TIPO DE CONTRATO</th>
@@ -1363,10 +1363,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                 <th className="px-3 py-2.5 text-center">ACCIONES</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-xs">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700 font-medium text-xs">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-8 text-center text-slate-400 text-3xs font-bold uppercase tracking-wider">
+                  <td colSpan={10} className="p-8 text-center text-slate-400 dark:text-slate-500 text-3xs font-bold uppercase tracking-wider">
                     No se encontraron contratos registrados.
                   </td>
                 </tr>
@@ -1381,12 +1381,12 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
                   // Expiration Alert & Row Styling
                   const rowBorderClass = expAlert?.level === 'warning_3m'
-                    ? 'border-l-4 border-l-amber-500 bg-amber-50/20 hover:bg-amber-50/30'
+                    ? 'border-l-4 border-l-amber-500 bg-amber-50/20 dark:bg-amber-950/20 hover:bg-amber-50/30 dark:hover:bg-amber-900/30'
                     : expAlert?.level === 'urgent_1m'
-                    ? 'border-l-4 border-l-rose-500 bg-rose-50/20 hover:bg-rose-50/30'
+                    ? 'border-l-4 border-l-rose-500 bg-rose-50/20 dark:bg-rose-950/20 hover:bg-rose-50/30 dark:hover:bg-rose-900/30'
                     : expAlert?.level === 'expired'
-                    ? 'border-l-4 border-l-red-600 bg-red-50/20 hover:bg-red-50/30'
-                    : 'hover:bg-slate-50/60';
+                    ? 'border-l-4 border-l-red-600 bg-red-50/20 dark:bg-red-950/20 hover:bg-red-50/30 dark:hover:bg-red-900/30'
+                    : 'hover:bg-slate-50/60 dark:hover:bg-slate-800/60';
 
                   return (
                     <tr key={con.id} className={`transition-colors ${rowBorderClass}`}>
@@ -1400,34 +1400,34 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                                 setSelectedContractForDetails(con);
                                 setIsContractDetailsModalOpen(true);
                               }}
-                              className="font-extrabold text-indigo-600 hover:text-indigo-900 hover:underline font-mono text-xs text-left cursor-pointer flex items-center gap-1.5 group"
+                              className="font-extrabold text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:underline font-mono text-xs text-left cursor-pointer flex items-center gap-1.5 group"
                               title="Ver Detalle del Contrato"
                             >
                               <span>{con.id}</span>
-                              <Eye className="w-3 h-3 text-indigo-400 group-hover:text-indigo-600 transition-colors" />
+                              <Eye className="w-3 h-3 text-indigo-400 dark:text-indigo-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
                             </button>
                           ) : (
-                            <span className="font-extrabold text-slate-900 font-mono text-xs">{con.id}</span>
+                            <span className="font-extrabold text-slate-900 dark:text-slate-100 font-mono text-xs">{con.id}</span>
                           )}
                           {con.linkedContractId && (
-                            <span className="text-[10px] text-indigo-600 font-bold">Vínculo: {con.linkedContractId}</span>
+                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">Vínculo: {con.linkedContractId}</span>
                           )}
                         </div>
                       </td>
 
                       {/* 2. CLIENTE */}
-                      <td className="px-3 py-2.5 font-bold text-slate-800">
+                      <td className="px-3 py-2.5 font-bold text-slate-800 dark:text-slate-100">
                         <div className="flex flex-col justify-center">
-                          <span className="font-black text-xs text-slate-950 leading-snug tracking-tight">{client?.name || con.clientId}</span>
+                          <span className="font-black text-xs text-slate-950 dark:text-slate-100 leading-snug tracking-tight">{client?.name || con.clientId}</span>
                           <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] text-slate-500 font-bold">📍 {client?.city || con.city || 'Quito'}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-500 font-bold">📍 {client?.city || con.city || 'Quito'}</span>
                             {(() => {
                               const sec = con.sector || (client?.industry?.toLowerCase().includes('público') || client?.industry?.toLowerCase().includes('publico') || client?.name.toUpperCase().includes('MSP') || client?.name.toUpperCase().includes('IESS') || client?.name.toUpperCase().includes('SOLCA') || client?.name.toUpperCase().includes('HOSPITAL') ? 'Público' : 'Privado');
                               return (
                                 <span className={`text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded border ${
                                   sec === 'Público'
-                                    ? 'bg-purple-100/80 text-purple-950 border-purple-300'
-                                    : 'bg-blue-50 text-blue-900 border-blue-200'
+                                    ? 'bg-purple-100/80 dark:bg-purple-950/80 text-purple-950 dark:text-purple-300 border-purple-300 dark:border-purple-800'
+                                    : 'bg-blue-50 dark:bg-blue-950 text-blue-900 dark:text-blue-300 border-blue-200 dark:border-blue-800'
                                 }`}>
                                   {sec === 'Público' ? '🏛️ Público' : '🏢 Privado'}
                                 </span>
@@ -1439,16 +1439,16 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
                       {/* 3. TIPO DE CONTRATO */}
                       <td className="px-3 py-2.5">
-                        <span className="font-bold text-indigo-900 bg-indigo-50/70 px-2 py-1 rounded-md text-[11px] inline-block">
+                        <span className="font-bold text-indigo-900 dark:text-indigo-300 bg-indigo-50/70 dark:bg-indigo-950/70 px-2 py-1 rounded-md text-[11px] inline-block">
                           {con.type}
                         </span>
                       </td>
 
                       {/* 4. VALOR (USD) */}
-                      <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800">
+                      <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-100">
                         {con.contractValue && con.contractValue > 0
                           ? `$${con.contractValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-                          : <span className="text-slate-400 font-normal">-</span>
+                          : <span className="text-slate-400 dark:text-slate-500 font-normal">-</span>
                         }
                       </td>
 
@@ -1457,39 +1457,39 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                         {brands.length > 0 ? (
                           <div className="flex flex-wrap items-center justify-center gap-1">
                             {brands.map(b => (
-                              <span key={b} className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
+                              <span key={b} className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
                                 {b}
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                             GE
                           </span>
                         )}
                       </td>
 
                       {/* 6. FECHA INICIO */}
-                      <td className="px-2 py-2.5 text-center font-mono text-xs font-semibold text-slate-700">
+                      <td className="px-2 py-2.5 text-center font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
                         {con.startDate || '-'}
                       </td>
 
                       {/* 7. FECHA VENCIMIENTO */}
-                      <td className="px-2 py-2.5 text-center font-mono text-xs font-bold text-slate-900">
+                      <td className="px-2 py-2.5 text-center font-mono text-xs font-bold text-slate-900 dark:text-slate-100">
                         <div className="flex flex-col items-center">
                           <span>{con.endDate || '-'}</span>
                           {expAlert?.level === 'warning_3m' && (
-                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-amber-900 bg-amber-100/90 border border-amber-300 px-1.5 py-0.5 rounded-md shadow-2xs mt-1">
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-amber-900 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/90 border border-amber-300 dark:border-amber-800 px-1.5 py-0.5 rounded-md shadow-2xs mt-1">
                               ⚠️ 3 MESES ({expAlert.days}d)
                             </span>
                           )}
                           {expAlert?.level === 'urgent_1m' && (
-                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-rose-900 bg-rose-100/90 border border-rose-300 px-1.5 py-0.5 rounded-md shadow-2xs mt-1">
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-rose-900 dark:text-rose-300 bg-rose-100/90 dark:bg-rose-950/90 border border-rose-300 dark:border-rose-800 px-1.5 py-0.5 rounded-md shadow-2xs mt-1">
                               ⚠️ 1 MES ({expAlert.days}d)
                             </span>
                           )}
                           {expAlert?.level === 'expired' && (
-                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-red-950 bg-red-100/90 border border-red-300 px-1.5 py-0.5 rounded-md shadow-2xs mt-1">
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-red-950 dark:text-red-300 bg-red-100/90 dark:bg-red-950/90 border border-red-300 dark:border-red-800 px-1.5 py-0.5 rounded-md shadow-2xs mt-1">
                               🚨 VENCIDO ({expAlert.days}d)
                             </span>
                           )}
@@ -1501,22 +1501,22 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                         <div className="flex flex-col items-center gap-1.5">
                           {/* Status pill */}
                           {expAlert?.level === 'warning_3m' ? (
-                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-950 border border-amber-300 w-full shadow-2xs">
+                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-950 text-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 w-full shadow-2xs">
                               ⚠️ 3 MESES (POR VENCER)
                             </span>
                           ) : expAlert?.level === 'urgent_1m' ? (
-                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-950 border border-rose-300 w-full shadow-2xs">
+                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-100 dark:bg-rose-950 text-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 w-full shadow-2xs">
                               ⚠️ 1 MES (POR VENCER)
                             </span>
                           ) : expAlert?.level === 'expired' ? (
-                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-950 border border-red-300 w-full shadow-2xs">
+                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-red-100 dark:bg-red-950 text-red-950 dark:text-red-300 border border-red-300 dark:border-red-800 w-full shadow-2xs">
                               🚨 VENCIDO
                             </span>
                           ) : (
                             <span className={`inline-flex items-center justify-center px-3 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
                               con.status === 'Activo'
-                                ? 'bg-emerald-100 text-emerald-950 border border-emerald-300'
-                                : 'bg-rose-100 text-rose-950 border border-rose-300'
+                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                                : 'bg-rose-100 dark:bg-rose-950 text-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
                             }`}>
                               {con.status || 'ACTIVO'}
                             </span>
@@ -1531,8 +1531,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
                               if (s.hasNoPending) {
                                 return (
-                                  <div className="bg-emerald-100 border border-emerald-300 text-emerald-900 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full">
-                                    <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <div className="bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                                     <span>✓ TODO REALIZADO ({s.done}/{s.total})</span>
                                   </div>
                                 );
@@ -1540,8 +1540,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
                               if (s.isAllScheduled) {
                                 return (
-                                  <div className="bg-sky-100 border border-sky-300 text-sky-900 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full" title="Todas las visitas se encuentran agendadas en el calendario">
-                                    <Calendar className="w-3 h-3 text-sky-600 shrink-0" />
+                                  <div className="bg-sky-100 dark:bg-sky-950 border border-sky-300 dark:border-sky-800 text-sky-900 dark:text-sky-300 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full" title="Todas las visitas se encuentran agendadas en el calendario">
+                                    <Calendar className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />
                                     <span>📅 {s.scheduled} AGENDADO{s.scheduled > 1 ? 'S' : ''} ({s.done}/{s.total})</span>
                                   </div>
                                 );
@@ -1549,12 +1549,12 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
                               const lastOne = s.unScheduled === 1;
                               const pillClass = lastOne
-                                ? 'bg-amber-100 border-amber-400 text-amber-900 animate-pulse'
-                                : 'bg-slate-100/90 border-slate-200 text-slate-700';
+                                ? 'bg-amber-100 dark:bg-amber-950 border-amber-400 dark:border-amber-700 text-amber-900 dark:text-amber-300 animate-pulse'
+                                : 'bg-slate-100/90 dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300';
 
                               return (
                                 <div className={`${pillClass} border font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full`}>
-                                  {lastOne ? <span className="text-amber-500 shrink-0 leading-none">⚠️</span> : <FileText className="w-3 h-3 text-slate-500 shrink-0" />}
+                                  {lastOne ? <span className="text-amber-500 dark:text-amber-500 shrink-0 leading-none">⚠️</span> : <FileText className="w-3 h-3 text-slate-500 dark:text-slate-500 shrink-0" />}
                                   <span>{s.unScheduled} {s.unScheduled === 1 ? 'POR AGENDAR' : 'POR AGENDAR'} ({s.done}/{s.total})</span>
                                 </div>
                               );
@@ -1569,8 +1569,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             ).length;
                             const pendingMtos = Math.max(0, totalMtos - completedMtos);
                             return (
-                              <div className="bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full">
-                                <FileText className="w-3 h-3 text-slate-500 shrink-0" />
+                              <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs w-full">
+                                <FileText className="w-3 h-3 text-slate-500 dark:text-slate-500 shrink-0" />
                                 <span>{pendingMtos} POR AGENDAR ({completedMtos}/{totalMtos})</span>
                               </div>
                             );
@@ -1587,7 +1587,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             if (!equipText) return null;
 
                             return (
-                              <div className="bg-indigo-50/80 border border-indigo-200/70 rounded-lg p-1.5 text-[9px] font-bold text-indigo-900 font-mono leading-tight w-full text-center max-w-[240px]">
+                              <div className="bg-indigo-50/80 dark:bg-indigo-950/80 border border-indigo-200/70 dark:border-indigo-800/70 rounded-lg p-1.5 text-[9px] font-bold text-indigo-900 dark:text-indigo-300 font-mono leading-tight w-full text-center max-w-[240px]">
                                 ({equipText})
                               </div>
                             );
@@ -1599,12 +1599,12 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                       <td className="px-2 py-2.5">
                         <div className="flex flex-col gap-1.5 text-3xs font-bold">
                           {con.coverage && (
-                            <span className="text-slate-600 font-semibold text-3xs line-clamp-1 block mb-0.5">{con.coverage}</span>
+                            <span className="text-slate-600 dark:text-slate-300 font-semibold text-3xs line-clamp-1 block mb-0.5">{con.coverage}</span>
                           )}
 
                           {/* ✨ Equipo Nuevo Badge */}
                           {con.isNewEquipment && (
-                            <span className="inline-flex items-center gap-1 text-amber-900 bg-amber-100/90 border border-amber-300 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold shadow-2xs w-max">
+                            <span className="inline-flex items-center gap-1 text-amber-900 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/90 border border-amber-300 dark:border-amber-800 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold shadow-2xs w-max">
                               ✨ Equipo Nuevo
                             </span>
                           )}
@@ -1617,10 +1617,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                               <button
                                 type="button"
                                 onClick={() => triggerDirectDownload(targetPdf, `Contrato_${con.id}.pdf`)}
-                                className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
+                                className="inline-flex items-center gap-1 text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-800 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
                                 title="Descargar Documento del Contrato PDF"
                               >
-                                📄 Contrato <ExternalLink className="w-2.5 h-2.5 text-emerald-600" />
+                                📄 Contrato <ExternalLink className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
                               </button>
                             );
                           })()}
@@ -1636,10 +1636,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                               <button
                                 type="button"
                                 onClick={() => triggerDirectDownload(srPdf, `SR_${con.id}.pdf`)}
-                                className="inline-flex items-center gap-1 text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all w-max shadow-2xs cursor-pointer"
+                                className="inline-flex items-center gap-1 text-amber-950 dark:text-amber-300 bg-amber-50 dark:bg-amber-950 hover:bg-amber-100 dark:hover:bg-amber-900 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all w-max shadow-2xs cursor-pointer"
                                 title="Descargar Service Record (SR) PDF"
                               >
-                                🛠 SR <ExternalLink className="w-2.5 h-2.5 text-amber-600" />
+                                🛠 SR <ExternalLink className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
                               </button>
                             );
                           })()}
@@ -1654,10 +1654,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                               <button
                                 type="button"
                                 onClick={() => triggerDirectDownload(caPdf, `CA_${con.id}.pdf`)}
-                                className="inline-flex items-center gap-1 text-orange-950 bg-orange-50 hover:bg-orange-100 border border-orange-300 px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all w-max shadow-2xs cursor-pointer"
+                                className="inline-flex items-center gap-1 text-orange-950 dark:text-orange-300 bg-orange-50 dark:bg-orange-950 hover:bg-orange-100 dark:hover:bg-orange-900 border border-orange-300 dark:border-orange-800 px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all w-max shadow-2xs cursor-pointer"
                                 title="Descargar Certificate of Acceptance (CA) PDF"
                               >
-                                📜 CA <ExternalLink className="w-2.5 h-2.5 text-orange-600" />
+                                📜 CA <ExternalLink className="w-2.5 h-2.5 text-orange-600 dark:text-orange-400" />
                               </button>
                             );
                           })()}
@@ -1672,10 +1672,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                               <button
                                 type="button"
                                 onClick={() => triggerDirectDownload(podPdf, `POD_${con.id}.pdf`)}
-                                className="inline-flex items-center gap-1 text-sky-950 bg-sky-50 hover:bg-sky-100 border border-sky-300 px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all w-max shadow-2xs cursor-pointer"
+                                className="inline-flex items-center gap-1 text-sky-950 dark:text-sky-300 bg-sky-50 dark:bg-sky-950 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-300 dark:border-sky-800 px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all w-max shadow-2xs cursor-pointer"
                                 title="Descargar Proof of Delivery (POD) PDF"
                               >
-                                📦 POD <ExternalLink className="w-2.5 h-2.5 text-sky-600" />
+                                📦 POD <ExternalLink className="w-2.5 h-2.5 text-sky-600 dark:text-sky-400" />
                               </button>
                             );
                           })()}
@@ -1685,16 +1685,16 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             <button
                               type="button"
                               onClick={() => triggerDirectDownload(con.schedulePdfUrl!, `Cronograma_${con.id}.pdf`)}
-                              className="inline-flex items-center gap-1 text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
+                              className="inline-flex items-center gap-1 text-purple-800 dark:text-purple-300 bg-purple-50 dark:bg-purple-950 hover:bg-purple-100 dark:hover:bg-purple-900 border border-purple-300 dark:border-purple-800 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all w-max shadow-2xs cursor-pointer"
                               title="Descargar Cronograma PDF"
                             >
-                              📅 Cronograma <ExternalLink className="w-2.5 h-2.5 text-purple-600" />
+                              📅 Cronograma <ExternalLink className="w-2.5 h-2.5 text-purple-600 dark:text-purple-400" />
                             </button>
                           )}
 
                           {/* Fallback if no coverage badges or PDFs exist */}
                           {!con.coverage && !con.isNewEquipment && !(con.contractPdfUrl || con.pdfUrl) && !con.schedulePdfUrl && !(con.serviceRecordPdfUrl || con.srPdfUrl || con.equipmentItems?.some(e => e.serviceRecordPdfUrl || e.srPdfUrl || e.caPdfUrl || e.podPdfUrl)) && (
-                            <span className="text-slate-400 font-normal text-center block">-</span>
+                            <span className="text-slate-400 dark:text-slate-500 font-normal text-center block">-</span>
                           )}
                         </div>
                       </td>
@@ -1709,10 +1709,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                                 setSelectedContractForDetails(con);
                                 setIsContractDetailsModalOpen(true);
                               }}
-                              className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs flex items-center gap-1 border border-indigo-100/80 shadow-2xs"
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs flex items-center gap-1 border border-indigo-100/80 dark:border-indigo-800/80 shadow-2xs"
                               title="Ver Detalle del Contrato"
                             >
-                              <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                              <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                               <span>Ver Detalle</span>
                             </button>
                           )}
@@ -1726,7 +1726,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                                 setIsContractModalOpen(true);
                               }
                             }}
-                            className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs"
+                            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs"
                           >
                             Editar
                           </button>
@@ -1734,7 +1734,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                             <button
                               type="button"
                               onClick={() => onRenewContract(con)}
-                              className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs border border-emerald-200/80 shadow-2xs"
+                              className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs border border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs"
                               title="Crear el contrato de renovación, copiando cliente y equipos"
                             >
                               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -1749,7 +1749,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
                                   onDeleteContract(con.id);
                                 }
                               }}
-                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                              className="p-1.5 text-rose-500 dark:text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900 rounded-md transition-colors cursor-pointer"
                               title="Eliminar Contrato"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1767,20 +1767,20 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
-          <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 flex items-center justify-between font-sans">
-            <span className="text-3xs text-slate-500 font-medium">Pág. {contractPage} de {totalPages}</span>
+          <div className="bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between font-sans">
+            <span className="text-3xs text-slate-500 dark:text-slate-500 font-medium">Pág. {contractPage} de {totalPages}</span>
             <div className="flex gap-1">
               <button
                 onClick={() => setContractPage(prev => Math.max(prev - 1, 1))}
                 disabled={contractPage === 1}
-                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setContractPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={contractPage === totalPages}
-                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 Siguiente
               </button>

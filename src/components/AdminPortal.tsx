@@ -625,7 +625,7 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
       days: 0,
       text: '🔄 Renovado (Sucesor Vinculado)',
       badgeText: 'RENOVADO',
-      colorClass: 'bg-blue-50 text-blue-800 border-blue-200 font-extrabold'
+      colorClass: 'bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-extrabold'
     };
   }
 
@@ -636,7 +636,7 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
       days: 0,
       text: '🔴 Vencido',
       badgeText: 'VENCIDO',
-      colorClass: 'bg-red-100 text-red-800 border-red-200 font-bold'
+      colorClass: 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800 font-bold'
     };
   }
 
@@ -657,7 +657,7 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
       days: Math.abs(diffDays),
       text: `🔴 Vencido hace ${Math.abs(diffDays)}d`,
       badgeText: `VENCIDO (${Math.abs(diffDays)}d)`,
-      colorClass: 'bg-red-100 text-red-800 border-red-300 font-extrabold'
+      colorClass: 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-300 dark:border-red-800 font-extrabold'
     };
   }
 
@@ -668,7 +668,7 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
       days: diffDays,
       text: `🚨 Vence en ${diffDays} días (1 mes)`,
       badgeText: `🚨 1 MES (${diffDays}d)`,
-      colorClass: 'bg-red-50 text-red-850 border-red-300 font-black animate-pulse'
+      colorClass: 'bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-300 dark:border-red-800 font-black animate-pulse'
     };
   }
 
@@ -679,7 +679,7 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
       days: diffDays,
       text: `⚠️ Vence en ${diffDays} días (3 meses)`,
       badgeText: `⚠️ 3 MESES (${diffDays}d)`,
-      colorClass: 'bg-amber-50 text-amber-900 border-amber-300 font-extrabold'
+      colorClass: 'bg-amber-50 dark:bg-amber-950 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800 font-extrabold'
     };
   }
 
@@ -688,7 +688,7 @@ const getContractExpirationAlert = (endDateStr: string, status?: string, linkedC
     days: diffDays,
     text: `Vigente (${diffDays}d restantes)`,
     badgeText: 'VIGENTE',
-    colorClass: 'bg-emerald-50 text-emerald-800 border-emerald-200 font-bold'
+    colorClass: 'bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-bold'
   };
 };
 
@@ -1170,20 +1170,24 @@ const getEngineerEmoji = (engineerId: string): string => {
 };
 
 const getEngineerColorClasses = (engineerId: string) => {
+  // Nota: los tonos "-950" no existen en la paleta de Tailwind (el máximo es 950), así que sin
+  // dark: el texto quedaba sin color explícito en modo oscuro y heredaba el blanco del contenedor
+  // padre, volviéndose ilegible sobre el fondo pastel claro (lightBg). Se corrige a -950 (válido)
+  // y se agrega la variante dark: a cada campo usado como color de texto/fondo.
   const colors: Record<string, { bg: string; text: string; border: string; borderL: string; ring: string; lightBg: string }> = {
-    'ENG-001': { bg: 'bg-rose-500', text: 'text-rose-955', border: 'border-rose-200', borderL: 'border-l-rose-500', ring: 'ring-rose-500', lightBg: 'bg-rose-50/95' },
-    'ENG-002': { bg: 'bg-teal-500', text: 'text-teal-955', border: 'border-teal-200', borderL: 'border-l-teal-600', ring: 'ring-teal-500', lightBg: 'bg-teal-50/95' },
-    'ENG-003': { bg: 'bg-indigo-500', text: 'text-indigo-955', border: 'border-indigo-200', borderL: 'border-l-indigo-600', ring: 'ring-indigo-500', lightBg: 'bg-indigo-50/95' },
-    'ENG-004': { bg: 'bg-amber-500', text: 'text-amber-955', border: 'border-amber-200', borderL: 'border-l-amber-500', ring: 'ring-amber-500', lightBg: 'bg-amber-50/95' },
-    'ENG-005': { bg: 'bg-purple-500', text: 'text-purple-955', border: 'border-purple-200', borderL: 'border-l-purple-500', ring: 'ring-purple-500', lightBg: 'bg-purple-50/95' },
-    'ENG-006': { bg: 'bg-emerald-500', text: 'text-emerald-955', border: 'border-emerald-200', borderL: 'border-l-emerald-600', ring: 'ring-emerald-500', lightBg: 'bg-emerald-50/95' },
-    'ENG-007': { bg: 'bg-sky-500', text: 'text-sky-955', border: 'border-sky-200', borderL: 'border-l-sky-500', ring: 'ring-sky-500', lightBg: 'bg-sky-50/95' },
-    'ENG-008': { bg: 'bg-orange-500', text: 'text-orange-955', border: 'border-orange-200', borderL: 'border-l-orange-500', ring: 'ring-orange-500', lightBg: 'bg-orange-50/95' },
-    'ENG-009': { bg: 'bg-pink-500', text: 'text-pink-955', border: 'border-pink-200', borderL: 'border-l-pink-500', ring: 'ring-pink-500', lightBg: 'bg-pink-50/95' },
-    'ENG-010': { bg: 'bg-lime-500', text: 'text-lime-955', border: 'border-lime-200', borderL: 'border-l-lime-600', ring: 'ring-lime-500', lightBg: 'bg-lime-50/95' },
-    'ENG-011': { bg: 'bg-cyan-500', text: 'text-cyan-955', border: 'border-cyan-200', borderL: 'border-l-cyan-500', ring: 'ring-cyan-500', lightBg: 'bg-cyan-50/95' },
+    'ENG-001': { bg: 'bg-rose-500', text: 'text-rose-950 dark:text-rose-300', border: 'border-rose-200 dark:border-rose-800', borderL: 'border-l-rose-500', ring: 'ring-rose-500', lightBg: 'bg-rose-50/95 dark:bg-rose-950/40' },
+    'ENG-002': { bg: 'bg-teal-500', text: 'text-teal-950 dark:text-teal-300', border: 'border-teal-200 dark:border-teal-800', borderL: 'border-l-teal-600', ring: 'ring-teal-500', lightBg: 'bg-teal-50/95 dark:bg-teal-950/40' },
+    'ENG-003': { bg: 'bg-indigo-500', text: 'text-indigo-950 dark:text-indigo-300', border: 'border-indigo-200 dark:border-indigo-800', borderL: 'border-l-indigo-600', ring: 'ring-indigo-500', lightBg: 'bg-indigo-50/95 dark:bg-indigo-950/40' },
+    'ENG-004': { bg: 'bg-amber-500', text: 'text-amber-950 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800', borderL: 'border-l-amber-500', ring: 'ring-amber-500', lightBg: 'bg-amber-50/95 dark:bg-amber-950/40' },
+    'ENG-005': { bg: 'bg-purple-500', text: 'text-purple-950 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800', borderL: 'border-l-purple-500', ring: 'ring-purple-500', lightBg: 'bg-purple-50/95 dark:bg-purple-950/40' },
+    'ENG-006': { bg: 'bg-emerald-500', text: 'text-emerald-950 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800', borderL: 'border-l-emerald-600', ring: 'ring-emerald-500', lightBg: 'bg-emerald-50/95 dark:bg-emerald-950/40' },
+    'ENG-007': { bg: 'bg-sky-500', text: 'text-sky-950 dark:text-sky-300', border: 'border-sky-200 dark:border-sky-800', borderL: 'border-l-sky-500', ring: 'ring-sky-500', lightBg: 'bg-sky-50/95 dark:bg-sky-950/40' },
+    'ENG-008': { bg: 'bg-orange-500', text: 'text-orange-950 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800', borderL: 'border-l-orange-500', ring: 'ring-orange-500', lightBg: 'bg-orange-50/95 dark:bg-orange-950/40' },
+    'ENG-009': { bg: 'bg-pink-500', text: 'text-pink-950 dark:text-pink-300', border: 'border-pink-200 dark:border-pink-800', borderL: 'border-l-pink-500', ring: 'ring-pink-500', lightBg: 'bg-pink-50/95 dark:bg-pink-950/40' },
+    'ENG-010': { bg: 'bg-lime-500', text: 'text-lime-950 dark:text-lime-300', border: 'border-lime-200 dark:border-lime-800', borderL: 'border-l-lime-600', ring: 'ring-lime-500', lightBg: 'bg-lime-50/95 dark:bg-lime-950/40' },
+    'ENG-011': { bg: 'bg-cyan-500', text: 'text-cyan-950 dark:text-cyan-300', border: 'border-cyan-200 dark:border-cyan-800', borderL: 'border-l-cyan-500', ring: 'ring-cyan-500', lightBg: 'bg-cyan-50/95 dark:bg-cyan-950/40' },
   };
-  return colors[engineerId] || { bg: 'bg-slate-500', text: 'text-slate-955', border: 'border-slate-200', borderL: 'border-l-slate-500', ring: 'ring-slate-500', lightBg: 'bg-slate-50/95' };
+  return colors[engineerId] || { bg: 'bg-slate-500', text: 'text-slate-950 dark:text-slate-300', border: 'border-slate-200 dark:border-slate-700', borderL: 'border-l-slate-500', ring: 'ring-slate-500', lightBg: 'bg-slate-50/95 dark:bg-slate-800/60' };
 };
 
 const getEngineerHexColor = (engineerId: string): string => {
@@ -3858,12 +3862,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 }
               }, 120);
             }}
-            className="cal-day-cell min-h-[115px] p-2 bg-slate-100/70 border border-dashed border-slate-200/80 flex flex-col justify-between cursor-pointer hover:bg-indigo-50/30 transition-colors opacity-75 hover:opacity-100"
+            className="cal-day-cell min-h-[115px] p-2 bg-slate-100/70 dark:bg-slate-800/40 border border-dashed border-slate-200/80 dark:border-slate-700/80 flex flex-col justify-between cursor-pointer hover:bg-indigo-50/30 dark:hover:bg-indigo-950/30 transition-colors opacity-75 hover:opacity-100"
           >
             <div className="flex justify-between items-center w-full">
-              <span className="font-mono text-xs font-black text-slate-400 opacity-60">{prevDay}</span>
+              <span className="font-mono text-xs font-black text-slate-400 dark:text-slate-500 opacity-60">{prevDay}</span>
               {prevDayOrders.length > 0 && (
-                <span className="bg-slate-200 text-slate-500 font-bold text-[8px] px-1 rounded-full opacity-60">
+                <span className="bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold text-[8px] px-1 rounded-full opacity-60">
                   {prevDayOrders.length}
                 </span>
               )}
@@ -3878,7 +3882,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     className={`text-[8.5px] leading-tight p-1 rounded font-bold truncate flex items-center gap-1 select-none opacity-50 hover:opacity-100 transition-opacity ${
                       isFeriado
                         ? 'bg-red-600 text-white border border-red-700 font-black'
-                        : 'bg-teal-50 border-teal-200 border-l-4 border-l-teal-500 text-teal-900'
+                        : 'bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800 border-l-4 border-l-teal-500 text-teal-900 dark:text-teal-300'
                     }`}
                     title={isFeriado ? `Feriado Ecuador: ${v.notes}` : `Vacaciones: ${eng?.name || 'Técnico'}`}
                   >
@@ -3894,7 +3898,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <div
                     key={`pv-st-${st.id}`}
                     onClick={(e) => { e.stopPropagation(); setInfoScheduledTraining(st); }}
-                    className="text-[8.5px] leading-tight p-1 rounded bg-purple-50 hover:bg-purple-100 border border-purple-200 border-l-4 border-l-purple-600 text-purple-950 font-bold truncate flex items-center gap-1 select-none cursor-pointer opacity-50 hover:opacity-100 transition-opacity"
+                    className="text-[8.5px] leading-tight p-1 rounded bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800 border-l-4 border-l-purple-600 text-purple-950 dark:text-purple-300 font-bold truncate flex items-center gap-1 select-none cursor-pointer opacity-50 hover:opacity-100 transition-opacity"
                     title={`Capacitación: ${st.title} (${st.location}) - ${eng?.name || 'Técnico'}`}
                   >
                     <span>🎓</span>
@@ -3905,11 +3909,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               {/* Contract commitments for prev overflow day */}
               {getContractCommitmentsForDate(prevDateStr).map((commitment, index) => {
-                const badgeBg = commitment.isDone 
-                  ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950 border-l-4 border-l-emerald-600'
+                const badgeBg = commitment.isDone
+                  ? 'bg-emerald-50/70 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-300 border-l-4 border-l-emerald-600'
                   : commitment.isQc
-                  ? 'bg-violet-50/70 border-violet-200 text-violet-955 border-l-4 border-l-violet-600'
-                  : 'bg-indigo-50/70 border-indigo-200 text-indigo-950 border-l-4 border-l-indigo-600';
+                  ? 'bg-violet-50/70 dark:bg-violet-950/50 border-violet-200 dark:border-violet-800 text-violet-950 dark:text-violet-300 border-l-4 border-l-violet-600'
+                  : 'bg-indigo-50/70 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800 text-indigo-950 dark:text-indigo-300 border-l-4 border-l-indigo-600';
                 return (
                   <div
                     key={`pv-con-maint-${commitment.contract.id}-${index}`}
@@ -3945,13 +3949,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   : isWoQc
                   ? 'border-l-4 border-l-purple-600'
                   : (engColor ? `border-l-4 ${engColor.borderL}` : '');
-                let badgeBg = isWoQc ? 'bg-purple-50 text-purple-955 border border-purple-200' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150');
-                if (wo.isEquipmentDown) badgeBg = 'bg-red-50 text-red-955 border border-red-150';
-                else if (wo.status === 'Conciliado') badgeBg = 'bg-emerald-50 text-emerald-955 border border-emerald-150';
-                else if (wo.status === 'Reportado') badgeBg = 'bg-indigo-50 text-indigo-955 border border-indigo-150';
-                else if (wo.status === 'Realizado') badgeBg = 'bg-blue-50 text-blue-955 border border-blue-150';
-                else if (wo.status === 'En Proceso') badgeBg = 'bg-sky-50 text-sky-955 border border-sky-150';
-                else if (wo.status === 'Pendiente') badgeBg = isWoQc ? 'bg-purple-50 text-purple-955 border border-purple-200' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150');
+                let badgeBg = isWoQc ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 dark:bg-orange-950/50 text-orange-950 dark:text-orange-300 border border-orange-200 dark:border-orange-800' : 'bg-yellow-50 dark:bg-yellow-950/50 text-yellow-950 dark:text-yellow-300 border border-yellow-150 dark:border-yellow-800');
+                if (wo.isEquipmentDown) badgeBg = 'bg-red-50 dark:bg-red-950/50 text-red-950 dark:text-red-300 border border-red-150 dark:border-red-800';
+                else if (wo.status === 'Conciliado') badgeBg = 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-300 border border-emerald-150 dark:border-emerald-800';
+                else if (wo.status === 'Reportado') badgeBg = 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-950 dark:text-indigo-300 border border-indigo-150 dark:border-indigo-800';
+                else if (wo.status === 'Realizado') badgeBg = 'bg-blue-50 dark:bg-blue-950/50 text-blue-950 dark:text-blue-300 border border-blue-150 dark:border-blue-800';
+                else if (wo.status === 'En Proceso') badgeBg = 'bg-sky-50 dark:bg-sky-950/50 text-sky-950 dark:text-sky-300 border border-sky-150 dark:border-sky-800';
+                else if (wo.status === 'Pendiente') badgeBg = isWoQc ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 dark:bg-orange-950/50 text-orange-950 dark:text-orange-300 border border-orange-200 dark:border-orange-800' : 'bg-yellow-50 dark:bg-yellow-950/50 text-yellow-950 dark:text-yellow-300 border border-yellow-150 dark:border-yellow-800');
                 return (
                   <div
                     key={`pv-wo-${wo.id}`}
@@ -3959,7 +3963,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     onClick={e => { e.stopPropagation(); setInfoWO(wo); }}
                     title={`${clientDisplayName} - ${wo.equipmentName}${isWoQc ? ' [Control de Calidad]' : ''}`}
                   >
-                    <div className="flex items-center justify-between font-black truncate text-slate-900 leading-none mb-0.5">
+                    <div className="flex items-center justify-between font-black truncate text-slate-900 dark:text-slate-100 leading-none mb-0.5">
                       <span className="truncate">{clientDisplayName}</span>
                       {isWoQc && (
                         <span className="bg-purple-700 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1 shadow-2xs border border-purple-800 flex items-center gap-0.5 animate-pulse" title="Visita de Control de Calidad">
@@ -3981,10 +3985,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
                     )}
                     {wo.plannedTime && (
-                      <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">⏰ {wo.plannedTime}</p>
+                      <p className="text-indigo-700 dark:text-indigo-400 text-[8px] font-bold mt-0.5 leading-none">⏰ {wo.plannedTime}</p>
                     )}
-                    <p className="truncate text-slate-700 text-[8.5px] font-normal mt-0.5">{wo.equipmentName}</p>
-                    <p className="truncate text-indigo-900 text-[7.5px] font-bold mt-0.5 flex items-center gap-0.5">
+                    <p className="truncate text-slate-700 dark:text-slate-300 text-[8.5px] font-normal mt-0.5">{wo.equipmentName}</p>
+                    <p className="truncate text-indigo-900 dark:text-indigo-300 text-[7.5px] font-bold mt-0.5 flex items-center gap-0.5">
                       <span className="mr-0.5">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
                       {eng?.name.replace('Ing. ', '').split(' ')[0]}
                       {supportIds.length > 0 && (
@@ -3997,8 +4001,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </span>
                       )}
                     </p>
-                    <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-200/40">
-                      <span className="text-[7.5px] text-slate-450 font-bold tracking-tight select-none no-print">Detalles / Editar</span>
+                    <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-200/40 dark:border-slate-600/40">
+                      <span className="text-[7.5px] text-slate-450 dark:text-slate-500 font-bold tracking-tight select-none no-print">Detalles / Editar</span>
                       {userRole === 'admin' && wo.status === 'Pendiente' && !wo.isEquipmentDown ? (
                         <button
                           type="button"
@@ -4010,21 +4014,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             wo.clientConfirmed
                               ? 'bg-emerald-500 border-emerald-600'
                               : wo.type === 'Preventivo'
-                              ? 'bg-white border-orange-300 hover:border-emerald-400'
-                              : 'bg-white border-amber-300 hover:border-emerald-400'
+                              ? 'bg-white dark:bg-slate-800 border-orange-300 dark:border-orange-700 hover:border-emerald-400'
+                              : 'bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-700 hover:border-emerald-400'
                           }`}>
                             {wo.clientConfirmed && <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />}
                           </span>
                         </button>
                       ) : (
                         <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto ${
-                          wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200'
-                          : wo.status === 'Conciliado' ? 'bg-emerald-100/50 text-emerald-805 border-emerald-200'
-                          : wo.status === 'Reportado' ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
-                          : wo.status === 'Realizado' ? 'bg-blue-100/50 text-blue-805 border-blue-200'
-                          : wo.status === 'En Proceso' ? 'bg-sky-100/50 text-sky-850 border-sky-200'
-                          : wo.type === 'Preventivo' ? 'bg-orange-200/70 text-orange-900 border-orange-300'
-                          : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
+                          wo.isEquipmentDown ? 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800'
+                          : wo.status === 'Conciliado' ? 'bg-emerald-100/50 dark:bg-emerald-950 text-emerald-805 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                          : wo.status === 'Reportado' ? 'bg-indigo-100/50 dark:bg-indigo-950 text-indigo-805 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+                          : wo.status === 'Realizado' ? 'bg-blue-100/50 dark:bg-blue-950 text-blue-805 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                          : wo.status === 'En Proceso' ? 'bg-sky-100/50 dark:bg-sky-950 text-sky-850 dark:text-sky-300 border-sky-200 dark:border-sky-800'
+                          : wo.type === 'Preventivo' ? 'bg-orange-200/70 dark:bg-orange-950 text-orange-900 dark:text-orange-300 border-orange-300 dark:border-orange-800'
+                          : 'bg-yellow-100/50 dark:bg-yellow-950 text-yellow-850 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
                         }`}>{wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}</span>
                       )}
                     </div>
@@ -4093,12 +4097,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           }}
           className={`cal-day-cell min-h-[115px] p-2 text-left transition-all flex flex-col justify-between cursor-pointer focus:outline-none ${
             isSelected
-              ? 'bg-indigo-50/70 text-slate-900 ring-2 ring-indigo-500'
+              ? 'bg-indigo-50/70 dark:bg-indigo-950/40 text-slate-900 dark:text-slate-100 ring-2 ring-indigo-500'
               : hasFeriado
-              ? 'bg-red-50/60 hover:bg-red-50/90 text-slate-900 border-red-200/80'
+              ? 'bg-red-50/60 dark:bg-red-950/30 hover:bg-red-50/90 dark:hover:bg-red-950/50 text-slate-900 dark:text-slate-100 border-red-200/80 dark:border-red-800/80'
               : hasEngineerVacation
-              ? 'bg-teal-50/40 hover:bg-teal-50/70 text-slate-900 border-teal-200/60'
-              : 'bg-white hover:bg-slate-50/60 text-slate-800'
+              ? 'bg-teal-50/40 dark:bg-teal-950/30 hover:bg-teal-50/70 dark:hover:bg-teal-950/50 text-slate-900 dark:text-slate-100 border-teal-200/60 dark:border-teal-800/60'
+              : 'bg-white dark:bg-slate-900 hover:bg-slate-50/60 dark:hover:bg-slate-800/60 text-slate-800 dark:text-slate-200'
           }`}
         >
           <div className="flex justify-between items-center w-full">
@@ -4107,10 +4111,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 ? 'bg-red-600 text-white font-mono font-black px-1.5 py-0.5 rounded-md text-[11px] shadow-2xs'
                 : hasEngineerVacation
                 ? 'bg-teal-600 text-white font-mono font-black px-1.5 py-0.5 rounded-md text-[11px] shadow-2xs'
-                : 'text-slate-800'
+                : 'text-slate-800 dark:text-slate-200'
             }`}>{day}</span>
             {dayOrders.length > 0 && (
-              <span className="bg-indigo-100 text-indigo-805 font-bold text-[8px] px-1 rounded-full">
+              <span className="bg-indigo-100 dark:bg-indigo-950 text-indigo-805 dark:text-indigo-300 font-bold text-[8px] px-1 rounded-full">
                 {dayOrders.length}
               </span>
             )}
@@ -4125,7 +4129,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   className={`text-[9px] leading-tight p-1.5 rounded-md border font-bold truncate flex items-center gap-1.5 select-none transition-transform hover:scale-[1.01] ${
                     isFeriado
                       ? 'bg-red-600 text-white border-red-700 font-black tracking-tight shadow-2xs'
-                      : 'bg-teal-50 border-teal-200 border-l-4 border-l-teal-500 text-teal-900 font-bold'
+                      : 'bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800 border-l-4 border-l-teal-500 text-teal-900 dark:text-teal-300 font-bold'
                   }`}
                   title={isFeriado ? `Feriado Ecuador: ${v.notes}` : `Vacaciones: ${eng?.name || 'Técnico'}`}
                   onClick={(e) => {
@@ -4143,7 +4147,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               return (
                 <div
                   key={`st-${st.id}`}
-                  className="text-[8.5px] leading-tight p-1 rounded bg-purple-50 hover:bg-purple-100 border border-purple-200 border-l-4 border-l-purple-600 text-purple-950 font-bold truncate flex items-center gap-1 select-none cursor-pointer transition-colors"
+                  className="text-[8.5px] leading-tight p-1 rounded bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800 border-l-4 border-l-purple-600 text-purple-950 dark:text-purple-300 font-bold truncate flex items-center gap-1 select-none cursor-pointer transition-colors"
                   title={`Capacitación: ${st.title} (${st.location}) - ${eng?.name || 'Técnico'}`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -4158,11 +4162,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
             {/* Contract commitments for current day */}
             {getContractCommitmentsForDate(dateStr).map((commitment, index) => {
-              const badgeBg = commitment.isDone 
-                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-955 border-l-4 border-l-emerald-600'
+              const badgeBg = commitment.isDone
+                ? 'bg-emerald-50/70 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-300 border-l-4 border-l-emerald-600'
                 : commitment.isQc
-                ? 'bg-violet-50/70 border-violet-200 text-violet-955 border-l-4 border-l-violet-600'
-                : 'bg-indigo-50/70 border-indigo-200 text-indigo-950 border-l-4 border-l-indigo-600';
+                ? 'bg-violet-50/70 dark:bg-violet-950/50 border-violet-200 dark:border-violet-800 text-violet-950 dark:text-violet-300 border-l-4 border-l-violet-600'
+                : 'bg-indigo-50/70 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800 text-indigo-950 dark:text-indigo-300 border-l-4 border-l-indigo-600';
               return (
                 <div
                   key={`con-maint-${commitment.contract.id}-${index}`}
@@ -4191,26 +4195,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               const matchedContract = findContractForWorkOrder(wo, contracts, clients);
               const isWoQc = isWorkOrderQc(wo, contracts);
               let badgeBg = isWoQc
-                ? 'bg-purple-50/90 hover:bg-purple-100 text-purple-955 border border-purple-200'
+                ? 'bg-purple-50/90 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
                 : (wo.type === 'Preventivo'
-                ? 'bg-orange-100/80 hover:bg-orange-100 text-orange-955 border border-orange-200'
-                : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150');
+                ? 'bg-orange-100/80 dark:bg-orange-950/50 hover:bg-orange-100 dark:hover:bg-orange-900/50 text-orange-950 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
+                : 'bg-yellow-50 dark:bg-yellow-950/50 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 text-yellow-950 dark:text-yellow-300 border border-yellow-150 dark:border-yellow-800');
               if (wo.isEquipmentDown) {
-                badgeBg = 'bg-red-50 hover:bg-red-100 text-red-955 border border-red-150';
+                badgeBg = 'bg-red-50 dark:bg-red-950/50 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-950 dark:text-red-300 border border-red-150 dark:border-red-800';
               } else if (wo.status === 'Conciliado') {
-                badgeBg = 'bg-emerald-50 hover:bg-emerald-100 text-emerald-955 border border-emerald-150';
+                badgeBg = 'bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-950 dark:text-emerald-300 border border-emerald-150 dark:border-emerald-800';
               } else if (wo.status === 'Reportado') {
-                badgeBg = 'bg-indigo-50 hover:bg-indigo-100 text-indigo-955 border border-indigo-150';
+                badgeBg = 'bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-950 dark:text-indigo-300 border border-indigo-150 dark:border-indigo-800';
               } else if (wo.status === 'Realizado') {
-                badgeBg = 'bg-blue-50 hover:bg-blue-100 text-blue-955 border border-blue-150';
+                badgeBg = 'bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-950 dark:text-blue-300 border border-blue-150 dark:border-blue-800';
               } else if (wo.status === 'En Proceso') {
-                badgeBg = 'bg-sky-50 hover:bg-sky-100 text-sky-955 border border-sky-150';
+                badgeBg = 'bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/50 text-sky-950 dark:text-sky-300 border border-sky-150 dark:border-sky-800';
               } else if (wo.status === 'Pendiente') {
                 badgeBg = isWoQc
-                  ? 'bg-purple-50/90 hover:bg-purple-100 text-purple-955 border border-purple-200'
+                  ? 'bg-purple-50/90 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
                   : (wo.type === 'Preventivo'
-                  ? 'bg-orange-100/80 hover:bg-orange-100 text-orange-955 border border-orange-200'
-                  : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-955 border border-yellow-150');
+                  ? 'bg-orange-100/80 dark:bg-orange-950/50 hover:bg-orange-100 dark:hover:bg-orange-900/50 text-orange-950 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
+                  : 'bg-yellow-50 dark:bg-yellow-950/50 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 text-yellow-950 dark:text-yellow-300 border border-yellow-150 dark:border-yellow-800');
               }
 
               const matchesQuery = deferredSearchQuery ? matchesSearch(wo) : true;
@@ -4237,10 +4241,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               if (isConflicting) {
                 if (conflictDetail?.type === 'vacation' || conflictDetail?.type === 'feriado') {
-                  cardStyle += ' border-2 border-red-600 bg-red-50/95';
+                  cardStyle += ' border-2 border-red-600 bg-red-50/95 dark:bg-red-950/60';
                   ringStyle += ' ring-2 ring-red-500 shadow-md animate-pulse z-10';
                 } else {
-                  cardStyle += ' border-2 border-amber-500 bg-amber-50/95';
+                  cardStyle += ' border-2 border-amber-500 bg-amber-50/95 dark:bg-amber-950/60';
                   ringStyle += ' ring-2 ring-amber-500 shadow-md animate-pulse z-10';
                 }
               }
@@ -4281,7 +4285,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     setInfoWO(wo);
                   }}
                 >
-                  <div className="flex items-center justify-between font-black truncate text-slate-900 leading-none mb-0.5">
+                  <div className="flex items-center justify-between font-black truncate text-slate-900 dark:text-slate-100 leading-none mb-0.5">
                     <span className="truncate">{clientDisplayName}</span>
                     {isWoQc && (
                       <span className="bg-purple-700 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1 shadow-2xs border border-purple-800 flex items-center gap-0.5 animate-pulse" title="Visita de Control de Calidad">
@@ -4317,12 +4321,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
                   )}
                   {wo.plannedTime && (
-                    <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">
+                    <p className="text-indigo-700 dark:text-indigo-400 text-[8px] font-bold mt-0.5 leading-none">
                       ⏰ {wo.plannedTime}
                     </p>
                   )}
-                  <p className="truncate text-slate-700 text-[8.5px] font-normal mt-0.5">{wo.equipmentName}</p>
-                  <p className="truncate text-indigo-900 text-[7.5px] font-bold mt-0.5 flex items-center gap-0.5">
+                  <p className="truncate text-slate-700 dark:text-slate-300 text-[8.5px] font-normal mt-0.5">{wo.equipmentName}</p>
+                  <p className="truncate text-indigo-900 dark:text-indigo-300 text-[7.5px] font-bold mt-0.5 flex items-center gap-0.5">
                     <span className="mr-0.5">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
                     <span>{getEngineerFullNameNoTitle(eng?.name) || 'Sin Asignar'}</span>
                     {supportIds.length > 0 && (
@@ -4342,8 +4346,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   </p>
 
                   {/* Status Indicator */}
-                  <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-200/40">
-                    <span className="text-[7.5px] text-slate-450 font-bold tracking-tight select-none no-print">Detalles / Editar</span>
+                  <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-200/40 dark:border-slate-600/40">
+                    <span className="text-[7.5px] text-slate-450 dark:text-slate-500 font-bold tracking-tight select-none no-print">Detalles / Editar</span>
                     {userRole === 'admin' && wo.status === 'Pendiente' && !wo.isEquipmentDown ? (
                       <button
                         type="button"
@@ -4355,8 +4359,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           wo.clientConfirmed
                             ? 'bg-emerald-500 border-emerald-600'
                             : wo.type === 'Preventivo'
-                            ? 'bg-white border-orange-300 hover:border-emerald-400'
-                            : 'bg-white border-amber-300 hover:border-emerald-400'
+                            ? 'bg-white dark:bg-slate-800 border-orange-300 dark:border-orange-700 hover:border-emerald-400'
+                            : 'bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-700 hover:border-emerald-400'
                         }`}>
                           {wo.clientConfirmed && <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />}
                         </span>
@@ -4364,18 +4368,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     ) : (
                       <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto print:ml-auto ${
                         wo.isEquipmentDown
-                          ? 'bg-red-100 text-red-800 border-red-200'
+                          ? 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800'
                           : wo.status === 'Conciliado'
-                          ? 'bg-emerald-100/50 text-emerald-805 border-emerald-200'
+                          ? 'bg-emerald-100/50 dark:bg-emerald-950 text-emerald-805 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                           : wo.status === 'Reportado'
-                          ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
+                          ? 'bg-indigo-100/50 dark:bg-indigo-950 text-indigo-805 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
                           : wo.status === 'Realizado'
-                          ? 'bg-blue-100/50 text-blue-805 border-blue-200'
+                          ? 'bg-blue-100/50 dark:bg-blue-950 text-blue-805 dark:text-blue-300 border-blue-200 dark:border-blue-800'
                           : wo.status === 'En Proceso'
-                          ? 'bg-sky-100/50 text-sky-850 border-sky-200'
+                          ? 'bg-sky-100/50 dark:bg-sky-950 text-sky-850 dark:text-sky-300 border-sky-200 dark:border-sky-800'
                           : wo.type === 'Preventivo'
-                          ? 'bg-orange-200/70 text-orange-900 border-orange-300'
-                          : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
+                          ? 'bg-orange-200/70 dark:bg-orange-950 text-orange-900 dark:text-orange-300 border-orange-300 dark:border-orange-800'
+                          : 'bg-yellow-100/50 dark:bg-yellow-950 text-yellow-850 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
                       }`}>
                         {wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}
                       </span>
@@ -4425,12 +4429,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 }
               }, 200);
             }}
-            className="cal-day-cell min-h-[115px] p-2 bg-slate-100/70 border border-dashed border-slate-200/80 flex flex-col justify-between cursor-pointer hover:bg-indigo-50/30 transition-colors opacity-75 hover:opacity-100"
+            className="cal-day-cell min-h-[115px] p-2 bg-slate-100/70 dark:bg-slate-800/40 border border-dashed border-slate-200/80 dark:border-slate-700/80 flex flex-col justify-between cursor-pointer hover:bg-indigo-50/30 dark:hover:bg-indigo-950/30 transition-colors opacity-75 hover:opacity-100"
           >
             <div className="flex justify-between items-center w-full">
-              <span className="font-mono text-xs font-black text-slate-400 opacity-60">{n}</span>
+              <span className="font-mono text-xs font-black text-slate-400 dark:text-slate-500 opacity-60">{n}</span>
               {nextDayOrders.length > 0 && (
-                <span className="bg-slate-200 text-slate-500 font-bold text-[8px] px-1 rounded-full opacity-60">
+                <span className="bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold text-[8px] px-1 rounded-full opacity-60">
                   {nextDayOrders.length}
                 </span>
               )}
@@ -4445,7 +4449,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     className={`text-[8.5px] leading-tight p-1 rounded font-bold truncate flex items-center gap-1 select-none opacity-50 hover:opacity-100 transition-opacity ${
                       isFeriado
                         ? 'bg-red-600 text-white border border-red-700 font-black'
-                        : 'bg-teal-50 border-teal-200 border-l-4 border-l-teal-500 text-teal-900'
+                        : 'bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800 border-l-4 border-l-teal-500 text-teal-900 dark:text-teal-300'
                     }`}
                     title={isFeriado ? `Feriado Ecuador: ${v.notes}` : `Vacaciones: ${eng?.name || 'Técnico'}`}
                   >
@@ -4457,11 +4461,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               {/* Contract commitments for next overflow day */}
               {getContractCommitmentsForDate(nextDateStr).map((commitment, index) => {
-                const badgeBg = commitment.isDone 
-                  ? 'bg-emerald-50/70 border-emerald-200 text-emerald-955 border-l-4 border-l-emerald-600'
+                const badgeBg = commitment.isDone
+                  ? 'bg-emerald-50/70 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-300 border-l-4 border-l-emerald-600'
                   : commitment.isQc
-                  ? 'bg-violet-50/70 border-violet-200 text-violet-955 border-l-4 border-l-violet-600'
-                  : 'bg-indigo-50/70 border-indigo-200 text-indigo-950 border-l-4 border-l-indigo-600';
+                  ? 'bg-violet-50/70 dark:bg-violet-950/50 border-violet-200 dark:border-violet-800 text-violet-950 dark:text-violet-300 border-l-4 border-l-violet-600'
+                  : 'bg-indigo-50/70 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800 text-indigo-950 dark:text-indigo-300 border-l-4 border-l-indigo-600';
                 return (
                   <div
                     key={`nv-con-maint-${commitment.contract.id}-${index}`}
@@ -4497,13 +4501,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   : isWoQc
                   ? 'border-l-4 border-l-purple-600'
                   : (engColor ? `border-l-4 ${engColor.borderL}` : '');
-                let badgeBg = isWoQc ? 'bg-purple-50 text-purple-955 border border-purple-200' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150');
-                if (wo.isEquipmentDown) badgeBg = 'bg-red-50 text-red-955 border border-red-150';
-                else if (wo.status === 'Conciliado') badgeBg = 'bg-emerald-50 text-emerald-955 border border-emerald-150';
-                else if (wo.status === 'Reportado') badgeBg = 'bg-indigo-50 text-indigo-955 border border-indigo-150';
-                else if (wo.status === 'Realizado') badgeBg = 'bg-blue-50 text-blue-955 border border-blue-150';
-                else if (wo.status === 'En Proceso') badgeBg = 'bg-sky-50 text-sky-955 border border-sky-150';
-                else if (wo.status === 'Pendiente') badgeBg = isWoQc ? 'bg-purple-50 text-purple-955 border border-purple-200' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 text-orange-955 border border-orange-200' : 'bg-yellow-50 text-yellow-955 border border-yellow-150');
+                let badgeBg = isWoQc ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 dark:bg-orange-950/50 text-orange-950 dark:text-orange-300 border border-orange-200 dark:border-orange-800' : 'bg-yellow-50 dark:bg-yellow-950/50 text-yellow-950 dark:text-yellow-300 border border-yellow-150 dark:border-yellow-800');
+                if (wo.isEquipmentDown) badgeBg = 'bg-red-50 dark:bg-red-950/50 text-red-950 dark:text-red-300 border border-red-150 dark:border-red-800';
+                else if (wo.status === 'Conciliado') badgeBg = 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-300 border border-emerald-150 dark:border-emerald-800';
+                else if (wo.status === 'Reportado') badgeBg = 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-950 dark:text-indigo-300 border border-indigo-150 dark:border-indigo-800';
+                else if (wo.status === 'Realizado') badgeBg = 'bg-blue-50 dark:bg-blue-950/50 text-blue-950 dark:text-blue-300 border border-blue-150 dark:border-blue-800';
+                else if (wo.status === 'En Proceso') badgeBg = 'bg-sky-50 dark:bg-sky-950/50 text-sky-950 dark:text-sky-300 border border-sky-150 dark:border-sky-800';
+                else if (wo.status === 'Pendiente') badgeBg = isWoQc ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800' : (wo.type === 'Preventivo' ? 'bg-orange-100/80 dark:bg-orange-950/50 text-orange-950 dark:text-orange-300 border border-orange-200 dark:border-orange-800' : 'bg-yellow-50 dark:bg-yellow-950/50 text-yellow-950 dark:text-yellow-300 border border-yellow-150 dark:border-yellow-800');
                 return (
                   <div
                     key={`nv-wo-${wo.id}`}
@@ -4511,7 +4515,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     onClick={e => { e.stopPropagation(); setInfoWO(wo); }}
                     title={`${clientDisplayName} - ${wo.equipmentName}${isWoQc ? ' [Control de Calidad]' : ''}`}
                   >
-                    <div className="flex items-center justify-between font-black truncate text-slate-900 leading-none mb-0.5">
+                    <div className="flex items-center justify-between font-black truncate text-slate-900 dark:text-slate-100 leading-none mb-0.5">
                       <span className="truncate">{clientDisplayName}</span>
                       {isWoQc && (
                         <span className="bg-purple-700 text-white font-extrabold text-[7.5px] px-1 py-0.5 rounded shrink-0 ml-1 shadow-2xs border border-purple-800 flex items-center gap-0.5 animate-pulse" title="Visita de Control de Calidad">
@@ -4533,10 +4537,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
                     )}
                     {wo.plannedTime && (
-                      <p className="text-indigo-700 text-[8px] font-bold mt-0.5 leading-none">⏰ {wo.plannedTime}</p>
+                      <p className="text-indigo-700 dark:text-indigo-400 text-[8px] font-bold mt-0.5 leading-none">⏰ {wo.plannedTime}</p>
                     )}
-                    <p className="truncate text-slate-700 text-[8.5px] font-normal mt-0.5">{wo.equipmentName}</p>
-                    <p className="truncate text-indigo-900 text-[7.5px] font-bold mt-0.5 flex items-center gap-0.5">
+                    <p className="truncate text-slate-700 dark:text-slate-300 text-[8.5px] font-normal mt-0.5">{wo.equipmentName}</p>
+                    <p className="truncate text-indigo-900 dark:text-indigo-300 text-[7.5px] font-bold mt-0.5 flex items-center gap-0.5">
                       <span className="mr-0.5">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
                       {eng?.name.replace('Ing. ', '').split(' ')[0]}
                       {supportIds.length > 0 && (
@@ -4549,8 +4553,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </span>
                       )}
                     </p>
-                    <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-200/40">
-                      <span className="text-[7.5px] text-slate-450 font-bold tracking-tight select-none no-print">Detalles / Editar</span>
+                    <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-200/40 dark:border-slate-600/40">
+                      <span className="text-[7.5px] text-slate-450 dark:text-slate-500 font-bold tracking-tight select-none no-print">Detalles / Editar</span>
                       {userRole === 'admin' && wo.status === 'Pendiente' && !wo.isEquipmentDown ? (
                         <button
                           type="button"
@@ -4562,21 +4566,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             wo.clientConfirmed
                               ? 'bg-emerald-500 border-emerald-600'
                               : wo.type === 'Preventivo'
-                              ? 'bg-white border-orange-300 hover:border-emerald-400'
-                              : 'bg-white border-amber-300 hover:border-emerald-400'
+                              ? 'bg-white dark:bg-slate-800 border-orange-300 dark:border-orange-700 hover:border-emerald-400'
+                              : 'bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-700 hover:border-emerald-400'
                           }`}>
                             {wo.clientConfirmed && <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />}
                           </span>
                         </button>
                       ) : (
                         <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border ml-auto ${
-                          wo.isEquipmentDown ? 'bg-red-100 text-red-800 border-red-200'
-                          : wo.status === 'Conciliado' ? 'bg-emerald-100/50 text-emerald-805 border-emerald-200'
-                          : wo.status === 'Reportado' ? 'bg-indigo-100/50 text-indigo-805 border-indigo-200'
-                          : wo.status === 'Realizado' ? 'bg-blue-100/50 text-blue-805 border-blue-200'
-                          : wo.status === 'En Proceso' ? 'bg-sky-100/50 text-sky-850 border-sky-200'
-                          : wo.type === 'Preventivo' ? 'bg-orange-200/70 text-orange-900 border-orange-300'
-                          : 'bg-yellow-100/50 text-yellow-850 border-yellow-200'
+                          wo.isEquipmentDown ? 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800'
+                          : wo.status === 'Conciliado' ? 'bg-emerald-100/50 dark:bg-emerald-950 text-emerald-805 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                          : wo.status === 'Reportado' ? 'bg-indigo-100/50 dark:bg-indigo-950 text-indigo-805 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+                          : wo.status === 'Realizado' ? 'bg-blue-100/50 dark:bg-blue-950 text-blue-805 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                          : wo.status === 'En Proceso' ? 'bg-sky-100/50 dark:bg-sky-950 text-sky-850 dark:text-sky-300 border-sky-200 dark:border-sky-800'
+                          : wo.type === 'Preventivo' ? 'bg-orange-200/70 dark:bg-orange-950 text-orange-900 dark:text-orange-300 border-orange-300 dark:border-orange-800'
+                          : 'bg-yellow-100/50 dark:bg-yellow-950 text-yellow-850 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
                         }`}>{wo.isEquipmentDown ? 'Parado ⚠️' : wo.status}</span>
                       )}
                     </div>
@@ -7654,18 +7658,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-full max-w-md bg-white h-full z-50 shadow-2xl p-6 flex flex-col justify-between overflow-y-auto"
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 h-full z-50 shadow-2xl p-6 flex flex-col justify-between overflow-y-auto"
             >
               <div>
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-4 mb-6">
                   <div>
-                    <h3 className="font-bold text-md text-slate-900">Programar Agenda</h3>
-                    <p className="text-3xs text-slate-500 mt-0.5">Crear una agenda relacional para Ingenieros y Clientes.</p>
+                    <h3 className="font-bold text-md text-slate-900 dark:text-slate-100">Programar Agenda</h3>
+                    <p className="text-3xs text-slate-500 dark:text-slate-500 mt-0.5">Crear una agenda relacional para Ingenieros y Clientes.</p>
                   </div>
                   <button
                     id="btn-close-wo-slide"
                     onClick={() => setIsCreatingWO(false)}
-                    className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                    className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -7674,7 +7678,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <form onSubmit={handleCreateWO} className="space-y-4 text-xs">
                   {/* Client Select */}
                   <div className="space-y-1.5">
-                    <label className="block text-2xs font-bold text-slate-500 uppercase">1. Ubicación / Sede de Cliente</label>
+                    <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">1. Ubicación / Sede de Cliente</label>
                     <input
                       type="text"
                       id="wo-client-input"
@@ -7694,7 +7698,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         const autoCity = getCityForClientOrWO(val, clients, contracts);
                         setNewWOCity(autoCity);
                       }}
-                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                       placeholder="Escribe el nombre del cliente o selecciónalo..."
                       required
                     />
@@ -7706,16 +7710,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                     {/* 1.1 Ciudad / Sede de Atención */}
                     <div className="mt-2 space-y-1">
-                      <label className="block text-2xs font-bold text-slate-500 uppercase flex items-center justify-between">
+                      <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase flex items-center justify-between">
                         <span>1.1 Ciudad / Sede de Atención (Sector)</span>
-                        <span className="text-[10px] text-indigo-600 font-semibold lowercase">
+                        <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold lowercase">
                           (Se usa para reagendamiento inteligente)
                         </span>
                       </label>
                       <select
                         value={newWOCity}
                         onChange={e => setNewWOCity(e.target.value)}
-                        className="w-full p-2.5 rounded-lg border border-indigo-200 bg-indigo-50/40 font-extrabold text-xs text-indigo-950 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
+                        className="w-full p-2.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/40 dark:bg-indigo-950/40 font-extrabold text-xs text-indigo-950 dark:text-indigo-300 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
                       >
                         <option value="Quito">📍 Quito (Sierra / Alrededores)</option>
                         <option value="Guayaquil">📍 Guayaquil (Costa / Alrededores)</option>
@@ -7730,16 +7734,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       const inactiveContract = matchedClient ? contracts.find(con => con.clientId === matchedClient.id && con.status === 'Inactivo') : null;
                       if (!inactiveContract) return null;
                       return (
-                        <div className="bg-rose-50 border-2 border-rose-300 rounded-xl p-3 flex items-start gap-2.5 shadow-2xs animate-in fade-in zoom-in-95 duration-150 my-2">
-                          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                        <div className="bg-rose-50 dark:bg-rose-950 border-2 border-rose-300 dark:border-rose-800 rounded-xl p-3 flex items-start gap-2.5 shadow-2xs animate-in fade-in zoom-in-95 duration-150 my-2">
+                          <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                           <div className="space-y-0.5">
-                            <span className="font-black text-xs text-rose-950 block uppercase tracking-wide">
+                            <span className="font-black text-xs text-rose-950 dark:text-rose-300 block uppercase tracking-wide">
                               🚨 AVISO: CONTRATO INACTIVO (NO RENOVADO)
                             </span>
-                            <p className="text-[11px] text-rose-900 font-bold leading-snug">
+                            <p className="text-[11px] text-rose-900 dark:text-rose-300 font-bold leading-snug">
                               El cliente <u>{matchedClient?.name}</u> tiene su contrato registrado como <strong>INACTIVO (No Renovado)</strong>.
                             </p>
-                            <p className="text-[10px] text-rose-700 font-medium">
+                            <p className="text-[10px] text-rose-700 dark:text-rose-400 font-medium">
                               ⚠️ Este trabajo o visita no cuenta con soporte ni garantía bajo contrato vigente.
                             </p>
                           </div>
@@ -7750,27 +7754,27 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                   {/* Engineer Select — Professional searchable dropdown */}
                   <div className="space-y-1.5">
-                    <label className="block text-2xs font-bold text-slate-500 uppercase">2. Ingeniero Especialista Asignado</label>
+                    <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">2. Ingeniero Especialista Asignado</label>
 
                     <div className="relative">
                       {/* Trigger button */}
                       <button
                         type="button"
                         onClick={() => setWoEngDropdownOpen(!woEngDropdownOpen)}
-                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold flex items-center justify-between text-slate-800 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left h-[42px] transition-all hover:border-indigo-300"
+                        className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold flex items-center justify-between text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left h-[42px] transition-all hover:border-indigo-300 dark:hover:border-indigo-600"
                       >
                         {newWOEngineer ? (() => {
                           const eng = engineers.find(e => e.id === newWOEngineer);
                           return (
                             <span className="flex items-center gap-2.5">
                               <span className="text-lg leading-none">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
-                              <span className="truncate font-bold text-slate-800">{eng?.name || 'Seleccionar Ingeniero'}</span>
+                              <span className="truncate font-bold text-slate-800 dark:text-slate-200">{eng?.name || 'Seleccionar Ingeniero'}</span>
                             </span>
                           );
                         })() : (
-                          <span className="text-slate-400 font-normal">— Seleccionar Ingeniero —</span>
+                          <span className="text-slate-400 dark:text-slate-500 font-normal">— Seleccionar Ingeniero —</span>
                         )}
-                        <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${woEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        <svg className={`w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 transition-transform ${woEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                       </button>
 
                       {/* Dropdown panel */}
@@ -7782,29 +7786,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             onClick={() => { setWoEngDropdownOpen(false); setWoEngSearchQuery(''); }}
                           />
 
-                          <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150">
+                          <div className="absolute top-full left-0 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150">
                             {/* Search input */}
-                            <div className="p-2.5 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
-                              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <div className="p-2.5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 flex items-center gap-2">
+                              <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                               <input
                                 type="text"
                                 placeholder="Buscar ingeniero..."
                                 value={woEngSearchQuery}
                                 onChange={e => setWoEngSearchQuery(e.target.value)}
-                                className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 font-semibold"
+                                className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 dark:text-slate-200 font-semibold"
                                 autoFocus
                               />
                             </div>
 
                             {/* Options list */}
-                            <div className="overflow-y-auto divide-y divide-slate-50">
+                            <div className="overflow-y-auto divide-y divide-slate-50 dark:divide-slate-700">
                               {(() => {
                                 const filtered = engineers.filter(e =>
                                   e.name.toLowerCase().includes(woEngSearchQuery.toLowerCase())
                                 );
                                 if (filtered.length === 0) {
                                   return (
-                                    <div className="p-4 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                    <div className="p-4 text-center text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
                                       No se encontraron ingenieros
                                     </div>
                                   );
@@ -7820,15 +7824,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         setWoEngDropdownOpen(false);
                                         setWoEngSearchQuery('');
                                       }}
-                                      className={`w-full p-3 text-left text-xs font-semibold hover:bg-indigo-50/60 transition-colors flex items-center justify-between cursor-pointer ${
-                                        isSelected ? 'bg-indigo-50 text-indigo-750 font-black' : 'text-slate-800'
+                                      className={`w-full p-3 text-left text-xs font-semibold hover:bg-indigo-50/60 dark:hover:bg-indigo-950/40 transition-colors flex items-center justify-between cursor-pointer ${
+                                        isSelected ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-750 dark:text-indigo-300 font-black' : 'text-slate-800 dark:text-slate-200'
                                       }`}
                                     >
                                       <span className="flex items-center gap-3">
                                         <span className="text-lg leading-none w-7 text-center">{getEngineerEmoji(e.id)}</span>
                                         <span className="font-bold">{e.name}</span>
                                       </span>
-                                      {isSelected && <Check className="w-4 h-4 text-indigo-600 shrink-0" />}
+                                      {isSelected && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />}
                                     </button>
                                   );
                                 });
@@ -7842,18 +7846,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                   {/* Support Engineer Select — Professional searchable multi-select dropdown */}
                   <div className="space-y-1.5">
-                    <label className="block text-2xs font-bold text-slate-500 uppercase">2.1. Técnico(s) de Apoyo (Opcional)</label>
+                    <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">2.1. Técnico(s) de Apoyo (Opcional)</label>
 
                     <div className="relative">
                       {/* Trigger button */}
                       <button
                         type="button"
                         onClick={() => setWoSupportEngDropdownOpen(!woSupportEngDropdownOpen)}
-                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold flex items-center justify-between text-slate-800 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left min-h-[42px] transition-all hover:border-indigo-300"
+                        className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold flex items-center justify-between text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left min-h-[42px] transition-all hover:border-indigo-300 dark:hover:border-indigo-600"
                       >
                         {newWOSupportEngineers.length === 0 ? (
-                          <span className="text-slate-400 font-normal flex items-center gap-1.5">
-                            <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span className="text-slate-400 dark:text-slate-500 font-normal flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                             <span>— Seleccionar Técnico(s) de Apoyo —</span>
                           </span>
                         ) : (
@@ -7864,7 +7868,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               return (
                                 <span
                                   key={id}
-                                  className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-3xs px-2 py-0.5 rounded-md transition-colors"
+                                  className="inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold text-3xs px-2 py-0.5 rounded-md transition-colors"
                                 >
                                   <span>{getEngineerEmoji(eng.id)}</span>
                                   <span>{eng.name.replace('Ing. ', '')}</span>
@@ -7873,7 +7877,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       e.stopPropagation();
                                       setNewWOSupportEngineers(newWOSupportEngineers.filter(x => x !== id));
                                     }}
-                                    className="ml-0.5 text-indigo-400 hover:text-indigo-700 font-black cursor-pointer"
+                                    className="ml-0.5 text-indigo-400 dark:text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 font-black cursor-pointer"
                                     title="Quitar"
                                   >
                                     ×
@@ -7889,7 +7893,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               {newWOSupportEngineers.length}
                             </span>
                           )}
-                          <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${woSupportEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                          <svg className={`w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 transition-transform ${woSupportEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                         </div>
                       </button>
 
@@ -7901,23 +7905,23 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             onClick={() => { setWoSupportEngDropdownOpen(false); setWoSupportEngSearchQuery(''); }}
                           />
 
-                          <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150">
+                          <div className="absolute top-full left-0 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150">
                             {/* Search input */}
-                            <div className="p-2.5 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
-                              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <div className="p-2.5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 flex items-center gap-2">
+                              <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                               <input
                                 type="text"
                                 placeholder="Buscar técnico por nombre o especialidad..."
                                 value={woSupportEngSearchQuery}
                                 onChange={e => setWoSupportEngSearchQuery(e.target.value)}
-                                className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 font-semibold"
+                                className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 dark:text-slate-200 font-semibold"
                                 autoFocus
                               />
                               {woSupportEngSearchQuery && (
                                 <button
                                   type="button"
                                   onClick={() => setWoSupportEngSearchQuery('')}
-                                  className="text-slate-400 hover:text-slate-600 p-0.5"
+                                  className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-0.5"
                                 >
                                   <X className="w-3.5 h-3.5" />
                                 </button>
@@ -7925,7 +7929,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             </div>
 
                             {/* Options list */}
-                            <div className="overflow-y-auto divide-y divide-slate-50 p-1">
+                            <div className="overflow-y-auto divide-y divide-slate-50 dark:divide-slate-700 p-1">
                               {(() => {
                                 const filtered = engineers.filter(e =>
                                   e.id !== newWOEngineer &&
@@ -7934,7 +7938,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 );
                                 if (filtered.length === 0) {
                                   return (
-                                    <div className="p-4 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                    <div className="p-4 text-center text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
                                       No se encontraron ingenieros
                                     </div>
                                   );
@@ -7953,18 +7957,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         }
                                       }}
                                       className={`w-full p-2.5 rounded-lg text-left text-xs font-semibold transition-colors flex items-center justify-between cursor-pointer ${
-                                        isChecked ? 'bg-indigo-50/80 text-indigo-900 font-bold' : 'hover:bg-slate-50 text-slate-800'
+                                        isChecked ? 'bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-300 font-bold' : 'hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'
                                       }`}
                                     >
                                       <span className="flex items-center gap-2.5 min-w-0">
                                         <span className="text-base leading-none shrink-0">{getEngineerEmoji(e.id)}</span>
                                         <span className="truncate">
-                                          <span className="font-bold text-slate-900 block truncate">{e.name}</span>
-                                          <span className="text-[9px] text-slate-400 font-medium block leading-tight">{e.specialty} {e.sede ? `• 📍 ${e.sede}` : ''}</span>
+                                          <span className="font-bold text-slate-900 dark:text-slate-100 block truncate">{e.name}</span>
+                                          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium block leading-tight">{e.specialty} {e.sede ? `• 📍 ${e.sede}` : ''}</span>
                                         </span>
                                       </span>
                                       <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
-                                        isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'
+                                        isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
                                       }`}>
                                         {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                                       </div>
@@ -7975,14 +7979,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             </div>
 
                             {/* Footer */}
-                            <div className="p-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-3xs font-semibold text-slate-500">
+                            <div className="p-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-3xs font-semibold text-slate-500 dark:text-slate-500">
                               <span>{newWOSupportEngineers.length} seleccionado(s)</span>
                               <div className="flex items-center gap-2">
                                 {newWOSupportEngineers.length > 0 && (
                                   <button
                                     type="button"
                                     onClick={() => setNewWOSupportEngineers([])}
-                                    className="text-indigo-600 hover:underline font-bold"
+                                    className="text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
                                   >
                                     Limpiar
                                   </button>
@@ -8004,7 +8008,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                   {/* Date Input */}
                   <div className="space-y-1.5">
-                    <label className="block text-2xs font-bold text-slate-500 uppercase">3. Fecha Planificada ({calendarMonthName} {calendarYear})</label>
+                    <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">3. Fecha Planificada ({calendarMonthName} {calendarYear})</label>
                     <input
                       id="wo-date-input"
                       type="date"
@@ -8012,13 +8016,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       max={`${calendarYear}-${calendarMonth.toString().padStart(2, '0')}-${new Date(calendarYear, calendarMonth, 0).getDate().toString().padStart(2, '0')}`}
                       value={newWODate}
                       onChange={e => setNewWODate(e.target.value)}
-                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                     />
                   </div>
 
                   {/* End Date Input (Fecha Hasta) */}
                   <div className="space-y-1.5">
-                    <label className="block text-2xs font-bold text-slate-500 uppercase">3.1. Fecha Hasta</label>
+                    <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">3.1. Fecha Hasta</label>
                     <input
                       id="wo-end-date-input"
                       type="date"
@@ -8030,32 +8034,32 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         }
                       }}
                       min={newWODate}
-                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500 font-mono text-xs"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-1 focus:ring-indigo-500 font-mono text-xs"
                     />
                   </div>
 
                   {/* Time Input */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="block text-2xs font-bold text-slate-500 uppercase">3.2. Hora Desde</label>
+                      <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">3.2. Hora Desde</label>
                       <input
                         id="wo-time-start-input"
                         type="time"
                         required
                         value={newWOTimeStart}
                         onChange={e => setNewWOTimeStart(e.target.value)}
-                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500 font-mono text-xs"
+                        className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-1 focus:ring-indigo-500 font-mono text-xs"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="block text-2xs font-bold text-slate-500 uppercase">3.3. Hora Hasta</label>
+                      <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">3.3. Hora Hasta</label>
                       <input
                         id="wo-time-end-input"
                         type="time"
                         required
                         value={newWOTimeEnd}
                         onChange={e => setNewWOTimeEnd(e.target.value)}
-                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500 font-mono text-xs"
+                        className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-1 focus:ring-indigo-500 font-mono text-xs"
                       />
                     </div>
                   </div>
@@ -8064,9 +8068,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     const conflicts = getCreationFormConflicts();
                     if (conflicts.length === 0) return null;
                     return (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-800 space-y-2 mt-2">
+                      <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-800 dark:text-red-300 space-y-2 mt-2">
                         <div className="flex items-center gap-2">
-                          <AlertCircle className="w-5 h-5 text-red-650 shrink-0 animate-bounce" />
+                          <AlertCircle className="w-5 h-5 text-red-650 dark:text-red-400 shrink-0 animate-bounce" />
                           <h4 className="font-extrabold text-xs">⚠️ Conflicto: Técnico(s) en Vacaciones</h4>
                         </div>
                         <div className="text-3xs space-y-1 font-semibold leading-normal">
@@ -8082,7 +8086,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                   {/* Maintenance Type */}
                   <div className="space-y-1.5">
-                    <label className="block text-2xs font-bold text-slate-500 uppercase">4. Tipo de Servicio</label>
+                    <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">4. Tipo de Servicio</label>
                     <div className="grid grid-cols-4 gap-2">
                       {(['Preventivo', 'Correctivo', 'Instalación', 'Calibración', 'Soporte', 'FMI', 'Capacitación', 'Inspección'] as MaintenanceType[]).map(t => (
                         <button
@@ -8092,8 +8096,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           onClick={() => setNewWOType(t)}
                           className={`py-1.5 rounded font-bold text-3xs border text-center transition-all ${
                             newWOType === t 
-                              ? 'bg-slate-900 text-white border-slate-900' 
-                              : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
+                              ? 'bg-slate-900 text-white border-slate-900'
+                              : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                           }`}
                         >
                           {t}
@@ -8104,7 +8108,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                   {/* Equipment Name */}
                   <div className="space-y-1.5">
-                    <label className="block text-2xs font-bold text-slate-500 uppercase">5. Equipo, Activo o Descripción del Trabajo</label>
+                    <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">5. Equipo, Activo o Descripción del Trabajo</label>
                     <div className="flex gap-2">
                       <input
                         id="wo-equipment-input"
@@ -8117,7 +8121,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         }}
                         onFocus={() => setShowEquipSuggestions(true)}
                         placeholder="Ej: Buscar o escribir equipo a añadir..."
-                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500 text-xs"
+                        className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-1 focus:ring-indigo-500 text-xs"
                         autoComplete="off"
                       />
                       <button
@@ -8141,12 +8145,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     {selectedWOTags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
                         {selectedWOTags.map((tag, idx) => (
-                          <span key={idx} className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5">
+                          <span key={idx} className="bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5">
                             {tag}
                             <button
                               type="button"
                               onClick={() => setSelectedWOTags(prev => prev.filter((_, i) => i !== idx))}
-                              className="text-indigo-400 hover:text-indigo-600 font-bold focus:outline-none cursor-pointer text-xs"
+                              className="text-indigo-400 dark:text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-300 font-bold focus:outline-none cursor-pointer text-xs"
                             >
                               &times;
                             </button>
@@ -8200,8 +8204,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 className="fixed inset-0 z-40 cursor-default" 
                                 onClick={() => setShowEquipSuggestions(false)}
                               />
-                              <div className="absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-250 rounded-lg shadow-lg py-1 divide-y divide-slate-100 text-left">
-                                <div className="px-3 py-1.5 text-[9px] font-bold text-slate-400 uppercase bg-slate-50/50">
+                              <div className="absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white dark:bg-slate-800 border border-slate-250 dark:border-slate-700 rounded-lg shadow-lg py-1 divide-y divide-slate-100 dark:divide-slate-700 text-left">
+                                <div className="px-3 py-1.5 text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase bg-slate-50/50 dark:bg-slate-800/50">
                                   Equipos sugeridos para este cliente ({filteredEquips.length})
                                 </div>
                                 {filteredEquips.map(eq => {
@@ -8222,18 +8226,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         setNewWOEquipment('');
                                         setShowEquipSuggestions(false);
                                       }}
-                                      className="w-full text-left px-3 py-2.5 hover:bg-indigo-50/70 flex justify-between items-center gap-3 transition-colors cursor-pointer text-xs"
+                                      className="w-full text-left px-3 py-2.5 hover:bg-indigo-50/70 dark:hover:bg-indigo-950/40 flex justify-between items-center gap-3 transition-colors cursor-pointer text-xs"
                                     >
                                       <div className="space-y-0.5">
-                                        <div className="font-bold text-slate-800 text-xs">
+                                        <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">
                                           {brandClean} {modelClean}
                                         </div>
-                                        <div className="text-[10px] text-slate-500 font-medium">
+                                        <div className="text-[10px] text-slate-500 dark:text-slate-500 font-medium">
                                           {nameClean}
                                         </div>
                                       </div>
                                       {eq.serialNumber && (
-                                        <span className="font-mono text-[9.5px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200/60 shrink-0">
+                                        <span className="font-mono text-[9.5px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/60 shrink-0">
                                           S/N: {eq.serialNumber}
                                         </span>
                                       )}
@@ -8250,7 +8254,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                   {/* Duration Days */}
                   <div className="space-y-1.5">
-                    <label className="block text-2xs font-bold text-slate-500 uppercase">6. Duración (Días)</label>
+                    <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">6. Duración (Días)</label>
                     <input
                       type="number"
                       min={1}
@@ -8258,29 +8262,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       required
                       value={newWODurationDays}
                       onChange={e => setNewWODurationDays(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500 font-mono text-xs"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-1 focus:ring-indigo-500 font-mono text-xs"
                     />
                   </div>
 
                   {/* Notes / Action instructions */}
                   <div className="space-y-1.5">
-                    <label className="block text-2xs font-bold text-slate-500 uppercase">7. Instrucciones o Notas técnicas</label>
+                    <label className="block text-2xs font-bold text-slate-500 dark:text-slate-500 uppercase">7. Instrucciones o Notas técnicas</label>
                     <textarea
                       id="wo-notes-input"
                       rows={3}
                       value={newWONotes}
                       onChange={e => setNewWONotes(e.target.value)}
                       placeholder="Instrucciones específicas de seguridad, herramientas a llevar..."
-                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white focus:ring-1 focus:ring-indigo-500"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
 
-                  <div className="pt-4 border-t border-slate-100 flex gap-3">
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex gap-3">
                     <button
                       type="button"
                       id="btn-new-wo-cancel"
                       onClick={() => setIsCreatingWO(false)}
-                      className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-lg transition-colors"
+                      className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold py-2.5 rounded-lg transition-colors"
                     >
                       Cancelar
                     </button>
@@ -8317,26 +8321,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[90vh] z-50 border border-slate-150 font-sans"
+                className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[90vh] z-50 border border-slate-150 dark:border-slate-700 font-sans"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-4 mb-4">
                   <div>
-                    <span className="text-4xs font-bold font-mono text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100 uppercase tracking-widest">
+                    <span className="text-4xs font-bold font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-full border border-indigo-100 dark:border-indigo-800 uppercase tracking-widest">
                       {isEditingWOState ? 'Editar Datos de la Orden' : 'Detalle de la Orden'}
                     </span>
-                    <h3 className="font-extrabold text-sm text-slate-900 mt-1 flex items-center gap-1.5">
+                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 mt-1 flex items-center gap-1.5">
                       <span>{infoWO.id}</span>
                       <span className={`text-[9.5px] px-2 py-0.5 rounded-full uppercase font-black border ${
                         infoWO.status === 'Conciliado'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                          ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-150 dark:border-emerald-800'
                           : infoWO.status === 'Reportado'
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-150 animate-pulse'
+                          ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-150 dark:border-indigo-800 animate-pulse'
                           : infoWO.status === 'Realizado'
-                          ? 'bg-blue-50 text-blue-700 border-blue-150'
+                          ? 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-150 dark:border-blue-800'
                           : infoWO.status === 'En Proceso'
-                          ? 'bg-sky-50 text-sky-700 border-sky-150 animate-pulse'
-                          : 'bg-yellow-50 text-yellow-700 border-yellow-150'
+                          ? 'bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border-sky-150 dark:border-sky-800 animate-pulse'
+                          : 'bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 border-yellow-150 dark:border-yellow-800'
                       }`}>
                         {infoWO.status}
                       </span>
@@ -8344,7 +8348,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   </div>
                   <button
                     onClick={handleCloseInfoModal}
-                    className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-650 cursor-pointer transition-colors"
+                    className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 cursor-pointer transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -8355,13 +8359,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   const clientContract = client ? contracts.find(con => con.clientId === client.id) : null;
                   if (clientContract?.status !== 'Inactivo') return null;
                   return (
-                    <div className="bg-rose-50 border-2 border-rose-300 rounded-xl p-3 mb-4 flex items-start gap-2.5 shadow-2xs animate-in fade-in duration-150">
-                      <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                    <div className="bg-rose-50 dark:bg-rose-950 border-2 border-rose-300 dark:border-rose-800 rounded-xl p-3 mb-4 flex items-start gap-2.5 shadow-2xs animate-in fade-in duration-150">
+                      <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-black text-xs text-rose-950 block uppercase tracking-wide">
+                        <span className="font-black text-xs text-rose-950 dark:text-rose-300 block uppercase tracking-wide">
                           🚨 AVISO: CLIENTE CON CONTRATO INACTIVO (NO RENOVADO)
                         </span>
-                        <p className="text-[11px] text-rose-900 font-bold leading-snug mt-0.5">
+                        <p className="text-[11px] text-rose-900 dark:text-rose-300 font-bold leading-snug mt-0.5">
                           El contrato de <u>{clientDisplayName}</u> está marcado como <strong>INACTIVO (No renovado)</strong>. Los trabajos agendados no cuentan con amparo ni cobertura de garantía.
                         </p>
                       </div>
@@ -8379,7 +8383,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         const displayClientName = matchedClient ? matchedClient.name : (editedWO?.clientId || '');
                         return (
                           <div className="space-y-1 col-span-1">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase">1. Cliente / Sede</label>
+                            <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">1. Cliente / Sede</label>
                             <input
                               type="text"
                               list="edit-wo-clients-datalist"
@@ -8390,7 +8394,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 const nextClientId = found ? found.id : val;
                                 setEditedWO(prev => prev ? { ...prev, clientId: nextClientId } : null);
                               }}
-                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-800 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                              className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                               placeholder="Escriba el nombre del cliente o selecciónalo..."
                             />
                             <datalist id="edit-wo-clients-datalist">
@@ -8404,11 +8408,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Servicio Type */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">2. Tipo de Servicio</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">2. Tipo de Servicio</label>
                         <select
                           value={editedWO?.type || 'Preventivo'}
                           onChange={e => setEditedWO(prev => prev ? { ...prev, type: e.target.value as any } : null)}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs"
+                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs dark:text-slate-200"
                         >
                           {(['Preventivo', 'Correctivo', 'Instalación', 'Calibración', 'Soporte', 'FMI', 'Capacitación', 'Inspección']).map(t => (
                             <option key={t} value={t}>{t}</option>
@@ -8418,29 +8422,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Equipo input */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">3. Equipo / Activo</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">3. Equipo / Activo</label>
                         <input
                           type="text"
                           value={editedWO?.equipmentName || ''}
                           onChange={e => setEditedWO(prev => prev ? { ...prev, equipmentName: e.target.value } : null)}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs"
+                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs dark:text-slate-200"
                         />
                       </div>
 
                       {/* Fecha input */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">4. Fecha Planificada</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">4. Fecha Planificada</label>
                         <input
                           type="date"
                           value={editedWO?.plannedDate || ''}
                           onChange={e => setEditedWO(prev => prev ? { ...prev, plannedDate: e.target.value } : null)}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs"
+                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-xs dark:text-slate-200"
                         />
                       </div>
 
                       {/* Hora Desde */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">5. Hora Desde</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">5. Hora Desde</label>
                         <input
                           type="time"
                           value={parseTimeRange(editedWO?.plannedTime || '').start}
@@ -8449,13 +8453,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             const newTime = `${formatTime12h(e.target.value)} - ${formatTime12h(range.end)}`;
                             setEditedWO(prev => prev ? { ...prev, plannedTime: newTime } : null);
                           }}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs"
+                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-xs dark:text-slate-200"
                         />
                       </div>
 
                       {/* Hora Hasta */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">5.1. Hora Hasta</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">5.1. Hora Hasta</label>
                         <input
                           type="time"
                           value={parseTimeRange(editedWO?.plannedTime || '').end}
@@ -8464,13 +8468,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             const newTime = `${formatTime12h(range.start)} - ${formatTime12h(e.target.value)}`;
                             setEditedWO(prev => prev ? { ...prev, plannedTime: newTime } : null);
                           }}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs"
+                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-xs dark:text-slate-200"
                         />
                       </div>
 
                       {/* Fecha Hasta */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">4.1. Fecha Hasta</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">4.1. Fecha Hasta</label>
                         <input
                           type="date"
                           value={getEndDateStr(editedWO?.plannedDate || '', editedWO?.durationDays || 1)}
@@ -8481,13 +8485,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             }
                           }}
                           min={editedWO?.plannedDate || ''}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs"
+                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-xs dark:text-slate-200"
                         />
                       </div>
 
                       {/* Ingeniero Apoyo — Professional searchable multi-select dropdown */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">7. Técnico(s) de Apoyo (Opcional)</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">7. Técnico(s) de Apoyo (Opcional)</label>
 
                         {(() => {
                           const selectedSupport = editedWO?.supportEngineerIds || (editedWO?.supportEngineerId ? [editedWO.supportEngineerId] : []);
@@ -8496,11 +8500,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               <button
                                 type="button"
                                 onClick={() => setEditWoSupportEngDropdownOpen(!editWoSupportEngDropdownOpen)}
-                                className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold flex items-center justify-between text-slate-800 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left min-h-[42px] transition-all hover:border-indigo-300"
+                                className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold flex items-center justify-between text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left min-h-[42px] transition-all hover:border-indigo-300 dark:hover:border-indigo-600"
                               >
                                 {selectedSupport.length === 0 ? (
-                                  <span className="text-slate-400 font-normal flex items-center gap-1.5">
-                                    <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <span className="text-slate-400 dark:text-slate-500 font-normal flex items-center gap-1.5">
+                                    <Users className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                                     <span>— Sin técnicos de apoyo —</span>
                                   </span>
                                 ) : (
@@ -8511,7 +8515,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       return (
                                         <span
                                           key={id}
-                                          className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-3xs px-2 py-0.5 rounded-md transition-colors"
+                                          className="inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold text-3xs px-2 py-0.5 rounded-md transition-colors"
                                         >
                                           <span>{getEngineerEmoji(eng.id)}</span>
                                           <span>{eng.name.replace('Ing. ', '')}</span>
@@ -8527,7 +8531,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                                 });
                                               }
                                             }}
-                                            className="ml-0.5 text-indigo-400 hover:text-indigo-700 font-black cursor-pointer"
+                                            className="ml-0.5 text-indigo-400 dark:text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 font-black cursor-pointer"
                                             title="Quitar"
                                           >
                                             ×
@@ -8543,7 +8547,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       {selectedSupport.length}
                                     </span>
                                   )}
-                                  <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${editWoSupportEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                  <svg className={`w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 transition-transform ${editWoSupportEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                 </div>
                               </button>
 
@@ -8554,29 +8558,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     onClick={() => { setEditWoSupportEngDropdownOpen(false); setEditWoSupportEngSearchQuery(''); }}
                                   />
 
-                                  <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150 font-sans">
-                                    <div className="p-2.5 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
-                                      <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <div className="absolute top-full left-0 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150 font-sans">
+                                    <div className="p-2.5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 flex items-center gap-2">
+                                      <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                                       <input
                                         type="text"
                                         placeholder="Buscar técnico por nombre o especialidad..."
                                         value={editWoSupportEngSearchQuery}
                                         onChange={e => setEditWoSupportEngSearchQuery(e.target.value)}
-                                        className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 font-semibold"
+                                        className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 dark:text-slate-200 font-semibold"
                                         autoFocus
                                       />
                                       {editWoSupportEngSearchQuery && (
                                         <button
                                           type="button"
                                           onClick={() => setEditWoSupportEngSearchQuery('')}
-                                          className="text-slate-400 hover:text-slate-600 p-0.5"
+                                          className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-0.5"
                                         >
                                           <X className="w-3.5 h-3.5" />
                                         </button>
                                       )}
                                     </div>
 
-                                    <div className="overflow-y-auto divide-y divide-slate-50 p-1">
+                                    <div className="overflow-y-auto divide-y divide-slate-50 dark:divide-slate-700 p-1">
                                       {(() => {
                                         const filtered = engineers.filter(e =>
                                           e.id !== editedWO?.engineerId &&
@@ -8585,7 +8589,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         );
                                         if (filtered.length === 0) {
                                           return (
-                                            <div className="p-4 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                            <div className="p-4 text-center text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
                                               No se encontraron ingenieros
                                             </div>
                                           );
@@ -8609,18 +8613,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                                 }
                                               }}
                                               className={`w-full p-2.5 rounded-lg text-left text-xs font-semibold transition-colors flex items-center justify-between cursor-pointer ${
-                                                isChecked ? 'bg-indigo-50/80 text-indigo-900 font-bold' : 'hover:bg-slate-50 text-slate-800'
+                                                isChecked ? 'bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-300 font-bold' : 'hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'
                                               }`}
                                             >
                                               <span className="flex items-center gap-2.5 min-w-0">
                                                 <span className="text-base leading-none shrink-0">{getEngineerEmoji(e.id)}</span>
                                                 <span className="truncate">
-                                                  <span className="font-bold text-slate-900 block truncate">{e.name}</span>
-                                                  <span className="text-[9px] text-slate-400 font-medium block leading-tight">{e.specialty} {e.sede ? `• 📍 ${e.sede}` : ''}</span>
+                                                  <span className="font-bold text-slate-900 dark:text-slate-100 block truncate">{e.name}</span>
+                                                  <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium block leading-tight">{e.specialty} {e.sede ? `• 📍 ${e.sede}` : ''}</span>
                                                 </span>
                                               </span>
                                               <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
-                                                isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'
+                                                isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
                                               }`}>
                                                 {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                                               </div>
@@ -8630,7 +8634,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       })()}
                                     </div>
 
-                                    <div className="p-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-3xs font-semibold text-slate-500">
+                                    <div className="p-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-3xs font-semibold text-slate-500 dark:text-slate-500">
                                       <span>{selectedSupport.length} seleccionado(s)</span>
                                       <div className="flex items-center gap-2">
                                         {selectedSupport.length > 0 && (
@@ -8645,7 +8649,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                                 });
                                               }
                                             }}
-                                            className="text-indigo-600 hover:underline font-bold"
+                                            className="text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
                                           >
                                             Limpiar
                                           </button>
@@ -8669,25 +8673,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Ingeniero Principal — Professional searchable dropdown */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">6. Técnico Principal</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">6. Técnico Principal</label>
                         <div className="relative">
                           <button
                             type="button"
                             onClick={() => setEditWoEngDropdownOpen(!editWoEngDropdownOpen)}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold flex items-center justify-between text-slate-800 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left h-[42px] transition-all hover:border-indigo-300"
+                            className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold flex items-center justify-between text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-indigo-500 cursor-pointer text-left h-[42px] transition-all hover:border-indigo-300 dark:hover:border-indigo-600"
                           >
                             {editedWO?.engineerId ? (() => {
                               const eng = engineers.find(e => e.id === editedWO.engineerId);
                               return (
                                 <span className="flex items-center gap-2.5">
                                   <span className="text-lg leading-none">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
-                                  <span className="truncate font-bold text-slate-800">{eng?.name || 'Seleccionar Técnico'}</span>
+                                  <span className="truncate font-bold text-slate-800 dark:text-slate-200">{eng?.name || 'Seleccionar Técnico'}</span>
                                 </span>
                               );
                             })() : (
-                              <span className="text-slate-400 font-normal">— Seleccionar Técnico —</span>
+                              <span className="text-slate-400 dark:text-slate-500 font-normal">— Seleccionar Técnico —</span>
                             )}
-                            <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${editWoEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                            <svg className={`w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 transition-transform ${editWoEngDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                           </button>
 
                           {editWoEngDropdownOpen && (
@@ -8697,27 +8701,27 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 onClick={() => { setEditWoEngDropdownOpen(false); setEditWoEngSearchQuery(''); }}
                               />
 
-                              <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150">
-                                <div className="p-2.5 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
-                                  <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <div className="absolute top-full left-0 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 animate-in fade-in slide-in-from-top-1 duration-150">
+                                <div className="p-2.5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 flex items-center gap-2">
+                                  <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                                   <input
                                     type="text"
                                     placeholder="Buscar ingeniero..."
                                     value={editWoEngSearchQuery}
                                     onChange={e => setEditWoEngSearchQuery(e.target.value)}
-                                    className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 font-semibold"
+                                    className="w-full bg-transparent text-xs p-1 focus:outline-hidden text-slate-800 dark:text-slate-200 font-semibold"
                                     autoFocus
                                   />
                                 </div>
 
-                                <div className="overflow-y-auto divide-y divide-slate-50">
+                                <div className="overflow-y-auto divide-y divide-slate-50 dark:divide-slate-700">
                                   {(() => {
                                     const filtered = engineers.filter(e =>
                                       e.name.toLowerCase().includes(editWoEngSearchQuery.toLowerCase())
                                     );
                                     if (filtered.length === 0) {
                                       return (
-                                        <div className="p-4 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                        <div className="p-4 text-center text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
                                           No se encontraron ingenieros
                                         </div>
                                       );
@@ -8735,15 +8739,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                             setEditWoEngDropdownOpen(false);
                                             setEditWoEngSearchQuery('');
                                           }}
-                                          className={`w-full p-3 text-left text-xs font-semibold hover:bg-indigo-50/60 transition-colors flex items-center justify-between cursor-pointer ${
-                                            isSelected ? 'bg-indigo-50 text-indigo-750 font-black' : 'text-slate-800'
+                                          className={`w-full p-3 text-left text-xs font-semibold hover:bg-indigo-50/60 dark:hover:bg-indigo-950/40 transition-colors flex items-center justify-between cursor-pointer ${
+                                            isSelected ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-750 dark:text-indigo-300 font-black' : 'text-slate-800 dark:text-slate-200'
                                           }`}
                                         >
                                           <span className="flex items-center gap-3">
                                             <span className="text-lg leading-none w-7 text-center">{getEngineerEmoji(e.id)}</span>
                                             <span className="font-bold">{e.name}</span>
                                           </span>
-                                          {isSelected && <Check className="w-4 h-4 text-indigo-600 shrink-0" />}
+                                          {isSelected && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />}
                                         </button>
                                       );
                                     });
@@ -8757,24 +8761,24 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Duración en Días */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">9. Duración (en Días)</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">9. Duración (en Días)</label>
                         <input
                           type="number"
                           min={1}
                           max={30}
                           value={editedWO?.durationDays || 1}
                           onChange={e => setEditedWO(prev => prev ? { ...prev, durationDays: Math.max(1, parseInt(e.target.value) || 1) } : null)}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-mono font-bold"
+                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold dark:text-slate-200"
                         />
                       </div>
 
                       {/* Estado de la Orden */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">8. Estado de la Orden</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">8. Estado de la Orden</label>
                         <select
                           value={editedWO?.status || 'Pendiente'}
                           onChange={e => setEditedWO(prev => prev ? { ...prev, status: e.target.value as any } : null)}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold"
+                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold dark:text-slate-200"
                         >
                           {(['Pendiente', 'En Proceso', 'Realizado', 'Reportado', 'Conciliado'] as WorkOrderStatus[]).map(s => (
                             <option key={s} value={s}>{s}</option>
@@ -8784,11 +8788,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Estado del Equipo */}
                       <div className="space-y-1 col-span-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">¿Equipo Parado? ⚠️</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">¿Equipo Parado? ⚠️</label>
                         <select
                           value={editedWO?.isEquipmentDown ? 'yes' : 'no'}
                           onChange={e => setEditedWO(prev => prev ? { ...prev, isEquipmentDown: e.target.value === 'yes' } : null)}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold"
+                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold dark:text-slate-200"
                         >
                           <option value="no">No, Operando Normal 🟢</option>
                           <option value="yes">Sí, Equipo Parado 🔴</option>
@@ -8797,12 +8801,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Notas text */}
                       <div className="space-y-1 md:col-span-2">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">10. Instrucciones / Notas del Administrador</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">10. Instrucciones / Notas del Administrador</label>
                         <textarea
                           value={editedWO?.notes || ''}
                           onChange={e => setEditedWO(prev => prev ? { ...prev, notes: e.target.value } : null)}
                           rows={3}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-serif italic text-slate-700 text-xs"
+                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-serif italic text-slate-700 dark:text-slate-300 text-xs"
                         />
                       </div>
 
@@ -8810,9 +8814,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         const conflicts = getEditFormConflicts();
                         if (conflicts.length === 0) return null;
                         return (
-                          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-800 space-y-2 mt-2 md:col-span-2">
+                          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-800 dark:text-red-300 space-y-2 mt-2 md:col-span-2">
                             <div className="flex items-center gap-2">
-                              <AlertCircle className="w-5 h-5 text-red-650 shrink-0 animate-bounce" />
+                              <AlertCircle className="w-5 h-5 text-red-650 dark:text-red-400 shrink-0 animate-bounce" />
                               <h4 className="font-extrabold text-xs">⚠️ Conflicto: Técnico(s) en Vacaciones</h4>
                             </div>
                             <div className="text-3xs space-y-1 font-semibold leading-normal">
@@ -8828,14 +8832,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
 
                     {/* Form Buttons */}
-                    <div className="pt-4 border-t border-slate-100 flex gap-3 justify-end">
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex gap-3 justify-end">
                       <button
                         type="button"
                         onClick={() => {
                           setIsEditingWOState(false);
                           setEditedWO(null);
                         }}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-2xs px-4 py-2.5 rounded-lg cursor-pointer transition-colors"
+                        className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-2xs px-4 py-2.5 rounded-lg cursor-pointer transition-colors"
                       >
                         Cancelar
                       </button>
@@ -8922,23 +8926,23 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                       {/* Left Column - Work Order Specs */}
                       <div className="space-y-4">
-                        <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cliente / Ubicación</p>
-                          <h4 className="font-extrabold text-slate-800 mt-0.5">{clientDisplayName}</h4>
-                          <p className="text-3xs text-slate-500 font-medium mt-0.5">{client?.address}</p>
+                        <div className="bg-slate-50/70 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Cliente / Ubicación</p>
+                          <h4 className="font-extrabold text-slate-800 dark:text-slate-100 mt-0.5">{clientDisplayName}</h4>
+                          <p className="text-3xs text-slate-500 dark:text-slate-500 font-medium mt-0.5">{client?.address}</p>
                         </div>
 
-                        <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Equipo / Activo</p>
-                          <h4 className="font-extrabold text-slate-800 mt-0.5 flex items-center gap-1.5">
+                        <div className="bg-slate-50/70 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Equipo / Activo</p>
+                          <h4 className="font-extrabold text-slate-800 dark:text-slate-100 mt-0.5 flex items-center gap-1.5">
                             <span>{infoWO.equipmentName}</span>
                             {infoWO.isEquipmentDown && (
-                              <span className="bg-red-100 text-red-800 text-[8px] px-1.5 py-0.5 rounded-full font-black border border-red-200 uppercase tracking-tight shrink-0 animate-pulse">
+                              <span className="bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 text-[8px] px-1.5 py-0.5 rounded-full font-black border border-red-200 dark:border-red-800 uppercase tracking-tight shrink-0 animate-pulse">
                                 Parado ⚠️
                               </span>
                             )}
                           </h4>
-                          <p className="text-3xs text-slate-500 mt-0.5"><span className="font-bold">Servicio:</span> {infoWO.type}</p>
+                          <p className="text-3xs text-slate-500 dark:text-slate-500 mt-0.5"><span className="font-bold">Servicio:</span> {infoWO.type}</p>
                           {(() => {
                             if (infoWO.type !== 'Preventivo' && !isWorkOrderQc(infoWO, contracts)) return null;
                             const matchedWOCon = findContractForWorkOrder(infoWO, contracts, clients);
@@ -8959,12 +8963,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           })()}
                         </div>
 
-                        <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Programación</p>
-                          <h4 className="font-bold text-slate-800 mt-0.5">📅 {infoWO.plannedDate}</h4>
-                          {infoWO.plannedTime && <p className="text-3xs text-slate-500 font-bold mt-0.5">⏰ {infoWO.plannedTime}</p>}
+                        <div className="bg-slate-50/70 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Programación</p>
+                          <h4 className="font-bold text-slate-800 dark:text-slate-100 mt-0.5">📅 {infoWO.plannedDate}</h4>
+                          {infoWO.plannedTime && <p className="text-3xs text-slate-500 dark:text-slate-500 font-bold mt-0.5">⏰ {infoWO.plannedTime}</p>}
                           {infoWO.durationDays && infoWO.durationDays > 1 && (
-                            <p className="text-3xs text-indigo-600 font-bold mt-1.5 flex items-center gap-1">
+                            <p className="text-3xs text-indigo-600 dark:text-indigo-400 font-bold mt-1.5 flex items-center gap-1">
                               🔁 Duración: {infoWO.durationDays} días
                             </p>
                           )}
@@ -8973,23 +8977,23 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Right Column - Engineers & Notes */}
                       <div className="space-y-4">
-                        <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Técnicos Asignados</p>
+                        <div className="bg-slate-50/70 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Técnicos Asignados</p>
                           <div className="mt-1 space-y-1">
-                            <p className="font-extrabold text-indigo-950 flex items-center gap-1 text-[11px]">
+                            <p className="font-extrabold text-indigo-950 dark:text-indigo-300 flex items-center gap-1 text-[11px]">
                               👤 Principal: {eng?.name || 'Sin asignar'}
                             </p>
                             {supportEng && (
-                              <p className="font-semibold text-slate-600 flex items-center gap-1 text-[10.5px]">
+                              <p className="font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 text-[10.5px]">
                                 👤 Apoyo: {supportEng.name}
                               </p>
                             )}
                           </div>
                         </div>
 
-                        <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Notas del Administrador</p>
-                          <p className="text-3xs text-slate-600 leading-relaxed font-medium italic mt-1 bg-white p-2 rounded border border-slate-100">
+                        <div className="bg-slate-50/70 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Notas del Administrador</p>
+                          <p className="text-3xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium italic mt-1 bg-white dark:bg-slate-800 p-2 rounded border border-slate-100 dark:border-slate-700">
                             {infoWO.notes ? `"${infoWO.notes}"` : 'Sin observaciones adicionales.'}
                           </p>
                         </div>
@@ -8997,41 +9001,41 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
 
                     {/* Technical Report Section */}
-                    <div className="mt-5 border-t border-slate-100 pt-4">
-                      <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1 mb-3">
-                        <FileText className="w-4 h-4 text-indigo-600" />
+                    <div className="mt-5 border-t border-slate-100 dark:border-slate-700 pt-4">
+                      <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1 mb-3">
+                        <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                         <span>Informe de Campo</span>
                       </h4>
 
                       {matchedReport ? (
-                        <div className="space-y-3 bg-indigo-50/40 p-4 rounded-xl border border-indigo-100/50 text-xs">
-                          <div className="grid grid-cols-2 gap-3 border-b border-indigo-100/40 pb-3 font-medium">
+                        <div className="space-y-3 bg-indigo-50/40 dark:bg-indigo-950/30 p-4 rounded-xl border border-indigo-100/50 dark:border-indigo-800/50 text-xs">
+                          <div className="grid grid-cols-2 gap-3 border-b border-indigo-100/40 dark:border-indigo-800/40 pb-3 font-medium">
                             <div>
-                              <p className="text-[9px] font-bold text-slate-400 uppercase">Código del Reporte</p>
-                              <p className="font-mono font-bold text-slate-700 mt-0.5">{matchedReport.id}</p>
+                              <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Código del Reporte</p>
+                              <p className="font-mono font-bold text-slate-700 dark:text-slate-300 mt-0.5">{matchedReport.id}</p>
                             </div>
                             <div>
-                              <p className="text-[9px] font-bold text-slate-400 uppercase">Horas Invertidas</p>
-                              <p className="font-bold text-slate-700 mt-0.5">{matchedReport.hoursSpent} hrs</p>
+                              <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Horas Invertidas</p>
+                              <p className="font-bold text-slate-700 dark:text-slate-300 mt-0.5">{matchedReport.hoursSpent} hrs</p>
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <p className="text-[9px] font-bold text-slate-400 uppercase">Hallazgos Técnicos</p>
-                            <p className="text-2xs text-slate-700 leading-normal font-medium">{matchedReport.technicalFindings}</p>
+                            <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Hallazgos Técnicos</p>
+                            <p className="text-2xs text-slate-700 dark:text-slate-300 leading-normal font-medium">{matchedReport.technicalFindings}</p>
                           </div>
 
                           <div className="space-y-1">
-                            <p className="text-[9px] font-bold text-slate-400 uppercase">Acciones Realizadas</p>
-                            <p className="text-2xs text-slate-700 leading-normal font-medium">{matchedReport.actionsTaken}</p>
+                            <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Acciones Realizadas</p>
+                            <p className="text-2xs text-slate-700 dark:text-slate-300 leading-normal font-medium">{matchedReport.actionsTaken}</p>
                           </div>
 
                           {matchedReport.materialsUsed.length > 0 && (
                             <div className="space-y-1.5">
-                              <p className="text-[9px] font-bold text-slate-400 uppercase">Materiales / Repuestos Utilizados</p>
+                              <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Materiales / Repuestos Utilizados</p>
                               <div className="flex flex-wrap gap-1">
                                 {matchedReport.materialsUsed.map((m, idx) => (
-                                  <span key={idx} className="bg-white border border-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">
+                                  <span key={idx} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded text-[10px] font-bold">
                                     {m.item} ({m.qty})
                                   </span>
                                 ))}
@@ -9039,18 +9043,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             </div>
                           )}
 
-                          <div className="grid grid-cols-2 gap-3 border-t border-indigo-100/40 pt-3 text-[10.5px] items-center">
+                          <div className="grid grid-cols-2 gap-3 border-t border-indigo-100/40 dark:border-indigo-800/40 pt-3 text-[10.5px] items-center">
                             <div>
-                              <p className="text-[9px] font-bold text-slate-400 uppercase">Firma del Técnico</p>
-                              <p className="font-serif italic font-extrabold text-indigo-850 mt-0.5">{matchedReport.technicianSignature}</p>
+                              <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Firma del Técnico</p>
+                              <p className="font-serif italic font-extrabold text-indigo-850 dark:text-indigo-300 mt-0.5">{matchedReport.technicianSignature}</p>
                             </div>
                             <div>
-                              <p className="text-[9px] font-bold text-slate-400 uppercase">Firma del Cliente</p>
-                              <p className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-150 w-fit mt-0.5">
+                              <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Firma del Cliente</p>
+                              <p className="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-150 dark:border-emerald-800 w-fit mt-0.5">
                                 ✍️ {matchedReport.clientSignatureName}
                               </p>
                             </div>
-                            <div className="col-span-2 mt-2 pt-2 border-t border-dashed border-indigo-100/30">
+                            <div className="col-span-2 mt-2 pt-2 border-t border-dashed border-indigo-100/30 dark:border-indigo-800/30">
                               <button
                                 type="button"
                                 onClick={() => {
@@ -9066,11 +9070,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center space-y-3">
+                        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 text-center space-y-3">
                           <div>
-                            <AlertCircle className="w-5 h-5 text-slate-500 mx-auto mb-1.5" />
-                            <p className="text-2xs font-extrabold text-slate-800">Sin Reporte de Campo Sincronizado</p>
-                            <p className="text-[10px] text-slate-600 mt-0.5">
+                            <AlertCircle className="w-5 h-5 text-slate-500 dark:text-slate-500 mx-auto mb-1.5" />
+                            <p className="text-2xs font-extrabold text-slate-800 dark:text-slate-200">Sin Reporte de Campo Sincronizado</p>
+                            <p className="text-[10px] text-slate-600 dark:text-slate-300 mt-0.5">
                               Esta orden está pendiente de ejecución en campo por el ingeniero asignado. Como administrador, puede registrar la entrega o marcarla como realizada directamente:
                             </p>
                           </div>
@@ -9168,11 +9172,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
 
                     {/* Footer buttons */}
-                    <div className="mt-6 border-t border-slate-100 pt-4 flex justify-end gap-3">
+                    <div className="mt-6 border-t border-slate-100 dark:border-slate-700 pt-4 flex justify-end gap-3">
                       {effectivePermissions.canDeleteWorkOrders !== false && (
                         isConfirmingDelete ? (
-                          <div className="flex items-center gap-1.5 border border-rose-200 bg-rose-50/70 p-1 rounded-lg mr-auto">
-                            <span className="text-3xs font-extrabold text-rose-800 px-1">¿Eliminar orden?</span>
+                          <div className="flex items-center gap-1.5 border border-rose-200 dark:border-rose-800 bg-rose-50/70 dark:bg-rose-950/50 p-1 rounded-lg mr-auto">
+                            <span className="text-3xs font-extrabold text-rose-800 dark:text-rose-300 px-1">¿Eliminar orden?</span>
                             <button
                               type="button"
                               onClick={() => {
@@ -9188,7 +9192,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             <button
                               type="button"
                               onClick={() => setIsConfirmingDelete(false)}
-                              className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-3xs px-2.5 py-1 rounded-md cursor-pointer transition-colors"
+                              className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-extrabold text-3xs px-2.5 py-1 rounded-md cursor-pointer transition-colors"
                             >
                               No
                             </button>
@@ -9197,7 +9201,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <button
                             type="button"
                             onClick={() => setIsConfirmingDelete(true)}
-                            className="bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-2xs px-3.5 py-2 rounded-lg border border-rose-200 cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs mr-auto"
+                            className="bg-rose-50 dark:bg-rose-950 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-650 dark:text-rose-400 font-extrabold text-2xs px-3.5 py-2 rounded-lg border border-rose-200 dark:border-rose-800 cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs mr-auto"
                             title="Eliminar esta orden de trabajo"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -9218,7 +9222,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       )}
                       <button
                         onClick={handleCloseInfoModal}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-2xs px-4 py-2 rounded-lg cursor-pointer transition-colors"
+                        className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-2xs px-4 py-2 rounded-lg cursor-pointer transition-colors"
                       >
                         Cerrar Detalles
                       </button>
@@ -9247,24 +9251,24 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full border border-amber-200"
+              className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 max-w-md w-full border border-amber-200 dark:border-amber-800"
             >
               <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-sm text-slate-900">Alerta de Conflicto</h4>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">{pendingConflictMove.conflictLabel}</p>
-                  <p className="text-xs text-slate-600 mt-1">Fecha destino: <span className="font-bold">{pendingConflictMove.targetDateStr}</span></p>
-                  <p className="text-xs text-slate-500 mt-2">¿Está seguro de que desea mover esta Orden de Trabajo a esta fecha con conflicto?</p>
+                  <h4 className="font-black text-sm text-slate-900 dark:text-slate-100">Alerta de Conflicto</h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{pendingConflictMove.conflictLabel}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">Fecha destino: <span className="font-bold">{pendingConflictMove.targetDateStr}</span></p>
+                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">¿Está seguro de que desea mover esta Orden de Trabajo a esta fecha con conflicto?</p>
                 </div>
               </div>
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setPendingConflictMove(null)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors"
                 >
                   Cancelar
                 </button>
@@ -9366,44 +9370,44 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="relative bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[92vh] z-50 flex flex-col justify-between"
+                className="relative bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[92vh] z-50 flex flex-col justify-between"
               >
                 {/* Header Section */}
-                <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
+                <div className="flex justify-between items-start border-b border-slate-100 dark:border-slate-700 pb-4 mb-4">
                   <div className="flex gap-4 items-center">
-                    <div className="w-14 h-14 rounded-full bg-slate-100 text-3xl flex items-center justify-center border border-slate-200 shrink-0">
+                    <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 text-3xl flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
                       {getEngineerEmoji(eng.id)}
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-base text-slate-900 leading-tight flex items-center gap-2">
+                      <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100 leading-tight flex items-center gap-2">
                         <span>{eng.name}</span>
-                        <span className="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-mono font-bold">
+                        <span className="text-[10px] bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-full font-mono font-bold">
                           Score 360°: ⭐ {currentEval.scoreGeneral} / 5.0
                         </span>
                       </h3>
-                      <p className="text-2xs text-slate-500 font-bold mt-1 uppercase tracking-wide">
-                        {eng.specialty} • <span className="text-indigo-650 font-black">{eng.sede || 'Quito'}</span>
+                      <p className="text-2xs text-slate-500 dark:text-slate-500 font-bold mt-1 uppercase tracking-wide">
+                        {eng.specialty} • <span className="text-indigo-650 dark:text-indigo-400 font-black">{eng.sede || 'Quito'}</span>
                       </p>
-                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">{eng.email}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">{eng.email}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setIsEngMetricsModalOpen(false)}
-                    className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-650 cursor-pointer transition-colors"
+                    className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 cursor-pointer transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 {/* Sub-Tabs: Metrics vs Evaluation 360 */}
-                <div className="flex gap-2 border-b border-slate-200 mb-5 pb-2">
+                <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700 mb-5 pb-2">
                   <button
                     type="button"
                     onClick={() => setEval360ModalTab('metrics')}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                       eval360ModalTab === 'metrics'
                         ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                        : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300'
                     }`}
                   >
                     <BarChart3 className="w-3.5 h-3.5" />
@@ -9415,7 +9419,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                       eval360ModalTab === 'evaluation'
                         ? 'bg-purple-600 text-white shadow-xs'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                        : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300'
                     }`}
                   >
                     <Award className="w-3.5 h-3.5" />
@@ -9428,17 +9432,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs mb-6">
                     {/* Left Column: Job & Productivity Metrics */}
                     <div className="space-y-5">
-                      <h4 className="font-bold text-slate-850 text-xs border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                        <BarChart3 className="w-4 h-4 text-indigo-550" />
+                      <h4 className="font-bold text-slate-850 dark:text-slate-100 text-xs border-b border-slate-100 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                        <BarChart3 className="w-4 h-4 text-indigo-550 dark:text-indigo-400" />
                         <span>Productividad del Periodo</span>
                       </h4>
 
                       {/* KPI summaries */}
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl text-center">
-                          <span className="text-[9px] font-bold text-slate-450 uppercase block">Total Asignaciones</span>
-                          <span className="text-xl font-extrabold text-slate-855 mt-1 block">{stats?.total || 0}</span>
-                          <span className="text-[8px] text-slate-400 font-medium">
+                        <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 p-3 rounded-xl text-center">
+                          <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 uppercase block">Total Asignaciones</span>
+                          <span className="text-xl font-extrabold text-slate-855 dark:text-slate-100 mt-1 block">{stats?.total || 0}</span>
+                          <span className="text-[8px] text-slate-400 dark:text-slate-500 font-medium">
                             {stats?.asPrimary || 0} Principal / {stats?.asSupport || 0} Apoyo
                           </span>
                         </div>
@@ -9447,14 +9451,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           onClick={() => setShowEngHoursDetail(!showEngHoursDetail)}
                           className={`p-3 rounded-xl text-center border transition-all cursor-pointer ${
                             showEngHoursDetail
-                              ? 'bg-indigo-100/90 border-indigo-500 ring-2 ring-indigo-500 shadow-xs'
-                              : 'bg-slate-50 border-slate-200/60 hover:bg-slate-100/80'
+                              ? 'bg-indigo-100/90 dark:bg-indigo-950 border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500 dark:ring-indigo-400 shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-800 border-slate-200/60 dark:border-slate-700/60 hover:bg-slate-100/80 dark:hover:bg-slate-700'
                           }`}
                           title="Haz clic para ver el desglose profesional minucioso de horas por orden de trabajo"
                         >
-                          <span className="text-[9px] font-bold text-slate-500 uppercase block">Horas en Campo (Ver detalle)</span>
-                          <span className="text-xl font-extrabold text-indigo-700 mt-1 block">{totalHours} hrs</span>
-                          <span className="text-[8px] text-indigo-800 font-extrabold bg-indigo-100 px-1.5 py-0.5 rounded-full inline-block mt-0.5">
+                          <span className="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase block">Horas en Campo (Ver detalle)</span>
+                          <span className="text-xl font-extrabold text-indigo-700 dark:text-indigo-300 mt-1 block">{totalHours} hrs</span>
+                          <span className="text-[8px] text-indigo-800 dark:text-indigo-300 font-extrabold bg-indigo-100 dark:bg-indigo-950 px-1.5 py-0.5 rounded-full inline-block mt-0.5">
                             🔍 Haz clic para ver desglose
                           </span>
                         </button>
@@ -9524,16 +9528,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         instHours = instDaysTotal * 8;
 
                         return (
-                          <div className="bg-indigo-50/90 border border-indigo-300 rounded-xl p-4 shadow-sm space-y-3 animate-in fade-in duration-200">
-                            <div className="flex items-center justify-between border-b border-indigo-200 pb-2">
-                              <h5 className="font-black text-xs text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
-                                <Clock className="w-4 h-4 text-indigo-600 animate-pulse" />
+                          <div className="bg-indigo-50/90 dark:bg-indigo-950 border border-indigo-300 dark:border-indigo-800 rounded-xl p-4 shadow-sm space-y-3 animate-in fade-in duration-200">
+                            <div className="flex items-center justify-between border-b border-indigo-200 dark:border-indigo-800 pb-2">
+                              <h5 className="font-black text-xs text-indigo-950 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                                <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-pulse" />
                                 <span>Desglose Profesional de Horas en Campo ({totalHours} hrs totales)</span>
                               </h5>
                               <button
                                 type="button"
                                 onClick={() => setShowEngHoursDetail(false)}
-                                className="text-[9px] font-extrabold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 px-2 py-0.5 rounded-md cursor-pointer"
+                                className="text-[9px] font-extrabold text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md cursor-pointer"
                               >
                                 ✕ Cerrar
                               </button>
@@ -9541,65 +9545,65 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                             {/* Category Summary Cards */}
                             <div className="grid grid-cols-4 gap-2 text-[9.5px]">
-                              <div className="bg-white p-2 rounded-lg border border-slate-200 text-center shadow-2xs">
-                                <span className="text-slate-400 font-bold uppercase block text-[8px]">Preventivos</span>
-                                <span className="font-black text-indigo-700 text-xs mt-0.5 block">{prevHours} hrs</span>
-                                <span className="text-[8px] text-slate-500 font-semibold">{prevCount} Órdenes</span>
+                              <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-center shadow-2xs">
+                                <span className="text-slate-400 dark:text-slate-500 font-bold uppercase block text-[8px]">Preventivos</span>
+                                <span className="font-black text-indigo-700 dark:text-indigo-300 text-xs mt-0.5 block">{prevHours} hrs</span>
+                                <span className="text-[8px] text-slate-500 dark:text-slate-500 font-semibold">{prevCount} Órdenes</span>
                               </div>
-                              <div className="bg-white p-2 rounded-lg border border-emerald-200 text-center shadow-2xs">
-                                <span className="text-emerald-700 font-bold uppercase block text-[8px]">Instalaciones</span>
-                                <span className="font-black text-emerald-800 text-xs mt-0.5 block">{instHours} hrs</span>
-                                <span className="text-[8px] text-emerald-600 font-semibold">{instDaysTotal} días ({instCount} proyect.)</span>
+                              <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-emerald-200 dark:border-emerald-800 text-center shadow-2xs">
+                                <span className="text-emerald-700 dark:text-emerald-300 font-bold uppercase block text-[8px]">Instalaciones</span>
+                                <span className="font-black text-emerald-800 dark:text-emerald-300 text-xs mt-0.5 block">{instHours} hrs</span>
+                                <span className="text-[8px] text-emerald-600 dark:text-emerald-400 font-semibold">{instDaysTotal} días ({instCount} proyect.)</span>
                               </div>
-                              <div className="bg-white p-2 rounded-lg border border-amber-200 text-center shadow-2xs">
-                                <span className="text-amber-700 font-bold uppercase block text-[8px]">Correctivos</span>
-                                <span className="font-black text-amber-800 text-xs mt-0.5 block">{corrHours} hrs</span>
-                                <span className="text-[8px] text-amber-600 font-semibold">{corrCount} Órdenes</span>
+                              <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-amber-200 dark:border-amber-800 text-center shadow-2xs">
+                                <span className="text-amber-700 dark:text-amber-300 font-bold uppercase block text-[8px]">Correctivos</span>
+                                <span className="font-black text-amber-800 dark:text-amber-300 text-xs mt-0.5 block">{corrHours} hrs</span>
+                                <span className="text-[8px] text-amber-600 dark:text-amber-400 font-semibold">{corrCount} Órdenes</span>
                               </div>
-                              <div className="bg-white p-2 rounded-lg border border-sky-200 text-center shadow-2xs">
-                                <span className="text-sky-700 font-bold uppercase block text-[8px]">Otros / QC</span>
-                                <span className="font-black text-sky-800 text-xs mt-0.5 block">{inspHours} hrs</span>
-                                <span className="text-[8px] text-sky-600 font-semibold">{inspCount} Órdenes</span>
+                              <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-sky-200 dark:border-sky-800 text-center shadow-2xs">
+                                <span className="text-sky-700 dark:text-sky-300 font-bold uppercase block text-[8px]">Otros / QC</span>
+                                <span className="font-black text-sky-800 dark:text-sky-300 text-xs mt-0.5 block">{inspHours} hrs</span>
+                                <span className="text-[8px] text-sky-600 dark:text-sky-400 font-semibold">{inspCount} Órdenes</span>
                               </div>
                             </div>
 
                             {/* Structured Detailed Work Order List */}
                             <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
-                              <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">Detalle Orden por Orden:</p>
+                              <p className="text-[9px] font-extrabold text-slate-500 dark:text-slate-500 uppercase tracking-wider">Detalle Orden por Orden:</p>
                               {woDetailedList.length === 0 ? (
-                                <p className="text-[10px] text-slate-400 font-bold text-center py-3">Sin mantenimientos ni horas registradas en este periodo.</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold text-center py-3">Sin mantenimientos ni horas registradas en este periodo.</p>
                               ) : (
                                 woDetailedList.map(({ wo, hrs, sourceLabel, isInst }) => {
                                   const client = clients.find(c => c.id === wo.clientId);
                                   const effStatus = getWOEffectiveStatus(wo);
 
                                   return (
-                                    <div key={wo.id} className="bg-white border border-slate-200/90 rounded-lg p-2 flex justify-between items-center text-[10px] hover:border-indigo-300 transition-all shadow-2xs">
+                                    <div key={wo.id} className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/90 rounded-lg p-2 flex justify-between items-center text-[10px] hover:border-indigo-300 dark:hover:border-indigo-700 transition-all shadow-2xs">
                                       <div className="truncate pr-2 space-y-0.5">
                                         <div className="flex items-center gap-1.5">
-                                          <span className="font-mono font-extrabold text-slate-800 text-[10.5px]">{wo.id}</span>
+                                          <span className="font-mono font-extrabold text-slate-800 dark:text-slate-100 text-[10.5px]">{wo.id}</span>
                                           <span className={`text-[8px] font-black px-1.5 py-0.2 rounded uppercase ${
-                                            isInst ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-                                            wo.type === 'Preventivo' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' :
-                                            'bg-amber-100 text-amber-800 border border-amber-200'
+                                            isInst ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' :
+                                            wo.type === 'Preventivo' ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800' :
+                                            'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                                           }`}>
                                             {wo.type}
                                           </span>
                                         </div>
-                                        <p className="font-bold text-slate-900 truncate text-[10px]">{client ? client.name : (wo.clientId || 'Sin cliente')}</p>
-                                        <p className="text-slate-500 font-medium truncate text-[9px]">{wo.equipmentName} • 📅 {wo.plannedDate}</p>
+                                        <p className="font-bold text-slate-900 dark:text-slate-100 truncate text-[10px]">{client ? client.name : (wo.clientId || 'Sin cliente')}</p>
+                                        <p className="text-slate-500 dark:text-slate-500 font-medium truncate text-[9px]">{wo.equipmentName} • 📅 {wo.plannedDate}</p>
                                       </div>
 
                                       <div className="text-right shrink-0 space-y-1">
-                                        <span className="font-mono font-black text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md text-xs block">
+                                        <span className="font-mono font-black text-indigo-900 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md text-xs block">
                                           ⏱️ {hrs.toFixed(1)} hrs
                                         </span>
-                                        <span className="text-[8px] font-bold text-slate-400 block">{sourceLabel}</span>
+                                        <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 block">{sourceLabel}</span>
                                         <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded inline-block ${
-                                          effStatus === 'Conciliado' ? 'bg-emerald-100 text-emerald-800' :
-                                          effStatus === 'Realizado' ? 'bg-blue-100 text-blue-800' :
-                                          effStatus === 'Reportado' ? 'bg-indigo-100 text-indigo-800' :
-                                          'bg-amber-100 text-amber-800'
+                                          effStatus === 'Conciliado' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300' :
+                                          effStatus === 'Realizado' ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300' :
+                                          effStatus === 'Reportado' ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300' :
+                                          'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
                                         }`}>
                                           {effStatus.toUpperCase()}
                                         </span>
@@ -9614,12 +9618,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       })()}
 
                       {/* Completion rate bar */}
-                      <div className="space-y-1.5 bg-slate-50/50 border border-slate-200/45 p-3.5 rounded-xl">
+                      <div className="space-y-1.5 bg-slate-50/50 dark:bg-slate-800/60 border border-slate-200/45 dark:border-slate-700/45 p-3.5 rounded-xl">
                         <div className="flex justify-between items-center text-[10px]">
-                          <span className="font-bold text-slate-600">Tasa de Cierre del Periodo</span>
-                          <span className="font-black text-emerald-700">{complianceRate}%</span>
+                          <span className="font-bold text-slate-600 dark:text-slate-300">Tasa de Cierre del Periodo</span>
+                          <span className="font-black text-emerald-700 dark:text-emerald-300">{complianceRate}%</span>
                         </div>
-                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                        <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
                           <div 
                             className="h-full bg-emerald-500 rounded-full transition-all duration-550" 
                             style={{ width: `${complianceRate}%` }}
@@ -9629,70 +9633,70 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Status counters breakdown list with clickable pending view */}
                       <div className="space-y-2">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase block">Estados de Tarea (Reales) - Haz clic para ver detalle:</span>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase block">Estados de Tarea (Reales) - Haz clic para ver detalle:</span>
                         <div className="grid grid-cols-2 gap-2 text-[10px]">
                           <button
                             type="button"
                             onClick={() => setEngMetricsSelectedStatus('Conciliado')}
                             className={`flex justify-between items-center p-2 rounded-lg transition-all cursor-pointer border text-left ${
                               engMetricsSelectedStatus === 'Conciliado'
-                                ? 'bg-emerald-100/80 border-emerald-400 ring-1 ring-emerald-400'
-                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                                ? 'bg-emerald-100/80 dark:bg-emerald-950 border-emerald-400 dark:border-emerald-300 ring-1 ring-emerald-400 dark:ring-emerald-300'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                             }`}
                           >
-                            <span className="font-semibold text-emerald-800">Conciliadas</span>
-                            <span className="font-black text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded">{stats?.statusCounts.Conciliado || 0}</span>
+                            <span className="font-semibold text-emerald-800 dark:text-emerald-300">Conciliadas</span>
+                            <span className="font-black text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">{stats?.statusCounts.Conciliado || 0}</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setEngMetricsSelectedStatus('Realizado')}
                             className={`flex justify-between items-center p-2 rounded-lg transition-all cursor-pointer border text-left ${
                               engMetricsSelectedStatus === 'Realizado'
-                                ? 'bg-blue-100/80 border-blue-400 ring-1 ring-blue-400'
-                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                                ? 'bg-blue-100/80 dark:bg-blue-950 border-blue-400 dark:border-blue-300 ring-1 ring-blue-400 dark:ring-blue-300'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                             }`}
                           >
-                            <span className="font-semibold text-blue-800">Realizadas</span>
-                            <span className="font-black text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded">{stats?.statusCounts.Realizado || 0}</span>
+                            <span className="font-semibold text-blue-800 dark:text-blue-300">Realizadas</span>
+                            <span className="font-black text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">{stats?.statusCounts.Realizado || 0}</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setEngMetricsSelectedStatus('Reportado')}
                             className={`flex justify-between items-center p-2 rounded-lg transition-all cursor-pointer border text-left ${
                               engMetricsSelectedStatus === 'Reportado'
-                                ? 'bg-indigo-100/80 border-indigo-400 ring-1 ring-indigo-400'
-                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                                ? 'bg-indigo-100/80 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-300 ring-1 ring-indigo-400 dark:ring-indigo-300'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                             }`}
                           >
-                            <span className="font-semibold text-indigo-800">Reportadas</span>
-                            <span className="font-black text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded">{stats?.statusCounts.Reportado || 0}</span>
+                            <span className="font-semibold text-indigo-800 dark:text-indigo-300">Reportadas</span>
+                            <span className="font-black text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">{stats?.statusCounts.Reportado || 0}</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setEngMetricsSelectedStatus('En Proceso')}
                             className={`flex justify-between items-center p-2 rounded-lg transition-all cursor-pointer border text-left ${
                               engMetricsSelectedStatus === 'En Proceso'
-                                ? 'bg-sky-100/80 border-sky-400 ring-1 ring-sky-400'
-                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                                ? 'bg-sky-100/80 dark:bg-sky-950 border-sky-400 dark:border-sky-300 ring-1 ring-sky-400 dark:ring-sky-300'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                             }`}
                           >
-                            <span className="font-semibold text-sky-800">En Proceso</span>
-                            <span className="font-black text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded">{stats?.statusCounts['En Proceso'] || 0}</span>
+                            <span className="font-semibold text-sky-800 dark:text-sky-300">En Proceso</span>
+                            <span className="font-black text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">{stats?.statusCounts['En Proceso'] || 0}</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setEngMetricsSelectedStatus('Pendiente')}
                             className={`flex justify-between items-center p-2 rounded-lg col-span-2 transition-all cursor-pointer border text-left ${
                               engMetricsSelectedStatus === 'Pendiente'
-                                ? 'bg-amber-100/90 border-amber-400 ring-1 ring-amber-400 shadow-xs'
-                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                                ? 'bg-amber-100/90 dark:bg-amber-950 border-amber-400 dark:border-amber-300 ring-1 ring-amber-400 dark:ring-amber-300 shadow-xs'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                             }`}
                           >
-                            <span className="font-bold text-amber-800 flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5 text-amber-600" />
+                            <span className="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                               <span>Pendientes (Clic para ver lista de tareas)</span>
                             </span>
-                            <span className="font-black text-amber-900 bg-amber-200 px-2 py-0.5 rounded text-xs">
+                            <span className="font-black text-amber-900 dark:text-amber-300 bg-amber-200 dark:bg-amber-950 px-2 py-0.5 rounded text-xs">
                               {stats?.statusCounts.Pendiente || 0}
                             </span>
                           </button>
@@ -9706,17 +9710,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           });
 
                           return (
-                            <div className="space-y-2 bg-amber-50/70 border border-amber-200 rounded-xl p-3 mt-2 shadow-2xs">
+                            <div className="space-y-2 bg-amber-50/70 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-3 mt-2 shadow-2xs">
                               <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-extrabold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
-                                  <ClipboardList className="w-3.5 h-3.5 text-amber-600" />
+                                <p className="text-[10px] font-extrabold text-amber-900 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                                  <ClipboardList className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                                   <span>Órdenes {engMetricsSelectedStatus === 'TODAS' ? 'Totales' : engMetricsSelectedStatus.toUpperCase()} ({selectedStatusOrders.length}):</span>
                                 </p>
                                 {engMetricsSelectedStatus !== 'TODAS' && (
                                   <button
                                     type="button"
                                     onClick={() => setEngMetricsSelectedStatus('TODAS')}
-                                    className="text-[9px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                                    className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
                                   >
                                     Ver todas
                                   </button>
@@ -9724,26 +9728,26 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
 
                               {selectedStatusOrders.length === 0 ? (
-                                <p className="text-[10px] text-slate-400 font-bold p-2 text-center">No hay órdenes en estado {engMetricsSelectedStatus}</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold p-2 text-center">No hay órdenes en estado {engMetricsSelectedStatus}</p>
                               ) : (
                                 <div className="max-h-[160px] overflow-y-auto space-y-1.5 pr-1">
                                   {selectedStatusOrders.map(wo => {
                                     const client = clients.find(c => c.id === wo.clientId);
                                     const effStatus = getWOEffectiveStatus(wo);
                                     return (
-                                      <div key={wo.id} className="bg-white border border-slate-200 rounded-lg p-2 flex justify-between items-center text-[10px] hover:border-amber-300 transition-colors shadow-2xs">
+                                      <div key={wo.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 flex justify-between items-center text-[10px] hover:border-amber-300 dark:hover:border-amber-700 transition-colors shadow-2xs">
                                         <div className="truncate pr-2">
-                                          <span className="font-mono font-bold text-slate-800 block truncate">{wo.id}</span>
-                                          <span className="font-bold text-indigo-950 block truncate">{client ? client.name : (wo.clientId || 'Sin cliente')}</span>
-                                          <span className="text-slate-500 font-medium truncate block text-[9px]">{wo.equipmentName}</span>
+                                          <span className="font-mono font-bold text-slate-800 dark:text-slate-100 block truncate">{wo.id}</span>
+                                          <span className="font-bold text-indigo-950 dark:text-indigo-300 block truncate">{client ? client.name : (wo.clientId || 'Sin cliente')}</span>
+                                          <span className="text-slate-500 dark:text-slate-500 font-medium truncate block text-[9px]">{wo.equipmentName}</span>
                                         </div>
                                         <div className="text-right shrink-0">
-                                          <span className="font-mono font-bold text-slate-600 block text-[9px]">📅 {wo.plannedDate}</span>
+                                          <span className="font-mono font-bold text-slate-600 dark:text-slate-300 block text-[9px]">📅 {wo.plannedDate}</span>
                                           <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded inline-block mt-0.5 ${
-                                            effStatus === 'Pendiente' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                                            effStatus === 'Realizado' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                                            effStatus === 'Conciliado' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-                                            'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                            effStatus === 'Pendiente' ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800' :
+                                            effStatus === 'Realizado' ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800' :
+                                            effStatus === 'Conciliado' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' :
+                                            'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
                                           }`}>
                                             {effStatus.toUpperCase()}
                                           </span>
@@ -9761,14 +9765,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                     {/* Right Column: Maintenance types & Vacation Status */}
                     <div className="space-y-5">
-                      <h4 className="font-bold text-slate-800 text-xs border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                        <Briefcase className="w-4 h-4 text-emerald-600" />
+                      <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xs border-b border-slate-100 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                        <Briefcase className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         <span>Distribución de Trabajos y Ausencias</span>
                       </h4>
 
                       {/* Maintenance types distribution with clickable detail */}
-                      <div className="space-y-2 bg-slate-50/50 border border-slate-200/40 p-3.5 rounded-xl">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tipos de Servicio Ejecutados - Haz clic para ver lista:</span>
+                      <div className="space-y-2 bg-slate-50/50 dark:bg-slate-800/60 border border-slate-200/40 dark:border-slate-700/40 p-3.5 rounded-xl">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase block mb-1">Tipos de Servicio Ejecutados - Haz clic para ver lista:</span>
                         <div className="grid grid-cols-2 gap-2 text-[10px]">
                           {Object.entries(typeBreakdown).map(([type, count]) => {
                             if (count === 0) return null;
@@ -9780,17 +9784,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 onClick={() => setEngMetricsSelectedType(isSelected ? null : (type as WorkOrderType))}
                                 className={`flex justify-between items-center px-2 py-1.5 rounded-lg border transition-all cursor-pointer text-left ${
                                   isSelected
-                                    ? 'bg-emerald-100 border-emerald-400 text-emerald-900 font-bold ring-1 ring-emerald-400 shadow-2xs'
-                                    : 'bg-white border-slate-200 hover:bg-slate-100/70 text-slate-700 font-semibold'
+                                    ? 'bg-emerald-100 dark:bg-emerald-950 border-emerald-400 dark:border-emerald-300 text-emerald-900 dark:text-emerald-300 font-bold ring-1 ring-emerald-400 dark:ring-emerald-300 shadow-2xs'
+                                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:bg-slate-100/70 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold'
                                 }`}
                               >
                                 <span className="truncate pr-1">{type}</span>
-                                <span className="font-extrabold text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded-md shrink-0 text-2xs">{count}</span>
+                                <span className="font-extrabold text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded-md shrink-0 text-2xs">{count}</span>
                               </button>
                             );
                           })}
                           {Object.values(typeBreakdown).every(c => c === 0) && (
-                            <div className="col-span-2 text-center text-slate-400 py-4 font-bold">
+                            <div className="col-span-2 text-center text-slate-400 dark:text-slate-500 py-4 font-bold">
                               Sin servicios registrados en este periodo
                             </div>
                           )}
@@ -9800,42 +9804,42 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         {engMetricsSelectedType && (() => {
                           const typeOrders = engOrders.filter(wo => wo.type === engMetricsSelectedType);
                           return (
-                            <div className="space-y-2 bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 mt-3 shadow-2xs animate-in fade-in duration-150">
+                            <div className="space-y-2 bg-emerald-50/70 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 mt-3 shadow-2xs animate-in fade-in duration-150">
                               <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
-                                  <Briefcase className="w-3.5 h-3.5 text-emerald-600" />
+                                <p className="text-[10px] font-extrabold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                                  <Briefcase className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                                   <span>Órdenes de {engMetricsSelectedType} ({typeOrders.length}):</span>
                                 </p>
                                 <button
                                   type="button"
                                   onClick={() => setEngMetricsSelectedType(null)}
-                                  className="text-[9px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
+                                  className="text-[9px] font-bold text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 cursor-pointer"
                                 >
                                   Cerrar
                                 </button>
                               </div>
 
                               {typeOrders.length === 0 ? (
-                                <p className="text-[10px] text-slate-400 font-bold p-2 text-center">Sin órdenes registradas para {engMetricsSelectedType}</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold p-2 text-center">Sin órdenes registradas para {engMetricsSelectedType}</p>
                               ) : (
                                 <div className="max-h-[160px] overflow-y-auto space-y-1.5 pr-1">
                                   {typeOrders.map(wo => {
                                     const client = clients.find(c => c.id === wo.clientId);
                                     const effStatus = getWOEffectiveStatus(wo);
                                     return (
-                                      <div key={wo.id} className="bg-white border border-slate-200 rounded-lg p-2 flex justify-between items-center text-[10px] hover:border-emerald-300 transition-colors shadow-2xs">
+                                      <div key={wo.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 flex justify-between items-center text-[10px] hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors shadow-2xs">
                                         <div className="truncate pr-2">
-                                          <span className="font-mono font-bold text-slate-800 block truncate">{wo.id}</span>
-                                          <span className="font-bold text-emerald-950 block truncate">{client ? client.name : (wo.clientId || 'Sin cliente')}</span>
-                                          <span className="text-slate-500 font-medium truncate block text-[9px]">{wo.equipmentName}</span>
+                                          <span className="font-mono font-bold text-slate-800 dark:text-slate-100 block truncate">{wo.id}</span>
+                                          <span className="font-bold text-emerald-950 dark:text-emerald-300 block truncate">{client ? client.name : (wo.clientId || 'Sin cliente')}</span>
+                                          <span className="text-slate-500 dark:text-slate-500 font-medium truncate block text-[9px]">{wo.equipmentName}</span>
                                         </div>
                                         <div className="text-right shrink-0">
-                                          <span className="font-mono font-bold text-slate-600 block text-[9px]">📅 {wo.plannedDate}</span>
+                                          <span className="font-mono font-bold text-slate-600 dark:text-slate-300 block text-[9px]">📅 {wo.plannedDate}</span>
                                           <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded inline-block mt-0.5 ${
-                                            effStatus === 'Pendiente' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                                            effStatus === 'Realizado' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                                            effStatus === 'Conciliado' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-                                            'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                            effStatus === 'Pendiente' ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800' :
+                                            effStatus === 'Realizado' ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800' :
+                                            effStatus === 'Conciliado' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' :
+                                            'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
                                           }`}>
                                             {effStatus.toUpperCase()}
                                           </span>
@@ -9852,29 +9856,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Vacations details */}
                       <div className="space-y-2">
-                        <span className="text-[10px] font-bold text-slate-555 uppercase block flex items-center gap-1">
-                          <Palmtree className="w-3.5 h-3.5 text-teal-650" />
+                        <span className="text-[10px] font-bold text-slate-555 dark:text-slate-500 uppercase block flex items-center gap-1">
+                          <Palmtree className="w-3.5 h-3.5 text-teal-650 dark:text-teal-400" />
                           <span>Resumen de Vacaciones Anuales</span>
                         </span>
-                        <div className="bg-white border border-slate-200 rounded-xl p-3.5 divide-y divide-slate-100 text-[10px] space-y-1.5">
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 divide-y divide-slate-100 dark:divide-slate-700 text-[10px] space-y-1.5">
                           <div className="flex justify-between items-center pb-1.5">
-                            <span className="font-medium text-slate-600">Días Anuales Permitidos</span>
-                            <span className="font-black text-slate-800">{eng.annualVacationDays || 15} días</span>
+                            <span className="font-medium text-slate-600 dark:text-slate-300">Días Anuales Permitidos</span>
+                            <span className="font-black text-slate-800 dark:text-slate-100">{eng.annualVacationDays || 15} días</span>
                           </div>
                           <div className="flex justify-between items-center py-1.5">
-                            <span className="font-medium text-slate-600">Vacaciones Pendientes</span>
-                            <span className="font-black text-amber-600">{eng.pendingVacationsLastYear || 0} días</span>
+                            <span className="font-medium text-slate-600 dark:text-slate-300">Vacaciones Pendientes</span>
+                            <span className="font-black text-amber-600 dark:text-amber-400">{eng.pendingVacationsLastYear || 0} días</span>
                           </div>
                           <div className="flex justify-between items-center py-1.5">
-                            <span className="font-medium text-slate-600">Vacaciones en Reserva (Standby)</span>
-                            <span className="font-black text-slate-700">{eng.standbyVacationsLastYear || 0} días</span>
+                            <span className="font-medium text-slate-600 dark:text-slate-300">Vacaciones en Reserva (Standby)</span>
+                            <span className="font-black text-slate-700 dark:text-slate-300">{eng.standbyVacationsLastYear || 0} días</span>
                           </div>
-                          <div className="flex justify-between items-center pt-1.5 border-t border-slate-100">
-                            <span className="font-medium text-slate-600">Día de Cumpleaños Libre</span>
+                          <div className="flex justify-between items-center pt-1.5 border-t border-slate-100 dark:border-slate-700">
+                            <span className="font-medium text-slate-600 dark:text-slate-300">Día de Cumpleaños Libre</span>
                             <span className={`font-bold px-1.5 py-0.5 rounded-full text-[8.5px] ${
                               eng.birthdayVacationDay === 0 
-                                ? 'bg-red-50 text-red-700 border border-red-100' 
-                                : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                ? 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-800' 
+                                : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800'
                             }`}>
                               {eng.birthdayVacationDay === 0 ? '❌ Ya Usado' : '✅ Disponible'}
                             </span>
@@ -9895,7 +9899,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <span className="text-xs text-purple-100 font-bold">/ 5.0 Puntos</span>
                         </div>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-xs border border-white/20 px-3.5 py-2 rounded-xl text-right">
+                      <div className="bg-white/10 dark:bg-slate-900/10 backdrop-blur-xs border border-white/20 px-3.5 py-2 rounded-xl text-right">
                         <span className="text-[9px] font-extrabold uppercase text-amber-300 block">Clasificación</span>
                         <span className="text-xs font-bold text-white">
                           {currentEval.scoreGeneral >= 4.5 ? '🌟 Excelente' : currentEval.scoreGeneral >= 3.8 ? '👍 Sobresaliente' : currentEval.scoreGeneral >= 3.0 ? '⚠️ Satisfactorio' : '🚨 Requiere Plan de Mejora'}
@@ -9904,31 +9908,31 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
 
                     {/* Evaluador & Periodo */}
-                    <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Evaluado por</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Evaluado por</label>
                         <input
                           type="text"
                           value={currentEval.evaluatorName}
                           onChange={(e) => setEditingEval360({ ...currentEval, evaluatorName: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-hidden"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 outline-hidden"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Periodo de Evaluación</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Periodo de Evaluación</label>
                         <input
                           type="text"
                           value={currentEval.period}
                           onChange={(e) => setEditingEval360({ ...currentEval, period: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-hidden"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 outline-hidden"
                         />
                       </div>
                     </div>
 
                     {/* Grid de 9 Competencias 360° con explicaciones */}
                     <div className="space-y-2">
-                      <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                        <Award className="w-4 h-4 text-purple-600" />
+                      <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xs flex items-center gap-1.5">
+                        <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                         <span>Evaluación por Competencias (1.0 a 5.0 ⭐)</span>
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -9945,13 +9949,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         ].map(comp => {
                           const val = (currentEval.competencies as any)[comp.key] || 4.0;
                           return (
-                            <div key={comp.key} className="bg-white border border-slate-200 rounded-xl p-3 space-y-1.5 hover:border-purple-300 transition-colors shadow-2xs">
+                            <div key={comp.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 space-y-1.5 hover:border-purple-300 dark:hover:border-purple-700 transition-colors shadow-2xs">
                               <div className="flex justify-between items-start text-[10px] font-bold gap-1">
                                 <div>
-                                  <span className="text-slate-800 font-bold block">{comp.label}</span>
-                                  <span className="text-slate-400 font-normal text-[8.5px] leading-tight block mt-0.5">{comp.description}</span>
+                                  <span className="text-slate-800 dark:text-slate-100 font-bold block">{comp.label}</span>
+                                  <span className="text-slate-400 dark:text-slate-500 font-normal text-[8.5px] leading-tight block mt-0.5">{comp.description}</span>
                                 </div>
-                                <span className="text-purple-700 font-mono text-xs shrink-0">{val} ⭐</span>
+                                <span className="text-purple-700 dark:text-purple-300 font-mono text-xs shrink-0">{val} ⭐</span>
                               </div>
                               <input
                                 type="range"
@@ -9972,34 +9976,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     <div className="space-y-3 pt-2">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="block text-[10px] font-bold text-emerald-700 uppercase">💪 Fortalezas Destacadas</label>
+                          <label className="block text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase">💪 Fortalezas Destacadas</label>
                           <textarea
                             rows={2}
                             value={currentEval.feedbackStrengths || ''}
                             onChange={(e) => setEditingEval360({ ...currentEval, feedbackStrengths: e.target.value })}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700 outline-hidden"
+                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden"
                             placeholder="Manejo impecable del cliente..."
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-[10px] font-bold text-amber-700 uppercase">🔍 Oportunidades de Mejora</label>
+                          <label className="block text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase">🔍 Oportunidades de Mejora</label>
                           <textarea
                             rows={2}
                             value={currentEval.feedbackImprovements || ''}
                             onChange={(e) => setEditingEval360({ ...currentEval, feedbackImprovements: e.target.value })}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700 outline-hidden"
+                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden"
                             placeholder="Optimizar tiempos en cierre de informes..."
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-indigo-700 uppercase">🎯 Plan de Acción y Capacitación</label>
+                        <label className="block text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase">🎯 Plan de Acción y Capacitación</label>
                         <textarea
                           rows={2}
                           value={currentEval.actionPlan || ''}
                           onChange={(e) => setEditingEval360({ ...currentEval, actionPlan: e.target.value })}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700 outline-hidden"
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden"
                           placeholder="Curso avanzado de Tomografía GE..."
                         />
                       </div>
@@ -10008,7 +10012,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 )}
 
                 {/* Footer buttons with separate print actions */}
-                <div className="flex flex-wrap justify-between items-center border-t border-slate-100 pt-4 mt-2 gap-2">
+                <div className="flex flex-wrap justify-between items-center border-t border-slate-100 dark:border-slate-700 pt-4 mt-2 gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <button
                       type="button"
@@ -10059,7 +10063,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       setIsEngMetricsModalOpen(false);
                       setEditingEval360(null);
                     }}
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-4 py-2 rounded-xl transition-colors cursor-pointer"
+                    className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold text-xs px-4 py-2 rounded-xl transition-colors cursor-pointer"
                   >
                     Cerrar
                   </button>
@@ -10073,17 +10077,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Engineers List & Management Modal */}
       {isEngsModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="engineers-list-modal">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in duration-200 relative">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in duration-200 relative">
             
             {/* Modal Header */}
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
                   <UserCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider">Gestión de Técnicos y Usuarios del Sistema</h3>
-                  <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Administra técnicos, disponibilidad, roles de acceso y credenciales de usuarios.</p>
+                  <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wider">Gestión de Técnicos y Usuarios del Sistema</h3>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-500 font-semibold mt-0.5">Administra técnicos, disponibilidad, roles de acceso y credenciales de usuarios.</p>
                 </div>
               </div>
               <button
@@ -10091,25 +10095,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setIsEngsModalOpen(false);
                   setIsAddingNewEng(false);
                 }}
-                className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
+                className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex border-b border-slate-200 bg-slate-100/75 px-4 pt-2 gap-2">
+            <div className="flex border-b border-slate-200 dark:border-slate-700 bg-slate-100/75 dark:bg-slate-800/75 px-4 pt-2 gap-2">
               <button
                 onClick={() => setEngModalTab('engineers')}
                 className={`px-4 py-2 text-xs font-extrabold rounded-t-lg transition-all flex items-center gap-2 cursor-pointer border-t border-x ${
                   engModalTab === 'engineers'
-                    ? 'bg-white text-indigo-700 border-slate-200 -mb-px shadow-2xs font-black'
-                    : 'bg-transparent text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-200/50'
+                    ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 border-slate-200 dark:border-slate-700 -mb-px shadow-2xs font-black'
+                    : 'bg-transparent text-slate-500 dark:text-slate-500 border-transparent hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-600/50'
                 }`}
               >
                 <span>🛠️ Técnicos & Cuadrilla</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                  engModalTab === 'engineers' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-200 text-slate-600'
+                  engModalTab === 'engineers' ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}>
                   {engineers.length}
                 </span>
@@ -10119,13 +10123,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 onClick={() => setEngModalTab('users')}
                 className={`px-4 py-2 text-xs font-extrabold rounded-t-lg transition-all flex items-center gap-2 cursor-pointer border-t border-x ${
                   engModalTab === 'users'
-                    ? 'bg-white text-amber-700 border-slate-200 -mb-px shadow-2xs font-black'
-                    : 'bg-transparent text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-200/50'
+                    ? 'bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-300 border-slate-200 dark:border-slate-700 -mb-px shadow-2xs font-black'
+                    : 'bg-transparent text-slate-500 dark:text-slate-500 border-transparent hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-600/50'
                 }`}
               >
                 <span>👥 Todos los Usuarios Registrados</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                  engModalTab === 'users' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-600'
+                  engModalTab === 'users' ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}>
                   {(allRegisteredUsers || []).length}
                 </span>
@@ -10133,16 +10137,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
 
             {/* Search and Quick Filters */}
-            <div className="p-3.5 border-b border-slate-100 flex flex-col sm:flex-row gap-3 bg-white">
+            <div className="p-3.5 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-3 bg-white dark:bg-slate-900">
               <div className="relative flex-1">
                 <input
                   type="text"
                   placeholder={engModalTab === 'engineers' ? "Buscar técnico por nombre o especialidad..." : "Buscar usuario por correo, nombre o rol..."}
                   value={engSearchQuery}
                   onChange={(e) => setEngSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 pl-8 text-xs font-semibold text-slate-755 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 pl-8 text-xs font-semibold text-slate-755 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                 />
-                <span className="absolute left-3 top-2 text-slate-400 text-3xs">🔍</span>
+                <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-500 text-3xs">🔍</span>
               </div>
               
               {/* Quick Add Form button */}
@@ -10157,55 +10161,55 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
             {/* Add New User / Engineer Inline Panel */}
             {isAddingNewEng && (
-              <div className="bg-gradient-to-br from-indigo-50/70 via-slate-50 to-indigo-50/40 p-4 border-b border-indigo-100/80 space-y-3.5 animate-fadeIn">
+              <div className="bg-gradient-to-br from-indigo-50/70 via-slate-50 to-indigo-50/40 p-4 border-b border-indigo-100/80 dark:border-indigo-800/80 space-y-3.5 animate-fadeIn">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-extrabold text-xs shadow-xs">
                       <UserPlus className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                      <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
                         Registrar Nuevo Usuario & Asignar Rol
                       </h4>
-                      <p className="text-[10px] text-slate-500 font-medium">
+                      <p className="text-[10px] text-slate-500 dark:text-slate-500 font-medium">
                         Crea la cuenta en el sistema, asígnale su rol (Admin, Técnico o Ventas) y sincronízala con Firebase.
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100/80 px-2.5 py-0.5 rounded-full border border-indigo-200">
+                  <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-100/80 dark:bg-indigo-950/80 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
                     Nuevo Perfil
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                      Nombre Completo <span className="text-rose-500">*</span>
+                    <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
+                      Nombre Completo <span className="text-rose-500 dark:text-rose-400">*</span>
                     </label>
                     <input
                       type="text"
                       placeholder="Ej. Ing. Juan Pérez o Gerencia Técnica"
                       value={newEngName}
                       onChange={(e) => setNewEngName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                      Correo Electrónico (Login) <span className="text-rose-500">*</span>
+                    <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
+                      Correo Electrónico (Login) <span className="text-rose-500 dark:text-rose-400">*</span>
                     </label>
                     <input
                       type="email"
                       placeholder="ej: usuario@orimec.com.ec"
                       value={newEngEmail}
                       onChange={(e) => setNewEngEmail(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                    <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                       Contraseña Inicial (opcional)
                     </label>
                     <input
@@ -10213,18 +10217,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       placeholder="Mínimo 6 caracteres"
                       value={newEngPassword}
                       onChange={(e) => setNewEngPassword(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                    <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                       Rol en el Sistema
                     </label>
                     <select
                       value={newEngRole}
                       onChange={(e) => setNewEngRole(e.target.value as 'engineer' | 'admin' | 'sales' | 'orimec')}
-                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                     >
                       <option value="engineer">🛠️ Ingeniero / Técnico (FSM & Órdenes)</option>
                       <option value="admin">👑 Administrador (Acceso Total)</option>
@@ -10236,13 +10240,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   {newEngRole === 'engineer' && (
                     <>
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                        <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                           Especialidad
                         </label>
                         <select
                           value={newEngSpecialty}
                           onChange={(e) => setNewEngSpecialty(e.target.value as Specialty)}
-                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                         >
                           <option value="Mecánica">Mecánica</option>
                           <option value="Electricidad">Electricidad</option>
@@ -10253,13 +10257,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                        <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                           Sede Asignada
                         </label>
                         <select
                           value={newEngSede}
                           onChange={(e) => setNewEngSede(e.target.value as any)}
-                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                         >
                           <option value="Quito">Quito</option>
                           <option value="Guayaquil">Guayaquil</option>
@@ -10268,7 +10272,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                        <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                           Teléfono de Contacto
                         </label>
                         <input
@@ -10276,15 +10280,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           placeholder="Ej: +593 99 999 9999"
                           value={newEngPhone}
                           onChange={(e) => setNewEngPhone(e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                         />
                       </div>
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
-                  <span className="text-[10px] text-slate-500 font-semibold italic">
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-500 font-semibold italic">
                     {newEngPassword ? '🔑 Se creará cuenta con correo y contraseña.' : 'ℹ️ Si el usuario ya se registró, se sincronizará su perfil.'}
                   </span>
                   <div className="flex gap-2">
@@ -10292,7 +10296,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       type="button"
                       onClick={() => setIsAddingNewEng(false)}
                       disabled={isRegisteringUser}
-                      className="px-3.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer"
+                      className="px-3.5 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-600/60 rounded-lg transition-colors cursor-pointer"
                     >
                       Cancelar
                     </button>
@@ -10311,10 +10315,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             )}
 
             {/* Modal Body depending on Tab */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2.5 bg-slate-50/50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5 bg-slate-50/50 dark:bg-slate-800/50">
               {engModalTab === 'engineers' ? (
                 filteredEngineersForList.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400 font-semibold text-xs">
+                  <div className="text-center py-8 text-slate-400 dark:text-slate-500 font-semibold text-xs">
                     No se encontraron técnicos registrados con ese criterio de búsqueda.
                   </div>
                 ) : (
@@ -10328,22 +10332,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                   if (editingEngId === eng.id) {
                     return (
-                      <div key={eng.id} className="bg-slate-50 border border-indigo-150 rounded-lg p-4 flex flex-col gap-3 shadow-xs animate-in fade-in slide-in-from-top-1 duration-150">
-                        <div className="flex flex-wrap justify-between items-center border-b border-slate-200 pb-2.5 gap-2">
+                      <div key={eng.id} className="bg-slate-50 dark:bg-slate-800 border border-indigo-150 dark:border-indigo-800 rounded-lg p-4 flex flex-col gap-3 shadow-xs animate-in fade-in slide-in-from-top-1 duration-150">
+                        <div className="flex flex-wrap justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2.5 gap-2">
                           <div className="flex items-center gap-2">
-                            <span className="font-extrabold text-[11px] text-indigo-950 uppercase tracking-wider">✏️ Editar Detalles del Técnico</span>
-                            <span className="bg-indigo-100 text-indigo-800 text-[8px] font-extrabold px-1.5 py-0.5 rounded border border-indigo-150 font-mono">
+                            <span className="font-extrabold text-[11px] text-indigo-950 dark:text-indigo-300 uppercase tracking-wider">✏️ Editar Detalles del Técnico</span>
+                            <span className="bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-[8px] font-extrabold px-1.5 py-0.5 rounded border border-indigo-150 dark:border-indigo-800 font-mono">
                               {eng.id}
                             </span>
                           </div>
 
                           {/* Plantillas Rápida de Permisos (AHÍ ARRIBA BIEN VISIBLE) */}
-                          <div className="flex flex-wrap items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
-                            <span className="text-[8.5px] font-black text-slate-400 uppercase tracking-wider px-1">Plantilla Permisos:</span>
+                          <div className="flex flex-wrap items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs">
+                            <span className="text-[8.5px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">Plantilla Permisos:</span>
                             <button
                               type="button"
                               onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ingeniería', globalRoleTemplates))}
-                              className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
+                              className="bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
                               title="Cargar permisos predeterminados de Ingeniería"
                             >
                               🛠️ Ingeniería
@@ -10351,7 +10355,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             <button
                               type="button"
                               onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ventas', globalRoleTemplates))}
-                              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
+                              className="bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
                               title="Cargar permisos predeterminados de Ventas"
                             >
                               ⚡ Ventas
@@ -10359,7 +10363,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             <button
                               type="button"
                               onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Admin' as any, globalRoleTemplates))}
-                              className="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
+                              className="bg-purple-50 dark:bg-purple-950 hover:bg-purple-100 dark:hover:bg-purple-900 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-extrabold text-[8.5px] px-2.5 py-1 rounded cursor-pointer transition-all hover:scale-102 flex items-center gap-1"
                               title="Cargar todos los permisos de Administrador Total"
                             >
                               👑 Admin Total
@@ -10382,22 +10386,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                           {/* Nombre */}
                           <div className="space-y-1">
-                            <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Nombre Completo</label>
+                            <label className="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Nombre Completo</label>
                             <input 
                               type="text"
                               value={editEngName}
                               onChange={e => setEditEngName(e.target.value)}
-                              className="w-full text-3xs p-2 rounded-lg border border-slate-200 bg-white font-semibold"
+                              className="w-full text-3xs p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
                             />
                           </div>
 
                           {/* Especialidad */}
                           <div className="space-y-1">
-                            <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Especialidad</label>
+                            <label className="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Especialidad</label>
                             <select
                               value={editEngSpecialty}
                               onChange={e => setEditEngSpecialty(e.target.value as Specialty)}
-                              className="w-full text-3xs p-2 rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 outline-hidden"
+                              className="w-full text-3xs p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold text-slate-700 dark:text-slate-300 outline-hidden"
                             >
                               <option value="Ingeniería">Ingeniería</option>
                               <option value="Aplicaciones">Aplicaciones</option>
@@ -10408,11 +10412,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Sede / Sector */}
                           <div className="space-y-1">
-                            <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Sede / Sector (Cobertura)</label>
+                            <label className="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sede / Sector (Cobertura)</label>
                             <select
                               value={editEngSede}
                               onChange={e => setEditEngSede(e.target.value as any)}
-                              className="w-full text-3xs p-2 rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 outline-hidden"
+                              className="w-full text-3xs p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold text-slate-700 dark:text-slate-300 outline-hidden"
                             >
                               <option value="Quito">📍 Quito (Sierra / Alrededores)</option>
                               <option value="Guayaquil">📍 Guayaquil (Costa / Alrededores)</option>
@@ -10423,21 +10427,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Correo */}
                           <div className="space-y-1">
-                            <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Correo Electrónico</label>
+                            <label className="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Correo Electrónico</label>
                             <input 
                               type="email"
                               value={editEngEmail}
                               onChange={e => setEditEngEmail(e.target.value)}
-                              className="w-full text-3xs p-2 rounded-lg border border-slate-200 bg-white font-semibold"
+                              className="w-full text-3xs p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold"
                             />
                           </div>
 
                           {/* Modalidades y Capacitaciones Acreditadas */}
                           <div className="space-y-1 sm:col-span-4">
-                            <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                            <label className="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                               🎓 Modalidades y Capacitaciones Acreditadas
                             </label>
-                            <div className="flex flex-wrap gap-1.5 p-2.5 bg-white border border-slate-200 rounded-xl">
+                            <div className="flex flex-wrap gap-1.5 p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
                               {OFFICIAL_MODALITIES.map(mod => {
                                 const isSelected = editEngSkills.includes(mod.code);
                                 return (
@@ -10455,7 +10459,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     className={`px-2.5 py-1 rounded-lg text-3xs font-extrabold transition-all cursor-pointer border flex items-center gap-1 ${
                                       isSelected
                                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-                                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500'
                                     }`}
                                   >
                                     <span>{isSelected ? '✓ ' : '+ '}{mod.code}</span>
@@ -10466,13 +10470,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
 
                           {/* 🔒 PERMISOS Y ACCESOS DEL SISTEMA */}
-                          <div className="space-y-2 sm:col-span-3 mt-2 pt-3 border-t border-slate-200">
+                          <div className="space-y-2 sm:col-span-3 mt-2 pt-3 border-t border-slate-200 dark:border-slate-700">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <div>
-                                <span className="font-extrabold text-[10.5px] text-slate-800 flex items-center gap-1.5">
+                                <span className="font-extrabold text-[10.5px] text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                                   <span>🔒 Permisos y Accesos del Sistema</span>
                                 </span>
-                                <p className="text-[8.5px] text-slate-500 font-medium">Personaliza qué módulos y acciones puede realizar este usuario.</p>
+                                <p className="text-[8.5px] text-slate-500 dark:text-slate-500 font-medium">Personaliza qué módulos y acciones puede realizar este usuario.</p>
                               </div>
                               
                               {/* Plantillas Rápida */}
@@ -10480,7 +10484,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <button
                                   type="button"
                                   onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ventas'))}
-                                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-extrabold text-[8px] px-2 py-0.5 rounded cursor-pointer transition-colors"
+                                  className="bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-extrabold text-[8px] px-2 py-0.5 rounded cursor-pointer transition-colors"
                                   title="Aplicar permisos por defecto del departamento de Ventas"
                                 >
                                   ⚡ Plantilla Ventas
@@ -10488,7 +10492,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <button
                                   type="button"
                                   onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Ingeniería'))}
-                                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-[8px] px-2 py-0.5 rounded cursor-pointer transition-colors"
+                                  className="bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold text-[8px] px-2 py-0.5 rounded cursor-pointer transition-colors"
                                   title="Aplicar permisos por defecto de Ingeniería"
                                 >
                                   🛠️ Plantilla Ingeniería
@@ -10496,7 +10500,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <button
                                   type="button"
                                   onClick={() => setEditEngPermissions(getDefaultPermissionsForSpecialty('Admin' as any))}
-                                  className="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-extrabold text-[8px] px-2 py-0.5 rounded cursor-pointer transition-colors"
+                                  className="bg-purple-50 dark:bg-purple-950 hover:bg-purple-100 dark:hover:bg-purple-900 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-extrabold text-[8px] px-2 py-0.5 rounded cursor-pointer transition-colors"
                                   title="Habilitar todos los permisos de administrador"
                                 >
                                   👑 Admin Total
@@ -10504,10 +10508,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3 bg-white border border-slate-200 rounded-xl">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
                               {/* 📅 AGENDAMIENTO Y ÓRDENES */}
-                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
-                                <span className="font-extrabold text-[9px] text-indigo-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📅 Agendamiento y Órdenes</span>
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-indigo-900 dark:text-indigo-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">📅 Agendamiento y Órdenes</span>
                                 {[
                                   { key: 'canViewWorkOrders', label: 'Ver mapa y calendario de agenda' },
                                   { key: 'canCreateWorkOrders', label: 'Crear / agendar órdenes' },
@@ -10515,12 +10519,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   { key: 'canDeleteWorkOrders', label: 'Eliminar órdenes de trabajo' },
                                   { key: 'canChangeWorkOrderStatus', label: 'Marcar estado (Realizado/Pendiente)' },
                                 ].map(perm => (
-                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={!!(editEngPermissions as any)[perm.key]}
                                       onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                      className="rounded border-slate-300 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
                                     />
                                     <span>{perm.label}</span>
                                   </label>
@@ -10528,8 +10532,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
 
                               {/* 📜 CONTRATOS DE MANTENIMIENTO */}
-                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
-                                <span className="font-extrabold text-[9px] text-amber-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📜 Contratos de Mantenimiento</span>
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-amber-900 dark:text-amber-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">📜 Contratos de Mantenimiento</span>
                                 {[
                                   { key: 'canViewContracts', label: 'Ver contratos y cronogramas' },
                                   { key: 'canCreateContracts', label: 'Crear nuevos contratos' },
@@ -10537,12 +10541,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   { key: 'canDeleteContracts', label: 'Eliminar contratos' },
                                   { key: 'canViewContractValues', label: '💰 Ver Valores $ USD del Contrato', highlight: true },
                                 ].map(perm => (
-                                  <label key={perm.key} className={`flex items-center gap-1.5 text-[8.5px] font-bold cursor-pointer transition-colors ${perm.highlight ? 'text-emerald-700 font-extrabold' : 'text-slate-700 hover:text-indigo-600'}`}>
+                                  <label key={perm.key} className={`flex items-center gap-1.5 text-[8.5px] font-bold cursor-pointer transition-colors ${perm.highlight ? 'text-emerald-700 dark:text-emerald-300 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400'}`}>
                                     <input
                                       type="checkbox"
                                       checked={!!(editEngPermissions as any)[perm.key]}
                                       onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                      className="rounded border-slate-300 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
                                     />
                                     <span>{perm.label}</span>
                                   </label>
@@ -10550,20 +10554,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
 
                               {/* 📑 INFORMES TÉCNICOS */}
-                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
-                                <span className="font-extrabold text-[9px] text-sky-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📑 Informes Técnicos</span>
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-sky-900 dark:text-sky-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">📑 Informes Técnicos</span>
                                 {[
                                   { key: 'canViewReports', label: 'Ver informes técnicos' },
                                   { key: 'canCreateReports', label: 'Crear nuevos informes (RE-TE-04)' },
                                   { key: 'canApproveReports', label: 'Aprobar / Validar informes' },
                                   { key: 'canExportReportsPdf', label: 'Descargar e imprimir PDF' },
                                 ].map(perm => (
-                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={!!(editEngPermissions as any)[perm.key]}
                                       onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                      className="rounded border-slate-300 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
                                     />
                                     <span>{perm.label}</span>
                                   </label>
@@ -10571,20 +10575,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
 
                               {/* 🏢 CLIENTES Y EQUIPOS */}
-                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
-                                <span className="font-extrabold text-[9px] text-emerald-900 uppercase tracking-wider block border-b border-slate-200 pb-1">🏢 Clientes y Equipos</span>
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-emerald-900 dark:text-emerald-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">🏢 Clientes y Equipos</span>
                                 {[
                                   { key: 'canViewClients', label: 'Ver directorio de clientes' },
                                   { key: 'canEditClients', label: 'Crear / Editar clientes' },
                                   { key: 'canViewEquipments', label: 'Ver inventario de equipos' },
                                   { key: 'canEditEquipments', label: 'Crear / Editar equipos' },
                                 ].map(perm => (
-                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={!!(editEngPermissions as any)[perm.key]}
                                       onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                      className="rounded border-slate-300 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
                                     />
                                     <span>{perm.label}</span>
                                   </label>
@@ -10592,18 +10596,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
 
                               {/* 📂 REGISTRO MTO */}
-                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
-                                <span className="font-extrabold text-[9px] text-pink-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📂 Registro de Mantenimiento</span>
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-pink-900 dark:text-pink-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">📂 Registro de Mantenimiento</span>
                                 {[
                                   { key: 'canViewRegistry', label: 'Ver Registro de Equipos (Hoja Vida)' },
                                   { key: 'canEditRegistry', label: 'Crear / Importar CSV de Registro' },
                                 ].map(perm => (
-                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={!!(editEngPermissions as any)[perm.key]}
                                       onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                      className="rounded border-slate-300 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
                                     />
                                     <span>{perm.label}</span>
                                   </label>
@@ -10611,18 +10615,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
 
                               {/* 🌴 VACACIONES Y PERMISOS */}
-                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
-                                <span className="font-extrabold text-[9px] text-teal-900 uppercase tracking-wider block border-b border-slate-200 pb-1">🌴 Vacaciones y Permisos</span>
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-teal-900 dark:text-teal-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">🌴 Vacaciones y Permisos</span>
                                 {[
                                   { key: 'canViewVacations', label: 'Ver módulo de vacaciones del personal' },
                                   { key: 'canManageVacations', label: 'Solicitar / Aprobar / Editar vacaciones' },
                                 ].map(perm => (
-                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={!!(editEngPermissions as any)[perm.key]}
                                       onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                      className="rounded border-slate-300 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
                                     />
                                     <span>{perm.label}</span>
                                   </label>
@@ -10630,18 +10634,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
 
                               {/* 📚 CAPACITACIONES Y ENTRENAMIENTOS */}
-                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
-                                <span className="font-extrabold text-[9px] text-purple-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📚 Capacitaciones y Cursos</span>
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-purple-900 dark:text-purple-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">📚 Capacitaciones y Cursos</span>
                                 {[
                                   { key: 'canViewTrainings', label: 'Ver módulo de capacitaciones y cursos' },
                                   { key: 'canManageTrainings', label: 'Programar / Editar / Eliminar cursos' },
                                 ].map(perm => (
-                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={!!(editEngPermissions as any)[perm.key]}
                                       onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                      className="rounded border-slate-300 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
                                     />
                                     <span>{perm.label}</span>
                                   </label>
@@ -10649,19 +10653,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </div>
 
                               {/* ⚙️ ADMINISTRACIÓN Y REPORTES */}
-                              <div className="space-y-1.5 p-2 bg-slate-50/70 border border-slate-100 rounded-lg">
-                                <span className="font-extrabold text-[9px] text-slate-900 uppercase tracking-wider block border-b border-slate-200 pb-1">⚙️ Administración del Sistema</span>
+                              <div className="space-y-1.5 p-2 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 rounded-lg">
+                                <span className="font-extrabold text-[9px] text-slate-900 dark:text-slate-100 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">⚙️ Administración del Sistema</span>
                                 {[
                                   { key: 'canManageUsers', label: 'Gestionar usuarios y otorgar permisos' },
                                   { key: 'canViewAuditLogs', label: 'Ver registros de auditoría y cambios' },
                                   { key: 'canExportData', label: 'Exportar reportes a Excel / CSV' },
                                 ].map(perm => (
-                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                                  <label key={perm.key} className="flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={!!(editEngPermissions as any)[perm.key]}
                                       onChange={e => setEditEngPermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                                      className="rounded border-slate-300 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
                                     />
                                     <span>{perm.label}</span>
                                   </label>
@@ -10671,7 +10675,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-3 mt-1.5 pt-2 border-t border-slate-200/60">
+                        <div className="flex flex-wrap items-center justify-between gap-3 mt-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
                           {/* Password Reset Action */}
                           <button
                             onClick={() => {
@@ -10682,7 +10686,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                             }}
                             type="button"
-                            className="text-[9px] font-bold text-indigo-600 hover:text-indigo-850 hover:underline flex items-center gap-1 cursor-pointer"
+                            className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-850 dark:hover:text-indigo-300 hover:underline flex items-center gap-1 cursor-pointer"
                           >
                             🔑 Enviar correo para restablecer contraseña
                           </button>
@@ -10690,7 +10694,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           <div className="flex gap-2">
                             <button
                               onClick={() => setEditingEngId(null)}
-                              className="px-3 py-1.5 text-3xs font-bold text-slate-500 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                              className="px-3 py-1.5 text-3xs font-bold text-slate-500 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors cursor-pointer"
                             >
                               Cancelar
                             </button>
@@ -10721,43 +10725,43 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   }
 
                   return (
-                    <div key={eng.id} className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs hover:border-slate-300 transition-colors">
+                    <div key={eng.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs hover:border-slate-300 dark:hover:border-slate-500 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="text-2xl">{getEngineerEmoji(eng.id)}</div>
                         <div>
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-extrabold text-xs text-slate-800">{eng.name}</span>
-                            <span className="bg-sky-50 text-sky-800 border border-sky-200 text-[8px] font-extrabold px-1.5 py-0.2 rounded flex items-center gap-0.5">
+                            <span className="font-extrabold text-xs text-slate-800 dark:text-slate-100">{eng.name}</span>
+                            <span className="bg-sky-50 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[8px] font-extrabold px-1.5 py-0.2 rounded flex items-center gap-0.5">
                               📍 Sede: {eng.sede || 'Quito'}
                             </span>
                             {isMaster && (
-                              <span className="bg-slate-100 text-slate-600 border border-slate-200 text-[8px] font-extrabold px-1 py-0.2 rounded uppercase">
+                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[8px] font-extrabold px-1 py-0.2 rounded uppercase">
                                 Base
                               </span>
                             )}
                           </div>
-                          <div className="text-[10px] text-slate-400 font-semibold mt-0.5 uppercase tracking-wide text-left">
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5 uppercase tracking-wide text-left">
                             {eng.specialty}
                           </div>
-                          <div className="text-[10px] text-indigo-600 font-extrabold mt-0.5">
+                          <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold mt-0.5">
                             📅 {engActiveOrders} asignaciones este mes
                           </div>
                           {/* Modalidades y Capacitaciones Acreditadas */}
                           <div className="flex flex-wrap items-center gap-1 mt-1 font-sans">
-                            <span className="text-[8.5px] font-bold text-slate-400 uppercase">🎓 Capacitaciones:</span>
+                            <span className="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 uppercase">🎓 Capacitaciones:</span>
                             {(eng.skills && eng.skills.length > 0 ? eng.skills : ['GE', 'FE']).map(s => (
-                              <span key={s} className="bg-indigo-50 text-indigo-700 border border-indigo-150 text-[8.5px] font-extrabold px-1.5 py-0.2 rounded">
+                              <span key={s} className="bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-150 dark:border-indigo-800 text-[8.5px] font-extrabold px-1.5 py-0.2 rounded">
                                 {s}
                               </span>
                             ))}
                             {((scheduledTrainings || []).filter(st => st.engineerId === eng.id || st.supportEngineerIds?.includes(eng.id)).length > 0) && (
-                              <span className="bg-purple-50 text-purple-700 border border-purple-150 text-[8.5px] font-extrabold px-1.5 py-0.2 rounded">
+                              <span className="bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-150 dark:border-purple-800 text-[8.5px] font-extrabold px-1.5 py-0.2 rounded">
                                 📜 {(scheduledTrainings || []).filter(st => st.engineerId === eng.id || st.supportEngineerIds?.includes(eng.id)).length} Registradas
                               </span>
                             )}
                           </div>
                           {eng.email && (
-                            <div className="text-[8px] text-slate-400 font-semibold font-mono mt-0.5 text-left">
+                            <div className="text-[8px] text-slate-400 dark:text-slate-500 font-semibold font-mono mt-0.5 text-left">
                               ✉️ {eng.email}
                             </div>
                           )}
@@ -10772,10 +10776,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             onChange={(e) => handleUpdateEngAvailability(eng, e.target.value as any)}
                             className={`text-2xs font-bold px-2 py-1 rounded border outline-hidden cursor-pointer ${
                               eng.availability === 'En Campo'
-                                ? 'bg-sky-50 text-sky-850 border-sky-200 font-black'
+                                ? 'bg-sky-50 dark:bg-sky-950 text-sky-850 dark:text-sky-300 border-sky-200 dark:border-sky-800 font-black'
                                 : eng.availability === 'Disponible'
-                                ? 'bg-emerald-50 text-emerald-805 border-emerald-200'
-                                : 'bg-slate-50 text-slate-500 border-slate-200'
+                                ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-805 border-emerald-200 dark:border-emerald-800'
+                                : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-500 border-slate-200 dark:border-slate-700'
                             }`}
                           >
                             <option value="Disponible">🟢 Disponible</option>
@@ -10796,7 +10800,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setEditEngPermissions(eng.customPermissions || getDefaultPermissionsForSpecialty(eng.specialty || 'Ingeniería'));
                           }}
                           title="Editar detalles, capacitaciones y permisos de este usuario"
-                          className="p-1.5 rounded-lg border bg-white border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer text-xs"
+                          className="p-1.5 rounded-lg border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900 transition-colors cursor-pointer text-xs"
                         >
                           ✏️
                         </button>
@@ -10811,8 +10815,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           disabled={isMaster}
                           className={`p-1.5 rounded-lg border transition-colors cursor-pointer text-xs ${
                             isMaster
-                              ? 'bg-slate-50 border-slate-100 text-slate-350 cursor-not-allowed opacity-50'
-                              : 'bg-white border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50'
+                              ? 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-350 dark:text-slate-500 cursor-not-allowed opacity-50'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900'
                           }`}
                         >
                           🔗
@@ -10825,8 +10829,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           disabled={isMaster}
                           className={`p-1.5 rounded-lg border transition-colors cursor-pointer text-xs ${
                             isMaster
-                              ? 'bg-slate-50 border-slate-100 text-slate-350 cursor-not-allowed opacity-50'
-                              : 'bg-white border-slate-200 text-slate-400 hover:text-red-655 hover:border-red-200 hover:bg-red-50'
+                              ? 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-350 dark:text-slate-500 cursor-not-allowed opacity-50'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-red-655 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900'
                           }`}
                         >
                           🗑️
@@ -10852,12 +10856,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   if (filteredUsers.length === 0) {
                     return (
                       <div className="space-y-3 py-6">
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center space-y-2">
-                          <p className="text-xs font-extrabold text-amber-800">
+                        <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-center space-y-2">
+                          <p className="text-xs font-extrabold text-amber-800 dark:text-amber-300">
                             {engSearchQuery ? 'No se encontraron usuarios con ese filtro de búsqueda.' : 'No hay usuarios registrados actualmente en Firestore.'}
                           </p>
-                          <p className="text-[10px] text-slate-600 font-medium max-w-md mx-auto">
-                            Puedes registrar un nuevo usuario haciendo clic en el botón superior <span className="font-bold text-indigo-700">"Registrar Usuario / Técnico"</span>.
+                          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium max-w-md mx-auto">
+                            Puedes registrar un nuevo usuario haciendo clic en el botón superior <span className="font-bold text-indigo-700 dark:text-indigo-300">"Registrar Usuario / Técnico"</span>.
                           </p>
                         </div>
                       </div>
@@ -10866,9 +10870,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                   return (
                     <div className="space-y-2.5">
-                      <div className="flex items-center justify-between px-1 text-[11px] text-slate-600 font-bold">
+                      <div className="flex items-center justify-between px-1 text-[11px] text-slate-600 dark:text-slate-300 font-bold">
                         <span>Listado de Cuentas y Accesos en Firebase ({filteredUsers.length})</span>
-                        <span className="text-[9px] text-slate-400">Sincronizado en tiempo real</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500">Sincronizado en tiempo real</span>
                       </div>
 
                       {filteredUsers.map(user => {
@@ -10885,19 +10889,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             key={user.uid}
                             className={`border rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all ${
                               isSelf
-                                ? 'bg-indigo-50/70 border-indigo-300 ring-1 ring-indigo-200 shadow-xs'
+                                ? 'bg-indigo-50/70 dark:bg-indigo-950/70 border-indigo-300 dark:border-indigo-800 ring-1 ring-indigo-200 dark:ring-indigo-800 shadow-xs'
                                 : linkedEng
-                                ? 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
-                                : 'bg-amber-50/50 border-amber-200 shadow-2xs'
+                                ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-500 shadow-2xs'
+                                : 'bg-amber-50/50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800 shadow-2xs'
                             }`}
                           >
                             <div className="space-y-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-extrabold text-xs text-slate-800 flex items-center gap-1">
+                                <span className="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1">
                                   ✉️ {user.email || '(sin email)'}
                                 </span>
                                 {user.name && (
-                                  <span className="text-slate-600 font-semibold text-xs">
+                                  <span className="text-slate-600 dark:text-slate-300 font-semibold text-xs">
                                     • {user.name}
                                   </span>
                                 )}
@@ -10911,40 +10915,40 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     ⏳ Pendiente de Aprobación
                                   </span>
                                 )}
-                                <span className="bg-slate-100 text-slate-500 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded">
+                                <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-500 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded">
                                   {user.uid.slice(0, 10)}...
                                 </span>
                               </div>
 
                               <div className="flex items-center gap-2 flex-wrap text-[10px]">
-                                <span className="text-slate-500 font-semibold">Rol Asignado:</span>
+                                <span className="text-slate-500 dark:text-slate-500 font-semibold">Rol Asignado:</span>
                                 <span className={`font-black uppercase px-2 py-0.5 rounded text-[9px] border ${
                                   user.role === 'admin'
-                                    ? 'bg-purple-100 text-purple-800 border-purple-200'
+                                    ? 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800'
                                     : user.role === 'engineer'
-                                    ? 'bg-indigo-100 text-indigo-800 border-indigo-200'
+                                    ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
                                     : user.role === 'sales'
-                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                                     : user.role === 'orimec'
-                                    ? 'bg-sky-100 text-sky-800 border-sky-200'
-                                    : 'bg-amber-100 text-amber-800 border-amber-200'
+                                    ? 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800'
+                                    : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
                                 }`}>
                                   {user.role === 'admin' ? '👑 Administrador' : user.role === 'engineer' ? '🛠️ Ingeniero/Técnico' : user.role === 'sales' ? '💼 Ventas/Comercial' : user.role === 'orimec' ? '🏢 Personal ORIMEC' : '⚠️ Sin Asignar'}
                                 </span>
 
                                 {user.signupRoleLabel && (
-                                  <span className="bg-slate-50 text-slate-600 text-[9px] font-bold px-2 py-0.5 rounded border border-slate-200">
+                                  <span className="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[9px] font-bold px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                                     Solicitó: {user.signupRoleLabel}
                                   </span>
                                 )}
 
                                 {linkedEng ? (
-                                  <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
+                                  <span className="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                                     ✓ Técnico Vinculado: <span className="font-black">{linkedEng.name}</span> ({linkedEng.id})
                                   </span>
                                 ) : (
                                   user.role === 'engineer' && (
-                                    <span className="bg-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded border border-amber-300">
+                                    <span className="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[9px] font-bold px-2 py-0.5 rounded border border-amber-300 dark:border-amber-800">
                                       ⚠ Sin perfil de técnico vinculado
                                     </span>
                                   )
@@ -10956,7 +10960,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               <select
                                 value={curRole}
                                 onChange={e => setPendingUserRoles(prev => ({ ...prev, [user.uid]: e.target.value as any }))}
-                                className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-400 shadow-2xs"
+                                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-400 dark:border-indigo-300 shadow-2xs"
                               >
                                 <option value="engineer">🛠️ Ingeniero/Técnico</option>
                                 <option value="sales">💼 Vendedor / Comercial</option>
@@ -10968,7 +10972,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <select
                                   value={curEngId}
                                   onChange={e => setPendingUserEngIds(prev => ({ ...(prev || {}), [user.uid]: e.target.value }))}
-                                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-400 shadow-2xs max-w-[180px]"
+                                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-hidden focus:border-indigo-400 dark:border-indigo-300 shadow-2xs max-w-[180px]"
                                 >
                                   <option value="">-- Vincular Técnico --</option>
                                   {engineers.map(e => (
@@ -11012,19 +11016,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             {/* Delete Confirmation Overlay inside modal */}
             {engToDelete && (
               <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-3xs flex items-center justify-center p-6 z-30">
-                <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-sm w-full p-4 space-y-4 animate-in zoom-in-95 duration-150">
-                  <h4 className="font-extrabold text-xs text-red-700 uppercase tracking-wider flex items-center gap-1.5">
+                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl max-w-sm w-full p-4 space-y-4 animate-in zoom-in-95 duration-150">
+                  <h4 className="font-extrabold text-xs text-red-700 dark:text-red-300 uppercase tracking-wider flex items-center gap-1.5">
                     ⚠ Confirmar Eliminación
                   </h4>
-                  <p className="text-3xs text-slate-650 font-semibold leading-normal">
+                  <p className="text-3xs text-slate-650 dark:text-slate-300 font-semibold leading-normal">
                     ¿Estás seguro de que deseas eliminar a **{engToDelete.name}**?
                     <br />
-                    <span className="text-red-500 font-bold">Esta acción no se puede deshacer.</span> Si tiene mantenimientos asignados, aparecerán con un técnico no asignado.
+                    <span className="text-red-500 dark:text-red-400 font-bold">Esta acción no se puede deshacer.</span> Si tiene mantenimientos asignados, aparecerán con un técnico no asignado.
                   </p>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
                     <button
                       onClick={() => setEngToDelete(null)}
-                      className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer"
                     >
                       Cancelar
                     </button>
@@ -11042,22 +11046,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             {/* Merge / Fusion Confirmation Overlay inside modal */}
             {engToMerge && (
               <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-3xs flex items-center justify-center p-6 z-30">
-                <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-sm w-full p-4 space-y-4 animate-in zoom-in-95 duration-150">
-                  <h4 className="font-extrabold text-xs text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl max-w-sm w-full p-4 space-y-4 animate-in zoom-in-95 duration-150">
+                  <h4 className="font-extrabold text-xs text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
                     🔗 Fusionar Técnicos Duplicados
                   </h4>
-                  <p className="text-[10px] text-slate-650 font-semibold leading-normal">
-                    Vas a fusionar al técnico <span className="font-bold text-slate-900">{engToMerge.name}</span>.
+                  <p className="text-[10px] text-slate-650 dark:text-slate-300 font-semibold leading-normal">
+                    Vas a fusionar al técnico <span className="font-bold text-slate-900 dark:text-slate-100">{engToMerge.name}</span>.
                     <br />
                     Todas sus agendas se reasignarán al técnico destino seleccionado y este registro duplicado será eliminado.
                   </p>
 
                   <div className="space-y-1.5">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Selecciona el técnico destino (Correcto):</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Selecciona el técnico destino (Correcto):</label>
                     <select
                       value={mergeTargetId}
                       onChange={(e) => setMergeTargetId(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                     >
                       <option value="">Seleccionar técnico...</option>
                       {engineers
@@ -11070,13 +11074,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </select>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 font-sans">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700 font-sans">
                     <button
                       onClick={() => {
                         setEngToMerge(null);
                         setMergeTargetId('');
                       }}
-                      className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                      className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
                     >
                       Cancelar
                     </button>
@@ -11086,7 +11090,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       className={`font-bold text-xs px-3 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer ${
                         mergeTargetId
                           ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                          : 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                          : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50'
                       }`}
                     >
                       Confirmar Fusión
@@ -11102,38 +11106,38 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Reset Month Schedule Modal (2-Step Confirmation) */}
       {isResetModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="reset-month-modal">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-sm w-full p-5 space-y-4 animate-in zoom-in-95 duration-150 relative">
-            <div className="flex items-center gap-2 text-red-750">
-              <AlertCircle className="w-5 h-5 text-red-600" />
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 max-w-sm w-full p-5 space-y-4 animate-in zoom-in-95 duration-150 relative">
+            <div className="flex items-center gap-2 text-red-750 dark:text-red-300">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
               <h3 className="font-extrabold text-xs uppercase tracking-wider">¿Reiniciar agenda del mes?</h3>
             </div>
             
-            <p className="text-[10px] text-slate-650 font-semibold leading-normal">
-              Estás a punto de eliminar permanentemente **{currentMonthWOs.length}** agendas del mes de <span className="font-bold text-slate-800">{calendarMonthName} de {calendarYear}</span> en Firestore.
+            <p className="text-[10px] text-slate-650 dark:text-slate-300 font-semibold leading-normal">
+              Estás a punto de eliminar permanentemente **{currentMonthWOs.length}** agendas del mes de <span className="font-bold text-slate-800 dark:text-slate-100">{calendarMonthName} de {calendarYear}</span> en Firestore.
               <br />
-              <span className="text-red-500 font-extrabold">Esta acción no se puede deshacer.</span>
+              <span className="text-red-500 dark:text-red-400 font-extrabold">Esta acción no se puede deshacer.</span>
             </p>
 
             <div className="space-y-2">
-              <label className="block text-[9px] font-bold text-slate-500 uppercase leading-tight">
-                Para confirmar, escribe <span className="font-mono font-black text-red-700 select-all">REINICIAR {calendarMonthName.toUpperCase()}</span> abajo:
+              <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase leading-tight">
+                Para confirmar, escribe <span className="font-mono font-black text-red-700 dark:text-red-300 select-all">REINICIAR {calendarMonthName.toUpperCase()}</span> abajo:
               </label>
               <input
                 type="text"
                 value={resetConfirmText}
                 onChange={(e) => setResetConfirmText(e.target.value)}
                 placeholder={`REINICIAR ${calendarMonthName.toUpperCase()}`}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all uppercase"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all uppercase"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 font-sans">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700 font-sans">
               <button
                 onClick={() => {
                   setIsResetModalOpen(false);
                   setResetConfirmText('');
                 }}
-                className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
               >
                 Cancelar
               </button>
@@ -11143,7 +11147,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 className={`font-bold text-xs px-3 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer ${
                   resetConfirmText.toUpperCase() === `REINICIAR ${calendarMonthName.toUpperCase()}`
                     ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                    : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50'
                 }`}
               >
                 Eliminar Todo (2/2)
@@ -11156,38 +11160,38 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Report Month Modal (2-Step Confirmation) */}
       {isReportMonthModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="report-month-modal">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-sm w-full p-5 space-y-4 animate-in zoom-in-95 duration-150 relative">
-            <div className="flex items-center gap-2 text-emerald-750">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 max-w-sm w-full p-5 space-y-4 animate-in zoom-in-95 duration-150 relative">
+            <div className="flex items-center gap-2 text-emerald-750 dark:text-emerald-300">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               <h3 className="font-extrabold text-xs uppercase tracking-wider">¿Reportar todo el mes?</h3>
             </div>
             
-            <p className="text-[10px] text-slate-650 font-semibold leading-normal">
-              Estás a punto de marcar como ejecutados y reportados **{currentMonthWOs.filter(wo => wo.status !== 'Reportado' && wo.status !== 'Conciliado').length}** trabajos del mes de <span className="font-bold text-slate-800">{calendarMonthName} de {calendarYear}</span> en Firestore.
+            <p className="text-[10px] text-slate-650 dark:text-slate-300 font-semibold leading-normal">
+              Estás a punto de marcar como ejecutados y reportados **{currentMonthWOs.filter(wo => wo.status !== 'Reportado' && wo.status !== 'Conciliado').length}** trabajos del mes de <span className="font-bold text-slate-800 dark:text-slate-100">{calendarMonthName} de {calendarYear}</span> en Firestore.
               <br />
               Se generará un reporte de campo automático para cada una de las órdenes pendientes.
             </p>
 
             <div className="space-y-2">
-              <label className="block text-[9px] font-bold text-slate-500 uppercase leading-tight">
-                Para confirmar, escribe <span className="font-mono font-black text-emerald-700 select-all">REPORTAR {calendarMonthName.toUpperCase()}</span> abajo:
+              <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase leading-tight">
+                Para confirmar, escribe <span className="font-mono font-black text-emerald-700 dark:text-emerald-300 select-all">REPORTAR {calendarMonthName.toUpperCase()}</span> abajo:
               </label>
               <input
                 type="text"
                 value={reportMonthConfirmText}
                 onChange={(e) => setReportMonthConfirmText(e.target.value)}
                 placeholder={`REPORTAR ${calendarMonthName.toUpperCase()}`}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all uppercase"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all uppercase"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 font-sans">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700 font-sans">
               <button
                 onClick={() => {
                   setIsReportMonthModalOpen(false);
                   setReportMonthConfirmText('');
                 }}
-                className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
               >
                 Cancelar
               </button>
@@ -11197,7 +11201,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 className={`font-bold text-xs px-3 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer ${
                   reportMonthConfirmText.toUpperCase() === `REPORTAR ${calendarMonthName.toUpperCase()}`
                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                    : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50'
                 }`}
               >
                 Confirmar (2/2)
@@ -11218,10 +11222,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Modal Creación / Edición de Cliente */}
       {isClientModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="client-form-modal">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Users className="w-5 h-5 text-indigo-600" />
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-md p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                <Users className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <span>{editingClient ? 'Editar Cliente' : 'Nuevo Cliente'}</span>
               </h3>
               <button
@@ -11229,7 +11233,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setIsClientModalOpen(false);
                   setEditingClient(null);
                 }}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -11237,7 +11241,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
             <form onSubmit={handleSaveClient} className="space-y-3.5 text-xs">
               <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">RUC / Cédula</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">RUC / Cédula</label>
                 <input
                   type="text"
                   required
@@ -11245,76 +11249,76 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   value={clientFormId}
                   onChange={(e) => setClientFormId(e.target.value)}
                   placeholder="Ej. 1792040001001"
-                  className="w-full bg-slate-50 disabled:bg-slate-100/80 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                  className="w-full bg-slate-50 dark:bg-slate-800 disabled:bg-slate-100/80 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">Nombre o Razón Social</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Nombre o Razón Social</label>
                 <input
                   type="text"
                   required
                   value={clientFormName}
                   onChange={(e) => setClientFormName(e.target.value)}
                   placeholder="Ej. Hospital Metropolitano"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">Dirección</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Dirección</label>
                 <input
                   type="text"
                   required
                   value={clientFormAddress}
                   onChange={(e) => setClientFormAddress(e.target.value)}
                   placeholder="Ej. Av. Mariana de Jesús s/n"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">Ciudad / Sucursal</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Ciudad / Sucursal</label>
                 <input
                   type="text"
                   value={clientFormCity}
                   onChange={(e) => setClientFormCity(e.target.value)}
                   placeholder="Ej. Quito / Matriz"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Contacto Principal</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Contacto Principal</label>
                   <input
                     type="text"
                     value={clientFormContact}
                     onChange={(e) => setClientFormContact(e.target.value)}
                     placeholder="Ej. Dra. María Elena"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Teléfono</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Teléfono</label>
                   <input
                     type="text"
                     value={clientFormPhone}
                     onChange={(e) => setClientFormPhone(e.target.value)}
                     placeholder="Ej. 099123456"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 font-sans">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700 font-sans">
                 <button
                   type="button"
                   onClick={() => {
                     setIsClientModalOpen(false);
                     setEditingClient(null);
                   }}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
                 >
                   Cancelar
                 </button>
@@ -11333,9 +11337,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Modal Creación / Edición de Registro de Mantenimiento */}
       {isRegistryModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="registry-form-modal">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-lg p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
                 <FileSpreadsheet className="w-5 h-5 text-pink-500" />
                 <span>{editingRegistry ? 'Editar Registro de Mantenimiento' : 'Nuevo Registro de Mantenimiento'}</span>
               </h3>
@@ -11344,7 +11348,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setIsRegistryModalOpen(false);
                   setEditingRegistry(null);
                 }}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -11353,18 +11357,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <form onSubmit={handleSaveRegistry} className="space-y-3.5 text-xs">
               {/* Institución */}
               <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">Nombre de Persona o Institución</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Nombre de Persona o Institución</label>
                 <input
                   type="text"
                   required
                   value={regFormInstitutionName}
                   onChange={(e) => setRegFormInstitutionName(e.target.value)}
                   placeholder="Ej. HOSP. ENRIQUE GARCÉS"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
                 />
                 {suggestedRegistryEquipments.length > 0 && (
-                  <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 space-y-1.5 mt-1.5 animate-in fade-in duration-150">
-                    <p className="text-[10px] font-extrabold text-amber-900 uppercase tracking-wider flex items-center gap-1">
+                  <div className="bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-2.5 space-y-1.5 mt-1.5 animate-in fade-in duration-150">
+                    <p className="text-[10px] font-extrabold text-amber-900 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1">
                       <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                       <span>Equipos registrados y de cobertura para este cliente (Clic para autorrellenar):</span>
                     </p>
@@ -11382,13 +11386,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             setRegFormTuboModel(sug.tuboModel);
                             setRegFormTuboSerial(sug.tuboSerial);
                           }}
-                          className="text-[10px] bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-950 px-2.5 py-1 rounded-lg font-bold transition-all text-left shadow-2xs cursor-pointer flex items-center gap-1.5 group"
+                          className="text-[10px] bg-white dark:bg-slate-800 hover:bg-amber-100/80 dark:hover:bg-amber-900/50 border border-amber-300 dark:border-amber-700 text-amber-950 dark:text-amber-200 px-2.5 py-1 rounded-lg font-bold transition-all text-left shadow-2xs cursor-pointer flex items-center gap-1.5 group"
                           title="Usar estos datos de marca, modelo y serie"
                         >
-                          <span className="font-mono text-amber-700 bg-amber-100 group-hover:bg-amber-200 px-1 py-0.2 rounded text-[9px]">{sug.eqBrand}</span>
+                          <span className="font-mono text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900 group-hover:bg-amber-200 dark:group-hover:bg-amber-800 px-1 py-0.2 rounded text-[9px]">{sug.eqBrand}</span>
                           <span>{sug.eqModel}</span>
                           {sug.eqSerial && sug.eqSerial !== '-' && (
-                            <span className="text-slate-500 font-mono text-[9px]">({sug.eqSerial})</span>
+                            <span className="text-slate-500 dark:text-slate-400 font-mono text-[9px]">({sug.eqSerial})</span>
                           )}
                         </button>
                       ))}
@@ -11398,80 +11402,80 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </div>
 
               {/* Equipo section */}
-              <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5 space-y-3">
-                <p className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800 rounded-xl p-3.5 space-y-3">
+                <p className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
                   <Cpu className="w-3.5 h-3.5" />
                   Equipo
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Marca</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Marca</label>
                     <input
                       type="text"
                       value={regFormEqBrand}
                       onChange={(e) => setRegFormEqBrand(e.target.value)}
                       placeholder="FUJIFILM"
-                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Modelo</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Modelo</label>
                     <input
                       type="text"
                       value={regFormEqModel}
                       onChange={(e) => setRegFormEqModel(e.target.value)}
                       placeholder="FCR GO"
-                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Nº Serie</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Nº Serie</label>
                     <input
                       type="text"
                       value={regFormEqSerial}
                       onChange={(e) => setRegFormEqSerial(e.target.value)}
                       placeholder="26830304"
-                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold font-mono text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold font-mono text-slate-700 dark:text-slate-200 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Tubo Rayos X section */}
-              <div className="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3.5 space-y-3">
-                <p className="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 rounded-xl p-3.5 space-y-3">
+                <p className="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5" />
                   Tubo de Rayos X
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Marca</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Marca</label>
                     <input
                       type="text"
                       value={regFormTuboBrand}
                       onChange={(e) => setRegFormTuboBrand(e.target.value)}
                       placeholder="FUJIFILM"
-                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Modelo</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Modelo</label>
                     <input
                       type="text"
                       value={regFormTuboModel}
                       onChange={(e) => setRegFormTuboModel(e.target.value)}
                       placeholder="M-5CE-31"
-                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Nº Serie</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Nº Serie</label>
                     <input
                       type="text"
                       value={regFormTuboSerial}
                       onChange={(e) => setRegFormTuboSerial(e.target.value)}
                       placeholder="KC 11834201"
-                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold font-mono text-slate-700 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold font-mono text-slate-700 dark:text-slate-200 outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                     />
                   </div>
                 </div>
@@ -11480,21 +11484,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               {/* Fecha & Responsable */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Fecha de Mantenimiento</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Fecha de Mantenimiento</label>
                   <input
                     type="date"
                     value={regFormFecha}
                     onChange={(e) => setRegFormFecha(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Responsable (Ingeniero)</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Responsable (Ingeniero)</label>
                   <select
                     required
                     value={regFormResponsable}
                     onChange={(e) => setRegFormResponsable(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
                   >
                     <option value="">-- Seleccionar Responsable --</option>
                     {engineers.map((eng) => (
@@ -11512,14 +11516,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-2 pt-1 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={() => {
                     setIsRegistryModalOpen(false);
                     setEditingRegistry(null);
                   }}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-150 rounded-lg cursor-pointer transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-150 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
                 >
                   Cancelar
                 </button>
@@ -11538,10 +11542,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Modal Creación / Edición de Equipo */}
       {isEquipModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="equipment-form-modal">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Cpu className="w-5 h-5 text-emerald-655" />
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-md p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                <Cpu className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <span>{editingEquip ? 'Editar Equipo Biomédico' : 'Nuevo Equipo Biomédico'}</span>
               </h3>
               <button
@@ -11549,7 +11553,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setIsEquipModalOpen(false);
                   setEditingEquip(null);
                 }}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -11558,7 +11562,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <form onSubmit={handleSaveEquipment} className="space-y-3.5 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Código / ID Único</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Código / ID Único</label>
                   <input
                     type="text"
                     required
@@ -11566,17 +11570,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     value={equipFormId}
                     onChange={(e) => setEquipFormId(e.target.value)}
                     placeholder="Ej. EQ-1002"
-                    className="w-full bg-slate-50 disabled:bg-slate-100/80 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                    className="w-full bg-slate-50 dark:bg-slate-800 disabled:bg-slate-100/80 dark:disabled:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Cliente Propietario</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Cliente Propietario</label>
                   <select
                     required
                     value={equipFormClientId}
                     onChange={(e) => setEquipFormClientId(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
                   >
                     <option value="">Seleccione cliente...</option>
                     {clients.map(c => (
@@ -11587,86 +11591,86 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">Nombre / Descripción del Activo</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Nombre / Descripción del Activo</label>
                 <input
                   type="text"
                   required
                   value={equipFormName}
                   onChange={(e) => setEquipFormName(e.target.value)}
                   placeholder="Ej. Ecógrafo Voluson E10"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Marca</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Marca</label>
                   <input
                     type="text"
                     required
                     value={equipFormBrand}
                     onChange={(e) => setEquipFormBrand(e.target.value)}
                     placeholder="Ej. GENERAL ELECTRIC"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Modelo</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Modelo</label>
                   <input
                     type="text"
                     required
                     value={equipFormModel}
                     onChange={(e) => setEquipFormModel(e.target.value)}
                     placeholder="Ej. Voluson E10"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Número de Serie</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Número de Serie</label>
                   <input
                     type="text"
                     required
                     value={equipFormSerial}
                     onChange={(e) => setEquipFormSerial(e.target.value)}
                     placeholder="Ej. SN89283712"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Versión Software</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Versión Software</label>
                   <input
                     type="text"
                     value={equipFormSW}
                     onChange={(e) => setEquipFormSW(e.target.value)}
                     placeholder="Ej. v6.2.1 (Opcional)"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Área / Sucursal Interna</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Área / Sucursal Interna</label>
                   <input
                     type="text"
                     value={equipFormSucursal}
                     onChange={(e) => setEquipFormSucursal(e.target.value)}
                     placeholder="Ej. Ginecología - Piso 3"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Estado Operativo</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Estado Operativo</label>
                   <select
                     value={equipFormStatus}
                     onChange={(e) => setEquipFormStatus(e.target.value as any)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer font-bold"
                   >
                     <option value="Operativo">🟢 Operativo</option>
                     <option value="No Operativo">🔴 No Operativo</option>
@@ -11674,14 +11678,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 font-sans">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700 font-sans">
                 <button
                   type="button"
                   onClick={() => {
                     setIsEquipModalOpen(false);
                     setEditingEquip(null);
                   }}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors"
                 >
                   Cancelar
                 </button>
@@ -11703,11 +11707,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
         return (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="contract-form-modal">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl p-6 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-5xl p-6 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
             {isSalesReadOnly && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between text-amber-900">
+              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-center justify-between text-amber-900 dark:text-amber-300">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-300 shrink-0" />
                   <span className="text-xs font-bold">
                     Modo Solo Lectura (Vendedor): Los datos del contrato no se pueden editar una vez creados. Solo puedes adjuntar o re-subir archivos PDF / Imagen.
                   </span>
@@ -11716,8 +11720,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             )}
 
             {renewalSourceContract && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center gap-2 text-emerald-900">
-                <ArrowUpRight className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 flex items-center gap-2 text-emerald-900 dark:text-emerald-300">
+                <ArrowUpRight className="w-4 h-4 text-emerald-600 dark:text-emerald-300 shrink-0" />
                 <span className="text-xs font-bold">
                   🔄 Renovando el contrato <span className="font-mono">{renewalSourceContract.id}</span>: cliente y equipos copiados. Al guardar, el contrato anterior quedará vinculado y marcado como "RENOVADO".
                 </span>
@@ -11731,7 +11735,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   <div className="space-y-3.5">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Código / Nº Contrato</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Código / Nº Contrato</label>
                         <input
                           type="text"
                           required
@@ -11740,14 +11744,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           onChange={(e) => setContractFormId(e.target.value)}
                           placeholder="Ej. CONTRATO-2026-004"
                           title={editingContract && userRole === 'admin' ? 'Admin: puedes cambiar el Nº Contrato. Se eliminará el registro anterior y se creará uno nuevo con el nuevo código.' : undefined}
-                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
-                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : editingContract && userRole === 'admin' ? 'bg-amber-50 focus:bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-400' : 'bg-slate-55 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden transition-all font-mono ${
+                            isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : editingContract && userRole === 'admin' ? 'bg-amber-50 dark:bg-amber-950 focus:bg-white dark:focus:bg-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-400' : 'bg-slate-55 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
                           }`}
                         />
                         {(() => {
                           if (editingContract && userRole === 'admin') {
                             return (
-                              <p className="text-[8px] text-amber-700 font-semibold leading-tight mt-0.5">⚠ Cambiar el código creará un nuevo registro y eliminará el actual.</p>
+                              <p className="text-[8px] text-amber-700 dark:text-amber-300 font-semibold leading-tight mt-0.5">⚠ Cambiar el código creará un nuevo registro y eliminará el actual.</p>
                             );
                           }
                           return null;
@@ -11755,7 +11759,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Tipo de Cobertura / Contrato</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Tipo de Cobertura / Contrato</label>
                         <div className="space-y-1.5">
                           <select
                             value={['Garantía extendida/Contrato', 'Garantía de compra', 'Vigencia Tecnológica', 'Facturable'].includes(contractFormType) ? contractFormType : 'Otro'}
@@ -11777,8 +11781,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 }
                               }
                             }}
-                            className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-bold ${
-                              isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
+                            className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden transition-all font-bold ${
+                              isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : 'bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
                             }`}
                           >
                             <option value="Garantía extendida/Contrato">Garantía extendida / Contrato</option>
@@ -11795,7 +11799,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               value={contractFormType}
                               onChange={(e) => setContractFormType(e.target.value)}
                               placeholder="Escribe el tipo de cobertura personalizado..."
-                              className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-xs font-bold text-indigo-950 bg-white focus:ring-2 focus:ring-indigo-500/20 outline-hidden shadow-2xs placeholder-slate-400"
+                              className="w-full border border-indigo-300 dark:border-indigo-800 rounded-lg px-3 py-2 text-xs font-bold text-indigo-950 dark:text-indigo-300 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-indigo-500/20 outline-hidden shadow-2xs placeholder-slate-400 dark:placeholder-slate-500"
                             />
                           )}
                         </div>
@@ -11804,7 +11808,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                     {/* Client Search and Select */}
                     <div className="space-y-1.5 relative">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Cliente Cobertura</label>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Cliente Cobertura</label>
                       {!isCreatingNewClientForContract ? (
                         <div>
                           <div className="flex gap-2">
@@ -11825,8 +11829,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   }
                                 }}
                                 onFocus={() => !isSalesReadOnly && setIsContractClientDropdownOpen(true)}
-                                className={`w-full border border-slate-200 rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all ${
-                                  isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                                className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden transition-all ${
+                                  isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : 'bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
                                 }`}
                               />
                               {contractClientSearchQuery && !isSalesReadOnly && (
@@ -11837,7 +11841,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     setContractFormClientId('');
                                     setIsContractClientDropdownOpen(true);
                                   }}
-                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xs font-bold"
                                 >
                                   ✕
                                 </button>
@@ -11850,7 +11854,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     setIsCreatingNewClientForContract(true);
                                     setContractFormClientId('');
                                 }}
-                                className="bg-amber-50 hover:bg-amber-100 text-amber-755 border border-amber-200 px-3 py-2 rounded-lg font-bold text-3xs transition-colors shrink-0 cursor-pointer"
+                                className="bg-amber-50 dark:bg-amber-950 hover:bg-amber-100 dark:hover:bg-amber-900 text-amber-755 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-3 py-2 rounded-lg font-bold text-3xs transition-colors shrink-0 cursor-pointer"
                               >
                                 + Nuevo Cliente
                               </button>
@@ -11859,7 +11863,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Search Dropdown list */}
                           {isContractClientDropdownOpen && !isSalesReadOnly && (
-                            <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-30 max-h-40 overflow-y-auto divide-y divide-slate-100">
+                            <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-30 max-h-40 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
                               {clients
                                 .filter(c => c.name.toLowerCase().includes(contractClientSearchQuery.toLowerCase()))
                                 .map(c => (
@@ -11871,14 +11875,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       setContractClientSearchQuery(c.name);
                                       setIsContractClientDropdownOpen(false);
                                     }}
-                                    className="w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium transition-colors flex items-center justify-between cursor-pointer"
+                                    className="w-full text-left px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium transition-colors flex items-center justify-between cursor-pointer"
                                   >
                                     <span>{c.name}</span>
-                                    <span className="text-[9px] text-slate-400 font-bold font-mono">{c.id}</span>
+                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold font-mono">{c.id}</span>
                                   </button>
                                 ))}
                               {clients.filter(c => c.name.toLowerCase().includes(contractClientSearchQuery.toLowerCase())).length === 0 && (
-                                <div className="p-3 text-slate-400 italic text-center">
+                                <div className="p-3 text-slate-400 dark:text-slate-500 italic text-center">
                                   No se encontraron clientes.
                                 </div>
                               )}
@@ -11886,9 +11890,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           )}
                         </div>
                       ) : (
-                        <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-3 space-y-2.5 animate-in fade-in-50 duration-150">
+                        <div className="bg-amber-50/40 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-3 space-y-2.5 animate-in fade-in-50 duration-150">
                           <div className="flex items-center justify-between">
-                            <span className="font-extrabold text-[9px] text-amber-800 tracking-wider">NUEVO CLIENTE</span>
+                            <span className="font-extrabold text-[9px] text-amber-800 dark:text-amber-300 tracking-wider">NUEVO CLIENTE</span>
                             <button
                               type="button"
                               onClick={() => {
@@ -11896,7 +11900,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 setContractFormClientId(clients[0]?.id || '');
                                 setContractClientSearchQuery(clients[0]?.name || '');
                               }}
-                              className="text-slate-400 hover:text-slate-650 text-3xs font-bold cursor-pointer"
+                              className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 text-3xs font-bold cursor-pointer"
                             >
                               Cancelar
                             </button>
@@ -11908,7 +11912,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               required={isCreatingNewClientForContract}
                               value={newContractClientName}
                               onChange={(e) => setNewContractClientName(e.target.value)}
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 outline-hidden focus:border-indigo-500 font-semibold"
                             />
                             <div className="grid grid-cols-2 gap-2">
                               <input
@@ -11916,14 +11920,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 placeholder="Sector / Industria"
                                 value={newContractClientIndustry}
                                 onChange={(e) => setNewContractClientIndustry(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 outline-hidden focus:border-indigo-500 font-semibold"
                               />
                               <input
                                 type="text"
                                 placeholder="Teléfono Contacto"
                                 value={newContractClientContactPhone}
                                 onChange={(e) => setNewContractClientContactPhone(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 outline-hidden focus:border-indigo-500 font-semibold"
                               />
                             </div>
                             <input
@@ -11931,14 +11935,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               placeholder="Dirección Completa"
                               value={newContractClientAddress}
                               onChange={(e) => setNewContractClientAddress(e.target.value)}
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 outline-hidden focus:border-indigo-500 font-semibold"
                             />
                             <input
                               type="text"
                               placeholder="Nombre de Contacto"
                               value={newContractClientContactName}
                               onChange={(e) => setNewContractClientContactName(e.target.value)}
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden focus:border-indigo-500 font-semibold"
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 outline-hidden focus:border-indigo-500 font-semibold"
                             />
                           </div>
                         </div>
@@ -11947,13 +11951,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Estado Contrato</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Estado Contrato</label>
                         <select
                           value={contractFormStatus}
                           disabled={isSalesReadOnly}
                           onChange={(e) => setContractFormStatus(e.target.value as any)}
-                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-bold ${
-                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
+                          className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden transition-all font-bold ${
+                            isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : 'bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
                           }`}
                         >
                           <option value="Activo">🟢 Activo</option>
@@ -11964,7 +11968,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Fecha Inicio</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Fecha Inicio</label>
                         <input
                           type="date"
                           required
@@ -11992,8 +11996,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                             }
                           }}
-                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
-                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden transition-all font-mono ${
+                            isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : 'bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
                           }`}
                         />
                       </div>
@@ -12001,7 +12005,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Fecha Vencimiento</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Fecha Vencimiento</label>
                         <input
                           type="date"
                           required
@@ -12037,14 +12041,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               }
                             }
                           }}
-                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
-                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden transition-all font-mono ${
+                            isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : 'bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
                           }`}
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">📍 Ciudad / Ubicación</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">📍 Ciudad / Ubicación</label>
                         <input
                           type="text"
                           disabled={isSalesReadOnly}
@@ -12052,8 +12056,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           onChange={(e) => setContractFormCity(e.target.value)}
                           placeholder="Ej. Quito, Guayaquil, Cuenca..."
                           list="cities-list"
-                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all ${
-                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden transition-all ${
+                            isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : 'bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
                           }`}
                         />
                         <datalist id="cities-list">
@@ -12073,13 +12077,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">🏢 Sector Cliente</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">🏢 Sector Cliente</label>
                         <select
                           value={contractFormSector}
                           disabled={isSalesReadOnly}
                           onChange={(e) => setContractFormSector(e.target.value as 'Público' | 'Privado')}
-                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-bold ${
-                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
+                          className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden transition-all font-bold ${
+                            isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : 'bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer'
                           }`}
                         >
                           <option value="Privado">🏢 Privado</option>
@@ -12088,7 +12092,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">💵 Valor Contrato ($ USD)</label>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">💵 Valor Contrato ($ USD)</label>
                         <input
                           type="number"
                           step="0.01"
@@ -12097,58 +12101,58 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           value={contractFormValue}
                           onChange={(e) => setContractFormValue(e.target.value)}
                           placeholder="Ej. 15000.00 (Opcional)"
-                          className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all font-mono ${
-                            isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden transition-all font-mono ${
+                            isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : 'bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
                           }`}
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Especificaciones</label>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Especificaciones</label>
                       <textarea
                         value={contractFormCoverage}
                         disabled={isSalesReadOnly}
                         onChange={(e) => setContractFormCoverage(e.target.value)}
                         rows={1}
                         placeholder="Límites de repuestos o coberturas..."
-                        className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-hidden transition-all ${
-                          isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                        className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden transition-all ${
+                          isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : 'bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
                         }`}
                       />
                     </div>
 
                     {/* Casilla de Selección: Equipo Nuevo */}
-                    <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-2.5 flex items-center justify-between shadow-2xs">
+                    <div className="bg-amber-50/90 dark:bg-amber-950/90 border border-amber-200 dark:border-amber-800 rounded-xl p-2.5 flex items-center justify-between shadow-2xs">
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           id="contract-is-new-equipment-check"
                           checked={contractFormIsNewEquipment}
                           onChange={(e) => setContractFormIsNewEquipment(e.target.checked)}
-                          className="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500 cursor-pointer"
+                          className="w-4 h-4 text-amber-600 dark:text-amber-300 rounded border-amber-300 dark:border-amber-800 focus:ring-amber-500 cursor-pointer"
                         />
-                        <label htmlFor="contract-is-new-equipment-check" className="text-xs font-extrabold text-amber-950 cursor-pointer select-none flex items-center gap-1.5">
+                        <label htmlFor="contract-is-new-equipment-check" className="text-xs font-extrabold text-amber-950 dark:text-amber-300 cursor-pointer select-none flex items-center gap-1.5">
                           <span>✨ Equipo Nuevo</span>
-                          <span className="bg-amber-200 text-amber-900 text-[8px] font-black px-1.5 py-0.2 rounded uppercase">Garantía / Entrega</span>
+                          <span className="bg-amber-200 dark:bg-amber-950 text-amber-900 dark:text-amber-300 text-[8px] font-black px-1.5 py-0.2 rounded uppercase">Garantía / Entrega</span>
                         </label>
                       </div>
-                      <span className="text-[9px] text-amber-800/80 font-semibold">Adjuntos opcionales (SR, CA, POD)</span>
+                      <span className="text-[9px] text-amber-800/80 dark:text-amber-300 font-semibold">Adjuntos opcionales (SR, CA, POD)</span>
                     </div>
 
                       {/* Linked Contract (Successor) - Admin only when editing */}
                       {editingContract && userRole === 'admin' && (
-                        <div className="space-y-1 bg-indigo-50/60 border border-indigo-200 rounded-xl p-2.5">
-                          <label className="block text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <div className="space-y-1 bg-indigo-50/60 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 rounded-xl p-2.5">
+                          <label className="block text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
                             🔗 Contrato Sucesor Vinculado
                           </label>
-                          <p className="text-[9px] text-indigo-600/80 font-medium leading-tight mb-1.5">
+                          <p className="text-[9px] text-indigo-600/80 dark:text-indigo-300 font-medium leading-tight mb-1.5">
                             Vincula este contrato (ej. vencido) al nuevo contrato que lo reemplaza para mantener el historial del cliente.
                           </p>
                           <select
                             value={contractFormLinkedId}
                             onChange={(e) => setContractFormLinkedId(e.target.value)}
-                            className="w-full bg-white border border-indigo-200 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 outline-hidden focus:border-indigo-500 cursor-pointer"
+                            className="w-full bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:border-indigo-500 cursor-pointer"
                           >
                             <option value="">— Sin vínculo —</option>
                             {contracts
@@ -12163,18 +12167,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </select>
                           {contractFormLinkedId && (
                             <div className="flex items-center gap-1.5 mt-1">
-                              <span className="text-[9px] text-indigo-700 font-bold">→ Sucesor:</span>
-                              <span className="text-[9px] font-mono text-indigo-900 bg-indigo-100 px-1.5 py-0.5 rounded">{contractFormLinkedId}</span>
-                              <button type="button" onClick={() => setContractFormLinkedId('')} className="text-rose-500 text-[9px] font-black ml-1 cursor-pointer hover:text-rose-700">✕</button>
+                              <span className="text-[9px] text-indigo-700 dark:text-indigo-300 font-bold">→ Sucesor:</span>
+                              <span className="text-[9px] font-mono text-indigo-900 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-950 px-1.5 py-0.5 rounded">{contractFormLinkedId}</span>
+                              <button type="button" onClick={() => setContractFormLinkedId('')} className="text-rose-500 text-[9px] font-black ml-1 cursor-pointer hover:text-rose-700 dark:hover:text-rose-300">✕</button>
                             </div>
                           )}
                         </div>
                       )}
 
                       {/* Cloudinary PDF / Image Attachments Section */}
-                      <div className="space-y-2.5 border-t border-slate-150 pt-3">
-                        <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                      <div className="space-y-2.5 border-t border-slate-150 dark:border-slate-700 pt-3">
+                        <h4 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
                           <span>Adjuntos de Contrato y Cronograma (PDF / Imagen)</span>
                         </h4>
 
@@ -12205,28 +12209,28 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               const file = e.dataTransfer.files?.[0];
                               if (file) handleUploadContractFile(file);
                             }}
-                            className={`bg-slate-50 border rounded-xl p-2.5 space-y-1.5 transition-all ${
-                              isDraggingContractPdf ? 'bg-indigo-50/80 border-indigo-500 ring-2 ring-indigo-400/50 scale-[1.01]' : 'border-slate-200'
+                            className={`bg-slate-50 dark:bg-slate-800 border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                              isDraggingContractPdf ? 'bg-indigo-50/80 dark:bg-indigo-950/80 border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-400/50 dark:ring-indigo-300/50 scale-[1.01]' : 'border-slate-200 dark:border-slate-700'
                             }`}
                           >
                             <div className="flex items-center justify-between pointer-events-none">
-                              <span className="block text-[9.5px] font-extrabold text-slate-700 uppercase tracking-wide">📄 Documento del Contrato</span>
+                              <span className="block text-[9.5px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wide">📄 Documento del Contrato</span>
                               {isDraggingContractPdf && (
-                                <span className="text-[8px] font-extrabold text-indigo-700 uppercase tracking-wider animate-pulse">¡Suelta el archivo!</span>
+                                <span className="text-[8px] font-extrabold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider animate-pulse">¡Suelta el archivo!</span>
                               )}
                             </div>
                             
                             {contractFormPdfUrl ? (
-                              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-xs gap-2">
-                                <a href={getCleanCloudinaryUrl(contractFormPdfUrl)} target="_blank" rel="noreferrer" className="text-emerald-900 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                  <FileText className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 p-2 rounded-lg text-xs gap-2">
+                                <a href={getCleanCloudinaryUrl(contractFormPdfUrl)} target="_blank" rel="noreferrer" className="text-emerald-900 dark:text-emerald-300 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                  <FileText className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300 shrink-0" />
                                   <span className="truncate">Ver Documento Adjunto</span>
-                                  <ExternalLink className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <ExternalLink className="w-3 h-3 text-emerald-600 dark:text-emerald-300 shrink-0" />
                                 </a>
                                 <button
                                   type="button"
                                   onClick={() => setContractFormPdfUrl('')}
-                                  className="text-rose-600 hover:text-rose-800 hover:bg-rose-100/60 font-bold text-3xs px-2 py-1 rounded transition-colors shrink-0 cursor-pointer border border-rose-200/60"
+                                  className="text-rose-600 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-300 hover:bg-rose-100/60 dark:hover:bg-rose-900/60 font-bold text-3xs px-2 py-1 rounded transition-colors shrink-0 cursor-pointer border border-rose-200/60 dark:border-rose-800/60"
                                 >
                                   Eliminar
                                 </button>
@@ -12245,21 +12249,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 />
                                 <label
                                   htmlFor="contract-pdf-input"
-                                  className={`w-full text-slate-700 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
+                                  className={`w-full text-slate-700 dark:text-slate-300 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
                                     isDraggingContractPdf
-                                      ? 'border-indigo-500 bg-white text-indigo-900 shadow-md'
-                                      : 'border-indigo-300/80 bg-white hover:bg-slate-100/80 hover:border-indigo-400'
+                                      ? 'border-indigo-500 dark:border-indigo-400 bg-white dark:bg-slate-900 text-indigo-900 dark:text-indigo-300 shadow-md'
+                                      : 'border-indigo-300/80 dark:border-indigo-800/80 bg-white dark:bg-slate-900 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-300'
                                   }`}
                                 >
                                   {isUploadingContractPdf ? (
-                                    <span className="text-amber-600 font-bold animate-pulse py-1">Subiendo Contrato... ({uploadContractPdfProgress}%)</span>
+                                    <span className="text-amber-600 dark:text-amber-300 font-bold animate-pulse py-1">Subiendo Contrato... ({uploadContractPdfProgress}%)</span>
                                   ) : (
                                     <>
                                       <div className="flex items-center gap-1.5 pointer-events-none">
-                                        <Upload className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                                        <Upload className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300 shrink-0" />
                                         <span>{isDraggingContractPdf ? '¡Suelte el archivo del contrato aquí!' : 'Adjuntar Contrato PDF'}</span>
                                       </div>
-                                      <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                      <span className="text-[9px] font-normal text-slate-400 dark:text-slate-500 pointer-events-none">
                                         Arrastra y suelta el archivo aquí o haz clic para buscar
                                       </span>
                                     </>
@@ -12271,12 +12275,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Adjuntos Opcionales para Equipo Nuevo: SR, CA, POD (General y Por Equipo) */}
                           {(contractFormIsNewEquipment || contractFormEquipmentItems.length > 0 || contractFormSrPdfUrl || contractFormCaPdfUrl || contractFormPodPdfUrl) && (
-                            <div className="space-y-3 pt-2 border-t border-amber-200/60 bg-amber-50/40 p-2.5 rounded-xl">
+                            <div className="space-y-3 pt-2 border-t border-amber-200/60 dark:border-amber-800/60 bg-amber-50/40 dark:bg-amber-950/40 p-2.5 rounded-xl">
                               <div className="flex items-center justify-between">
-                                <span className="block text-[9px] font-extrabold text-amber-900 uppercase tracking-wider">
+                                <span className="block text-[9px] font-extrabold text-amber-900 dark:text-amber-300 uppercase tracking-wider">
                                   ✨ Adjuntos de Equipo Nuevo (SR, CA, POD)
                                 </span>
-                                <span className="text-[8px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded">
+                                <span className="text-[8px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-1.5 py-0.2 rounded">
                                   {contractFormEquipmentItems.length > 0 ? `Por Equipo (${contractFormEquipmentItems.length})` : 'General del Contrato'}
                                 </span>
                               </div>
@@ -12285,14 +12289,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               {contractFormEquipmentItems.length > 0 ? (
                                 <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                                   {contractFormEquipmentItems.map((item, eqIdx) => (
-                                    <div key={eqIdx} className="bg-white border border-amber-200 rounded-xl p-2.5 space-y-2 shadow-2xs">
-                                      <div className="flex items-center justify-between border-b border-amber-100 pb-1">
-                                        <span className="text-[10px] font-extrabold text-amber-950 flex flex-wrap items-center gap-1.5 truncate">
+                                    <div key={eqIdx} className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 rounded-xl p-2.5 space-y-2 shadow-2xs">
+                                      <div className="flex items-center justify-between border-b border-amber-100 dark:border-amber-800 pb-1">
+                                        <span className="text-[10px] font-extrabold text-amber-950 dark:text-amber-300 flex flex-wrap items-center gap-1.5 truncate">
                                           <span>🖥️ {item.name}</span>
-                                          <span className="text-[8px] font-semibold text-slate-500">({item.brand})</span>
-                                          {item.modality && <span className="bg-indigo-100 text-indigo-800 text-[7.5px] font-black px-1 rounded">{item.modality}</span>}
-                                          {item.serial && <span className="bg-slate-100 text-slate-700 font-mono text-[7.5px] px-1 rounded">S/N: {item.serial}</span>}
-                                          {item.gon && <span className="bg-purple-100 text-purple-800 font-mono text-[7.5px] px-1 rounded">GON: {item.gon}</span>}
+                                          <span className="text-[8px] font-semibold text-slate-500 dark:text-slate-500">({item.brand})</span>
+                                          {item.modality && <span className="bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-[7.5px] font-black px-1 rounded">{item.modality}</span>}
+                                          {item.serial && <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[7.5px] px-1 rounded">S/N: {item.serial}</span>}
+                                          {item.gon && <span className="bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-mono text-[7.5px] px-1 rounded">GON: {item.gon}</span>}
                                         </span>
                                       </div>
 
@@ -12335,17 +12339,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                           className="space-y-1"
                                         >
                                           {item.serviceRecordPdfUrl ? (
-                                            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-2 rounded-xl text-3xs gap-2">
-                                              <a href={getCleanCloudinaryUrl(item.serviceRecordPdfUrl)} target="_blank" rel="noreferrer" className="text-amber-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                                <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                            <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-2 rounded-xl text-3xs gap-2">
+                                              <a href={getCleanCloudinaryUrl(item.serviceRecordPdfUrl)} target="_blank" rel="noreferrer" className="text-amber-950 dark:text-amber-300 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                                <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 shrink-0" />
                                                 <span className="truncate">🛠️ Service Record (SR) — {item.name}</span>
-                                                <ExternalLink className="w-3 h-3 text-amber-600 shrink-0" />
+                                                <ExternalLink className="w-3 h-3 text-amber-600 dark:text-amber-300 shrink-0" />
                                               </a>
                                               <button type="button" onClick={() => {
                                                 const updated = [...contractFormEquipmentItems];
                                                 updated[eqIdx] = { ...updated[eqIdx], serviceRecordPdfUrl: undefined };
                                                 setContractFormEquipmentItems(updated);
-                                              }} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                              }} className="text-rose-600 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-300 font-bold text-3xs px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800 shrink-0">Eliminar</button>
                                             </div>
                                           ) : (
                                             <div>
@@ -12370,22 +12374,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                               />
                                               <label
                                                 htmlFor={`sr-file-${eqIdx}`}
-                                                className={`w-full text-slate-700 font-extrabold text-[9.5px] py-2 px-3 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
+                                                className={`w-full text-slate-700 dark:text-slate-300 font-extrabold text-[9.5px] py-2 px-3 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
                                                   draggingEqAttachKey === `${eqIdx}-sr`
-                                                    ? 'border-amber-500 bg-amber-100/90 text-amber-950 shadow-md scale-[1.01]'
-                                                    : 'border-amber-300/80 bg-amber-50/30 hover:bg-amber-50 hover:border-amber-400'
+                                                    ? 'border-amber-500 dark:border-amber-400 bg-amber-100/90 dark:bg-amber-950/90 text-amber-950 dark:text-amber-300 shadow-md scale-[1.01]'
+                                                    : 'border-amber-300/80 dark:border-amber-800/80 bg-amber-50/30 dark:bg-amber-950/30 hover:bg-amber-50 dark:hover:bg-amber-900 hover:border-amber-400 dark:hover:border-amber-300'
                                                 }`}
                                               >
                                                 <div className="flex items-center justify-between w-full pointer-events-none">
-                                                  <span className="flex items-center gap-1.5 truncate font-extrabold text-amber-950">
-                                                    <Upload className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                                  <span className="flex items-center gap-1.5 truncate font-extrabold text-amber-950 dark:text-amber-300">
+                                                    <Upload className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 shrink-0" />
                                                     <span className="truncate">🛠️ Service Record (SR) — {item.name}</span>
                                                   </span>
-                                                  <span className="text-[7.5px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded shrink-0">
+                                                  <span className="text-[7.5px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-1.5 py-0.2 rounded shrink-0">
                                                     {draggingEqAttachKey === `${eqIdx}-sr` ? '¡Suelta el SR aquí!' : 'Subir SR / Arrastrar'}
                                                   </span>
                                                 </div>
-                                                <span className="text-[8.5px] font-normal text-slate-400 pointer-events-none">
+                                                <span className="text-[8.5px] font-normal text-slate-400 dark:text-slate-500 pointer-events-none">
                                                   Arrastra y suelta el archivo aquí o haz clic para buscar
                                                 </span>
                                               </label>
@@ -12431,17 +12435,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                           className="space-y-1"
                                         >
                                           {item.caPdfUrl ? (
-                                            <div className="flex items-center justify-between bg-teal-50 border border-teal-200 p-2 rounded-xl text-3xs gap-2">
-                                              <a href={getCleanCloudinaryUrl(item.caPdfUrl)} target="_blank" rel="noreferrer" className="text-teal-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                                <FileText className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                            <div className="flex items-center justify-between bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 p-2 rounded-xl text-3xs gap-2">
+                                              <a href={getCleanCloudinaryUrl(item.caPdfUrl)} target="_blank" rel="noreferrer" className="text-teal-950 dark:text-teal-300 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                                <FileText className="w-3.5 h-3.5 text-teal-600 dark:text-teal-300 shrink-0" />
                                                 <span className="truncate">📜 Certificate of Acceptance (CA) — {item.name}</span>
-                                                <ExternalLink className="w-3 h-3 text-teal-600 shrink-0" />
+                                                <ExternalLink className="w-3 h-3 text-teal-600 dark:text-teal-300 shrink-0" />
                                               </a>
                                               <button type="button" onClick={() => {
                                                 const updated = [...contractFormEquipmentItems];
                                                 updated[eqIdx] = { ...updated[eqIdx], caPdfUrl: undefined };
                                                 setContractFormEquipmentItems(updated);
-                                              }} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                              }} className="text-rose-600 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-300 font-bold text-3xs px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800 shrink-0">Eliminar</button>
                                             </div>
                                           ) : (
                                             <div>
@@ -12466,22 +12470,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                               />
                                               <label
                                                 htmlFor={`ca-file-${eqIdx}`}
-                                                className={`w-full text-slate-700 font-extrabold text-[9.5px] py-2 px-3 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
+                                                className={`w-full text-slate-700 dark:text-slate-300 font-extrabold text-[9.5px] py-2 px-3 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
                                                   draggingEqAttachKey === `${eqIdx}-ca`
-                                                    ? 'border-teal-500 bg-teal-100/90 text-teal-950 shadow-md scale-[1.01]'
-                                                    : 'border-teal-300/80 bg-teal-50/30 hover:bg-teal-50 hover:border-teal-400'
+                                                    ? 'border-teal-500 dark:border-teal-400 bg-teal-100/90 dark:bg-teal-950/90 text-teal-950 dark:text-teal-300 shadow-md scale-[1.01]'
+                                                    : 'border-teal-300/80 dark:border-teal-800/80 bg-teal-50/30 dark:bg-teal-950/30 hover:bg-teal-50 dark:hover:bg-teal-900 hover:border-teal-400 dark:hover:border-teal-300'
                                                 }`}
                                               >
                                                 <div className="flex items-center justify-between w-full pointer-events-none">
-                                                  <span className="flex items-center gap-1.5 truncate font-extrabold text-teal-950">
-                                                    <Upload className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                                  <span className="flex items-center gap-1.5 truncate font-extrabold text-teal-950 dark:text-teal-300">
+                                                    <Upload className="w-3.5 h-3.5 text-teal-600 dark:text-teal-300 shrink-0" />
                                                     <span className="truncate">📜 Certificate of Acceptance (CA) — {item.name}</span>
                                                   </span>
-                                                  <span className="text-[7.5px] font-bold text-teal-800 bg-teal-100 px-1.5 py-0.2 rounded shrink-0">
+                                                  <span className="text-[7.5px] font-bold text-teal-800 dark:text-teal-300 bg-teal-100 dark:bg-teal-950 px-1.5 py-0.2 rounded shrink-0">
                                                     {draggingEqAttachKey === `${eqIdx}-ca` ? '¡Suelta el CA aquí!' : 'Subir CA / Arrastrar'}
                                                   </span>
                                                 </div>
-                                                <span className="text-[8.5px] font-normal text-slate-400 pointer-events-none">
+                                                <span className="text-[8.5px] font-normal text-slate-400 dark:text-slate-500 pointer-events-none">
                                                   Arrastra y suelta el archivo aquí o haz clic para buscar
                                                 </span>
                                               </label>
@@ -12527,17 +12531,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                           className="space-y-1"
                                         >
                                           {item.podPdfUrl ? (
-                                            <div className="flex items-center justify-between bg-sky-50 border border-sky-200 p-2 rounded-xl text-3xs gap-2">
-                                              <a href={getCleanCloudinaryUrl(item.podPdfUrl)} target="_blank" rel="noreferrer" className="text-sky-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                                <FileText className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                            <div className="flex items-center justify-between bg-sky-50 dark:bg-sky-950 border border-sky-200 dark:border-sky-800 p-2 rounded-xl text-3xs gap-2">
+                                              <a href={getCleanCloudinaryUrl(item.podPdfUrl)} target="_blank" rel="noreferrer" className="text-sky-950 dark:text-sky-300 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                                <FileText className="w-3.5 h-3.5 text-sky-600 dark:text-sky-300 shrink-0" />
                                                 <span className="truncate">📦 Proof of Delivery (POD) — {item.name}</span>
-                                                <ExternalLink className="w-3 h-3 text-sky-600 shrink-0" />
+                                                <ExternalLink className="w-3 h-3 text-sky-600 dark:text-sky-300 shrink-0" />
                                               </a>
                                               <button type="button" onClick={() => {
                                                 const updated = [...contractFormEquipmentItems];
                                                 updated[eqIdx] = { ...updated[eqIdx], podPdfUrl: undefined };
                                                 setContractFormEquipmentItems(updated);
-                                              }} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-0.5 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                              }} className="text-rose-600 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-300 font-bold text-3xs px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800 shrink-0">Eliminar</button>
                                             </div>
                                           ) : (
                                             <div>
@@ -12562,22 +12566,22 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                               />
                                               <label
                                                 htmlFor={`pod-file-${eqIdx}`}
-                                                className={`w-full text-slate-700 font-extrabold text-[9.5px] py-2 px-3 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
+                                                className={`w-full text-slate-700 dark:text-slate-300 font-extrabold text-[9.5px] py-2 px-3 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
                                                   draggingEqAttachKey === `${eqIdx}-pod`
-                                                    ? 'border-sky-500 bg-sky-100/90 text-sky-950 shadow-md scale-[1.01]'
-                                                    : 'border-sky-300/80 bg-sky-50/30 hover:bg-sky-50 hover:border-sky-400'
+                                                    ? 'border-sky-500 dark:border-sky-400 bg-sky-100/90 dark:bg-sky-950/90 text-sky-950 dark:text-sky-300 shadow-md scale-[1.01]'
+                                                    : 'border-sky-300/80 dark:border-sky-800/80 bg-sky-50/30 dark:bg-sky-950/30 hover:bg-sky-50 dark:hover:bg-sky-900 hover:border-sky-400 dark:hover:border-sky-300'
                                                 }`}
                                               >
                                                 <div className="flex items-center justify-between w-full pointer-events-none">
-                                                  <span className="flex items-center gap-1.5 truncate font-extrabold text-sky-950">
-                                                    <Upload className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                                  <span className="flex items-center gap-1.5 truncate font-extrabold text-sky-950 dark:text-sky-300">
+                                                    <Upload className="w-3.5 h-3.5 text-sky-600 dark:text-sky-300 shrink-0" />
                                                     <span className="truncate">📦 Proof of Delivery (POD) — {item.name}</span>
                                                   </span>
-                                                  <span className="text-[7.5px] font-bold text-sky-800 bg-sky-100 px-1.5 py-0.2 rounded shrink-0">
+                                                  <span className="text-[7.5px] font-bold text-sky-800 dark:text-sky-300 bg-sky-100 dark:bg-sky-950 px-1.5 py-0.2 rounded shrink-0">
                                                     {draggingEqAttachKey === `${eqIdx}-pod` ? '¡Suelta el POD aquí!' : 'Subir POD / Arrastrar'}
                                                   </span>
                                                 </div>
-                                                <span className="text-[8.5px] font-normal text-slate-400 pointer-events-none">
+                                                <span className="text-[8.5px] font-normal text-slate-400 dark:text-slate-500 pointer-events-none">
                                                   Arrastra y suelta el archivo aquí o haz clic para buscar
                                                 </span>
                                               </label>
@@ -12617,47 +12621,47 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       const file = e.dataTransfer.files?.[0];
                                       if (file) handleUploadSrFile(file);
                                     }}
-                                    className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
-                                      isDraggingSrPdf ? 'bg-amber-100/90 border-amber-500 ring-2 ring-amber-400/50 scale-[1.01]' : 'border-amber-200'
+                                    className={`bg-white dark:bg-slate-900 border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                                      isDraggingSrPdf ? 'bg-amber-100/90 dark:bg-amber-950/90 border-amber-500 dark:border-amber-400 ring-2 ring-amber-400/50 dark:ring-amber-300/50 scale-[1.01]' : 'border-amber-200 dark:border-amber-800'
                                     }`}
                                   >
                                     <div className="flex items-center justify-between pointer-events-none">
-                                      <span className="block text-[9.5px] font-extrabold text-amber-950 uppercase tracking-wide">🛠️ Service Record (SR General)</span>
+                                      <span className="block text-[9.5px] font-extrabold text-amber-950 dark:text-amber-300 uppercase tracking-wide">🛠️ Service Record (SR General)</span>
                                       {isDraggingSrPdf ? (
-                                        <span className="text-[8px] font-extrabold text-amber-800 uppercase tracking-wider animate-pulse">¡Suelta el SR aquí!</span>
+                                        <span className="text-[8px] font-extrabold text-amber-800 dark:text-amber-300 uppercase tracking-wider animate-pulse">¡Suelta el SR aquí!</span>
                                       ) : (
-                                        <span className="text-[8px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                        <span className="text-[8px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-1.5 py-0.2 rounded">Opcional</span>
                                       )}
                                     </div>
                                     {contractFormSrPdfUrl ? (
-                                      <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-2 rounded-lg text-xs gap-2">
-                                        <a href={getCleanCloudinaryUrl(contractFormSrPdfUrl)} target="_blank" rel="noreferrer" className="text-amber-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                          <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                      <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-2 rounded-lg text-xs gap-2">
+                                        <a href={getCleanCloudinaryUrl(contractFormSrPdfUrl)} target="_blank" rel="noreferrer" className="text-amber-950 dark:text-amber-300 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                          <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 shrink-0" />
                                           <span className="truncate">Ver Service Record (SR)</span>
-                                          <ExternalLink className="w-3 h-3 text-amber-600 shrink-0" />
+                                          <ExternalLink className="w-3 h-3 text-amber-600 dark:text-amber-300 shrink-0" />
                                         </a>
-                                        <button type="button" onClick={() => setContractFormSrPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                        <button type="button" onClick={() => setContractFormSrPdfUrl('')} className="text-rose-600 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-300 font-bold text-3xs px-2 py-1 rounded border border-rose-200 dark:border-rose-800 shrink-0">Eliminar</button>
                                       </div>
                                     ) : (
                                       <div>
                                         <input type="file" id="sr-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadSrFile(file); }} className="hidden" />
                                         <label
                                           htmlFor="sr-pdf-input"
-                                          className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
+                                          className={`w-full text-slate-700 dark:text-slate-300 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
                                             isDraggingSrPdf
-                                              ? 'border-amber-500 bg-amber-50 text-amber-950 shadow-md'
-                                              : 'border-amber-300 bg-amber-50/30 hover:bg-amber-50 hover:border-amber-400'
+                                              ? 'border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-950 text-amber-950 dark:text-amber-300 shadow-md'
+                                              : 'border-amber-300 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/30 hover:bg-amber-50 dark:hover:bg-amber-900 hover:border-amber-400 dark:hover:border-amber-300'
                                           }`}
                                         >
                                           {isUploadingSrPdf ? (
-                                            <span className="text-amber-600 font-bold animate-pulse">Subiendo SR... ({uploadSrPdfProgress}%)</span>
+                                            <span className="text-amber-600 dark:text-amber-300 font-bold animate-pulse">Subiendo SR... ({uploadSrPdfProgress}%)</span>
                                           ) : (
                                             <>
                                               <div className="flex items-center gap-1.5 pointer-events-none">
-                                                <Upload className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                                <Upload className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 shrink-0" />
                                                 <span>{isDraggingSrPdf ? '¡Suelte el Service Record aquí!' : 'Adjuntar Service Record (SR)'}</span>
                                               </div>
-                                              <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                              <span className="text-[9px] font-normal text-slate-400 dark:text-slate-500 pointer-events-none">
                                                 Arrastra y suelta el archivo aquí o haz clic para buscar
                                               </span>
                                             </>
@@ -12693,47 +12697,47 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       const file = e.dataTransfer.files?.[0];
                                       if (file) handleUploadCaFile(file);
                                     }}
-                                    className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
-                                      isDraggingCaPdf ? 'bg-teal-100/90 border-teal-500 ring-2 ring-teal-400/50 scale-[1.01]' : 'border-teal-200'
+                                    className={`bg-white dark:bg-slate-900 border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                                      isDraggingCaPdf ? 'bg-teal-100/90 dark:bg-teal-950/90 border-teal-500 dark:border-teal-400 ring-2 ring-teal-400/50 dark:ring-teal-300/50 scale-[1.01]' : 'border-teal-200 dark:border-teal-800'
                                     }`}
                                   >
                                     <div className="flex items-center justify-between pointer-events-none">
-                                      <span className="block text-[9.5px] font-extrabold text-teal-950 uppercase tracking-wide">📜 Certificate of Acceptance (CA General)</span>
+                                      <span className="block text-[9.5px] font-extrabold text-teal-950 dark:text-teal-300 uppercase tracking-wide">📜 Certificate of Acceptance (CA General)</span>
                                       {isDraggingCaPdf ? (
-                                        <span className="text-[8px] font-extrabold text-teal-800 uppercase tracking-wider animate-pulse">¡Suelta el CA aquí!</span>
+                                        <span className="text-[8px] font-extrabold text-teal-800 dark:text-teal-300 uppercase tracking-wider animate-pulse">¡Suelta el CA aquí!</span>
                                       ) : (
-                                        <span className="text-[8px] font-bold text-teal-700 bg-teal-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                        <span className="text-[8px] font-bold text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-teal-950 px-1.5 py-0.2 rounded">Opcional</span>
                                       )}
                                     </div>
                                     {contractFormCaPdfUrl ? (
-                                      <div className="flex items-center justify-between bg-teal-50 border border-teal-200 p-2 rounded-lg text-xs gap-2">
-                                        <a href={getCleanCloudinaryUrl(contractFormCaPdfUrl)} target="_blank" rel="noreferrer" className="text-teal-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                          <FileText className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                      <div className="flex items-center justify-between bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 p-2 rounded-lg text-xs gap-2">
+                                        <a href={getCleanCloudinaryUrl(contractFormCaPdfUrl)} target="_blank" rel="noreferrer" className="text-teal-950 dark:text-teal-300 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                          <FileText className="w-3.5 h-3.5 text-teal-600 dark:text-teal-300 shrink-0" />
                                           <span className="truncate">Ver Certificate of Acceptance (CA)</span>
-                                          <ExternalLink className="w-3 h-3 text-teal-600 shrink-0" />
+                                          <ExternalLink className="w-3 h-3 text-teal-600 dark:text-teal-300 shrink-0" />
                                         </a>
-                                        <button type="button" onClick={() => setContractFormCaPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                        <button type="button" onClick={() => setContractFormCaPdfUrl('')} className="text-rose-600 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-300 font-bold text-3xs px-2 py-1 rounded border border-rose-200 dark:border-rose-800 shrink-0">Eliminar</button>
                                       </div>
                                     ) : (
                                       <div>
                                         <input type="file" id="ca-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadCaFile(file); }} className="hidden" />
                                         <label
                                           htmlFor="ca-pdf-input"
-                                          className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
+                                          className={`w-full text-slate-700 dark:text-slate-300 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
                                             isDraggingCaPdf
-                                              ? 'border-teal-500 bg-teal-50 text-teal-950 shadow-md'
-                                              : 'border-teal-300 bg-teal-50/30 hover:bg-teal-50 hover:border-teal-400'
+                                              ? 'border-teal-500 dark:border-teal-400 bg-teal-50 dark:bg-teal-950 text-teal-950 dark:text-teal-300 shadow-md'
+                                              : 'border-teal-300 dark:border-teal-800 bg-teal-50/30 dark:bg-teal-950/30 hover:bg-teal-50 dark:hover:bg-teal-900 hover:border-teal-400 dark:hover:border-teal-300'
                                           }`}
                                         >
                                           {isUploadingCaPdf ? (
-                                            <span className="text-teal-600 font-bold animate-pulse">Subiendo CA... ({uploadCaPdfProgress}%)</span>
+                                            <span className="text-teal-600 dark:text-teal-300 font-bold animate-pulse">Subiendo CA... ({uploadCaPdfProgress}%)</span>
                                           ) : (
                                             <>
                                               <div className="flex items-center gap-1.5 pointer-events-none">
-                                                <Upload className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                                <Upload className="w-3.5 h-3.5 text-teal-600 dark:text-teal-300 shrink-0" />
                                                 <span>{isDraggingCaPdf ? '¡Suelte el CA aquí!' : 'Adjuntar Certificate of Acceptance (CA)'}</span>
                                               </div>
-                                              <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                              <span className="text-[9px] font-normal text-slate-400 dark:text-slate-500 pointer-events-none">
                                                 Arrastra y suelta el archivo aquí o haz clic para buscar
                                               </span>
                                             </>
@@ -12769,47 +12773,47 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       const file = e.dataTransfer.files?.[0];
                                       if (file) handleUploadPodFile(file);
                                     }}
-                                    className={`bg-white border rounded-xl p-2.5 space-y-1.5 transition-all ${
-                                      isDraggingPodPdf ? 'bg-sky-100/90 border-sky-500 ring-2 ring-sky-400/50 scale-[1.01]' : 'border-sky-200'
+                                    className={`bg-white dark:bg-slate-900 border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                                      isDraggingPodPdf ? 'bg-sky-100/90 dark:bg-sky-950/90 border-sky-500 dark:border-sky-400 ring-2 ring-sky-400/50 dark:ring-sky-300/50 scale-[1.01]' : 'border-sky-200 dark:border-sky-800'
                                     }`}
                                   >
                                     <div className="flex items-center justify-between pointer-events-none">
-                                      <span className="block text-[9.5px] font-extrabold text-sky-950 uppercase tracking-wide">📦 Proof of Delivery (POD General)</span>
+                                      <span className="block text-[9.5px] font-extrabold text-sky-950 dark:text-sky-300 uppercase tracking-wide">📦 Proof of Delivery (POD General)</span>
                                       {isDraggingPodPdf ? (
-                                        <span className="text-[8px] font-extrabold text-sky-800 uppercase tracking-wider animate-pulse">¡Suelta el POD aquí!</span>
+                                        <span className="text-[8px] font-extrabold text-sky-800 dark:text-sky-300 uppercase tracking-wider animate-pulse">¡Suelta el POD aquí!</span>
                                       ) : (
-                                        <span className="text-[8px] font-bold text-sky-700 bg-sky-100 px-1.5 py-0.2 rounded">Opcional</span>
+                                        <span className="text-[8px] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-950 px-1.5 py-0.2 rounded">Opcional</span>
                                       )}
                                     </div>
                                     {contractFormPodPdfUrl ? (
-                                      <div className="flex items-center justify-between bg-sky-50 border border-sky-200 p-2 rounded-lg text-xs gap-2">
-                                        <a href={getCleanCloudinaryUrl(contractFormPodPdfUrl)} target="_blank" rel="noreferrer" className="text-sky-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                          <FileText className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                      <div className="flex items-center justify-between bg-sky-50 dark:bg-sky-950 border border-sky-200 dark:border-sky-800 p-2 rounded-lg text-xs gap-2">
+                                        <a href={getCleanCloudinaryUrl(contractFormPodPdfUrl)} target="_blank" rel="noreferrer" className="text-sky-950 dark:text-sky-300 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                          <FileText className="w-3.5 h-3.5 text-sky-600 dark:text-sky-300 shrink-0" />
                                           <span className="truncate">Ver Proof of Delivery (POD)</span>
-                                          <ExternalLink className="w-3 h-3 text-sky-600 shrink-0" />
+                                          <ExternalLink className="w-3 h-3 text-sky-600 dark:text-sky-300 shrink-0" />
                                         </a>
-                                        <button type="button" onClick={() => setContractFormPodPdfUrl('')} className="text-rose-600 hover:text-rose-800 font-bold text-3xs px-2 py-1 rounded border border-rose-200 shrink-0">Eliminar</button>
+                                        <button type="button" onClick={() => setContractFormPodPdfUrl('')} className="text-rose-600 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-300 font-bold text-3xs px-2 py-1 rounded border border-rose-200 dark:border-rose-800 shrink-0">Eliminar</button>
                                       </div>
                                     ) : (
                                       <div>
                                         <input type="file" id="pod-pdf-input" accept="application/pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadPodFile(file); }} className="hidden" />
                                         <label
                                           htmlFor="pod-pdf-input"
-                                          className={`w-full text-slate-700 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
+                                          className={`w-full text-slate-700 dark:text-slate-300 font-extrabold text-xs py-2 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all shadow-2xs select-none ${
                                             isDraggingPodPdf
-                                              ? 'border-sky-500 bg-sky-50 text-sky-950 shadow-md'
-                                              : 'border-sky-300 bg-sky-50/30 hover:bg-sky-50 hover:border-sky-400'
+                                              ? 'border-sky-500 dark:border-sky-400 bg-sky-50 dark:bg-sky-950 text-sky-950 dark:text-sky-300 shadow-md'
+                                              : 'border-sky-300 dark:border-sky-800 bg-sky-50/30 dark:bg-sky-950/30 hover:bg-sky-50 dark:hover:bg-sky-900 hover:border-sky-400 dark:hover:border-sky-300'
                                           }`}
                                         >
                                           {isUploadingPodPdf ? (
-                                            <span className="text-sky-600 font-bold animate-pulse">Subiendo POD... ({uploadPodPdfProgress}%)</span>
+                                            <span className="text-sky-600 dark:text-sky-300 font-bold animate-pulse">Subiendo POD... ({uploadPodPdfProgress}%)</span>
                                           ) : (
                                             <>
                                               <div className="flex items-center gap-1.5 pointer-events-none">
-                                                <Upload className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                                <Upload className="w-3.5 h-3.5 text-sky-600 dark:text-sky-300 shrink-0" />
                                                 <span>{isDraggingPodPdf ? '¡Suelte el POD aquí!' : 'Adjuntar Proof of Delivery (POD)'}</span>
                                               </div>
-                                              <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                              <span className="text-[9px] font-normal text-slate-400 dark:text-slate-500 pointer-events-none">
                                                 Arrastra y suelta el archivo aquí o haz clic para buscar
                                               </span>
                                             </>
@@ -12849,28 +12853,28 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               const file = e.dataTransfer.files?.[0];
                               if (file) handleUploadScheduleFile(file);
                             }}
-                            className={`bg-slate-50 border rounded-xl p-2.5 space-y-1.5 transition-all ${
-                              isDraggingSchedulePdf ? 'bg-purple-50/80 border-purple-500 ring-2 ring-purple-400/50 scale-[1.01]' : 'border-slate-200'
+                            className={`bg-slate-50 dark:bg-slate-800 border rounded-xl p-2.5 space-y-1.5 transition-all ${
+                              isDraggingSchedulePdf ? 'bg-purple-50/80 dark:bg-purple-950/80 border-purple-500 dark:border-purple-400 ring-2 ring-purple-400/50 dark:ring-purple-300/50 scale-[1.01]' : 'border-slate-200 dark:border-slate-700'
                             }`}
                           >
                             <div className="flex items-center justify-between pointer-events-none">
-                              <span className="block text-[9.5px] font-extrabold text-slate-700 uppercase tracking-wide">📅 Cronograma Firmado</span>
+                              <span className="block text-[9.5px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wide">📅 Cronograma Firmado</span>
                               {isDraggingSchedulePdf && (
-                                <span className="text-[8px] font-extrabold text-purple-700 uppercase tracking-wider animate-pulse">¡Suelta el archivo!</span>
+                                <span className="text-[8px] font-extrabold text-purple-700 dark:text-purple-300 uppercase tracking-wider animate-pulse">¡Suelta el archivo!</span>
                               )}
                             </div>
                             
                             {contractFormSchedulePdfUrl ? (
-                              <div className="flex items-center justify-between bg-purple-50 border border-purple-200 p-2 rounded-lg text-xs gap-2">
-                                <a href={getCleanCloudinaryUrl(contractFormSchedulePdfUrl)} target="_blank" rel="noreferrer" className="text-purple-950 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
-                                  <FileText className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                              <div className="flex items-center justify-between bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 p-2 rounded-lg text-xs gap-2">
+                                <a href={getCleanCloudinaryUrl(contractFormSchedulePdfUrl)} target="_blank" rel="noreferrer" className="text-purple-950 dark:text-purple-300 font-extrabold hover:underline truncate flex items-center gap-1.5 min-w-0">
+                                  <FileText className="w-3.5 h-3.5 text-purple-600 dark:text-purple-300 shrink-0" />
                                   <span className="truncate">Ver Cronograma Adjunto</span>
-                                  <ExternalLink className="w-3 h-3 text-purple-600 shrink-0" />
+                                  <ExternalLink className="w-3 h-3 text-purple-600 dark:text-purple-300 shrink-0" />
                                 </a>
                                 <button
                                   type="button"
                                   onClick={() => setContractFormSchedulePdfUrl('')}
-                                  className="text-rose-600 hover:text-rose-800 hover:bg-rose-100/60 font-bold text-3xs px-2 py-1 rounded transition-colors shrink-0 cursor-pointer border border-rose-200/60"
+                                  className="text-rose-600 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-300 hover:bg-rose-100/60 dark:hover:bg-rose-900/60 font-bold text-3xs px-2 py-1 rounded transition-colors shrink-0 cursor-pointer border border-rose-200/60 dark:border-rose-800/60"
                                 >
                                   Eliminar
                                 </button>
@@ -12889,21 +12893,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 />
                                 <label
                                   htmlFor="schedule-pdf-input"
-                                  className={`w-full text-slate-700 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
+                                  className={`w-full text-slate-700 dark:text-slate-300 font-extrabold text-xs py-2.5 px-3 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs select-none ${
                                     isDraggingSchedulePdf
-                                      ? 'border-purple-500 bg-white text-purple-900 shadow-md'
-                                      : 'border-purple-300/80 bg-white hover:bg-slate-100/80 hover:border-purple-400'
+                                      ? 'border-purple-500 dark:border-purple-400 bg-white dark:bg-slate-900 text-purple-900 dark:text-purple-300 shadow-md'
+                                      : 'border-purple-300/80 dark:border-purple-800/80 bg-white dark:bg-slate-900 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 hover:border-purple-400 dark:hover:border-purple-300'
                                   }`}
                                 >
                                   {isUploadingSchedulePdf ? (
-                                    <span className="text-amber-600 font-bold animate-pulse py-1">Subiendo Cronograma... ({uploadSchedulePdfProgress}%)</span>
+                                    <span className="text-amber-600 dark:text-amber-300 font-bold animate-pulse py-1">Subiendo Cronograma... ({uploadSchedulePdfProgress}%)</span>
                                   ) : (
                                     <>
                                       <div className="flex items-center gap-1.5 pointer-events-none">
-                                        <Upload className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                        <Upload className="w-3.5 h-3.5 text-purple-600 dark:text-purple-300 shrink-0" />
                                         <span>{isDraggingSchedulePdf ? '¡Suelte el archivo del cronograma aquí!' : 'Adjuntar Cronograma PDF'}</span>
                                       </div>
-                                      <span className="text-[9px] font-normal text-slate-400 pointer-events-none">
+                                      <span className="text-[9px] font-normal text-slate-400 dark:text-slate-500 pointer-events-none">
                                         Arrastra y suelta el archivo aquí o haz clic para buscar
                                       </span>
                                     </>
@@ -12917,29 +12921,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                      </div>
 
                   {/* Right Side: Equipment and Maintenance scheduling */}
-                  <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
+                  <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 pt-4 md:pt-0 md:pl-5">
                     {/* Equipments Panel */}
                     <div className="space-y-2">
-                      <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider">Equipos en Contrato</h4>
+                      <h4 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider">Equipos en Contrato</h4>
                       
                       {/* Load existing Client Equipment */}
                       {contractFormClientId && !isCreatingNewClientForContract && (
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5 max-h-[110px] overflow-y-auto">
-                          <span className="font-bold text-[9px] text-indigo-750 block">Equipos Registrados de este Cliente</span>
+                        <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 space-y-1.5 max-h-[110px] overflow-y-auto">
+                          <span className="font-bold text-[9px] text-indigo-750 dark:text-indigo-300 block">Equipos Registrados de este Cliente</span>
                           {(() => {
                             const clientEquips = equipments.filter(eq => eq.clientId === contractFormClientId);
                             if (clientEquips.length === 0) {
-                              return <span className="text-[9px] text-slate-400 italic">No hay equipos registrados.</span>;
+                              return <span className="text-[9px] text-slate-400 dark:text-slate-500 italic">No hay equipos registrados.</span>;
                             }
                             return (
                               <div className="space-y-1">
                                 {clientEquips.map(eq => {
                                   const alreadyAdded = contractFormEquipmentItems.some(item => item.name.toLowerCase() === eq.name.toLowerCase());
                                   return (
-                                    <div key={eq.id} className="flex items-center justify-between text-[10px] bg-white border border-slate-150 p-1 rounded-md shadow-3xs">
+                                    <div key={eq.id} className="flex items-center justify-between text-[10px] bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-700 p-1 rounded-md shadow-3xs">
                                       <div className="truncate">
-                                        <span className="font-bold text-slate-800">{eq.name}</span>
-                                        <span className="text-[8px] text-slate-400 font-medium block">Marca: {eq.brand || 'N/D'}</span>
+                                        <span className="font-bold text-slate-800 dark:text-slate-100">{eq.name}</span>
+                                        <span className="text-[8px] text-slate-400 dark:text-slate-500 font-medium block">Marca: {eq.brand || 'N/D'}</span>
                                       </div>
                                       {!alreadyAdded && !isSalesReadOnly ? (
                                         <button
@@ -12947,12 +12951,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                           onClick={() => {
                                             setContractFormEquipmentItems([...contractFormEquipmentItems, { name: eq.name, brand: eq.brand || 'N/D', serial: eq.serialNumber || undefined }]);
                                           }}
-                                          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold px-1 py-0.5 rounded text-[8px] cursor-pointer"
+                                          className="bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-extrabold px-1 py-0.5 rounded text-[8px] cursor-pointer"
                                         >
                                           + Agregar
                                         </button>
                                       ) : alreadyAdded ? (
-                                        <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100">Agregado</span>
+                                        <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-1 py-0.5 rounded border border-emerald-100 dark:border-emerald-800">Agregado</span>
                                       ) : null}
                                     </div>
                                   );
@@ -12965,34 +12969,34 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Add Custom / New Equipment to contract */}
                       {!isSalesReadOnly && (
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
+                        <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 space-y-2">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <div className="space-y-0.5">
-                              <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Nombre Equipo</label>
+                              <label className="block text-[9px] font-extrabold text-slate-500 dark:text-slate-500 uppercase">Nombre Equipo</label>
                               <input
                                 type="text"
                                 placeholder="Ej. REVOLUTION MAXIMA"
                                 value={tempEquipName}
                                 onChange={(e) => setTempEquipName(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500"
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:border-indigo-500"
                               />
                             </div>
                             <div className="space-y-0.5">
-                              <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Marca</label>
+                              <label className="block text-[9px] font-extrabold text-slate-500 dark:text-slate-500 uppercase">Marca</label>
                               <input
                                 type="text"
                                 placeholder="Ej. GE"
                                 value={tempEquipBrand}
                                 onChange={(e) => setTempEquipBrand(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 outline-hidden focus:border-indigo-500"
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:border-indigo-500"
                               />
                             </div>
                             <div className="space-y-0.5">
-                              <label className="block text-[9px] font-extrabold text-slate-500 uppercase">Modalidad</label>
+                              <label className="block text-[9px] font-extrabold text-slate-500 dark:text-slate-500 uppercase">Modalidad</label>
                               <select
                                 value={tempEquipModality}
                                 onChange={(e) => setTempEquipModality(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-extrabold text-slate-700 outline-hidden focus:border-indigo-500 cursor-pointer"
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-extrabold text-slate-700 dark:text-slate-300 outline-hidden focus:border-indigo-500 cursor-pointer"
                               >
                                 <option value="">-- Modalidad --</option>
                                 {EQUIPMENT_MODALITIES.map(mod => (
@@ -13003,9 +13007,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
 
                           {/* Optional Fields: Serial & GON */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5 border-t border-slate-200/60">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5 border-t border-slate-200/60 dark:border-slate-700/60">
                             <div className="space-y-0.5">
-                              <label className="block text-[9px] font-extrabold text-slate-500 uppercase flex items-center justify-between">
+                              <label className="block text-[9px] font-extrabold text-slate-500 dark:text-slate-500 uppercase flex items-center justify-between">
                                 <span>Serial (Opcional)</span>
                               </label>
                               <input
@@ -13013,11 +13017,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 placeholder="Ej. SN-98765432"
                                 value={tempEquipSerial}
                                 onChange={(e) => setTempEquipSerial(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 font-mono outline-hidden focus:border-indigo-500"
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono outline-hidden focus:border-indigo-500"
                               />
                             </div>
                             <div className="space-y-0.5">
-                              <label className="block text-[9px] font-extrabold text-slate-500 uppercase flex items-center justify-between">
+                              <label className="block text-[9px] font-extrabold text-slate-500 dark:text-slate-500 uppercase flex items-center justify-between">
                                 <span>GON (Opcional)</span>
                               </label>
                               <input
@@ -13025,7 +13029,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 placeholder="Ej. GON-12345"
                                 value={tempEquipGon}
                                 onChange={(e) => setTempEquipGon(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 font-mono outline-hidden focus:border-indigo-500"
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono outline-hidden focus:border-indigo-500"
                               />
                             </div>
                           </div>
@@ -13060,25 +13064,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       )}
 
                       {/* List of currently covered equipments */}
-                      <div className="border border-slate-205 rounded-xl divide-y divide-slate-100 max-h-[140px] overflow-y-auto bg-white">
+                      <div className="border border-slate-205 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-700 max-h-[140px] overflow-y-auto bg-white dark:bg-slate-900">
                         {contractFormEquipmentItems.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between p-2 hover:bg-slate-50/50 transition-colors">
+                          <div key={index} className="flex items-center justify-between p-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                             <div className="truncate pr-2 space-y-0.5">
-                              <p className="font-bold text-slate-800 text-[10.5px] leading-tight">{item.name}</p>
-                              <div className="flex flex-wrap items-center gap-1 text-[8.5px] text-slate-500 font-semibold leading-none">
-                                <span>Marca: <span className="font-extrabold text-slate-700">{item.brand}</span></span>
+                              <p className="font-bold text-slate-800 dark:text-slate-100 text-[10.5px] leading-tight">{item.name}</p>
+                              <div className="flex flex-wrap items-center gap-1 text-[8.5px] text-slate-500 dark:text-slate-500 font-semibold leading-none">
+                                <span>Marca: <span className="font-extrabold text-slate-700 dark:text-slate-300">{item.brand}</span></span>
                                 {item.modality && (
-                                  <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1 py-0.2 rounded font-black text-[7.5px]">
+                                  <span className="bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-1 py-0.2 rounded font-black text-[7.5px]">
                                     {item.modality}
                                   </span>
                                 )}
                                 {item.serial && (
-                                  <span className="bg-slate-100 text-slate-700 border border-slate-200 px-1 py-0.2 rounded font-mono text-[7.5px]">
+                                  <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-1 py-0.2 rounded font-mono text-[7.5px]">
                                     S/N: {item.serial}
                                   </span>
                                 )}
                                 {item.gon && (
-                                  <span className="bg-purple-50 text-purple-750 border border-purple-200 px-1 py-0.2 rounded font-mono text-[7.5px]">
+                                  <span className="bg-purple-50 dark:bg-purple-950 text-purple-750 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1 py-0.2 rounded font-mono text-[7.5px]">
                                     GON: {item.gon}
                                   </span>
                                 )}
@@ -13090,7 +13094,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 onClick={() => {
                                   setContractFormEquipmentItems(contractFormEquipmentItems.filter((_, i) => i !== index));
                                 }}
-                                className="text-red-500 hover:text-red-700 font-black text-2xs p-1 cursor-pointer shrink-0"
+                                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 font-black text-2xs p-1 cursor-pointer shrink-0"
                               >
                                 ✕
                               </button>
@@ -13098,7 +13102,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
                         ))}
                         {contractFormEquipmentItems.length === 0 && (
-                          <div className="p-3 text-center text-slate-400 italic text-[9px]">
+                          <div className="p-3 text-center text-slate-400 dark:text-slate-500 italic text-[9px]">
                             Ningún equipo asignado a la cobertura.
                           </div>
                         )}
@@ -13106,11 +13110,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </div>
 
                     {/* Maintenance Scheduling Panel */}
-                    <div className="space-y-2.5 pt-3 border-t border-slate-150">
-                      <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider">Mantenimientos Programados</h4>
+                    <div className="space-y-2.5 pt-3 border-t border-slate-150 dark:border-slate-700">
+                      <h4 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider">Mantenimientos Programados</h4>
                       
                       {/* Option: Dejar pendiente de programación por el Administrador */}
-                      <div className="bg-amber-50/90 border border-amber-250 rounded-xl p-2.5 space-y-1">
+                      <div className="bg-amber-50/90 dark:bg-amber-950/90 border border-amber-250 dark:border-amber-800 rounded-xl p-2.5 space-y-1">
                         <label className="flex items-start gap-2 cursor-pointer select-none">
                           <input
                             type="checkbox"
@@ -13133,10 +13137,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             className="w-4 h-4 mt-0.5 accent-amber-600 rounded cursor-pointer disabled:cursor-not-allowed"
                           />
                           <div>
-                            <span className="font-extrabold text-[10.5px] text-amber-950 block">
+                            <span className="font-extrabold text-[10.5px] text-amber-950 dark:text-amber-300 block">
                               ⏳ Dejar sin mantenimiento (Pendiente de programación por Admin)
                             </span>
-                            <p className="text-[9px] text-amber-850 font-medium leading-tight mt-0.5">
+                            <p className="text-[9px] text-amber-850 dark:text-amber-300 font-medium leading-tight mt-0.5">
                               {userRole === 'sales'
                                 ? 'Cargue los datos del contrato y el archivo PDF. El Administrador asignará las fechas del cronograma.'
                                 : 'Si activa esto, el contrato quedará marcado con alerta para definir las fechas posteriormente.'}
@@ -13145,21 +13149,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         </label>
                       </div>
                       
-                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2.5">
+                      <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 space-y-2.5">
                         <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                           {/* Column 1: Target Equipment Selector */}
                           <div className="space-y-1">
-                            <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">
+                            <label className="block text-[9.5px] font-extrabold text-slate-600 dark:text-slate-300 uppercase">
                               {contractFormEquipmentItems.length > 1 ? '🎯 Aplica a Equipo' : '⚙️ Equipo'}
                             </label>
                             <select
                               value={contractFormSelectedEquipForFreq}
                               disabled={isSalesReadOnly || contractFormEquipmentItems.length === 0}
                               onChange={(e) => setContractFormSelectedEquipForFreq(e.target.value)}
-                              className={`w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-slate-800 outline-hidden ${
+                              className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-slate-800 dark:text-slate-100 outline-hidden ${
                                 isSalesReadOnly || contractFormEquipmentItems.length === 0
-                                  ? 'bg-slate-100 cursor-not-allowed opacity-80'
-                                  : 'bg-white focus:border-indigo-500 cursor-pointer shadow-2xs'
+                                  ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80'
+                                  : 'bg-white dark:bg-slate-900 focus:border-indigo-500 cursor-pointer shadow-2xs'
                               }`}
                             >
                               <option value="all">
@@ -13177,7 +13181,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Column 2: Frequency Selector */}
                           <div className="space-y-1">
-                            <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">Frecuencia</label>
+                            <label className="block text-[9.5px] font-extrabold text-slate-600 dark:text-slate-300 uppercase">Frecuencia</label>
                             <select
                               value={contractFormFrequency}
                               disabled={isSalesReadOnly}
@@ -13193,8 +13197,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   }
                                 }
                               }}
-                              className={`w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-700 outline-hidden ${
-                                isSalesReadOnly ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-white focus:border-indigo-500 cursor-pointer shadow-2xs'
+                              className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 outline-hidden ${
+                                isSalesReadOnly ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-80' : 'bg-white dark:bg-slate-900 focus:border-indigo-500 cursor-pointer shadow-2xs'
                               }`}
                             >
                               <option value="Ninguno">Ninguno</option>
@@ -13210,7 +13214,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Column 3: Suggested Day */}
                           <div className="space-y-1">
-                            <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">Día Sugerido</label>
+                            <label className="block text-[9.5px] font-extrabold text-slate-600 dark:text-slate-300 uppercase">Día Sugerido</label>
                             <input
                               type="number"
                               min={1}
@@ -13222,14 +13226,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
                                 setContractFormPreferredDay(val);
                               }}
-                              className={`w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-slate-800 outline-hidden ${
+                              className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-slate-800 dark:text-slate-100 outline-hidden ${
                                 isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'
-                                  ? 'bg-slate-100 cursor-not-allowed opacity-70'
-                                  : 'bg-white focus:border-indigo-500'
+                                  ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70'
+                                  : 'bg-white dark:bg-slate-900 focus:border-indigo-500'
                               }`}
                             />
                             <div className="flex items-center gap-1 mt-1">
-                              <span className="text-[7.5px] text-slate-400 font-extrabold">Sugerir:</span>
+                              <span className="text-[7.5px] text-slate-400 dark:text-slate-500 font-extrabold">Sugerir:</span>
                               {[1, 15, 27].map(day => (
                                 <button
                                   key={day}
@@ -13239,7 +13243,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   className={`px-1.5 py-0.2 rounded text-[8px] font-black transition-colors cursor-pointer ${
                                     contractFormPreferredDay === day
                                       ? 'bg-indigo-600 text-white'
-                                      : 'bg-slate-200/80 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700'
+                                      : 'bg-slate-200/80 dark:bg-slate-700/80 hover:bg-indigo-50 dark:hover:bg-indigo-900 text-slate-600 dark:text-slate-300 hover:text-indigo-700 dark:hover:text-indigo-300'
                                   }`}
                                 >
                                   {day}
@@ -13250,15 +13254,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                           {/* Column 4: Preferred Starting Month */}
                           <div className="space-y-1">
-                            <label className="block text-[9.5px] font-extrabold text-slate-600 uppercase">Mes Inicial</label>
+                            <label className="block text-[9.5px] font-extrabold text-slate-600 dark:text-slate-300 uppercase">Mes Inicial</label>
                             <select
                               value={contractFormPreferredMonth}
                               disabled={isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'}
                               onChange={(e) => setContractFormPreferredMonth(e.target.value === '' ? '' : Number(e.target.value))}
-                              className={`w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-extrabold text-slate-800 outline-hidden ${
+                              className={`w-full border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs font-extrabold text-slate-800 dark:text-slate-100 outline-hidden ${
                                 isSalesReadOnly || contractFormFrequency === 'Ninguno' || contractFormFrequency === 'Personalizado'
-                                  ? 'bg-slate-100 cursor-not-allowed opacity-70'
-                                  : 'bg-white focus:border-indigo-500 cursor-pointer shadow-2xs'
+                                  ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70'
+                                  : 'bg-white dark:bg-slate-900 focus:border-indigo-500 cursor-pointer shadow-2xs'
                               }`}
                             >
                               <option value="">Auto (Desde Inicio)</option>
@@ -13314,7 +13318,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             }}
                             className={`w-full py-2 border rounded-xl text-xs font-black transition-all shadow-xs flex items-center justify-center gap-1.5 ${
                               isSalesReadOnly 
-                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' 
+                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed' 
                                 : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white border-indigo-600 cursor-pointer active:scale-98'
                             }`}
                           >
@@ -13329,27 +13333,27 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       {/* Add Specific Custom Date */}
                       {!isSalesReadOnly && (
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
-                          <span className="font-extrabold text-[10px] text-slate-600 uppercase tracking-wider block">
+                        <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 space-y-2">
+                          <span className="font-extrabold text-[10px] text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
                             ➕ Agregar Fecha Manual
                           </span>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             <div className="space-y-1">
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase">Fecha de Mantenimiento</label>
+                              <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Fecha de Mantenimiento</label>
                               <input
                                 type="date"
                                 value={tempMaintenanceDate}
                                 onChange={(e) => setTempMaintenanceDate(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-hidden font-mono focus:border-indigo-500"
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 outline-hidden font-mono focus:border-indigo-500"
                               />
                             </div>
                             {contractFormEquipmentItems.length > 0 && (
                               <div className="space-y-1">
-                                <label className="block text-[9px] font-bold text-slate-500 uppercase">Para Equipo (Opcional)</label>
+                                <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Para Equipo (Opcional)</label>
                                 <select
                                   value={tempManualEquipTarget}
                                   onChange={(e) => setTempManualEquipTarget(e.target.value)}
-                                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-700 outline-hidden focus:border-indigo-500 cursor-pointer"
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 outline-hidden focus:border-indigo-500 cursor-pointer"
                                 >
                                   <option value="">(Todos los equipos)</option>
                                   {contractFormEquipmentItems.map((item, idx) => (
@@ -13389,7 +13393,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       )}
 
                       {/* List of maintenance dates with interactive Quality Control toggles */}
-                      <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-[140px] overflow-y-auto bg-white">
+                      <div className="border border-slate-200 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-700 max-h-[140px] overflow-y-auto bg-white dark:bg-slate-900">
                         {(() => {
                           const currentQcs = contractFormQcDates.length > 0 ? contractFormQcDates : computeDefaultQcDates(contractFormMaintenanceDates);
 
@@ -13410,11 +13414,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             };
 
                             return (
-                              <div key={index} className="flex items-center justify-between px-2.5 py-1.5 hover:bg-slate-50/50 transition-colors">
+                              <div key={index} className="flex items-center justify-between px-2.5 py-1.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                 <div className="flex items-center gap-2 flex-wrap pr-1">
-                                  <span className="font-mono text-slate-800 text-[10px] font-bold">{fmtDate(date)}</span>
+                                  <span className="font-mono text-slate-800 dark:text-slate-100 text-[10px] font-bold">{fmtDate(date)}</span>
                                   {specificEquip && (
-                                    <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.2 rounded text-[8px] font-extrabold">
+                                    <span className="bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-1.5 py-0.2 rounded text-[8px] font-extrabold">
                                       ⚙️ {specificEquip}
                                     </span>
                                   )}
@@ -13446,8 +13450,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     }}
                                     className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border transition-all ${
                                       isSalesReadOnly 
-                                        ? (isQc ? 'bg-violet-400 border-violet-400 text-white cursor-not-allowed' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed')
-                                        : (isQc ? 'bg-violet-600 border-violet-600 text-white shadow-3xs cursor-pointer' : 'bg-white hover:bg-slate-100 text-slate-400 border-slate-200 cursor-pointer')
+                                        ? (isQc ? 'bg-violet-400 border-violet-400 dark:border-violet-300 text-white cursor-not-allowed' : 'bg-slate-100 dark:bg-slate-800 text-slate-300 border-slate-200 dark:border-slate-700 cursor-not-allowed')
+                                        : (isQc ? 'bg-violet-600 border-violet-600 text-white shadow-3xs cursor-pointer' : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-pointer')
                                     }`}
                                     title="Marcar esta visita como Control de Calidad"
                                   >
@@ -13461,7 +13465,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                       setContractFormQcDates(currentQcs.filter(qd => qd !== rawEntry && qd !== date));
                                       setContractFormMaintenanceDates(contractFormMaintenanceDates.filter((_, i) => i !== index));
                                     }}
-                                    className="text-red-500 hover:text-red-700 font-black text-2xs p-1 cursor-pointer shrink-0"
+                                    className="text-red-500 hover:text-red-700 dark:hover:text-red-300 font-black text-2xs p-1 cursor-pointer shrink-0"
                                   >
                                     ✕
                                   </button>
@@ -13471,7 +13475,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           });
                         })()}
                         {contractFormMaintenanceDates.length === 0 && (
-                          <div className="p-3 text-center text-slate-400 italic text-[9px]">
+                          <div className="p-3 text-center text-slate-400 dark:text-slate-500 italic text-[9px]">
                             Ninguna visita de mantenimiento programada.
                           </div>
                         )}
@@ -13481,7 +13485,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-3 border-t border-slate-100 font-sans mt-3">
+              <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-700 font-sans mt-3">
                 {editingContract && userRole === 'admin' && onDeleteContract ? (
                   <button
                     type="button"
@@ -13492,9 +13496,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         setEditingContract(null);
                       }
                     }}
-                    className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs px-3 py-2 rounded-lg cursor-pointer transition-colors border border-rose-200 flex items-center gap-1.5"
+                    className="bg-rose-50 dark:bg-rose-950 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 font-extrabold text-xs px-3 py-2 rounded-lg cursor-pointer transition-colors border border-rose-200 dark:border-rose-800 flex items-center gap-1.5"
                   >
-                    <Trash2 className="w-4 h-4 text-rose-600" />
+                    <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-300" />
                     <span>Eliminar Contrato</span>
                   </button>
                 ) : <div />}
@@ -13507,7 +13511,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       setEditingContract(null);
                       setRenewalSourceContract(null);
                     }}
-                    className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                    className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
                   >
                     Cancelar
                   </button>
@@ -13528,10 +13532,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Modal Detalles del Contrato */}
       {isContractDetailsModalOpen && selectedContractForDetails && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="contract-details-modal">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-xl p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Briefcase className="w-5 h-5 text-indigo-600" />
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-xl p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                <Briefcase className="w-5 h-5 text-indigo-600 dark:text-indigo-300" />
                 <span>Detalle de Contrato: {selectedContractForDetails.id}</span>
               </h3>
               <button
@@ -13539,7 +13543,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setIsContractDetailsModalOpen(false);
                   setSelectedContractForDetails(null);
                 }}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -13553,7 +13557,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 
                 if (!exp && maintStatus.total === 0) return null;
 
-                const alertColorClass = exp?.colorClass || (maintStatus.hasNoPending ? 'bg-purple-50 text-purple-950 border-purple-250' : 'bg-slate-50 text-slate-800 border-slate-200');
+                const alertColorClass = exp?.colorClass || (maintStatus.hasNoPending ? 'bg-purple-50 dark:bg-purple-950 text-purple-950 dark:text-purple-300 border-purple-250 dark:border-purple-800' : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700');
 
                 return (
                   <div className={`p-3 rounded-xl border text-xs font-bold flex flex-col gap-2 shadow-2xs ${alertColorClass}`}>
@@ -13567,39 +13571,39 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               : `Alerta de Vencimiento: Este contrato ${exp.text}`}
                           </span>
                         </div>
-                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/80 font-black shadow-2xs shrink-0">
+                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-white/80 dark:bg-slate-900/80 font-black shadow-2xs shrink-0">
                           {exp.badgeText}
                         </span>
                       </div>
                     )}
 
                     {maintStatus.total > 0 && (
-                      <div className={`flex flex-col gap-1.5 text-[11px] ${exp && exp.level !== 'ok' ? 'pt-2 border-t border-slate-200/60' : ''}`}>
+                      <div className={`flex flex-col gap-1.5 text-[11px] ${exp && exp.level !== 'ok' ? 'pt-2 border-t border-slate-200/60 dark:border-slate-700/60' : ''}`}>
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <span className="text-sm">{maintStatus.hasNoPending ? '⚡' : maintStatus.isAllScheduled ? '📅' : '📋'}</span>
                             <span>
                               {maintStatus.hasNoPending ? (
-                                <strong className="text-purple-900 font-extrabold">
+                                <strong className="text-purple-900 dark:text-purple-300 font-extrabold">
                                   Mantenimientos al Día: ¡Se realizaron todos los MTOs ({maintStatus.done}/{maintStatus.total})! No quedan mantenimientos pendientes.
                                 </strong>
                               ) : maintStatus.isAllScheduled ? (
-                                <strong className="text-sky-900 font-extrabold">
+                                <strong className="text-sky-900 dark:text-sky-300 font-extrabold">
                                   Mantenimientos Agendados: Los {maintStatus.total} MTOs están agendados en el calendario ({maintStatus.done} realizados).
                                 </strong>
                               ) : (
                                 <span>
-                                  <strong>Estado de Mantenimientos:</strong> {maintStatus.done} de {maintStatus.total} realizados · <strong className="text-sky-800">{maintStatus.scheduled} agendados</strong> · <strong className="text-amber-800">{maintStatus.unScheduled} por agendar</strong>
+                                  <strong>Estado de Mantenimientos:</strong> {maintStatus.done} de {maintStatus.total} realizados · <strong className="text-sky-800 dark:text-sky-300">{maintStatus.scheduled} agendados</strong> · <strong className="text-amber-800 dark:text-amber-300">{maintStatus.unScheduled} por agendar</strong>
                                 </span>
                               )}
                             </span>
                           </div>
                           <span className={`text-[9px] uppercase px-2 py-0.5 rounded font-black shadow-2xs shrink-0 ${
                             maintStatus.hasNoPending 
-                              ? 'bg-purple-200 text-purple-950' 
+                              ? 'bg-purple-200 dark:bg-purple-950 text-purple-950 dark:text-purple-300' 
                               : maintStatus.isAllScheduled
-                                ? 'bg-sky-200 text-sky-950'
-                                : 'bg-slate-200 text-slate-800'
+                                ? 'bg-sky-200 dark:bg-sky-950 text-sky-950 dark:text-sky-300'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100'
                           }`}>
                             {maintStatus.hasNoPending ? '⚡ 0 PENDIENTES' : maintStatus.isAllScheduled ? `📅 ${maintStatus.scheduled} AGENDADOS` : `📋 ${maintStatus.unScheduled} POR AGENDAR`}
                           </span>
@@ -13607,16 +13611,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                         {/* Sectioned breakdown of pending maintenance by equipment */}
                         {!maintStatus.hasNoPending && maintStatus.eqBreakdown && maintStatus.eqBreakdown.some(e => e.remaining > 0) && (
-                          <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-slate-200/50 pl-6">
-                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">MTOs por equipo:</span>
+                          <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-slate-200/50 dark:border-slate-700/50 pl-6">
+                            <span className="text-[9px] font-black text-slate-500 dark:text-slate-500 uppercase tracking-wider">MTOs por equipo:</span>
                             {maintStatus.eqBreakdown.filter(e => e.remaining > 0).map((eq, idx) => (
-                              <span key={idx} className="bg-white text-indigo-950 border border-indigo-200 font-bold text-[9px] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-3xs font-mono">
+                              <span key={idx} className="bg-white dark:bg-slate-900 text-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold text-[9px] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-3xs font-mono">
                                 <span>{eq.name}</span>
                                 {eq.modality && <span className="bg-indigo-600 text-white font-black text-[7.5px] px-1 py-0.1 rounded uppercase">{eq.modality}</span>}
                                 {eq.unScheduled > 0 ? (
-                                  <span className="text-amber-700 font-extrabold ml-0.5">: {eq.unScheduled} por agendar</span>
+                                  <span className="text-amber-700 dark:text-amber-300 font-extrabold ml-0.5">: {eq.unScheduled} por agendar</span>
                                 ) : (
-                                  <span className="text-sky-700 font-extrabold ml-0.5">: {eq.scheduled} agendado{eq.scheduled > 1 ? 's' : ''} (pendiente de realizar)</span>
+                                  <span className="text-sky-700 dark:text-sky-300 font-extrabold ml-0.5">: {eq.scheduled} agendado{eq.scheduled > 1 ? 's' : ''} (pendiente de realizar)</span>
                                 )}
                               </span>
                             ))}
@@ -13628,60 +13632,60 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 );
               })()}
               {/* Header Contract Info card */}
-              <div className="grid grid-cols-3 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+              <div className="grid grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3">
                 <div>
-                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Cliente</span>
-                  <span className="font-extrabold text-slate-800 text-[11px]">
+                  <span className="block text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Cliente</span>
+                  <span className="font-extrabold text-slate-800 dark:text-slate-100 text-[11px]">
                     {clients.find(c => c.id === selectedContractForDetails.clientId)?.name || selectedContractForDetails.clientId}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Ciudad / Ubicación</span>
-                  <span className="font-extrabold text-slate-800 text-[11px]">
+                  <span className="block text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Ciudad / Ubicación</span>
+                  <span className="font-extrabold text-slate-800 dark:text-slate-100 text-[11px]">
                     {selectedContractForDetails.city ? `📍 ${selectedContractForDetails.city}` : 'No especificada'}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Valor del Contrato</span>
-                  <span className="font-extrabold text-emerald-700 text-[11px] font-mono">
+                  <span className="block text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Valor del Contrato</span>
+                  <span className="font-extrabold text-emerald-700 dark:text-emerald-300 text-[11px] font-mono">
                     {selectedContractForDetails.contractValue !== undefined && selectedContractForDetails.contractValue !== null
                       ? `$ ${selectedContractForDetails.contractValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
                       : 'No especificado'}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Tipo Cobertura</span>
-                  <span className="font-bold text-indigo-700 text-[11px]">{selectedContractForDetails.type}</span>
+                  <span className="block text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Tipo Cobertura</span>
+                  <span className="font-bold text-indigo-700 dark:text-indigo-300 text-[11px]">{selectedContractForDetails.type}</span>
                 </div>
                 <div>
-                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Vigencia</span>
-                  <span className="font-bold text-slate-700 text-[10px] font-mono">
+                  <span className="block text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Vigencia</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 text-[10px] font-mono">
                     {selectedContractForDetails.startDate} al {selectedContractForDetails.endDate}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Estado Mantenimientos</span>
+                  <span className="block text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Estado Mantenimientos</span>
                   {(() => {
                     const maintStatus = getContractMaintenanceStatus(selectedContractForDetails, workOrders);
                     if (maintStatus.total === 0) {
-                      return <span className="font-bold text-slate-500 text-[10px]">{selectedContractForDetails.maintenanceFrequency || 'Sin agenda'}</span>;
+                      return <span className="font-bold text-slate-500 dark:text-slate-500 text-[10px]">{selectedContractForDetails.maintenanceFrequency || 'Sin agenda'}</span>;
                     }
                     if (maintStatus.hasNoPending) {
                       return (
-                        <span className="font-extrabold text-purple-750 text-[11px] flex items-center gap-1">
+                        <span className="font-extrabold text-purple-750 dark:text-purple-300 text-[11px] flex items-center gap-1">
                           ⚡ {maintStatus.done}/{maintStatus.total} Realizados (0 pendientes)
                         </span>
                       );
                     }
                     if (maintStatus.isAllScheduled) {
                       return (
-                        <span className="font-extrabold text-sky-750 text-[10px] flex items-center gap-1">
+                        <span className="font-extrabold text-sky-750 dark:text-sky-300 text-[10px] flex items-center gap-1">
                           📅 {maintStatus.total}/{maintStatus.total} Agendados ({maintStatus.done} realizados)
                         </span>
                       );
                     }
                     return (
-                      <span className="font-bold text-slate-700 text-[10px]">
+                      <span className="font-bold text-slate-700 dark:text-slate-300 text-[10px]">
                         📋 {maintStatus.done}/{maintStatus.total} Realizados ({maintStatus.unScheduled} por agendar)
                       </span>
                     );
@@ -13691,8 +13695,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               {/* Cloudinary Document Badges in Contract Details Modal */}
               {(selectedContractForDetails.contractPdfUrl || selectedContractForDetails.schedulePdfUrl || selectedContractForDetails.serviceRecordPdfUrl || selectedContractForDetails.caPdfUrl || selectedContractForDetails.podPdfUrl) && (
-                <div className="bg-indigo-50/60 border border-indigo-150 rounded-xl p-3 space-y-2">
-                  <span className="font-extrabold text-[9px] text-indigo-900 uppercase tracking-wider block">Documentos Adjuntos en la Nube (Cloudinary)</span>
+                <div className="bg-indigo-50/60 dark:bg-indigo-950/60 border border-indigo-150 dark:border-indigo-800 rounded-xl p-3 space-y-2">
+                  <span className="font-extrabold text-[9px] text-indigo-900 dark:text-indigo-300 uppercase tracking-wider block">Documentos Adjuntos en la Nube (Cloudinary)</span>
                   <div className="flex flex-wrap gap-2">
                     {selectedContractForDetails.contractPdfUrl && (
                       <a
@@ -13756,25 +13760,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               {/* Covered Equipments */}
               {selectedContractForDetails.equipmentItems && selectedContractForDetails.equipmentItems.length > 0 && (
                 <div className="space-y-2">
-                  <span className="font-extrabold text-[9px] text-slate-500 uppercase tracking-wider block">Equipos Cobertura y Adjuntos de Entrega</span>
+                  <span className="font-extrabold text-[9px] text-slate-500 dark:text-slate-500 uppercase tracking-wider block">Equipos Cobertura y Adjuntos de Entrega</span>
                   <div className="space-y-1.5">
                     {selectedContractForDetails.equipmentItems.map((item, idx) => (
-                      <div key={idx} className="bg-slate-50 border border-slate-200 p-2 rounded-xl flex flex-wrap items-center justify-between gap-2">
+                      <div key={idx} className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2 rounded-xl flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="font-extrabold text-slate-800 text-xs">🖥️ {item.name}</span>
-                          <span className="text-[9px] text-slate-500 font-semibold">({item.brand})</span>
+                          <span className="font-extrabold text-slate-800 dark:text-slate-100 text-xs">🖥️ {item.name}</span>
+                          <span className="text-[9px] text-slate-500 dark:text-slate-500 font-semibold">({item.brand})</span>
                           {item.modality && (
-                            <span className="bg-indigo-100 text-indigo-800 px-1.5 py-0.2 rounded text-[7.5px] font-black">
+                            <span className="bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 px-1.5 py-0.2 rounded text-[7.5px] font-black">
                               {item.modality}
                             </span>
                           )}
                           {item.serial && (
-                            <span className="bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.2 rounded font-mono text-[7.5px] font-bold">
+                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-1.5 py-0.2 rounded font-mono text-[7.5px] font-bold">
                               S/N: {item.serial}
                             </span>
                           )}
                           {item.gon && (
-                            <span className="bg-purple-50 text-purple-750 border border-purple-200 px-1.5 py-0.2 rounded font-mono text-[7.5px] font-bold">
+                            <span className="bg-purple-50 dark:bg-purple-950 text-purple-750 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.2 rounded font-mono text-[7.5px] font-bold">
                               GON: {item.gon}
                             </span>
                           )}
@@ -13787,7 +13791,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               setSelectedEquipmentForSchedulePdf(item);
                               setIsContractSchedulePdfOpen(true);
                             }}
-                            className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-[8px] px-2 py-0.5 rounded flex items-center gap-1 cursor-pointer transition-colors"
+                            className="bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold text-[8px] px-2 py-0.5 rounded flex items-center gap-1 cursor-pointer transition-colors"
                             title="Generar Cronograma en PDF para este equipo"
                           >
                             📄 Cronograma PDF
@@ -13820,7 +13824,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               {/* Maintenance Agenda List */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="font-extrabold text-[9px] text-slate-500 uppercase tracking-wider block">Cronograma de Visitas Programadas</span>
+                  <span className="font-extrabold text-[9px] text-slate-500 dark:text-slate-500 uppercase tracking-wider block">Cronograma de Visitas Programadas</span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <button
                       type="button"
@@ -13898,7 +13902,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   )}
                   </div>
                 </div>
-                <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden bg-white max-h-[220px] overflow-y-auto">
+                <div className="border border-slate-200 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-700 overflow-hidden bg-white dark:bg-slate-900 max-h-[220px] overflow-y-auto">
                   {selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.length > 0 ? (
                     selectedContractForDetails.maintenanceDates.map((date, idx) => {
                       const [cleanDate, specificEquipInDate] = date.split('|');
@@ -13944,18 +13948,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                       // Status determination
                       let statusText = 'No Agendado (Pendiente)';
-                      let statusClasses = 'bg-slate-50 text-slate-500 border-slate-200';
+                      let statusClasses = 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-500 border-slate-200 dark:border-slate-700';
                       
                       if (matchingWO) {
                         if (matchingWO.status === 'Realizado' || matchingWO.status === 'Conciliado') {
                           statusText = 'Hecho (Realizado)';
-                          statusClasses = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                          statusClasses = 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
                         } else if (matchingWO.status === 'En Proceso' || matchingWO.status === 'Reportado') {
                           statusText = `Agendado (${matchingWO.status})`;
-                          statusClasses = 'bg-sky-50 text-sky-700 border-sky-200';
+                          statusClasses = 'bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800';
                         } else {
                           statusText = 'Agendado (Pendiente)';
-                          statusClasses = 'bg-amber-50 text-amber-700 border-amber-200';
+                          statusClasses = 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
                         }
                       }
 
@@ -13980,19 +13984,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           }}
                           className={`flex items-center justify-between p-3 transition-colors ${
                             userRole === 'admin' && matchingWO 
-                              ? 'hover:bg-indigo-50/50 cursor-pointer group' 
-                              : 'hover:bg-slate-50/50 cursor-default'
+                              ? 'hover:bg-indigo-50/50 dark:hover:bg-indigo-900/50 cursor-pointer group' 
+                              : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/50 cursor-default'
                           }`}
                           title={userRole === 'admin' && matchingWO ? "Haga clic para ir directamente a la orden agendada en el calendario" : undefined}
                         >
                           <div className="space-y-1">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className={`font-mono text-slate-800 text-[11px] font-bold ${userRole === 'admin' && matchingWO ? 'group-hover:text-indigo-700' : ''} transition-colors`}>
+                              <span className={`font-mono text-slate-800 dark:text-slate-100 text-[11px] font-bold ${userRole === 'admin' && matchingWO ? 'group-hover:text-indigo-700 dark:group-hover:text-indigo-300' : ''} transition-colors`}>
                                 {fmtDate(cleanDate)}
                               </span>
                               {targetEqName && (
-                                <span className="bg-indigo-50 text-indigo-900 border border-indigo-200 px-2 py-0.5 rounded-md text-[9px] font-extrabold flex items-center gap-1 shadow-3xs">
-                                  <Cpu className="w-3 h-3 text-indigo-600 shrink-0" />
+                                <span className="bg-indigo-50 dark:bg-indigo-950 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md text-[9px] font-extrabold flex items-center gap-1 shadow-3xs">
+                                  <Cpu className="w-3 h-3 text-indigo-600 dark:text-indigo-300 shrink-0" />
                                   <span>{targetEqName}</span>
                                   {targetModality && (
                                     <span className="bg-indigo-600 text-white font-black text-[7.5px] px-1 py-0.1 rounded uppercase">
@@ -14004,11 +14008,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             </div>
                             <div className="flex items-center gap-1.5">
                               {isQc ? (
-                                <span className="bg-violet-100 text-violet-900 border border-violet-200 font-extrabold text-[8px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                <span className="bg-violet-100 dark:bg-violet-950 text-violet-900 dark:text-violet-300 border border-violet-200 dark:border-violet-800 font-extrabold text-[8px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
                                   📋 Control de Calidad
                                 </span>
                               ) : (
-                                <span className="bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[8px] px-1.5 py-0.5 rounded">
+                                <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-bold text-[8px] px-1.5 py-0.5 rounded">
                                   🛠️ Mantenimiento Preventivo
                                 </span>
                               )}
@@ -14055,7 +14059,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     e.stopPropagation();
                                     onUpdateWorkOrderStatus(matchingWO.id, 'Pendiente');
                                   }}
-                                  className="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-extrabold px-2.5 py-1 rounded-md text-[9px] transition-colors cursor-pointer shadow-2xs flex items-center gap-1 shrink-0"
+                                  className="bg-amber-100 dark:bg-amber-950 hover:bg-amber-200 dark:hover:bg-amber-900 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800 font-extrabold px-2.5 py-1 rounded-md text-[9px] transition-colors cursor-pointer shadow-2xs flex items-center gap-1 shrink-0"
                                   title="Revertir y cambiar esta visita de nuevo a estado Pendiente"
                                 >
                                   <span>↩ Cambiar a Pendiente</span>
@@ -14108,7 +14112,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       );
                     })
                   ) : (
-                    <div className="p-5 text-center text-slate-400 italic text-[10px]">
+                    <div className="p-5 text-center text-slate-400 dark:text-slate-500 italic text-[10px]">
                       Este contrato no posee visitas de mantenimiento agendadas.
                     </div>
                   )}
@@ -14116,14 +14120,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </div>
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-slate-100 font-sans">
+            <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-700 font-sans">
               <button
                 type="button"
                 onClick={() => {
                   setIsContractDetailsModalOpen(false);
                   setSelectedContractForDetails(null);
                 }}
-                className="px-4 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors text-slate-700"
+                className="px-4 py-2 text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors text-slate-700 dark:text-slate-300"
               >
                 Cerrar
               </button>
@@ -14589,16 +14593,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Modal Detalle de Capacitación Programada en Agenda */}
       {infoScheduledTraining && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs h-full w-full z-50 flex items-center justify-center p-4">
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-5 overflow-y-auto max-h-[90vh] z-50 border border-slate-150 font-sans space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-5 overflow-y-auto max-h-[90vh] z-50 border border-slate-150 dark:border-slate-700 font-sans space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl">🎓</span>
                 <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 leading-tight">
+                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 leading-tight">
                     {infoScheduledTraining.title}
                   </h3>
                   {infoScheduledTraining.courseCode && (
-                    <span className="inline-block bg-purple-100 text-purple-700 text-[9px] font-mono font-bold px-1.5 py-0.2 rounded mt-0.5 border border-purple-200">
+                    <span className="inline-block bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[9px] font-mono font-bold px-1.5 py-0.2 rounded mt-0.5 border border-purple-200 dark:border-purple-800">
                       {infoScheduledTraining.courseCode}
                     </span>
                   )}
@@ -14606,7 +14610,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               </div>
               <button
                 onClick={() => setInfoScheduledTraining(null)}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -14617,12 +14621,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               {(() => {
                 const eng = engineers.find(e => e.id === infoScheduledTraining.engineerId);
                 return (
-                  <div className="bg-purple-50/60 border border-purple-100 p-3 rounded-xl flex items-center gap-3">
+                  <div className="bg-purple-50/60 dark:bg-purple-950/60 border border-purple-100 dark:border-purple-800 p-3 rounded-xl flex items-center gap-3">
                     <span className="text-2xl">{eng ? getEngineerEmoji(eng.id) : '👤'}</span>
                     <div>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Ingeniero en Capacitación</span>
-                      <p className="font-extrabold text-slate-900 text-xs">{eng?.name || 'Técnico'}</p>
-                      <p className="text-[10px] text-slate-500 font-semibold">{eng?.specialty} • {eng?.sede || 'Quito'}</p>
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Ingeniero en Capacitación</span>
+                      <p className="font-extrabold text-slate-900 dark:text-slate-100 text-xs">{eng?.name || 'Técnico'}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-500 font-semibold">{eng?.specialty} • {eng?.sede || 'Quito'}</p>
                     </div>
                   </div>
                 );
@@ -14630,49 +14634,49 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               {/* Detalle de Fechas, Lugar y Precio */}
               <div className="grid grid-cols-2 gap-2.5 text-2xs">
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-150 space-y-0.5">
-                  <span className="block font-bold text-slate-400 uppercase text-[8px]">Fechas & Duración</span>
-                  <p className="font-mono font-bold text-slate-800 text-[10.5px]">
+                <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-150 dark:border-slate-700 space-y-0.5">
+                  <span className="block font-bold text-slate-400 dark:text-slate-500 uppercase text-[8px]">Fechas & Duración</span>
+                  <p className="font-mono font-bold text-slate-800 dark:text-slate-100 text-[10.5px]">
                     {infoScheduledTraining.startDate} → {infoScheduledTraining.endDate}
                   </p>
-                  <p className="text-[9px] font-semibold text-purple-700">
+                  <p className="text-[9px] font-semibold text-purple-700 dark:text-purple-300">
                     {Math.max(1, Math.round((new Date(infoScheduledTraining.endDate + 'T00:00:00').getTime() - new Date(infoScheduledTraining.startDate + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24)) + 1)} días
                   </p>
                 </div>
 
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-150 space-y-0.5">
-                  <span className="block font-bold text-slate-400 uppercase text-[8px]">Lugar & Inversión</span>
-                  <p className="font-bold text-slate-800 text-[10.5px] truncate">
+                <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-150 dark:border-slate-700 space-y-0.5">
+                  <span className="block font-bold text-slate-400 dark:text-slate-500 uppercase text-[8px]">Lugar & Inversión</span>
+                  <p className="font-bold text-slate-800 dark:text-slate-100 text-[10.5px] truncate">
                     📍 {infoScheduledTraining.location}
                   </p>
-                  <p className="text-[9.5px] font-mono font-extrabold text-emerald-700">
+                  <p className="text-[9.5px] font-mono font-extrabold text-emerald-700 dark:text-emerald-300">
                     {infoScheduledTraining.cost ? `$ ${infoScheduledTraining.cost.toLocaleString('en-US')}` : 'Sin costo registrado'}
                   </p>
                 </div>
               </div>
 
               {/* Estado */}
-              <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-150">
-                <span className="font-bold text-slate-500 text-[10px] uppercase">Estado de la Capacitación</span>
+              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-150 dark:border-slate-700">
+                <span className="font-bold text-slate-500 dark:text-slate-500 text-[10px] uppercase">Estado de la Capacitación</span>
                 <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full border ${
-                  infoScheduledTraining.status === 'Completado' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                  infoScheduledTraining.status === 'En Curso' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                  infoScheduledTraining.status === 'Cancelado' ? 'bg-red-50 text-red-700 border-red-200' :
-                  'bg-purple-50 text-purple-700 border-purple-200'
+                  infoScheduledTraining.status === 'Completado' ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' :
+                  infoScheduledTraining.status === 'En Curso' ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' :
+                  infoScheduledTraining.status === 'Cancelado' ? 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' :
+                  'bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
                 }`}>
                   {infoScheduledTraining.status}
                 </span>
               </div>
 
               {infoScheduledTraining.notes && (
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-150">
-                  <span className="block font-bold text-slate-400 uppercase text-[8px] mb-0.5">Observaciones</span>
-                  <p className="text-3xs text-slate-600 italic font-medium">"{infoScheduledTraining.notes}"</p>
+                <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-150 dark:border-slate-700">
+                  <span className="block font-bold text-slate-400 dark:text-slate-500 uppercase text-[8px] mb-0.5">Observaciones</span>
+                  <p className="text-3xs text-slate-600 dark:text-slate-300 italic font-medium">"{infoScheduledTraining.notes}"</p>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+            <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-700">
               {onDeleteScheduledTraining && (
                 <button
                   type="button"
@@ -14682,7 +14686,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       setInfoScheduledTraining(null);
                     }
                   }}
-                  className="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                  className="text-red-500 hover:text-red-700 dark:hover:text-red-300 text-xs font-bold flex items-center gap-1 cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Eliminar</span>
@@ -14703,10 +14707,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* Modal Contratos con GE (Garantía Extendida & Facturación) */}
       {isContractGeModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <FileSpreadsheet className="w-5 h-5 text-indigo-600" />
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-lg p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                <FileSpreadsheet className="w-5 h-5 text-indigo-600 dark:text-indigo-300" />
                 <span>{editingContractGe ? 'Editar Factura GE' : 'Nueva Factura GE'}</span>
               </h3>
               <button
@@ -14714,7 +14718,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   setIsContractGeModalOpen(false);
                   setEditingContractGe(null);
                 }}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -14722,7 +14726,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
             {/* Switcher de Modo: Cliente Existente vs Nuevo Cliente GE */}
             {!editingContractGe && (
-              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={() => {
@@ -14730,8 +14734,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   }}
                   className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     geFormMode === 'existing'
-                      ? 'bg-white text-indigo-700 shadow-2xs font-extrabold'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-2xs font-extrabold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                   }`}
                 >
                   <span>👥 Cliente Existente</span>
@@ -14748,8 +14752,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   }}
                   className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     geFormMode === 'new'
-                      ? 'bg-white text-indigo-700 shadow-2xs font-extrabold'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-2xs font-extrabold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                   }`}
                 >
                   <span>✨ Nuevo Cliente GE</span>
@@ -14804,13 +14808,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               {/* Cliente Selector depending on geFormMode */}
               {geFormMode === 'existing' && !editingContractGe ? (
                 <div className="space-y-1 relative">
-                  <label className="block font-bold text-slate-700">SELECCIONAR CLIENTE EXISTENTE *</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">SELECCIONAR CLIENTE EXISTENTE *</label>
                   {geFormCliente ? (
-                    <div className="bg-indigo-50 border border-indigo-200 p-2.5 rounded-xl flex justify-between items-center">
+                    <div className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 p-2.5 rounded-xl flex justify-between items-center">
                       <div>
-                        <span className="block text-[9px] font-bold text-indigo-500 uppercase">Cliente Seleccionado</span>
-                        <span className="font-extrabold text-indigo-900 text-sm">{geFormCliente}</span>
-                        {geFormEquipo && <span className="text-[10px] text-slate-500 font-semibold block">{geFormEquipo} ({geFormModalidad || 'GE'})</span>}
+                        <span className="block text-[9px] font-bold text-indigo-500 dark:text-indigo-400 uppercase">Cliente Seleccionado</span>
+                        <span className="font-extrabold text-indigo-900 dark:text-indigo-300 text-sm">{geFormCliente}</span>
+                        {geFormEquipo && <span className="text-[10px] text-slate-500 dark:text-slate-500 font-semibold block">{geFormEquipo} ({geFormModalidad || 'GE'})</span>}
                       </div>
                       <button
                         type="button"
@@ -14823,7 +14827,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           setGeClientSearchQuery('');
                           setIsGeClientDropdownOpen(true);
                         }}
-                        className="text-xs font-bold text-indigo-700 hover:underline cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-indigo-200"
+                        className="text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:underline cursor-pointer bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800"
                       >
                         Cambiar Cliente
                       </button>
@@ -14839,10 +14843,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           setGeClientSearchQuery(e.target.value);
                           setIsGeClientDropdownOpen(true);
                         }}
-                        className="w-full p-2.5 border border-slate-200 rounded-xl font-semibold text-slate-800 outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        className="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 outline-hidden focus:ring-2 focus:ring-indigo-500"
                       />
                       {isGeClientDropdownOpen && (
-                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100">
+                        <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
                           {(() => {
                             const existingMap = new Map<string, { name: string; sid?: string; modalidad?: string; equipo?: string; equipmentNum?: string | number }>();
                             clients.forEach(c => {
@@ -14867,7 +14871,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                             if (clientList.length === 0) {
                               return (
-                                <div className="p-3 text-center text-slate-400 text-3xs italic">
+                                <div className="p-3 text-center text-slate-400 dark:text-slate-500 text-3xs italic">
                                   No se encontraron clientes coincidentes. Pruebe a cambiar a "✨ Nuevo Cliente GE".
                                 </div>
                               );
@@ -14887,13 +14891,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                   setGeFormMonthNum(nextM);
                                   setIsGeClientDropdownOpen(false);
                                 }}
-                                className="w-full text-left p-2.5 hover:bg-indigo-50 transition-colors flex justify-between items-center cursor-pointer"
+                                className="w-full text-left p-2.5 hover:bg-indigo-50 dark:hover:bg-indigo-900 transition-colors flex justify-between items-center cursor-pointer"
                               >
                                 <div>
-                                  <span className="font-extrabold text-slate-800 text-xs block">{client.name}</span>
-                                  {client.equipo && <span className="text-[10px] text-slate-500 font-semibold">{client.equipo} {client.modalidad ? `• ${client.modalidad}` : ''}</span>}
+                                  <span className="font-extrabold text-slate-800 dark:text-slate-100 text-xs block">{client.name}</span>
+                                  {client.equipo && <span className="text-[10px] text-slate-500 dark:text-slate-500 font-semibold">{client.equipo} {client.modalidad ? `• ${client.modalidad}` : ''}</span>}
                                 </div>
-                                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">Seleccionar</span>
+                                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded border border-indigo-100 dark:border-indigo-800">Seleccionar</span>
                               </button>
                             ));
                           })()}
@@ -14904,14 +14908,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">NOMBRE DEL NUEVO CLIENTE *</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">NOMBRE DEL NUEVO CLIENTE *</label>
                   <input
                     type="text"
                     required
                     placeholder="ej: Nuevo Centro Médico San Francisco"
                     value={geFormCliente}
                     onChange={e => setGeFormCliente(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
+                    className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold"
                   />
                 </div>
               )}
@@ -14921,47 +14925,47 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-700">SID (SYSTEM ID)</label>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300">SID (SYSTEM ID)</label>
                       <input
                         type="text"
                         placeholder="ej: CE6XG22000"
                         value={geFormSid}
                         onChange={e => setGeFormSid(e.target.value)}
-                        className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                        className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-mono"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-700">MODALIDAD</label>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300">MODALIDAD</label>
                       <input
                         type="text"
                         placeholder="ej: CT, MR, SURGERY"
                         value={geFormModalidad}
                         onChange={e => setGeFormModalidad(e.target.value)}
-                        className="w-full p-2 border border-slate-200 rounded-lg font-bold"
+                        className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-bold"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block font-bold text-slate-700">EQUIPMENT #</label>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300">EQUIPMENT #</label>
                       <input
                         type="text"
                         placeholder="ej: 1"
                         value={geFormEquipmentNum}
                         onChange={e => setGeFormEquipmentNum(e.target.value)}
-                        className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                        className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-mono"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block font-bold text-slate-700">EQUIPO (MODELO)</label>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300">EQUIPO (MODELO)</label>
                     <input
                       type="text"
                       placeholder="ej: REVOLUTION ACT, 1.5T SIGNA CREATOR"
                       value={geFormEquipo}
                       onChange={e => setGeFormEquipo(e.target.value)}
-                      className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
+                      className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold"
                     />
                   </div>
                 </>
@@ -14990,12 +14994,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   if (prevAmounts.length === 0) return null;
 
                   return (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
+                    <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 space-y-1.5">
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                        <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
                           💵 Historial de Montos ($) para {geFormCliente}:
                         </span>
-                        <span className="text-[9px] text-slate-400 font-bold">Clic para seleccionar</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">Clic para seleccionar</span>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {prevAmounts.map((item, idx) => {
@@ -15012,11 +15016,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               className={`text-2xs font-mono font-black px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
                                 isSelected
                                   ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                                  : 'bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200 hover:border-emerald-300'
+                                  : 'bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-800'
                               }`}
                             >
                               <span>${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                              <span className={`text-[9px] font-sans font-bold px-1 rounded ${isSelected ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+                              <span className={`text-[9px] font-sans font-bold px-1 rounded ${isSelected ? 'bg-emerald-700 text-white' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'}`}>
                                 {item.count} factura{item.count > 1 ? 's' : ''} • Úl. #Mes: {item.maxMonth}
                               </span>
                             </button>
@@ -15030,105 +15034,105 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">INVOICE (FACTURA) *</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">INVOICE (FACTURA) *</label>
                   <input
                     type="text"
                     required
                     placeholder="ej: 100601349"
                     value={geFormInvoice}
                     onChange={e => setGeFormInvoice(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold"
+                    className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-mono font-bold"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">INVOICE AMOUNT ($)</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">INVOICE AMOUNT ($)</label>
                   <input
                     type="text"
                     placeholder="ej: 3557.25"
                     value={geFormAmount}
                     onChange={e => setGeFormAmount(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold"
+                    className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-mono font-bold"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">FECHA FACTURA (INVOICE DATE)</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">FECHA FACTURA (INVOICE DATE)</label>
                   <input
                     type="date"
                     value={geFormInvoiceDate}
                     onChange={e => setGeFormInvoiceDate(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono font-semibold text-slate-800 cursor-pointer"
+                    className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-mono font-semibold text-slate-800 dark:text-slate-100 cursor-pointer"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">FECHA VENCIMIENTO (DUE DATE)</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">FECHA VENCIMIENTO (DUE DATE)</label>
                   <input
                     type="date"
                     value={geFormDueDate}
                     onChange={e => setGeFormDueDate(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono font-semibold text-slate-800 cursor-pointer"
+                    className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-mono font-semibold text-slate-800 dark:text-slate-100 cursor-pointer"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">FECHA/AÑO PAGO</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">FECHA/AÑO PAGO</label>
                   <input
                     type="text"
                     placeholder="ej: June-2022"
                     value={geFormPaymentPeriod}
                     onChange={e => setGeFormPaymentPeriod(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
+                    className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">#MES</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">#MES</label>
                   <input
                     type="text"
                     placeholder="ej: 1"
                     value={geFormMonthNum}
                     onChange={e => setGeFormMonthNum(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                    className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-mono"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">CONTRATO</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">CONTRATO</label>
                   <input
                     type="text"
                     placeholder="ej: 1"
                     value={geFormContractNum}
                     onChange={e => setGeFormContractNum(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg font-mono"
+                    className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-mono"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="block font-bold text-slate-700">OBSERVACIONES / COMMENTS</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300">OBSERVACIONES / COMMENTS</label>
                 <input
                   type="text"
                   placeholder="ej: RENOVACION o Sin fecha de pago"
                   value={geFormObs}
                   onChange={e => setGeFormObs(e.target.value)}
-                  className="w-full p-2 border border-slate-200 rounded-lg font-semibold"
+                  className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={() => {
                     setIsContractGeModalOpen(false);
                     setEditingContractGe(null);
                   }}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
                 >
                   Cancelar
                 </button>
@@ -15147,7 +15151,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {/* MODAL CONFIGURACIÓN GLOBAL DE PLANTILLAS DE PERMISOS */}
       {isTemplateModalOpen && (
         <div className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             
             {/* Header */}
             <div className="bg-slate-900 text-white p-4 sm:p-5 flex justify-between items-center border-b border-slate-800">
@@ -15173,7 +15177,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
 
             {/* Tabs Selector */}
-            <div className="bg-slate-100 p-2.5 border-b border-slate-200 flex flex-wrap gap-2 justify-center sm:justify-start">
+            <div className="bg-slate-100 dark:bg-slate-800 p-2.5 border-b border-slate-200 dark:border-slate-700 flex flex-wrap gap-2 justify-center sm:justify-start">
               {[
                 { key: 'Ventas', label: '⚡ Plantilla Ventas' },
                 { key: 'Ingeniería', label: '🛠️ Plantilla Ingeniería' },
@@ -15192,7 +15196,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer border flex items-center gap-1.5 ${
                       isActive
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm scale-102'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span>{tab.label}</span>
@@ -15203,17 +15207,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
             {/* Checkboxes Grid */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
-              <div className="bg-indigo-50/70 border border-indigo-150 p-3 rounded-xl flex items-center justify-between text-xs text-indigo-900 font-medium">
+              <div className="bg-indigo-50/70 dark:bg-indigo-950/70 border border-indigo-150 dark:border-indigo-800 p-3 rounded-xl flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-300 font-medium">
                 <span>Editando permisos predeterminados de la <strong>{activeTemplateTab === 'Ventas' ? 'Plantilla Ventas' : activeTemplateTab === 'Ingeniería' ? 'Plantilla Ingeniería' : 'Plantilla Admin Total'}</strong>:</span>
-                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-extrabold px-2 py-0.5 rounded-full border border-indigo-200">
+                <span className="text-[10px] bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-extrabold px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
                   {engineers.filter(e => activeTemplateTab === 'Ventas' ? e.specialty === 'Ventas' : activeTemplateTab === 'Ingeniería' ? (e.specialty === 'Ingeniería' || e.specialty === 'Aplicaciones' || e.specialty === 'IT') : true).length} Usuario(s) asociados
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {/* 📅 AGENDAMIENTO Y ÓRDENES */}
-                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <span className="font-extrabold text-[10px] text-indigo-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📅 Agendamiento y Órdenes</span>
+                <div className="space-y-2 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-indigo-900 dark:text-indigo-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">📅 Agendamiento y Órdenes</span>
                   {[
                     { key: 'canViewWorkOrders', label: 'Ver mapa y calendario de agenda' },
                     { key: 'canCreateWorkOrders', label: 'Crear / agendar órdenes' },
@@ -15221,12 +15225,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     { key: 'canDeleteWorkOrders', label: 'Eliminar órdenes de trabajo' },
                     { key: 'canChangeWorkOrderStatus', label: 'Marcar estado (Realizado/Pendiente)' },
                   ].map(perm => (
-                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
                       <input
                         type="checkbox"
                         checked={!!(tempTemplatePermissions as any)[perm.key]}
                         onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 dark:text-indigo-300 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                       />
                       <span>{perm.label}</span>
                     </label>
@@ -15234,8 +15238,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
 
                 {/* 📜 CONTRATOS DE MANTENIMIENTO */}
-                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <span className="font-extrabold text-[10px] text-amber-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📜 Contratos de Mantenimiento</span>
+                <div className="space-y-2 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-amber-900 dark:text-amber-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">📜 Contratos de Mantenimiento</span>
                   {[
                     { key: 'canViewContracts', label: 'Ver contratos y cronogramas' },
                     { key: 'canCreateContracts', label: 'Crear nuevos contratos' },
@@ -15243,12 +15247,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     { key: 'canDeleteContracts', label: 'Eliminar contratos' },
                     { key: 'canViewContractValues', label: '💰 Ver Valores $ USD del Contrato', highlight: true },
                   ].map(perm => (
-                    <label key={perm.key} className={`flex items-center gap-2 text-xs font-bold cursor-pointer transition-colors ${perm.highlight ? 'text-emerald-700 font-extrabold' : 'text-slate-700 hover:text-indigo-600'}`}>
+                    <label key={perm.key} className={`flex items-center gap-2 text-xs font-bold cursor-pointer transition-colors ${perm.highlight ? 'text-emerald-700 dark:text-emerald-300 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300'}`}>
                       <input
                         type="checkbox"
                         checked={!!(tempTemplatePermissions as any)[perm.key]}
                         onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 dark:text-indigo-300 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                       />
                       <span>{perm.label}</span>
                     </label>
@@ -15256,20 +15260,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
 
                 {/* 📑 INFORMES TÉCNICOS */}
-                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <span className="font-extrabold text-[10px] text-sky-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📑 Informes Técnicos</span>
+                <div className="space-y-2 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-sky-900 dark:text-sky-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">📑 Informes Técnicos</span>
                   {[
                     { key: 'canViewReports', label: 'Ver informes técnicos' },
                     { key: 'canCreateReports', label: 'Crear nuevos informes (RE-TE-04)' },
                     { key: 'canApproveReports', label: 'Aprobar / Validar informes' },
                     { key: 'canExportReportsPdf', label: 'Descargar e imprimir PDF' },
                   ].map(perm => (
-                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
                       <input
                         type="checkbox"
                         checked={!!(tempTemplatePermissions as any)[perm.key]}
                         onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 dark:text-indigo-300 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                       />
                       <span>{perm.label}</span>
                     </label>
@@ -15277,20 +15281,20 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
 
                 {/* 🏢 CLIENTES Y EQUIPOS */}
-                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <span className="font-extrabold text-[10px] text-emerald-900 uppercase tracking-wider block border-b border-slate-200 pb-1">🏢 Clientes y Equipos</span>
+                <div className="space-y-2 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-emerald-900 dark:text-emerald-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">🏢 Clientes y Equipos</span>
                   {[
                     { key: 'canViewClients', label: 'Ver directorio de clientes' },
                     { key: 'canEditClients', label: 'Crear / Editar clientes' },
                     { key: 'canViewEquipments', label: 'Ver inventario de equipos' },
                     { key: 'canEditEquipments', label: 'Crear / Editar equipos' },
                   ].map(perm => (
-                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
                       <input
                         type="checkbox"
                         checked={!!(tempTemplatePermissions as any)[perm.key]}
                         onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 dark:text-indigo-300 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                       />
                       <span>{perm.label}</span>
                     </label>
@@ -15298,18 +15302,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
 
                 {/* 📂 REGISTRO MTO */}
-                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <span className="font-extrabold text-[10px] text-pink-900 uppercase tracking-wider block border-b border-slate-200 pb-1">📂 Registro de Mantenimiento</span>
+                <div className="space-y-2 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-pink-900 dark:text-pink-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">📂 Registro de Mantenimiento</span>
                   {[
                     { key: 'canViewRegistry', label: 'Ver Registro de Equipos (Hoja Vida)' },
                     { key: 'canEditRegistry', label: 'Crear / Importar CSV de Registro' },
                   ].map(perm => (
-                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
                       <input
                         type="checkbox"
                         checked={!!(tempTemplatePermissions as any)[perm.key]}
                         onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 dark:text-indigo-300 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                       />
                       <span>{perm.label}</span>
                     </label>
@@ -15317,19 +15321,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
 
                 {/* ⚙️ ADMINISTRACIÓN Y REPORTES */}
-                <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <span className="font-extrabold text-[10px] text-purple-900 uppercase tracking-wider block border-b border-slate-200 pb-1">⚙️ Administración del Sistema</span>
+                <div className="space-y-2 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <span className="font-extrabold text-[10px] text-purple-900 dark:text-purple-300 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-700 pb-1">⚙️ Administración del Sistema</span>
                   {[
                     { key: 'canManageUsers', label: 'Gestionar usuarios y otorgar permisos' },
                     { key: 'canViewAuditLogs', label: 'Ver registros de auditoría y cambios' },
                     { key: 'canExportData', label: 'Exportar reportes a Excel / CSV' },
                   ].map(perm => (
-                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors">
+                    <label key={perm.key} className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
                       <input
                         type="checkbox"
                         checked={!!(tempTemplatePermissions as any)[perm.key]}
                         onChange={e => setTempTemplatePermissions(prev => ({ ...prev, [perm.key]: e.target.checked }))}
-                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 dark:text-indigo-300 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                       />
                       <span>{perm.label}</span>
                     </label>
@@ -15339,11 +15343,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             </div>
 
             {/* Footer Actions */}
-            <div className="bg-slate-100 p-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-slate-100 dark:bg-slate-800 p-4 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setIsTemplateModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
@@ -15364,7 +15368,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     }
                     alert(`✅ Plantilla '${activeTemplateTab}' guardada exitosamente para futuros usuarios.`);
                   }}
-                  className="px-4 py-2 text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer shadow-xs"
+                  className="px-4 py-2 text-xs font-bold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shadow-xs"
                 >
                   💾 Solo Guardar Plantilla
                 </button>

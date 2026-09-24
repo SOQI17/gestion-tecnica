@@ -60,13 +60,13 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
   return (
     <div className="space-y-6 font-sans">
       {/* Header Block */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
         <div>
-          <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-            <Users className="w-4 h-4 text-indigo-600" />
+          <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             Gestión de Terceros y Clientes
           </h4>
-          <p className="text-3xs text-slate-500 mt-0.5 font-medium">Administra la información de clientes, RUC/cédula, sucursales y datos de contacto.</p>
+          <p className="text-3xs text-slate-500 dark:text-slate-500 mt-0.5 font-medium">Administra la información de clientes, RUC/cédula, sucursales y datos de contacto.</p>
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">
@@ -76,7 +76,7 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
               className={`font-semibold text-3xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition-all cursor-pointer ${
                 isClientImporterOpen
                   ? 'bg-amber-600 border-amber-600 text-white'
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                  : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
               }`}
             >
               <Database className="w-3.5 h-3.5" />
@@ -104,9 +104,9 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
 
       {/* CSV Importer Panel */}
       {isClientImporterOpen && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
-          <div className="border-b border-slate-100 pb-2 flex justify-between items-center">
-            <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wider font-mono">📥 Ingestor de Clientes (CSV)</h5>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-xs space-y-3">
+          <div className="border-b border-slate-100 dark:border-slate-700 pb-2 flex justify-between items-center">
+            <h5 className="font-bold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono">📥 Ingestor de Clientes (CSV)</h5>
             <button
               onClick={() => {
                 const headers = ['id', 'name', 'address', 'sucursal', 'contactName', 'contactPhone', 'contactEmail'];
@@ -119,12 +119,12 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
                 a.download = 'formato_clientes_mtorimec.csv';
                 a.click();
               }}
-              className="text-[10px] font-bold text-indigo-600 hover:underline cursor-pointer"
+              className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
             >
               📥 Descargar Plantilla Ejemplo
             </button>
           </div>
-          <p className="text-3xs text-slate-505 font-medium leading-relaxed">
+          <p className="text-3xs text-slate-505 dark:text-slate-500 font-medium leading-relaxed">
             El archivo debe ser un CSV separado por comas o punto y coma. Las cabeceras requeridas son: **id** (RUC/cédula), **name** (Nombre), **address** (Dirección) y **sucursal** (Ciudad).
           </p>
           <div className="flex flex-col gap-2">
@@ -132,11 +132,11 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
               type="file"
               accept=".csv"
               onChange={handleClientCsvUpload}
-              className="block w-full text-3xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all"
+              className="block w-full text-3xs text-slate-500 dark:text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-3xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-950 file:text-indigo-700 dark:file:text-indigo-300 file:cursor-pointer hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900 transition-all"
             />
             {clientCsvError && (
-              <div className="text-3xs text-red-650 font-bold bg-red-50 p-2 rounded-lg border border-red-100 flex items-center gap-1.5">
-                <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+              <div className="text-3xs text-red-650 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950 p-2 rounded-lg border border-red-100 dark:border-red-800 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
                 <span>{clientCsvError}</span>
               </div>
             )}
@@ -155,18 +155,18 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
               setClientSearch(e.target.value);
               setClientPage(1);
             }}
-            className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400"
+            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 dark:placeholder-slate-500"
           />
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
         </div>
-        <span className="text-3xs text-slate-400 font-bold uppercase tracking-wider">{filtered.length} Clientes encontrados</span>
+        <span className="text-3xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{filtered.length} Clientes encontrados</span>
       </div>
 
       {/* Clients Table */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-2xs">
         <table className="w-full text-left border-collapse text-[11px] font-sans">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-slate-655 font-extrabold uppercase text-[9px] tracking-wider">
+            <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-655 dark:text-slate-400 font-extrabold uppercase text-[9px] tracking-wider">
               <th className="p-3.5">Cédula / RUC</th>
               <th className="p-3.5">Nombre de Cliente</th>
               <th className="p-3.5">Dirección</th>
@@ -176,20 +176,20 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
               <th className="p-3.5 text-right no-print">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-slate-750 font-medium">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-slate-750 dark:text-slate-300 font-medium">
             {paginated.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center p-8 text-slate-400 font-semibold italic">
+                <td colSpan={7} className="text-center p-8 text-slate-400 dark:text-slate-500 font-semibold italic">
                   No se encontraron clientes.
                 </td>
               </tr>
             ) : (
               paginated.map(cli => (
-                <tr key={cli.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="p-3.5 font-mono font-bold text-slate-900">{cli.id}</td>
-                  <td className="p-3.5 font-extrabold text-slate-900">{cli.name}</td>
+                <tr key={cli.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                  <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-slate-100">{cli.id}</td>
+                  <td className="p-3.5 font-extrabold text-slate-900 dark:text-slate-100">{cli.name}</td>
                   <td className="p-3.5">{cli.address}</td>
-                  <td className="p-3.5 font-bold text-indigo-700">{cli.industry || '-'}</td>
+                  <td className="p-3.5 font-bold text-indigo-700 dark:text-indigo-300">{cli.industry || '-'}</td>
                   <td className="p-3.5">{cli.contactName || '-'}</td>
                   <td className="p-3.5 font-mono">{cli.contactPhone || '-'}</td>
                   <td className="p-3.5 text-right no-print">
@@ -204,7 +204,7 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
                         setClientFormPhone(cli.contactPhone || '');
                         setIsClientModalOpen(true);
                       }}
-                      className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
+                      className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
                     >
                       Editar
                     </button>
@@ -217,20 +217,20 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
-          <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 flex items-center justify-between font-sans">
-            <span className="text-3xs text-slate-500 font-medium">Pág. {clientPage} de {totalPages}</span>
+          <div className="bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between font-sans">
+            <span className="text-3xs text-slate-500 dark:text-slate-500 font-medium">Pág. {clientPage} de {totalPages}</span>
             <div className="flex gap-1">
               <button
                 onClick={() => setClientPage(prev => Math.max(prev - 1, 1))}
                 disabled={clientPage === 1}
-                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setClientPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={clientPage === totalPages}
-                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-2.5 py-1 text-3xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Siguiente
               </button>
