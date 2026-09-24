@@ -52,7 +52,7 @@ export const triggerDirectDownload = async (rawUrl: string, defaultFilename: str
 /**
  * Configuración y validación de ciberseguridad para carga de archivos
  */
-export const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 Megabytes
+export const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 Megabytes
 
 export const ALLOWED_MIME_TYPES = [
   'application/pdf',
@@ -74,7 +74,7 @@ export const validateFileUpload = (file: File): { isValid: boolean; error?: stri
     const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
     return {
       isValid: false,
-      error: `El archivo pesa ${sizeInMB} MB. El límite máximo de seguridad permitido es de 15 MB.`
+      error: `El archivo pesa ${sizeInMB} MB. El límite máximo de seguridad permitido es de 20 MB.`
     };
   }
 

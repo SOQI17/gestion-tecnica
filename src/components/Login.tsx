@@ -24,8 +24,12 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
 
   // Demo mode state
   const [isDemoMode, setIsDemoMode] = useState(false);
-  const [demoRole, setDemoRole] = useState<'admin' | 'engineer' | 'sales'>('admin');
+  const [demoRole, setDemoRole] = useState<'admin' | 'engineer' | 'sales' | 'orimec'>('admin');
   const [demoEngineerId, setDemoEngineerId] = useState(engineers[0]?.id || 'ENG-001');
+
+  // Rol elegido al registrarse (solo aplica cuando el email no coincide con un Ingeniero ya
+  // dado de alta por un admin -- en ese caso el rol se hereda de ese registro, como antes).
+  const [signupRole, setSignupRole] = useState<'ingeniero' | 'aplicacionista' | 'vendedor_tecnico' | 'personal_orimec'>('ingeniero');
 
   // Security notification for auto-logout / session expiry
   const [sessionExpiredNotice] = useState<boolean>(() => {
@@ -102,22 +106,64 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
           }
         }
 
-        let role: 'admin' | 'engineer' | 'sales' = 'sales';
+        let role: 'admin' | 'engineer' | 'sales' | 'orimec' = 'sales';
+        let status: 'pending' | 'approved' = 'approved';
+        let signupRoleLabel: string | undefined;
+        let newEngineerToCreate: Engineer | undefined;
+
         if (targetEmail === 'alexis.guerra@orimec.com.ec') {
+          // Admin de arranque del sistema: máxima prioridad, sin cambios.
           role = 'admin';
         } else if (matchedEngineer) {
+          // Ya fue dado de alta de antemano por un administrador: se considera ya vetado,
+          // se conserva el comportamiento anterior (aprobado de inmediato, sin selector).
           const specLower = (matchedEngineer.specialty || '').toLowerCase();
           const isVentas = specLower.includes('ventas') || specLower.includes('vendedor') || specLower.includes('comercial');
           role = isVentas ? 'sales' : 'engineer';
+        } else {
+          // Registro nuevo sin coincidencia previa: se usa el rol elegido en el formulario,
+          // con aprobación de administrador pendiente salvo para Personal ORIMEC.
+          if (signupRole === 'personal_orimec') {
+            role = 'orimec';
+            status = 'approved';
+            signupRoleLabel = 'Personal ORIMEC';
+          } else if (signupRole === 'vendedor_tecnico') {
+            role = 'sales';
+            status = 'pending';
+            signupRoleLabel = 'Vendedor Dpto. Técnico';
+          } else {
+            role = 'engineer';
+            status = 'pending';
+            const specialty = signupRole === 'aplicacionista' ? 'Aplicaciones' : 'Ingeniería';
+            signupRoleLabel = signupRole === 'aplicacionista' ? 'Aplicacionista' : 'Ingeniero';
+            const newEngId = `ENG-SELF-${Date.now()}`;
+            newEngineerToCreate = {
+              id: newEngId,
+              name: targetEmail.split('@')[0].toUpperCase().replace(/[._]/g, ' '),
+              email: targetEmail,
+              specialty,
+              sede: 'Quito',
+              phone: '',
+              avatar: '',
+              availability: 'Disponible',
+              skills: [specialty]
+            };
+          }
         }
 
-        const finalEngId = role === 'engineer' ? matchedEngineer?.id : undefined;
+        if (newEngineerToCreate) {
+          await setDoc(doc(db, 'engineers', newEngineerToCreate.id), newEngineerToCreate);
+        }
+
+        const finalEngId = role === 'engineer' ? (matchedEngineer?.id || newEngineerToCreate?.id) : undefined;
 
         const userProfile: AppUser = {
           uid: firebaseUser.uid,
           email: targetEmail,
           name: matchedEngineer?.name || targetEmail.split('@')[0].toUpperCase().replace(/[._]/g, ' '),
           role,
+          status,
+          ...(signupRoleLabel ? { signupRoleLabel } : {}),
           ...(finalEngId ? { engineerId: finalEngId } : {})
         };
 
@@ -206,6 +252,8 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
         mockEngId = demoEngineerId;
       } else if (demoRole === 'sales') {
         mockEmail = 'ventas@orimec.com.ec';
+      } else if (demoRole === 'orimec') {
+        mockEmail = 'personal.orimec@orimec.com.ec';
       }
 
       const mockUser: AppUser = {
@@ -365,6 +413,39 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
               </div>
             )}
 
+            {/* Role Selector (Sign Up only) — se ignora si el correo ya fue dado de alta por un admin */}
+            {isSignUp && (
+              <div className="space-y-1.5">
+                <label className="text-3xs font-bold text-slate-400 uppercase tracking-wider block">Tu Rol en ORIMEC</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { id: 'ingeniero', label: 'Ingeniero' },
+                    { id: 'aplicacionista', label: 'Aplicacionista' },
+                    { id: 'vendedor_tecnico', label: 'Vendedor Dpto. Técnico' },
+                    { id: 'personal_orimec', label: 'Personal ORIMEC' },
+                  ] as const).map(opt => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setSignupRole(opt.id)}
+                      className={`py-2.5 px-2 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
+                        signupRole === opt.id
+                          ? 'bg-slate-800 text-indigo-400 border-indigo-600/70 shadow-sm'
+                          : 'bg-slate-800/40 text-slate-450 border-slate-700 hover:text-white hover:border-slate-600'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[9px] text-slate-400/80 font-medium leading-normal mt-1">
+                  {signupRole === 'personal_orimec'
+                    ? 'Tu cuenta queda activa de inmediato con acceso solo a ORIMEC Portal.'
+                    : 'Tu cuenta quedará pendiente de aprobación por un administrador antes de poder ingresar (salvo que un admin ya te haya registrado previamente).'}
+                </p>
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               type="submit"
@@ -407,7 +488,7 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
             {/* Demo Role Selector */}
             <div className="space-y-1.5">
               <label className="text-3xs font-bold text-slate-400 uppercase tracking-wider block">Seleccionar Rol de Prueba</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   type="button"
                   onClick={() => setDemoRole('admin')}
@@ -443,6 +524,18 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
                 >
                   <User className="w-3.5 h-3.5" />
                   <span>Ingeniero</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDemoRole('orimec')}
+                  className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
+                    demoRole === 'orimec'
+                      ? 'bg-slate-800 text-sky-400 border-sky-600/70 shadow-sm'
+                      : 'bg-slate-800/40 text-slate-450 border-slate-700 hover:text-white hover:border-slate-600'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Personal ORIMEC</span>
                 </button>
               </div>
             </div>

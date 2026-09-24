@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo, startTransition } from 'react';
 import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity, Sun, Moon } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
-import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360 } from './types';
+import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360, OrimecDocumentRecord } from './types';
 import AdminPortal, { getDefaultPermissionsForSpecialty } from './components/AdminPortal';
 import EngineerPortal from './components/EngineerPortal';
+import OrimecPortal from './components/OrimecPortal';
 import Login from './components/Login';
 import { db, auth, handleFirestoreError, OperationType, registerFirebaseUserSecondary } from './firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, getDocs, getDoc, enableNetwork } from 'firebase/firestore';
@@ -24,7 +25,7 @@ const cleanUndefined = (obj: any): any => {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'admin' | 'engineer' | 'sales'>('sales');
+  const [activeTab, setActiveTab] = useState<'admin' | 'engineer' | 'sales' | 'orimec'>('sales');
 
   // Tema claro/oscuro: se recuerda la preferencia del usuario; si nunca la definió, se sigue
   // la preferencia del sistema operativo/navegador la primera vez.
@@ -55,6 +56,7 @@ export default function App() {
   const [vacations, setVacations] = useState<Vacation[]>([]);
   const [permissions, setPermissions] = useState<EngineerPermission[]>([]);
   const [maintenanceRegistries, setMaintenanceRegistries] = useState<MaintenanceRegistry[]>([]);
+  const [orimecDocuments, setOrimecDocuments] = useState<OrimecDocumentRecord[]>([]);
   const [evaluations360, setEvaluations360] = useState<EngineerEvaluation360[]>(() => {
     try {
       const saved = localStorage.getItem('fsm_evaluations360');
@@ -143,13 +145,14 @@ export default function App() {
           if (userDoc.exists()) {
             const userData = userDoc.data() as AppUser;
             // Preservar el rol guardado en Firestore (e.g. admin asignado por panel o engineer vinculado)
-            const effectiveRole: 'admin' | 'engineer' | 'sales' = (targetEmail === 'alexis.guerra@orimec.com.ec')
+            const effectiveRole: AppUser['role'] = (targetEmail === 'alexis.guerra@orimec.com.ec')
               ? 'admin'
               : (userData.role || expectedRole);
             const effectiveEngId = userData.engineerId || expectedEngId;
 
             if (userData.role !== effectiveRole || (effectiveRole === 'engineer' && userData.engineerId !== effectiveEngId)) {
               const updatedProfile: AppUser = {
+                ...userData,
                 uid: firebaseUser.uid,
                 email: targetEmail,
                 name: userData.name,
@@ -165,9 +168,11 @@ export default function App() {
             }
           } else {
             // Verificar si el usuario fue registrado previamente con ID personalizado o por email
-            let preAssignedRole = expectedRole;
+            let preAssignedRole: AppUser['role'] = expectedRole;
             let preAssignedEngId = expectedEngId;
             let preAssignedName: string | undefined;
+            let preAssignedStatus: AppUser['status'];
+            let preAssignedLabel: string | undefined;
 
             try {
               const usersSnap = await getDocs(collection(db, 'users'));
@@ -177,6 +182,8 @@ export default function App() {
                   if (uData.role) preAssignedRole = uData.role;
                   if (uData.engineerId) preAssignedEngId = uData.engineerId;
                   if (uData.name) preAssignedName = uData.name;
+                  if (uData.status) preAssignedStatus = uData.status;
+                  if (uData.signupRoleLabel) preAssignedLabel = uData.signupRoleLabel;
                 }
               });
             } catch (err) {
@@ -191,6 +198,8 @@ export default function App() {
               email: targetEmail,
               name: preAssignedName,
               role: effectiveRole,
+              ...(preAssignedStatus ? { status: preAssignedStatus } : {}),
+              ...(preAssignedLabel ? { signupRoleLabel: preAssignedLabel } : {}),
               ...(preAssignedEngId ? { engineerId: preAssignedEngId } : {})
             };
 
@@ -460,6 +469,20 @@ export default function App() {
       console.warn("Error leyendo usuarios de Firestore:", error);
     });
 
+    // 13. Suscribirse a la Colección de Documentos ORIMEC
+    const unsubOrimecDocuments = onSnapshot(collection(db, 'orimecDocuments'), (snapshot) => {
+      const list: OrimecDocumentRecord[] = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (docSnap.id !== 'fsm_placeholder' && !data.deleted) {
+          list.push(data as OrimecDocumentRecord);
+        }
+      });
+      startTransition(() => setOrimecDocuments(list));
+    }, (error) => {
+      console.warn("Error leyendo documentos ORIMEC de Firestore:", error);
+    });
+
     return () => {
       unsubEngineers();
       unsubClients();
@@ -473,6 +496,7 @@ export default function App() {
       unsubScheduledTrainings();
       unsubContractsGE();
       unsubUsers();
+      unsubOrimecDocuments();
     };
   }, []);
 
@@ -727,6 +751,44 @@ export default function App() {
       handleFirestoreError(error, OperationType.DELETE, `contracts/${contractId}`);
     }
   }, [currentUser, activeTab, showNotification]);
+
+  const handleAddOrimecDocument = useCallback(async (newDoc: OrimecDocumentRecord) => {
+    setOrimecDocuments(prev => [...prev.filter(d => d.id !== newDoc.id), newDoc]);
+    try {
+      await setDoc(doc(db, 'orimecDocuments', newDoc.id), cleanUndefined(newDoc));
+      showNotification(`Registro de ${newDoc.clientName} guardado en Documentos ORIMEC.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `orimecDocuments/${newDoc.id}`);
+    }
+  }, [showNotification]);
+
+  const handleUpdateOrimecDocument = useCallback(async (updatedDoc: OrimecDocumentRecord) => {
+    setOrimecDocuments(prev => prev.map(d => d.id === updatedDoc.id ? updatedDoc : d));
+    try {
+      await setDoc(doc(db, 'orimecDocuments', updatedDoc.id), cleanUndefined(updatedDoc));
+      showNotification(`Registro de ${updatedDoc.clientName} actualizado.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `orimecDocuments/${updatedDoc.id}`);
+    }
+  }, [showNotification]);
+
+  const handleDeleteOrimecDocument = useCallback(async (docId: string) => {
+    if (currentUser?.role !== 'admin') {
+      alert("Solo el Administrador tiene autorización para eliminar registros de Documentos ORIMEC.");
+      return;
+    }
+    setOrimecDocuments(prev => prev.filter(d => d.id !== docId));
+    try {
+      await setDoc(doc(db, 'orimecDocuments', docId), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin'
+      }, { merge: true });
+      showNotification(`Registro eliminado de Documentos ORIMEC.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `orimecDocuments/${docId}`);
+    }
+  }, [currentUser, showNotification]);
 
   const handleBulkUploadClients = useCallback(async (newClients: Client[]) => {
     try {
@@ -1153,7 +1215,7 @@ export default function App() {
     name: string;
     email: string;
     password?: string;
-    role: 'admin' | 'engineer' | 'sales';
+    role: 'admin' | 'engineer' | 'sales' | 'orimec';
     specialty?: Specialty;
     sede?: string;
     phone?: string;
@@ -1225,6 +1287,8 @@ export default function App() {
         email: cleanEmail,
         name: data.name.trim() || undefined,
         role: data.role,
+        // Un admin registrando manualmente a alguien equivale a aprobarlo de inmediato
+        status: 'approved',
         ...(engId ? { engineerId: engId } : {})
       };
       await setDoc(doc(db, 'users', uid), cleanUndefined(userProfile));
@@ -1232,7 +1296,7 @@ export default function App() {
         const filtered = prev.filter(u => u.uid !== uid && u.email?.toLowerCase() !== cleanEmail);
         return [...filtered, userProfile];
       });
-      const roleName = data.role === 'admin' ? 'Administrador' : data.role === 'engineer' ? 'Ingeniero/Técnico' : 'Ventas';
+      const roleName = data.role === 'admin' ? 'Administrador' : data.role === 'engineer' ? 'Ingeniero/Técnico' : data.role === 'orimec' ? 'Personal ORIMEC' : 'Ventas';
       showNotification(`¡Usuario ${data.name || cleanEmail} registrado y guardado exitosamente como ${roleName}!`, 'success');
     } catch (err: any) {
       console.error("Error al registrar usuario:", err);
@@ -1370,7 +1434,7 @@ export default function App() {
     };
   }, [currentUser, isDemoMode, handleLogout]);
 
-  const handleUpdateUserRole = useCallback(async (uid: string, role: 'admin' | 'engineer' | 'sales', engineerId?: string) => {
+  const handleUpdateUserRole = useCallback(async (uid: string, role: 'admin' | 'engineer' | 'sales' | 'orimec', engineerId?: string) => {
     try {
       const existing = allRegisteredUsers.find(u => u.uid === uid) || { uid, email: '', name: undefined as string | undefined };
       const userEmail = (existing.email || '').trim().toLowerCase();
@@ -1403,6 +1467,8 @@ export default function App() {
         ...existing,
         uid,
         role,
+        // Reasignar el rol es en sí un acto administrativo de aprobación
+        status: 'approved',
         ...(finalEngId ? { engineerId: finalEngId } : { engineerId: undefined })
       };
       await setDoc(doc(db, 'users', uid), cleanUndefined(updatedUserDoc));
@@ -1415,13 +1481,27 @@ export default function App() {
         }
         return [...prev, updatedUserDoc];
       });
-      const roleLabel = role === 'admin' ? 'Administrador' : role === 'engineer' ? 'Ingeniero/Técnico' : 'Ventas';
+      const roleLabel = role === 'admin' ? 'Administrador' : role === 'engineer' ? 'Ingeniero/Técnico' : role === 'orimec' ? 'Personal ORIMEC' : 'Ventas';
       showNotification(`Rol del usuario actualizado a ${roleLabel} con éxito.`, 'success');
     } catch (e) {
       console.error('Error actualizando rol de usuario:', e);
       showNotification('Error al actualizar el rol del usuario.', 'warning');
     }
   }, [showNotification, allRegisteredUsers, engineers]);
+
+  const handleApproveUser = useCallback(async (uid: string) => {
+    try {
+      const existing = allRegisteredUsers.find(u => u.uid === uid);
+      if (!existing) return;
+      const updatedUserDoc: AppUser = { ...existing, status: 'approved' };
+      await setDoc(doc(db, 'users', uid), cleanUndefined(updatedUserDoc));
+      setAllRegisteredUsers(prev => prev.map(u => u.uid === uid ? updatedUserDoc : u));
+      showNotification(`Cuenta de ${existing.email} aprobada con éxito.`, 'success');
+    } catch (e) {
+      console.error('Error aprobando usuario:', e);
+      showNotification('Error al aprobar la cuenta del usuario.', 'warning');
+    }
+  }, [showNotification, allRegisteredUsers]);
 
   // ── Computed values (memoized to avoid recompute on every render) ──
   const currentUserPermissions = useMemo(() => {
@@ -1455,9 +1535,36 @@ export default function App() {
         onLoginSuccess={(user, isDemo) => {
           setCurrentUser(user);
           setIsDemoMode(isDemo);
-          setActiveTab(user.role === 'admin' ? 'admin' : user.role === 'sales' ? 'sales' : 'engineer');
+          setActiveTab(user.role === 'admin' ? 'admin' : user.role === 'sales' ? 'sales' : user.role === 'orimec' ? 'orimec' : 'engineer');
         }}
       />
+    );
+  }
+
+  // Guard: cuenta registrada pero pendiente de aprobación por un administrador
+  if (currentUser.status === 'pending') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-slate-850/80 backdrop-blur-xl border border-slate-700/60 rounded-3xl shadow-2xl p-8 text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl mx-auto bg-gradient-to-br from-amber-600 via-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-600/30">
+            <RefreshCw className="w-7 h-7 text-white" />
+          </div>
+          <h2 className="text-lg font-black text-white tracking-tight">Cuenta pendiente de aprobación</h2>
+          <p className="text-xs text-slate-300 font-semibold leading-relaxed">
+            Tu cuenta está pendiente de aprobación por un administrador.
+          </p>
+          <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+            {currentUser.signupRoleLabel ? `Rol solicitado: ${currentUser.signupRoleLabel}. ` : ''}
+            Te avisaremos por correo cuando puedas ingresar. Si crees que esto es un error, contacta a un administrador.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 px-4 rounded-xl text-2xs cursor-pointer shadow-md transition-all"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -1500,12 +1607,30 @@ export default function App() {
             engineers.find(e => e.email && userEmailClean !== '' && e.email.trim().toLowerCase() === userEmailClean)
           ) : undefined;
 
-          const canSwitchPortals = currentUser && (
-            currentUser.role === 'admin' || 
-            isDemoMode || 
+          const hasFullAccess = currentUser.role === 'admin' ||
+            isDemoMode ||
             userEmailClean === 'johana.ruales@orimec.com.ec' ||
-            !!matchedCurrentEng?.customPermissions
-          );
+            !!matchedCurrentEng?.customPermissions;
+
+          const adminTab = { id: 'admin', label: 'Administración', icon: CalendarDays } as const;
+          const salesTab = { id: 'sales', label: 'Vendedor Portal', icon: Briefcase } as const;
+          const engineerTab = { id: 'engineer', label: 'Ingeniero Portal', icon: Smartphone } as const;
+          const orimecTab = { id: 'orimec', label: 'ORIMEC Portal', icon: Layers } as const;
+
+          // Mismo subconjunto que antes para los casos con acceso ampliado (admin/demo/casos
+          // especiales), simplemente sumando siempre ORIMEC Portal; Ingeniero/Vendedor Portal
+          // siguen restringidos por rol para el resto de usuarios.
+          const visiblePortalTabs = hasFullAccess
+            ? (currentUser.role === 'admin' || isDemoMode
+                ? [adminTab, salesTab, engineerTab, orimecTab]
+                : [adminTab, engineerTab, orimecTab])
+            : currentUser.role === 'sales'
+            ? [salesTab, orimecTab]
+            : currentUser.role === 'orimec'
+            ? [orimecTab]
+            : [engineerTab, orimecTab];
+
+          const canSwitchPortals = visiblePortalTabs.length > 1;
 
           return (
             <div className="flex items-center gap-3">
@@ -1527,7 +1652,7 @@ export default function App() {
                       ? 'Administrador'
                       : (userEmailClean === 'johana.ruales@orimec.com.ec' || matchedCurrentEng?.customPermissions)
                       ? 'Especial (IT & Administración)'
-                      : currentUser.role === 'sales' ? 'Vendedor' : 'Ingeniero'} {isDemoMode && '(Demo)'}
+                      : currentUser.role === 'sales' ? 'Vendedor' : currentUser.role === 'orimec' ? 'Personal ORIMEC' : 'Ingeniero'} {isDemoMode && '(Demo)'}
                   </p>
                 </div>
                 <button
@@ -1553,14 +1678,7 @@ export default function App() {
                   )}
 
                   <nav className="flex bg-slate-100/80 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200/60 dark:border-slate-700/60" id="nav-container-tabs">
-                    {(currentUser.role === 'admin' || isDemoMode ? [
-                      { id: 'admin', label: 'Administración', icon: CalendarDays },
-                      { id: 'sales', label: 'Vendedor Portal', icon: Briefcase },
-                      { id: 'engineer', label: 'Ingeniero Portal', icon: Smartphone },
-                    ] : [
-                      { id: 'admin', label: 'Administración', icon: CalendarDays },
-                      { id: 'engineer', label: 'Ingeniero Portal', icon: Smartphone },
-                    ]).map(tab => {
+                    {visiblePortalTabs.map(tab => {
                       const Icon = tab.icon;
                       const isActive = activeTab === tab.id;
                       return (
@@ -1584,17 +1702,17 @@ export default function App() {
                 </>
               ) : (
                 <div className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-300 text-[10px] font-extrabold px-3 py-1 rounded-lg flex items-center gap-1.5 uppercase tracking-wider">
-                  {currentUser.role === 'sales' ? (
-                    <>
-                      <Briefcase className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Portal Vendedor</span>
-                    </>
-                  ) : (
-                    <>
-                      <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Portal Ingeniero</span>
-                    </>
-                  )}
+                  {(() => {
+                    const soloTab = visiblePortalTabs[0];
+                    if (!soloTab) return null;
+                    const SoloIcon = soloTab.icon;
+                    return (
+                      <>
+                        <SoloIcon className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>{soloTab.label}</span>
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -1671,7 +1789,7 @@ export default function App() {
             )}
             {(activeTab === 'admin' || activeTab === 'sales') && (
               <AdminPortal
-                userRole={activeTab === 'sales' ? 'sales' : currentUser.role}
+                userRole={activeTab === 'sales' ? 'sales' : (currentUser.role === 'orimec' ? 'sales' : currentUser.role)}
                 currentUserEmail={currentUser.email}
                 currentUserPermissions={currentUserPermissions}
                 engineers={engineers}
@@ -1727,7 +1845,18 @@ export default function App() {
                 allRegisteredUsers={allRegisteredUsers}
                 onRegisterNewUser={handleRegisterNewUser}
                 onUpdateUserRole={handleUpdateUserRole}
+                onApproveUser={handleApproveUser}
                 onToggleClientConfirmed={handleToggleClientConfirmed}
+              />
+            )}
+            {activeTab === 'orimec' && (
+              <OrimecPortal
+                documents={orimecDocuments}
+                onAdd={handleAddOrimecDocument}
+                onUpdate={handleUpdateOrimecDocument}
+                onDelete={handleDeleteOrimecDocument}
+                currentUserEmail={currentUser.email}
+                userRole={currentUser.role}
               />
             )}
             {activeTab === 'engineer' && (

@@ -238,12 +238,13 @@ interface AdminPortalProps {
   onDeleteContractGE?: (id: string) => void;
   onBulkUploadContractsGE?: (cGEs: ContractGE[]) => void;
   allRegisteredUsers?: AppUser[];
-  onUpdateUserRole?: (uid: string, role: 'admin' | 'engineer' | 'sales', engineerId?: string) => void;
+  onUpdateUserRole?: (uid: string, role: 'admin' | 'engineer' | 'sales' | 'orimec', engineerId?: string) => void;
+  onApproveUser?: (uid: string) => void;
   onRegisterNewUser?: (data: {
     name: string;
     email: string;
     password?: string;
-    role: 'admin' | 'engineer' | 'sales';
+    role: 'admin' | 'engineer' | 'sales' | 'orimec';
     specialty?: Specialty;
     sede?: string;
     phone?: string;
@@ -1259,6 +1260,7 @@ export default function AdminPortal({
   onBulkUploadContractsGE,
   allRegisteredUsers,
   onUpdateUserRole,
+  onApproveUser,
   onRegisterNewUser,
   onToggleClientConfirmed
 }: AdminPortalProps) {
@@ -1937,7 +1939,7 @@ export default function AdminPortal({
   const [newEngName, setNewEngName] = useState('');
   const [newEngEmail, setNewEngEmail] = useState('');
   const [newEngPassword, setNewEngPassword] = useState('');
-  const [newEngRole, setNewEngRole] = useState<'engineer' | 'admin' | 'sales'>('engineer');
+  const [newEngRole, setNewEngRole] = useState<'engineer' | 'admin' | 'sales' | 'orimec'>('engineer');
   const [newEngSpecialty, setNewEngSpecialty] = useState<Specialty>('Ingeniería');
   const [newEngPhone, setNewEngPhone] = useState('');
   const [isRegisteringUser, setIsRegisteringUser] = useState(false);
@@ -10221,12 +10223,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                     </label>
                     <select
                       value={newEngRole}
-                      onChange={(e) => setNewEngRole(e.target.value as 'engineer' | 'admin' | 'sales')}
+                      onChange={(e) => setNewEngRole(e.target.value as 'engineer' | 'admin' | 'sales' | 'orimec')}
                       className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                     >
                       <option value="engineer">🛠️ Ingeniero / Técnico (FSM & Órdenes)</option>
                       <option value="admin">👑 Administrador (Acceso Total)</option>
                       <option value="sales">💼 Ventas / Comercial (Cotizaciones & Clientes)</option>
+                      <option value="orimec">🏢 Personal ORIMEC (Solo Documentos ORIMEC)</option>
                     </select>
                   </div>
 
@@ -10903,6 +10906,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     (Tu cuenta actual)
                                   </span>
                                 )}
+                                {user.status === 'pending' && (
+                                  <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-2xs animate-pulse">
+                                    ⏳ Pendiente de Aprobación
+                                  </span>
+                                )}
                                 <span className="bg-slate-100 text-slate-500 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded">
                                   {user.uid.slice(0, 10)}...
                                 </span>
@@ -10917,10 +10925,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     ? 'bg-indigo-100 text-indigo-800 border-indigo-200'
                                     : user.role === 'sales'
                                     ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                    : user.role === 'orimec'
+                                    ? 'bg-sky-100 text-sky-800 border-sky-200'
                                     : 'bg-amber-100 text-amber-800 border-amber-200'
                                 }`}>
-                                  {user.role === 'admin' ? '👑 Administrador' : user.role === 'engineer' ? '🛠️ Ingeniero/Técnico' : user.role === 'sales' ? '💼 Ventas/Comercial' : '⚠️ Sin Asignar'}
+                                  {user.role === 'admin' ? '👑 Administrador' : user.role === 'engineer' ? '🛠️ Ingeniero/Técnico' : user.role === 'sales' ? '💼 Ventas/Comercial' : user.role === 'orimec' ? '🏢 Personal ORIMEC' : '⚠️ Sin Asignar'}
                                 </span>
+
+                                {user.signupRoleLabel && (
+                                  <span className="bg-slate-50 text-slate-600 text-[9px] font-bold px-2 py-0.5 rounded border border-slate-200">
+                                    Solicitó: {user.signupRoleLabel}
+                                  </span>
+                                )}
 
                                 {linkedEng ? (
                                   <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
@@ -10944,6 +10960,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               >
                                 <option value="engineer">🛠️ Ingeniero/Técnico</option>
                                 <option value="sales">💼 Vendedor / Comercial</option>
+                                <option value="orimec">🏢 Personal ORIMEC</option>
                                 <option value="admin">👑 Administrador</option>
                               </select>
 
@@ -10971,6 +10988,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <Check className="w-3 h-3" />
                                 <span>Guardar Rol</span>
                               </button>
+
+                              {user.status === 'pending' && onApproveUser && (
+                                <button
+                                  onClick={() => onApproveUser(user.uid)}
+                                  title="Aprobar la cuenta con el rol ya asignado, sin modificarlo"
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg transition-all cursor-pointer shadow-xs hover:shadow whitespace-nowrap flex items-center gap-1"
+                                >
+                                  <Check className="w-3 h-3" />
+                                  <span>Aprobar Cuenta</span>
+                                </button>
+                              )}
                             </div>
                           </div>
                         );

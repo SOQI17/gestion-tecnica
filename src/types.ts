@@ -283,8 +283,40 @@ export interface AppUser {
   uid: string;
   email: string;
   name?: string;
-  role: 'admin' | 'engineer' | 'sales';
+  role: 'admin' | 'engineer' | 'sales' | 'orimec';
   engineerId?: string; // Solo presente si el rol es 'engineer'
+  status?: 'pending' | 'approved'; // Ausente en cuentas antiguas = aprobado implícitamente
+  signupRoleLabel?: string; // Rol exacto elegido en el registro (Ingeniero/Aplicacionista/Vendedor Dpto. Técnico/Personal ORIMEC), solo informativo
+}
+
+export interface OrimecDocumentFile {
+  id: string;
+  docType: 'Contrato' | 'Garantía' | 'Acta de entrega-recepción' | 'Otro';
+  customTypeLabel?: string; // Cuando docType === 'Otro'
+  url: string;
+  fileName: string; // Nombre estandarizado usado al descargar
+  sizeBytes?: number;
+  uploadedAt: string;
+}
+
+export interface OrimecDocumentRecord extends SoftDeletable {
+  id: string;
+  clientName: string;
+  clientTaxId?: string; // RUC o cédula
+  institutionOrAddress?: string;
+  contactName?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  processCode?: string; // Código del proceso o contrato asociado
+  equipmentName?: string;
+  equipmentBrand?: string;
+  equipmentModel?: string;
+  equipmentSerial?: string;
+  recordDate: string; // YYYY-MM-DD
+  files: OrimecDocumentFile[];
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Curso {
