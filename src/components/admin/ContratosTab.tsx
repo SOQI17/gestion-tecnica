@@ -282,7 +282,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
         if (effectiveStatus && effectiveStatus !== 'all') {
           const expAlert = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
           if (effectiveStatus === 'activo') {
-            if (con.status === 'Inactivo' || expAlert?.level === 'expired') return false;
+            // con.status === 'Vencido' se revisa aparte de expAlert.level: si el contrato ya tiene
+            // un sucesor vinculado, getContractExpirationAlert prioriza el nivel "renewed" y nunca
+            // marca "expired", aunque el contrato en sí siga con status Vencido.
+            if (con.status === 'Inactivo' || con.status === 'Vencido' || expAlert?.level === 'expired') return false;
           } else if (effectiveStatus === '1m' && expAlert?.level !== 'urgent_1m') {
             return false;
           } else if (effectiveStatus === '3m' && expAlert?.level !== 'warning_3m') {
