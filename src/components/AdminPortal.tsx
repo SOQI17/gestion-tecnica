@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useDeferredValue, useCallback } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag, UserPlus, Mail, Lock, Shield, Phone, MapPin, KeyRound, Pencil, Clock, DollarSign, Eye, ArrowUpRight } from 'lucide-react';
+import { ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag, UserPlus, Mail, Lock, Shield, Phone, MapPin, KeyRound, Pencil, Clock, DollarSign, Eye, ArrowUpRight } from 'lucide-react';
 
 export const OFFICIAL_MODALITIES = [
   { code: 'MR', label: 'MR: Resonancia Magnética' },
@@ -48,7 +48,6 @@ import { RETE04ReportModal } from './admin/RETE04ReportModal';
 import { RegistroTab } from './admin/RegistroTab';
 import { EquiposTab } from './admin/EquiposTab';
 import { ContratosTab } from './admin/ContratosTab';
-import { CronogramaTab } from './admin/CronogramaTab';
 import { VacacionesTab } from './admin/VacacionesTab';
 import { AgendamientoTab, DashboardPrintColumns, DEFAULT_DASHBOARD_PRINT_COLUMNS } from './admin/AgendamientoTab';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl, triggerDirectDownload } from '../utils/cloudinary';
@@ -1366,7 +1365,7 @@ export default function AdminPortal({
   const [pendingUserEngIds, setPendingUserEngIds] = useState<Record<string, string>>();
 
   // Main Admin Tab state
-  const [activeAdminTab, setActiveAdminTab] = useState<'agendamiento' | 'clientes' | 'equipos' | 'registro' | 'contratos' | 'cronograma' | 'vacaciones' | 'capacitaciones'>(
+  const [activeAdminTab, setActiveAdminTab] = useState<'agendamiento' | 'clientes' | 'equipos' | 'registro' | 'contratos' | 'vacaciones' | 'capacitaciones'>(
     userRole === 'sales' ? 'clientes' : 'agendamiento'
   );
 
@@ -7362,31 +7361,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     );
   };
 
-  const renderCronogramaTab = () => {
-    return (
-      <CronogramaTab
-        calendarMonth={calendarMonth}
-        setCalendarMonth={setCalendarMonth}
-        calendarYear={calendarYear}
-        setCalendarYear={setCalendarYear}
-        highlightedEngineerId={highlightedEngineerId}
-        setHighlightedEngineerId={setHighlightedEngineerId}
-        engineers={engineers}
-        getEngineerEmoji={getEngineerEmoji}
-        handlePrintCalendar={handlePrintCalendar}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        calendarDays={calendarDays}
-        calendarMonthName={calendarMonthName}
-        workOrders={workOrders}
-        clients={clients}
-        getEngineerColorClasses={getEngineerColorClasses}
-        matchesSearch={matchesSearch}
-        setInfoWO={setInfoWO}
-      />
-    );
-  };
-
   const renderVacacionesTab = () => {
     return (
       <VacacionesTab
@@ -7587,7 +7561,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               { id: 'equipos', label: 'Equipos (Activos)', icon: Cpu, color: 'text-emerald-400' },
               { id: 'registro', label: 'Registro MTO', icon: FileSpreadsheet, color: 'text-pink-400' },
               { id: 'contratos', label: 'Contratos', icon: Briefcase, color: 'text-amber-400' },
-              { id: 'cronograma', label: 'Cronograma', icon: CalendarIcon, color: 'text-rose-400' },
               { id: 'vacaciones', label: 'Vacaciones', icon: Palmtree, color: 'text-teal-400' },
               { id: 'capacitaciones', label: 'Capacitaciones', icon: BookOpen, color: 'text-purple-400' }
             ];
@@ -7595,7 +7568,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             const visibleAdminTabs = userRole === 'sales'
               ? allAdminTabs.filter(t => t.id === 'clientes' || t.id === 'contratos')
               : allAdminTabs.filter(t => {
-                  if (t.id === 'agendamiento' || t.id === 'cronograma') return effectivePermissions.canViewWorkOrders !== false;
+                  if (t.id === 'agendamiento') return effectivePermissions.canViewWorkOrders !== false;
                   if (t.id === 'clientes') return effectivePermissions.canViewClients !== false;
                   if (t.id === 'equipos') return effectivePermissions.canViewEquipments !== false;
                   if (t.id === 'registro') return effectivePermissions.canViewRegistry !== false;
@@ -7634,7 +7607,6 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       {activeAdminTab === 'equipos' && renderEquiposTab()}
       {activeAdminTab === 'registro' && renderRegistroTab()}
       {activeAdminTab === 'contratos' && renderContratosTab()}
-      {activeAdminTab === 'cronograma' && renderCronogramaTab()}
       {activeAdminTab === 'vacaciones' && renderVacacionesTab()}
       {activeAdminTab === 'capacitaciones' && (
         <CapacitacionesPortal
