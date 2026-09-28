@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layers, Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, User, Shield, ArrowRight, Briefcase, Activity, Sun, Moon } from 'lucide-react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { Engineer, AppUser } from '../types';
@@ -21,6 +21,13 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Recuperación de contraseña
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
 
   // Demo mode state
   const [isDemoMode, setIsDemoMode] = useState(false);
@@ -237,6 +244,31 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError(null);
+    const targetEmail = cleanEmail(resetEmail);
+    if (!targetEmail) {
+      setResetError('Por favor ingrese su correo electrónico.');
+      return;
+    }
+    setResetLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, targetEmail);
+      setResetSent(true);
+    } catch (err: any) {
+      // Por seguridad no revelamos si el correo existe o no en el sistema: se muestra el
+      // mismo mensaje de éxito salvo que el formato del correo sea inválido.
+      if (err?.code === 'auth/invalid-email') {
+        setResetError('Formato de correo electrónico no válido.');
+      } else {
+        setResetSent(true);
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const handleDemoLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -319,6 +351,83 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
           </div>
         )}
 
+        {isForgotPassword ? (
+          /* Forgot Password Panel */
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-sm font-black text-white">Recuperar Contraseña</h3>
+              <p className="text-3xs text-slate-400 font-semibold mt-1 leading-relaxed">
+                Ingresa el correo con el que te registraste y te enviaremos un enlace para restablecer tu contraseña.
+              </p>
+            </div>
+
+            {resetSent ? (
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-start gap-3 text-emerald-200">
+                <Mail className="w-5 h-5 shrink-0 text-emerald-400 mt-0.5" />
+                <div>
+                  <p className="text-xs font-bold text-emerald-300">Enlace enviado</p>
+                  <p className="text-2xs font-medium text-emerald-200/80 mt-0.5 leading-relaxed">
+                    Si el correo <strong>{resetEmail}</strong> está registrado, en unos minutos recibirás un enlace para crear una nueva contraseña. Revisa también la carpeta de spam.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-5">
+                {resetError && (
+                  <div className="p-4 bg-rose-900/30 border border-rose-800/50 rounded-2xl flex gap-3 text-rose-200">
+                    <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
+                    <span className="text-2xs font-semibold leading-normal">{resetError}</span>
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <label className="text-3xs font-bold text-slate-400 uppercase tracking-wider block">Correo Electrónico</label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
+                      <Mail className="w-4 h-4" />
+                    </span>
+                    <input
+                      type="email"
+                      required
+                      autoFocus
+                      placeholder="ej: alexis.guerra@orimec.com.ec"
+                      value={resetEmail}
+                      onChange={e => setResetEmail(e.target.value)}
+                      disabled={resetLoading}
+                      className="w-full bg-slate-800/55 border border-slate-700 text-white text-xs pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium placeholder-slate-500"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full bg-indigo-650 hover:bg-indigo-600 disabled:bg-indigo-850 text-white font-bold py-3 px-4 rounded-xl text-2xs cursor-pointer shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  {resetLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <span>Enviar Enlace de Recuperación</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsForgotPassword(false);
+                setResetSent(false);
+                setResetError(null);
+              }}
+              className="w-full text-center text-3xs text-slate-400 hover:text-white font-bold hover:underline cursor-pointer"
+            >
+              ← Volver a Iniciar Sesión
+            </button>
+          </div>
+        ) : (
+        <>
         {/* Demo Mode or Firebase Mode Selector tab */}
         <div className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/40 mb-6">
           <button
@@ -390,6 +499,22 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {!isSignUp && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetEmail(email);
+                      setResetError(null);
+                      setResetSent(false);
+                      setIsForgotPassword(true);
+                    }}
+                    className="text-3xs text-indigo-400 hover:text-indigo-300 font-bold hover:underline cursor-pointer"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Confirm Password Field (Sign Up only) */}
@@ -582,6 +707,8 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
               )}
             </button>
           </form>
+        )}
+        </>
         )}
       </div>
     </div>
