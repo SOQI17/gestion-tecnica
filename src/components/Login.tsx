@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, Shield, ArrowRight, Activity, Sun, Moon } from 'lucide-react';
+import { Lock, Mail, AlertCircle, Eye, EyeOff, Shield, ArrowRight, Activity, Sun, Moon } from 'lucide-react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -535,13 +535,6 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
               </button>
             </p>
 
-            {/* Admin Auto-register Info Banner */}
-            <div className="mt-4 p-3 bg-slate-800/30 rounded-xl border border-slate-700/30 text-[9px] text-slate-400 leading-normal flex gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-              <p>
-                <strong>Nota:</strong> Al registrarte como <strong>alexis.guerra@orimec.com.ec</strong> recibirás automáticamente el rol de Administrador. Si eres técnico, usa tu correo asignado en la base de datos de ingenieros.
-              </p>
-            </div>
           </form>
         )}
       </div>
