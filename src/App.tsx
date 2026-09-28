@@ -1334,6 +1334,50 @@ export default function App() {
     }
   }, [currentUser, showNotification, workOrders]);
 
+  const handleMergeClients = useCallback(async (sourceId: string, targetId: string) => {
+    try {
+      const sourceClient = clients.find(c => c.id === sourceId);
+      const targetClient = clients.find(c => c.id === targetId);
+      if (!sourceClient || !targetClient) return;
+
+      const sourceWOs = workOrders.filter(wo => wo.clientId === sourceId);
+      for (const wo of sourceWOs) {
+        await setDoc(doc(db, 'workOrders', wo.id), { clientId: targetId }, { merge: true });
+      }
+
+      const sourceEquipments = equipments.filter(eq => eq.clientId === sourceId);
+      for (const eq of sourceEquipments) {
+        await setDoc(doc(db, 'equipments', eq.id), { clientId: targetId }, { merge: true });
+      }
+
+      const sourceContracts = contracts.filter(con => con.clientId === sourceId);
+      for (const con of sourceContracts) {
+        await setDoc(doc(db, 'contracts', con.id), { clientId: targetId }, { merge: true });
+      }
+
+      // Registros de mantenimiento sueltos (sin OT vinculada) van por texto: los que ya tienen
+      // workOrderId se resuelven solos al reasignar el clientId de su OT (ver getEffectiveRegistryFields).
+      const sourceNameNorm = sourceClient.name.trim().toLowerCase();
+      const looseRegistries = maintenanceRegistries.filter(reg =>
+        !reg.workOrderId && (reg.institutionName || '').trim().toLowerCase() === sourceNameNorm
+      );
+      for (const reg of looseRegistries) {
+        await setDoc(doc(db, 'maintenanceRegistries', reg.id), { institutionName: targetClient.name }, { merge: true });
+      }
+
+      await setDoc(doc(db, 'clients', sourceId), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin',
+        mergedInto: targetId
+      }, { merge: true });
+
+      showNotification(`¡Clientes fusionados con éxito! Se reasignaron ${sourceWOs.length} órdenes de trabajo, ${sourceEquipments.length} equipos y ${sourceContracts.length} contratos.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `clients/merge`);
+    }
+  }, [currentUser, showNotification, workOrders, equipments, contracts, maintenanceRegistries, clients]);
+
   const handleBatchReportWorkOrders = useCallback(async (
     newReports: TechnicalReport[],
     woUpdates: { id: string; status: WorkOrderStatus }[]
@@ -1801,6 +1845,7 @@ export default function App() {
                 onDeleteEngineer={handleDeleteEngineer}
                 onDeleteWorkOrders={handleDeleteWorkOrders}
                 onMergeEngineers={handleMergeEngineers}
+                onMergeClients={handleMergeClients}
                 onBatchReportWorkOrders={handleBatchReportWorkOrders}
                 onAddClient={handleAddClient}
                 onAddEquipment={handleAddEquipment}

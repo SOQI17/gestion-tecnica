@@ -17,6 +17,8 @@ interface ClientesTabProps {
   setClientFormContact: (val: string) => void;
   setClientFormPhone: (val: string) => void;
   setIsClientModalOpen: (open: boolean) => void;
+  onMergeClientClick?: (client: Client) => void;
+  onViewClientDetails?: (client: Client) => void;
 }
 
 export const ClientesTab: React.FC<ClientesTabProps> = ({
@@ -34,6 +36,8 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
   setClientFormContact,
   setClientFormPhone,
   setIsClientModalOpen,
+  onMergeClientClick,
+  onViewClientDetails,
 }) => {
   const [clientSearch, setClientSearch] = useState('');
   const deferredClientSearch = useDeferredValue(clientSearch);
@@ -187,27 +191,49 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
               paginated.map(cli => (
                 <tr key={cli.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-slate-100">{cli.id}</td>
-                  <td className="p-3.5 font-extrabold text-slate-900 dark:text-slate-100">{cli.name}</td>
+                  <td className="p-3.5 font-extrabold text-slate-900 dark:text-slate-100">
+                    {onViewClientDetails ? (
+                      <button
+                        type="button"
+                        onClick={() => onViewClientDetails(cli)}
+                        className="text-left hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline cursor-pointer"
+                        title="Ver historial del cliente"
+                      >
+                        {cli.name}
+                      </button>
+                    ) : cli.name}
+                  </td>
                   <td className="p-3.5">{cli.address}</td>
                   <td className="p-3.5 font-bold text-indigo-700 dark:text-indigo-300">{cli.industry || '-'}</td>
                   <td className="p-3.5">{cli.contactName || '-'}</td>
                   <td className="p-3.5 font-mono">{cli.contactPhone || '-'}</td>
                   <td className="p-3.5 text-right no-print">
-                    <button
-                      onClick={() => {
-                        setEditingClient(cli);
-                        setClientFormId(cli.id);
-                        setClientFormName(cli.name);
-                        setClientFormAddress(cli.address);
-                        setClientFormCity(cli.industry || '');
-                        setClientFormContact(cli.contactName || '');
-                        setClientFormPhone(cli.contactPhone || '');
-                        setIsClientModalOpen(true);
-                      }}
-                      className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
-                    >
-                      Editar
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => {
+                          setEditingClient(cli);
+                          setClientFormId(cli.id);
+                          setClientFormName(cli.name);
+                          setClientFormAddress(cli.address);
+                          setClientFormCity(cli.industry || '');
+                          setClientFormContact(cli.contactName || '');
+                          setClientFormPhone(cli.contactPhone || '');
+                          setIsClientModalOpen(true);
+                        }}
+                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
+                      >
+                        Editar
+                      </button>
+                      {userRole === 'admin' && onMergeClientClick && (
+                        <button
+                          onClick={() => onMergeClientClick(cli)}
+                          title="Fusionar este cliente duplicado con otro"
+                          className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer"
+                        >
+                          Fusionar
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

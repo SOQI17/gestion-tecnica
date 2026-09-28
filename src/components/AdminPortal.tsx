@@ -202,6 +202,7 @@ interface AdminPortalProps {
   onDeleteEngineer?: (engId: string) => void;
   onDeleteWorkOrders?: (woIds: string[]) => void;
   onMergeEngineers?: (sourceId: string, targetId: string) => void;
+  onMergeClients?: (sourceId: string, targetId: string) => void;
   onBatchReportWorkOrders?: (reports: TechnicalReport[], woUpdates: { id: string; status: WorkOrderStatus }[]) => void;
   onAddClient?: (client: Client) => void;
   onAddEquipment?: (eq: Equipment) => void;
@@ -1227,6 +1228,7 @@ export default function AdminPortal({
   onDeleteEngineer,
   onDeleteWorkOrders,
   onMergeEngineers,
+  onMergeClients,
   onBatchReportWorkOrders,
   onAddClient,
   onAddEquipment,
@@ -1959,6 +1961,15 @@ export default function AdminPortal({
   // States for merging dynamic duplicate technicians
   const [engToMerge, setEngToMerge] = useState<Engineer | null>(null);
   const [mergeTargetId, setMergeTargetId] = useState<string>('');
+
+  // States for merging duplicate clients
+  const [clientToMerge, setClientToMerge] = useState<Client | null>(null);
+  const [mergeClientTargetId, setMergeClientTargetId] = useState<string>('');
+  const [mergeClientTargetSearch, setMergeClientTargetSearch] = useState('');
+
+  // State for the client detail/history modal
+  const [selectedClientForDetails, setSelectedClientForDetails] = useState<Client | null>(null);
+  const [isClientDetailsModalOpen, setIsClientDetailsModalOpen] = useState(false);
 
   // Active Calendar View states
   const [calendarYear, setCalendarYear] = useState<number>(currentYear);
@@ -5647,6 +5658,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setMergeTargetId('');
   };
 
+  const handleConfirmMergeClients = () => {
+    if (clientToMerge && mergeClientTargetId && onMergeClients) {
+      onMergeClients(clientToMerge.id, mergeClientTargetId);
+    }
+    setClientToMerge(null);
+    setMergeClientTargetId('');
+    setMergeClientTargetSearch('');
+  };
+
   const renderRETE04Report = (report: TechnicalReport, task: WorkOrder) => {
     return (
       <RETE04ReportModal
@@ -6513,6 +6533,15 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         setClientFormContact={setClientFormContact}
         setClientFormPhone={setClientFormPhone}
         setIsClientModalOpen={setIsClientModalOpen}
+        onMergeClientClick={(cli: Client) => {
+          setClientToMerge(cli);
+          setMergeClientTargetId('');
+          setMergeClientTargetSearch('');
+        }}
+        onViewClientDetails={(cli: Client) => {
+          setSelectedClientForDetails(cli);
+          setIsClientDetailsModalOpen(true);
+        }}
       />
     );
   };
@@ -14107,6 +14136,288 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           </div>
         </div>
       )}
+
+      {/* Modal Fusionar Clientes Duplicados */}
+      {clientToMerge && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 no-print">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl max-w-md w-full p-4 space-y-4 animate-in zoom-in-95 duration-150">
+            <h4 className="font-extrabold text-xs text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+              🔗 Fusionar Clientes Duplicados
+            </h4>
+            <p className="text-[10px] text-slate-650 dark:text-slate-300 font-semibold leading-normal">
+              Vas a fusionar a <span className="font-bold text-slate-900 dark:text-slate-100">{clientToMerge.name}</span> ({clientToMerge.id}).
+              <br />
+              Sus órdenes de trabajo, equipos y contratos se reasignarán al cliente destino que elijas, y este registro duplicado quedará eliminado.
+            </p>
+
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">Selecciona el cliente destino (Correcto):</label>
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o RUC/Cédula..."
+                  value={mergeClientTargetSearch}
+                  onChange={(e) => { setMergeClientTargetSearch(e.target.value); setMergeClientTargetId(''); }}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                />
+              </div>
+
+              {mergeClientTargetId ? (
+                (() => {
+                  const target = clients.find(c => c.id === mergeClientTargetId);
+                  return target ? (
+                    <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-lg px-2.5 py-1.5">
+                      <span className="text-[10px] font-bold text-emerald-900 dark:text-emerald-300">✓ {target.name} ({target.id})</span>
+                      <button
+                        type="button"
+                        onClick={() => { setMergeClientTargetId(''); setMergeClientTargetSearch(''); }}
+                        className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-200 font-black text-xs cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : null;
+                })()
+              ) : mergeClientTargetSearch.trim() && (
+                <div className="border border-slate-200 dark:border-slate-700 rounded-lg max-h-40 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
+                  {clients
+                    .filter(c =>
+                      c.id !== clientToMerge.id &&
+                      (c.name.toLowerCase().includes(mergeClientTargetSearch.trim().toLowerCase()) ||
+                        c.id.toLowerCase().includes(mergeClientTargetSearch.trim().toLowerCase()))
+                    )
+                    .slice(0, 20)
+                    .map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => { setMergeClientTargetId(c.id); setMergeClientTargetSearch(c.name); }}
+                        className="w-full text-left px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 cursor-pointer flex items-center justify-between gap-2"
+                      >
+                        <span className="truncate">{c.name}</span>
+                        <span className="text-slate-400 dark:text-slate-500 font-mono text-[9px] shrink-0">{c.id}</span>
+                      </button>
+                    ))}
+                  {clients.filter(c =>
+                    c.id !== clientToMerge.id &&
+                    (c.name.toLowerCase().includes(mergeClientTargetSearch.trim().toLowerCase()) ||
+                      c.id.toLowerCase().includes(mergeClientTargetSearch.trim().toLowerCase()))
+                  ).length === 0 && (
+                    <p className="px-2.5 py-2 text-[10px] text-slate-400 dark:text-slate-500 italic">Sin resultados.</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700 font-sans">
+              <button
+                onClick={() => {
+                  setClientToMerge(null);
+                  setMergeClientTargetId('');
+                  setMergeClientTargetSearch('');
+                }}
+                className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmMergeClients}
+                disabled={!mergeClientTargetId}
+                className={`font-bold text-xs px-3 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer ${
+                  mergeClientTargetId
+                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50'
+                }`}
+              >
+                Confirmar Fusión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Detalle de Cliente (Historial) */}
+      {isClientDetailsModalOpen && selectedClientForDetails && (() => {
+        const client = selectedClientForDetails;
+        const clientEquipments = equipments.filter(eq => eq.clientId === client.id);
+        const clientContracts = contracts.filter(con => con.clientId === client.id);
+        const clientWOs = [...workOrders.filter(wo => wo.clientId === client.id)].sort((a, b) => (b.plannedDate || '').localeCompare(a.plannedDate || ''));
+        const activeContracts = clientContracts.filter(con => con.status === 'Activo').length;
+        const lastVisit = clientWOs.find(wo => wo.status === 'Realizado' || wo.status === 'Reportado' || wo.status === 'Conciliado');
+
+        return (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print" id="client-details-modal">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150 relative font-sans">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+                <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                  <Users className="w-5 h-5 text-indigo-600 dark:text-indigo-300" />
+                  <span>{client.name}</span>
+                </h3>
+                <button
+                  onClick={() => {
+                    setIsClientDetailsModalOpen(false);
+                    setSelectedClientForDetails(null);
+                  }}
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4 text-xs max-h-[75vh] overflow-y-auto overscroll-contain pr-1">
+                {/* Info grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5">
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">RUC / Cédula</p>
+                    <p className="text-[11px] font-black text-slate-800 dark:text-slate-100 font-mono">{client.id}</p>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 col-span-2">
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Dirección</p>
+                    <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100">{client.address || '-'}</p>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5">
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Ciudad / Sucursal</p>
+                    <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100">{client.city || client.industry || '-'}</p>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5">
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Contacto</p>
+                    <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100">{client.contactName || '-'}</p>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5">
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Teléfono</p>
+                    <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100 font-mono">{client.contactPhone || '-'}</p>
+                  </div>
+                </div>
+
+                {/* Quick stats */}
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 rounded-lg p-2 text-center">
+                    <p className="text-sm font-black text-indigo-800 dark:text-indigo-300">{clientEquipments.length}</p>
+                    <p className="text-[8px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">Equipos</p>
+                  </div>
+                  <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-2 text-center">
+                    <p className="text-sm font-black text-amber-800 dark:text-amber-300">{activeContracts}/{clientContracts.length}</p>
+                    <p className="text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase">Contratos Activos</p>
+                  </div>
+                  <div className="bg-sky-50 dark:bg-sky-950 border border-sky-200 dark:border-sky-800 rounded-lg p-2 text-center">
+                    <p className="text-sm font-black text-sky-800 dark:text-sky-300">{clientWOs.length}</p>
+                    <p className="text-[8px] font-bold text-sky-600 dark:text-sky-400 uppercase">Órdenes de Trabajo</p>
+                  </div>
+                  <div className="bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-lg p-2 text-center">
+                    <p className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 mt-0.5">{lastVisit?.plannedDate || 'N/D'}</p>
+                    <p className="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Última Visita</p>
+                  </div>
+                </div>
+
+                {/* Equipos */}
+                <div className="space-y-1.5">
+                  <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider">⚙️ Equipos ({clientEquipments.length})</h5>
+                  {clientEquipments.length === 0 ? (
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 italic px-1">Sin equipos registrados para este cliente.</p>
+                  ) : (
+                    <div className="border border-slate-200 dark:border-slate-700 rounded-lg divide-y divide-slate-100 dark:divide-slate-700 max-h-32 overflow-y-auto">
+                      {clientEquipments.map(eq => (
+                        <div key={eq.id} className="px-2.5 py-1.5 flex items-center justify-between gap-2 text-[10px]">
+                          <div className="min-w-0">
+                            <span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{eq.name}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{eq.brand} {eq.model} · {eq.serialNumber}</span>
+                          </div>
+                          <span className={`shrink-0 text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                            eq.status === 'Operativo'
+                              ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                              : 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300'
+                          }`}>
+                            {eq.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Contratos */}
+                <div className="space-y-1.5">
+                  <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider">📜 Contratos ({clientContracts.length})</h5>
+                  {clientContracts.length === 0 ? (
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 italic px-1">Sin contratos registrados para este cliente.</p>
+                  ) : (
+                    <div className="border border-slate-200 dark:border-slate-700 rounded-lg divide-y divide-slate-100 dark:divide-slate-700 max-h-32 overflow-y-auto">
+                      {clientContracts.map(con => {
+                        const exp = getContractExpirationAlert(con.endDate, con.status, con.linkedContractId);
+                        return (
+                          <button
+                            key={con.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedContractForDetails(con);
+                              setIsContractDetailsModalOpen(true);
+                            }}
+                            className="w-full text-left px-2.5 py-1.5 flex items-center justify-between gap-2 text-[10px] hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                          >
+                            <div className="min-w-0">
+                              <span className="font-bold text-indigo-700 dark:text-indigo-300 truncate block">{con.id}</span>
+                              <span className="text-slate-500 dark:text-slate-400">{con.type} · {con.startDate} → {con.endDate}</span>
+                            </div>
+                            {exp && (
+                              <span className={`shrink-0 text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${exp.colorClass}`}>
+                                {exp.badgeText}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Historial de Órdenes de Trabajo */}
+                <div className="space-y-1.5">
+                  <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider">🗓️ Historial de Órdenes de Trabajo ({clientWOs.length})</h5>
+                  {clientWOs.length === 0 ? (
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 italic px-1">Sin órdenes de trabajo registradas para este cliente.</p>
+                  ) : (
+                    <div className="border border-slate-200 dark:border-slate-700 rounded-lg divide-y divide-slate-100 dark:divide-slate-700 max-h-48 overflow-y-auto">
+                      {clientWOs.map(wo => {
+                        const eng = engineers.find(e => e.id === wo.engineerId);
+                        return (
+                          <button
+                            key={wo.id}
+                            type="button"
+                            onClick={() => setInfoWO(wo)}
+                            className="w-full text-left px-2.5 py-1.5 flex items-center justify-between gap-2 text-[10px] hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                          >
+                            <div className="min-w-0">
+                              <span className="font-bold text-slate-800 dark:text-slate-100 font-mono">{wo.plannedDate}</span>
+                              <span className="text-slate-500 dark:text-slate-400"> · {wo.equipmentName} · {eng?.name || 'Sin asignar'}</span>
+                            </div>
+                            <span className="shrink-0 text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                              {wo.status}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-700 font-sans">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsClientDetailsModalOpen(false);
+                    setSelectedClientForDetails(null);
+                  }}
+                  className="px-4 py-2 text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors text-slate-700 dark:text-slate-300"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Modal / Vista de Cronograma Oficial en PDF / Word (ORIMEC) */}
       {isContractSchedulePdfOpen && selectedContractForSchedulePdf && (() => {
