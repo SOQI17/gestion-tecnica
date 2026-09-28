@@ -6475,7 +6475,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           const newWO: WorkOrder = {
             id: `WO-MTO-${con.id}-${cleanDate}-${Math.floor(Math.random() * 1000)}`,
             clientId: targetClientId,
-            engineerId: engineers[0]?.id || 'ENG-001',
+            // Sin ingeniero por defecto: antes caía siempre en engineers[0] (Andrés Vega),
+            // inflando sus métricas con visitas que en realidad nadie le asignó todavía.
+            engineerId: '',
             plannedDate: cleanDate,
             plannedTime: '09:00 AM - 11:00 AM',
             durationDays: 1,
@@ -13854,7 +13856,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                         if (!confirm(`¿Desea agendar automáticamente ${unagendedDates.length} visitas pendientes en el calendario de Agendamiento?`)) return;
 
-                        const defaultEngineer = engineers[0]?.id || 'ENG-001';
+                        // Sin ingeniero por defecto: antes caía siempre en engineers[0] (Andrés
+                        // Vega), inflando sus métricas con visitas que nadie le asignó todavía.
+                        const defaultEngineer = '';
                         const wosToBatch: WorkOrder[] = [];
                         for (let uIdx = 0; uIdx < unagendedDates.length; uIdx++) {
                           const rawDate = unagendedDates[uIdx];
