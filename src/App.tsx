@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, startTransition } from 'react';
-import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity, Sun, Moon } from 'lucide-react';
+import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity, Sun, Moon, Wrench } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
 import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360, OrimecDocumentRecord } from './types';
 import AdminPortal, { getDefaultPermissionsForSpecialty } from './components/AdminPortal';
@@ -1378,6 +1378,33 @@ export default function App() {
     }
   }, [currentUser, showNotification, workOrders, equipments, contracts, maintenanceRegistries, clients]);
 
+  // Utilidad de un solo uso: antes de la corrección, las visitas autogeneradas desde un
+  // contrato caían por defecto en ENG-001 (Andrés Vega), inflando sus métricas. Esto
+  // desasigna las que aún no se ejecutaron (Pendiente/En Proceso), dejando intactas las que
+  // ya fueron Realizadas/Reportadas/Conciliadas para no alterar historial ya cerrado.
+  const handleCleanupAutoAssignedWorkOrders = useCallback(async () => {
+    const affected = workOrders.filter(wo =>
+      wo.engineerId === 'ENG-001' &&
+      (wo.notes || '').includes('autogenerado bajo Contrato') &&
+      wo.status !== 'Realizado' && wo.status !== 'Reportado' && wo.status !== 'Conciliado'
+    );
+    if (affected.length === 0) {
+      showNotification('No se encontraron órdenes autogeneradas pendientes asignadas por defecto a Andrés Vega.', 'info');
+      return;
+    }
+    if (!window.confirm(`Se encontraron ${affected.length} órdenes autogeneradas (Pendientes/En Proceso) asignadas por defecto a Andrés Vega.\n\nSe les quitará el ingeniero para que las reasignes manualmente. Las que ya están Realizadas/Reportadas/Conciliadas NO se tocan.\n\n¿Continuar?`)) {
+      return;
+    }
+    try {
+      for (const wo of affected) {
+        await setDoc(doc(db, 'workOrders', wo.id), { engineerId: '' }, { merge: true });
+      }
+      showNotification(`¡Listo! Se desasignaron ${affected.length} órdenes autogeneradas que aún no se habían ejecutado.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'workOrders/cleanup-auto-assigned');
+    }
+  }, [workOrders, showNotification]);
+
   const handleBatchReportWorkOrders = useCallback(async (
     newReports: TechnicalReport[],
     woUpdates: { id: string; status: WorkOrderStatus }[]
@@ -1710,6 +1737,17 @@ export default function App() {
                     >
                       <Trash2 className="w-3 h-3 text-rose-500" />
                       <span className="hidden sm:inline">Restablecer BD</span>
+                    </button>
+                  )}
+
+                  {currentUser.role === 'admin' && (
+                    <button
+                      onClick={handleCleanupAutoAssignedWorkOrders}
+                      className="text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 text-[9px] font-bold px-2 py-1 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all cursor-pointer flex items-center gap-1"
+                      title="Quitar el ingeniero a las visitas autogeneradas (pendientes) que quedaron por defecto en Andrés Vega antes de la corrección"
+                    >
+                      <Wrench className="w-3 h-3 text-amber-500" />
+                      <span className="hidden sm:inline">Limpiar Auto-Asignados</span>
                     </button>
                   )}
 
