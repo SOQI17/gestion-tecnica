@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, User, Shield, ArrowRight, Briefcase, Activity, Sun, Moon } from 'lucide-react';
+import { Lock, Mail, AlertCircle, Eye, EyeOff, Sparkles, Shield, ArrowRight, Activity, Sun, Moon } from 'lucide-react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -8,7 +8,7 @@ import { masterEngineers } from '../mockData';
 
 interface LoginProps {
   engineers: Engineer[];
-  onLoginSuccess: (user: AppUser, isDemo: boolean) => void;
+  onLoginSuccess: (user: AppUser) => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
 }
@@ -28,11 +28,6 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
-
-  // Demo mode state
-  const [isDemoMode, setIsDemoMode] = useState(false);
-  const [demoRole, setDemoRole] = useState<'admin' | 'engineer' | 'sales' | 'orimec'>('admin');
-  const [demoEngineerId, setDemoEngineerId] = useState(engineers[0]?.id || 'ENG-001');
 
   // Rol elegido al registrarse (solo aplica cuando el email no coincide con un Ingeniero ya
   // dado de alta por un admin -- en ese caso el rol se hereda de ese registro, como antes).
@@ -175,7 +170,7 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
         };
 
         await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
-        onLoginSuccess(userProfile, false);
+        onLoginSuccess(userProfile);
       } else {
         // 1. Sign In via Firebase Auth first
         const userCredential = await signInWithEmailAndPassword(auth, targetEmail, password);
@@ -209,9 +204,9 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
               ...(effectiveEngId ? { engineerId: effectiveEngId } : {})
             };
             await setDoc(doc(db, 'users', firebaseUser.uid), updatedProfile);
-            onLoginSuccess(updatedProfile, false);
+            onLoginSuccess(updatedProfile);
           } else {
-            onLoginSuccess(fetchedProfile, false);
+            onLoginSuccess(fetchedProfile);
           }
         } else {
           const finalEngId = role === 'engineer' ? matchedEngineer?.id : undefined;
@@ -223,7 +218,7 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
             ...(finalEngId ? { engineerId: finalEngId } : {})
           };
           await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
-          onLoginSuccess(userProfile, false);
+          onLoginSuccess(userProfile);
         }
       }
     } catch (err: any) {
@@ -269,37 +264,6 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
     }
   };
 
-  const handleDemoLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-
-    setTimeout(() => {
-      let mockEmail = 'alexis.guerra@orimec.com.ec';
-      let mockEngId: string | undefined;
-
-      if (demoRole === 'engineer') {
-        const eng = engineers.find(e => e.id === demoEngineerId);
-        mockEmail = eng?.email || 'ingeniero@orimec.com';
-        mockEngId = demoEngineerId;
-      } else if (demoRole === 'sales') {
-        mockEmail = 'ventas@orimec.com.ec';
-      } else if (demoRole === 'orimec') {
-        mockEmail = 'personal.orimec@orimec.com.ec';
-      }
-
-      const mockUser: AppUser = {
-        uid: `demo-uid-${demoRole}-${Date.now()}`,
-        email: mockEmail,
-        role: demoRole,
-        engineerId: mockEngId
-      };
-
-      onLoginSuccess(mockUser, true);
-      setLoading(false);
-    }, 800);
-  };
-
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden select-none">
       {/* Decorative background glows */}
@@ -326,7 +290,7 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
           </div>
           <h2 className="text-2xl font-black text-white tracking-tight">ORIMEC FSM</h2>
           <p className="text-xs text-slate-300 font-semibold mt-1">
-            {isDemoMode ? 'Simulador de Acceso Local (Pruebas)' : 'Plataforma de Gestión Técnica Biomédica ORIMEC'}
+            Plataforma de Gestión Técnica Biomédica ORIMEC
           </p>
         </div>
 
@@ -427,34 +391,6 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
             </button>
           </div>
         ) : (
-        <>
-        {/* Demo Mode or Firebase Mode Selector tab */}
-        <div className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/40 mb-6">
-          <button
-            onClick={() => { setIsDemoMode(false); setError(null); }}
-            className={`flex-1 text-center py-2 text-3xs font-extrabold rounded-lg transition-all ${
-              !isDemoMode 
-                ? 'bg-indigo-650 text-white shadow-md' 
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Firebase Auth Cloud
-          </button>
-          <button
-            onClick={() => { setIsDemoMode(true); setError(null); }}
-            className={`flex-1 text-center py-2 text-3xs font-extrabold rounded-lg transition-all ${
-              isDemoMode 
-                ? 'bg-amber-600 text-white shadow-md' 
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Demo Local (Offline)
-          </button>
-        </div>
-
-        {/* Forms Container */}
-        {!isDemoMode ? (
-          /* Firebase Auth Mode Form */
           <form onSubmit={handleAuth} className="space-y-5">
             {/* Email Field */}
             <div className="space-y-1.5">
@@ -607,108 +543,6 @@ export default function Login({ engineers, onLoginSuccess, theme = 'light', onTo
               </p>
             </div>
           </form>
-        ) : (
-          /* Local Demo Mode Form */
-          <form onSubmit={handleDemoLogin} className="space-y-5">
-            {/* Demo Role Selector */}
-            <div className="space-y-1.5">
-              <label className="text-3xs font-bold text-slate-400 uppercase tracking-wider block">Seleccionar Rol de Prueba</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDemoRole('admin')}
-                  className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
-                    demoRole === 'admin'
-                      ? 'bg-slate-800 text-amber-500 border-amber-600/70 shadow-sm'
-                      : 'bg-slate-800/40 text-slate-450 border-slate-700 hover:text-white hover:border-slate-600'
-                  }`}
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>Admin</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDemoRole('sales')}
-                  className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
-                    demoRole === 'sales'
-                      ? 'bg-slate-800 text-purple-400 border-purple-600/70 shadow-sm'
-                      : 'bg-slate-800/40 text-slate-450 border-slate-700 hover:text-white hover:border-slate-600'
-                  }`}
-                >
-                  <Briefcase className="w-3.5 h-3.5" />
-                  <span>Vendedor</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDemoRole('engineer')}
-                  className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
-                    demoRole === 'engineer'
-                      ? 'bg-slate-800 text-teal-500 border-teal-600/70 shadow-sm'
-                      : 'bg-slate-800/40 text-slate-450 border-slate-700 hover:text-white hover:border-slate-600'
-                  }`}
-                >
-                  <User className="w-3.5 h-3.5" />
-                  <span>Ingeniero</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDemoRole('orimec')}
-                  className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl border font-bold text-3xs transition-all cursor-pointer ${
-                    demoRole === 'orimec'
-                      ? 'bg-slate-800 text-sky-400 border-sky-600/70 shadow-sm'
-                      : 'bg-slate-800/40 text-slate-450 border-slate-700 hover:text-white hover:border-slate-600'
-                  }`}
-                >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>Personal ORIMEC</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Engineer Profile selector (only if engineer is chosen) */}
-            {demoRole === 'engineer' && (
-              <div className="space-y-1.5 animate-fadeIn">
-                <label className="text-3xs font-bold text-slate-400 uppercase tracking-wider block">Simular como Técnico</label>
-                <select
-                  value={demoEngineerId}
-                  onChange={e => setDemoEngineerId(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-white text-xs px-3.5 py-3 rounded-xl focus:outline-none focus:border-indigo-500 transition-all font-semibold cursor-pointer"
-                >
-                  {engineers.map(eng => (
-                    <option key={eng.id} value={eng.id}>
-                      {eng.name} ({eng.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Demo Notice Banner */}
-            <div className="p-3 bg-amber-900/10 border border-amber-800/20 text-[9px] text-amber-300/80 rounded-xl leading-normal flex gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
-              <p>
-                <strong>Modo Simulado:</strong> No requiere internet ni configuración en la consola. Es perfecto para probar rápidamente los flujos de vista entre Admin y Técnico.
-              </p>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-amber-600 hover:bg-amber-550 disabled:bg-amber-900 text-white font-bold py-3.5 px-4 rounded-xl text-2xs cursor-pointer shadow-md transition-all flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <span>Ingresar (Prueba Local)</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-        )}
-        </>
         )}
       </div>
     </div>

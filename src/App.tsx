@@ -91,16 +91,10 @@ export default function App() {
   const [staleConnectionWarning, setStaleConnectionWarning] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
   // Escuchar el estado de autenticación de Firebase
   useEffect(() => {
-    if (isDemoMode) {
-      setAuthLoading(false);
-      return;
-    }
-
     setAuthLoading(true);
     const unsubAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -226,7 +220,7 @@ export default function App() {
     });
 
     return () => unsubAuth();
-  }, [isDemoMode]);
+  }, []);
 
   // Detectar pestañas dejadas abiertas por mucho tiempo (horas/días) en segundo plano: la
   // conexión en tiempo real de Firestore puede quedar "colgada" silenciosamente (sueño del
@@ -1405,7 +1399,7 @@ export default function App() {
 
   // ─── CIBERSEGURIDAD: Cierre de sesión automático por inactividad (30 min) ───
   useEffect(() => {
-    if (!currentUser || isDemoMode) return;
+    if (!currentUser) return;
 
     const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos de inactividad
     let lastActivity = Date.now();
@@ -1432,7 +1426,7 @@ export default function App() {
       monitoredEvents.forEach(evt => window.removeEventListener(evt, resetTimer));
       clearInterval(checkInterval);
     };
-  }, [currentUser, isDemoMode, handleLogout]);
+  }, [currentUser, handleLogout]);
 
   const handleUpdateUserRole = useCallback(async (uid: string, role: 'admin' | 'engineer' | 'sales' | 'orimec', engineerId?: string) => {
     try {
@@ -1532,9 +1526,8 @@ export default function App() {
         engineers={engineers}
         theme={theme}
         onToggleTheme={toggleTheme}
-        onLoginSuccess={(user, isDemo) => {
+        onLoginSuccess={(user) => {
           setCurrentUser(user);
-          setIsDemoMode(isDemo);
           setActiveTab(user.role === 'admin' ? 'admin' : user.role === 'sales' ? 'sales' : user.role === 'orimec' ? 'orimec' : 'engineer');
         }}
       />
@@ -1608,7 +1601,6 @@ export default function App() {
           ) : undefined;
 
           const hasFullAccess = currentUser.role === 'admin' ||
-            isDemoMode ||
             userEmailClean === 'johana.ruales@orimec.com.ec' ||
             !!matchedCurrentEng?.customPermissions;
 
@@ -1617,11 +1609,11 @@ export default function App() {
           const engineerTab = { id: 'engineer', label: 'Ingeniero Portal', icon: Smartphone } as const;
           const orimecTab = { id: 'orimec', label: 'ORIMEC Portal', icon: Layers } as const;
 
-          // Mismo subconjunto que antes para los casos con acceso ampliado (admin/demo/casos
+          // Mismo subconjunto que antes para los casos con acceso ampliado (admin/casos
           // especiales), simplemente sumando siempre ORIMEC Portal; Ingeniero/Vendedor Portal
           // siguen restringidos por rol para el resto de usuarios.
           const visiblePortalTabs = hasFullAccess
-            ? (currentUser.role === 'admin' || isDemoMode
+            ? (currentUser.role === 'admin'
                 ? [adminTab, salesTab, engineerTab, orimecTab]
                 : [adminTab, engineerTab, orimecTab])
             : currentUser.role === 'sales'
@@ -1652,7 +1644,7 @@ export default function App() {
                       ? 'Administrador'
                       : (userEmailClean === 'johana.ruales@orimec.com.ec' || matchedCurrentEng?.customPermissions)
                       ? 'Especial (IT & Administración)'
-                      : currentUser.role === 'sales' ? 'Vendedor' : currentUser.role === 'orimec' ? 'Personal ORIMEC' : 'Ingeniero'} {isDemoMode && '(Demo)'}
+                      : currentUser.role === 'sales' ? 'Vendedor' : currentUser.role === 'orimec' ? 'Personal ORIMEC' : 'Ingeniero'}
                   </p>
                 </div>
                 <button
