@@ -14442,7 +14442,14 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         // Dates for Table 2
         let rawDates = con.maintenanceDates || [];
         if (selectedEquipmentForSchedulePdf && rawDates.length > 0) {
-          const filterByEq = rawDates.filter(d => d.includes(`|${selectedEquipmentForSchedulePdf.name}`));
+          // Las fechas sin "|equipo" se generaron para "Todos los Equipos" y aplican a
+          // cualquier equipo del contrato -- deben incluirse igual que las que sí llevan la
+          // etiqueta exacta de este equipo (antes se excluían, dejando fuera del cronograma
+          // impreso las fechas generadas en modo "Todos los Equipos").
+          const filterByEq = rawDates.filter(d => {
+            const eqTag = d.split('|')[1];
+            return !eqTag || eqTag === selectedEquipmentForSchedulePdf.name;
+          });
           if (filterByEq.length > 0) {
             rawDates = filterByEq;
           }
