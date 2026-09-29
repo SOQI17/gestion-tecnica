@@ -1378,28 +1378,29 @@ export default function App() {
     }
   }, [currentUser, showNotification, workOrders, equipments, contracts, maintenanceRegistries, clients]);
 
-  // Utilidad de un solo uso: antes de la corrección, las visitas autogeneradas desde un
-  // contrato caían por defecto en ENG-001 (Andrés Vega), inflando sus métricas. Esto
-  // desasigna las que aún no se ejecutaron (Pendiente/En Proceso), dejando intactas las que
-  // ya fueron Realizadas/Reportadas/Conciliadas para no alterar historial ya cerrado.
+  // Utilidad de un solo uso: antes de la corrección, dos caminos distintos (cronograma
+  // autogenerado desde contrato, y el formulario manual de "Nueva Orden de Trabajo" con el
+  // dropdown preseleccionado) dejaban a ENG-001 (Andrés Vega) como ingeniero por defecto,
+  // inflando sus métricas. Esto desasigna TODAS las que aún no se ejecutaron
+  // (Pendiente/En Proceso), sin importar cómo se crearon, dejando intactas las que ya fueron
+  // Realizadas/Reportadas/Conciliadas para no alterar historial ya cerrado.
   const handleCleanupAutoAssignedWorkOrders = useCallback(async () => {
     const affected = workOrders.filter(wo =>
       wo.engineerId === 'ENG-001' &&
-      (wo.notes || '').includes('autogenerado bajo Contrato') &&
       wo.status !== 'Realizado' && wo.status !== 'Reportado' && wo.status !== 'Conciliado'
     );
     if (affected.length === 0) {
-      showNotification('No se encontraron órdenes autogeneradas pendientes asignadas por defecto a Andrés Vega.', 'info');
+      showNotification('No se encontraron órdenes pendientes asignadas por defecto a Andrés Vega.', 'info');
       return;
     }
-    if (!window.confirm(`Se encontraron ${affected.length} órdenes autogeneradas (Pendientes/En Proceso) asignadas por defecto a Andrés Vega.\n\nSe les quitará el ingeniero para que las reasignes manualmente. Las que ya están Realizadas/Reportadas/Conciliadas NO se tocan.\n\n¿Continuar?`)) {
+    if (!window.confirm(`Se encontraron ${affected.length} órdenes Pendientes/En Proceso asignadas a Andrés Vega.\n\nSe les quitará el ingeniero para que las reasignes manualmente. Las que ya están Realizadas/Reportadas/Conciliadas NO se tocan.\n\n¿Continuar?`)) {
       return;
     }
     try {
       for (const wo of affected) {
         await setDoc(doc(db, 'workOrders', wo.id), { engineerId: '' }, { merge: true });
       }
-      showNotification(`¡Listo! Se desasignaron ${affected.length} órdenes autogeneradas que aún no se habían ejecutado.`, 'success');
+      showNotification(`¡Listo! Se desasignaron ${affected.length} órdenes que aún no se habían ejecutado.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, 'workOrders/cleanup-auto-assigned');
     }
@@ -1744,7 +1745,7 @@ export default function App() {
                     <button
                       onClick={handleCleanupAutoAssignedWorkOrders}
                       className="text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 text-[9px] font-bold px-2 py-1 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all cursor-pointer flex items-center gap-1"
-                      title="Quitar el ingeniero a las visitas autogeneradas (pendientes) que quedaron por defecto en Andrés Vega antes de la corrección"
+                      title="Quitar el ingeniero a todas las órdenes pendientes/en proceso que quedaron por defecto en Andrés Vega antes de la corrección"
                     >
                       <Wrench className="w-3 h-3 text-amber-500" />
                       <span className="hidden sm:inline">Limpiar Auto-Asignados</span>

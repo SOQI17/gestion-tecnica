@@ -1861,7 +1861,9 @@ export default function AdminPortal({
   const [newWOClient, setNewWOClient] = useState(clients[0]?.id || '');
   const [newWOClientSearch, setNewWOClientSearch] = useState('');
   const [newWOCity, setNewWOCity] = useState<string>('Quito');
-  const [newWOEngineer, setNewWOEngineer] = useState(engineers[0]?.id || '');
+  // Sin ingeniero preseleccionado: antes defaulteaba a engineers[0] (Andrés Vega) y si el
+  // admin no cambiaba el dropdown, la orden quedaba silenciosamente a su nombre.
+  const [newWOEngineer, setNewWOEngineer] = useState('');
   const [woEngDropdownOpen, setWoEngDropdownOpen] = useState(false);
   const [woEngSearchQuery, setWoEngSearchQuery] = useState('');
   const [woSupportEngDropdownOpen, setWoSupportEngDropdownOpen] = useState(false);
