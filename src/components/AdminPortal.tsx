@@ -10986,17 +10986,29 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 </select>
                               )}
 
-                              <button
-                                onClick={() => {
-                                  if (onUpdateUserRole) {
-                                    onUpdateUserRole(user.uid, curRole, curEngId || undefined);
-                                  }
-                                }}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg transition-all cursor-pointer shadow-xs hover:shadow whitespace-nowrap flex items-center gap-1"
-                              >
-                                <Check className="w-3 h-3" />
-                                <span>Guardar Rol</span>
-                              </button>
+                              {(() => {
+                                const hasPendingChange = curRole !== ((user.role as any) || 'engineer') ||
+                                  (curRole === 'engineer' && curEngId !== (user.engineerId || ''));
+                                return (
+                                  <button
+                                    onClick={() => {
+                                      if (onUpdateUserRole && hasPendingChange) {
+                                        onUpdateUserRole(user.uid, curRole, curEngId || undefined);
+                                      }
+                                    }}
+                                    disabled={!hasPendingChange}
+                                    title={hasPendingChange ? 'Guardar el nuevo rol seleccionado' : 'Este usuario ya tiene este rol guardado'}
+                                    className={`font-extrabold text-xs px-3 py-1.5 rounded-lg transition-all whitespace-nowrap flex items-center gap-1 ${
+                                      hasPendingChange
+                                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer shadow-xs hover:shadow'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-350 dark:text-slate-500 cursor-not-allowed'
+                                    }`}
+                                  >
+                                    <Check className="w-3 h-3" />
+                                    <span>{hasPendingChange ? 'Guardar Rol' : 'Guardado'}</span>
+                                  </button>
+                                );
+                              })()}
 
                               {user.status === 'pending' && onApproveUser && (
                                 <button
