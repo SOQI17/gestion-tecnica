@@ -198,7 +198,15 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // 17. Registros de Auditoría Inmutables (Audit Logs)
+    // 17. Alertas de Administrador (ej. contrato nuevo subido desde Vendedor Portal) — solo el
+    // admin las lee/gestiona; Ventas/Admin pueden generarlas al ocurrir el evento que las dispara.
+    match /adminAlerts/{alertId} {
+      allow read, update: if isAdmin();
+      allow create: if isBackoffice() && isApproved();
+      allow delete: if isAdmin();
+    }
+
+    // 18. Registros de Auditoría Inmutables (Audit Logs)
     match /auditLogs/{logId} {
       allow read: if isAdmin();
       allow create: if isAuthenticated();

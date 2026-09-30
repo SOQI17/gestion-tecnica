@@ -407,3 +407,16 @@ export interface EngineerEvaluation360 {
   actionPlan?: string;
   updatedAt?: string;
 }
+
+export interface AdminAlert {
+  id: string;
+  type: 'new_contract';
+  title: string;
+  message: string;
+  contractId?: string;
+  clientName?: string;
+  createdByEmail?: string;
+  createdByName?: string;
+  createdAt: string;
+  read: boolean;
+}

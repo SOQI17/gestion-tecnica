@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, startTransition } from 'react';
-import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity, Sun, Moon, Wrench, Settings } from 'lucide-react';
+import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity, Sun, Moon, Wrench, Settings, Bell, FileText } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
-import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360, OrimecDocumentRecord } from './types';
+import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360, OrimecDocumentRecord, AdminAlert } from './types';
 import AdminPortal, { getDefaultPermissionsForSpecialty } from './components/AdminPortal';
 import EngineerPortal from './components/EngineerPortal';
 import OrimecPortal from './components/OrimecPortal';
@@ -57,6 +57,7 @@ export default function App() {
   const [permissions, setPermissions] = useState<EngineerPermission[]>([]);
   const [maintenanceRegistries, setMaintenanceRegistries] = useState<MaintenanceRegistry[]>([]);
   const [orimecDocuments, setOrimecDocuments] = useState<OrimecDocumentRecord[]>([]);
+  const [adminAlerts, setAdminAlerts] = useState<AdminAlert[]>([]);
   const [evaluations360, setEvaluations360] = useState<EngineerEvaluation360[]>(() => {
     try {
       const saved = localStorage.getItem('fsm_evaluations360');
@@ -90,6 +91,7 @@ export default function App() {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' | 'warning' } | null>(null);
   const [staleConnectionWarning, setStaleConnectionWarning] = useState(false);
   const [isAdminActionsOpen, setIsAdminActionsOpen] = useState(false);
+  const [isAlertsPanelOpen, setIsAlertsPanelOpen] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -495,6 +497,27 @@ export default function App() {
     };
   }, []);
 
+  // Alertas de administrador (ej. contrato nuevo subido desde el Vendedor Portal): solo se
+  // suscribe si el usuario actual es admin, ya que las reglas de Firestore restringen la
+  // lectura de esta colección exclusivamente a ese rol.
+  useEffect(() => {
+    if (currentUser?.role !== 'admin') {
+      setAdminAlerts([]);
+      return;
+    }
+    const unsubAlerts = onSnapshot(collection(db, 'adminAlerts'), (snapshot) => {
+      const list: AdminAlert[] = [];
+      snapshot.forEach(docSnap => {
+        list.push(docSnap.data() as AdminAlert);
+      });
+      list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+      startTransition(() => setAdminAlerts(list));
+    }, (error) => {
+      console.warn("Error leyendo alertas de administrador:", error);
+    });
+    return () => unsubAlerts();
+  }, [currentUser?.role]);
+
   const handleClearAllData = async () => {
     if (window.confirm("¿Está seguro de que desea borrar toda la información (órdenes, reportes, clientes y técnicos) de Firestore para empezar desde cero?")) {
       try {
@@ -705,10 +728,31 @@ export default function App() {
     try {
       await setDoc(doc(db, 'contracts', newContract.id), cleanUndefined(newContract));
       showNotification(`Contrato ${newContract.id} registrado con éxito.`, 'success');
+      if (currentUser?.role === 'sales') {
+        const clientName = clients.find(c => c.id === newContract.clientId)?.name || 'Cliente sin nombre';
+        const alertId = `ALERT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const alert: AdminAlert = {
+          id: alertId,
+          type: 'new_contract',
+          title: 'Nuevo contrato subido',
+          message: `${currentUser?.name || currentUser?.email || 'Un vendedor'} subió el contrato ${newContract.id} para ${clientName}.`,
+          contractId: newContract.id,
+          clientName,
+          createdByEmail: currentUser?.email,
+          createdByName: currentUser?.name,
+          createdAt: new Date().toISOString(),
+          read: false
+        };
+        try {
+          await setDoc(doc(db, 'adminAlerts', alertId), alert);
+        } catch (alertError) {
+          console.warn('No se pudo crear la alerta de administrador:', alertError);
+        }
+      }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `contracts/${newContract.id}`);
     }
-  }, [showNotification]);
+  }, [showNotification, currentUser, clients]);
 
   const handleUpdateContract = useCallback(async (updatedContract: Contract) => {
     setContracts(prev => {
@@ -1407,6 +1451,26 @@ export default function App() {
     }
   }, [workOrders, showNotification]);
 
+  const handleMarkAlertRead = useCallback(async (alertId: string) => {
+    try {
+      await setDoc(doc(db, 'adminAlerts', alertId), { read: true }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `adminAlerts/${alertId}`);
+    }
+  }, []);
+
+  const handleMarkAllAlertsRead = useCallback(async () => {
+    const unread = adminAlerts.filter(a => !a.read);
+    if (unread.length === 0) return;
+    try {
+      for (const alert of unread) {
+        await setDoc(doc(db, 'adminAlerts', alert.id), { read: true }, { merge: true });
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'adminAlerts/mark-all-read');
+    }
+  }, [adminAlerts]);
+
   const handleBatchReportWorkOrders = useCallback(async (
     newReports: TechnicalReport[],
     woUpdates: { id: string; status: WorkOrderStatus }[]
@@ -1707,6 +1771,68 @@ export default function App() {
               >
                 {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
               </button>
+
+              {/* Admin Alerts Bell */}
+              {currentUser.role === 'admin' && (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsAlertsPanelOpen(prev => !prev)}
+                    className={`relative text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer ${isAlertsPanelOpen ? 'bg-slate-100 dark:bg-slate-800' : ''}`}
+                    title="Alertas de administrador"
+                  >
+                    <Bell className="w-3.5 h-3.5" />
+                    {adminAlerts.some(a => !a.read) && (
+                      <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-rose-600 text-white text-[8px] font-extrabold flex items-center justify-center leading-none">
+                        {adminAlerts.filter(a => !a.read).length > 9 ? '9+' : adminAlerts.filter(a => !a.read).length}
+                      </span>
+                    )}
+                  </button>
+
+                  {isAlertsPanelOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsAlertsPanelOpen(false)} />
+                      <div className="absolute right-0 top-full mt-1 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                        <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+                          <p className="text-[10px] font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wide">Alertas</p>
+                          {adminAlerts.some(a => !a.read) && (
+                            <button
+                              onClick={handleMarkAllAlertsRead}
+                              className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                            >
+                              Marcar todas leídas
+                            </button>
+                          )}
+                        </div>
+                        <div className="max-h-80 overflow-y-auto">
+                          {adminAlerts.length === 0 ? (
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold text-center py-6 px-3">No hay alertas por el momento.</p>
+                          ) : (
+                            adminAlerts.map(alert => (
+                              <button
+                                key={alert.id}
+                                onClick={() => { if (!alert.read) handleMarkAlertRead(alert.id); }}
+                                className={`w-full text-left px-3 py-2.5 border-b border-slate-50 dark:border-slate-800 last:border-b-0 flex gap-2.5 transition-colors cursor-pointer ${
+                                  alert.read ? 'hover:bg-slate-50 dark:hover:bg-slate-800/60' : 'bg-indigo-50/60 dark:bg-indigo-950/40 hover:bg-indigo-50 dark:hover:bg-indigo-950/60'
+                                }`}
+                              >
+                                <FileText className={`w-4 h-4 shrink-0 mt-0.5 ${alert.read ? 'text-slate-400 dark:text-slate-500' : 'text-indigo-600 dark:text-indigo-400'}`} />
+                                <div className="min-w-0 flex-1">
+                                  <p className={`text-[10px] leading-snug ${alert.read ? 'font-semibold text-slate-600 dark:text-slate-300' : 'font-extrabold text-slate-800 dark:text-slate-100'}`}>{alert.title}</p>
+                                  <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">{alert.message}</p>
+                                  <p className="text-[8px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
+                                    {new Date(alert.createdAt).toLocaleString('es-EC', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  </p>
+                                </div>
+                                {!alert.read && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 shrink-0 mt-1.5" />}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* User Status and Logout Button */}
               <div className="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-3 mr-1">
