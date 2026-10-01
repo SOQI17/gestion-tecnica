@@ -8672,7 +8672,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         <select
                           value={editedWO?.status || 'Pendiente'}
                           onChange={e => setEditedWO(prev => prev ? { ...prev, status: e.target.value as any } : null)}
-                          className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold dark:text-slate-200"
+                          disabled={effectivePermissions.canChangeWorkOrderStatus === false}
+                          title={effectivePermissions.canChangeWorkOrderStatus === false ? 'Solo el ingeniero asignado o un administrador pueden cambiar el estado de ejecución.' : undefined}
+                          className={`w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold dark:text-slate-200 ${
+                            effectivePermissions.canChangeWorkOrderStatus === false ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                         >
                           {(['Pendiente', 'En Proceso', 'Realizado', 'Reportado', 'Conciliado'] as WorkOrderStatus[]).map(s => (
                             <option key={s} value={s}>{s}</option>
@@ -8969,10 +8973,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             <AlertCircle className="w-5 h-5 text-slate-500 dark:text-slate-500 mx-auto mb-1.5" />
                             <p className="text-2xs font-extrabold text-slate-800 dark:text-slate-200">Sin Reporte de Campo Sincronizado</p>
                             <p className="text-[10px] text-slate-600 dark:text-slate-300 mt-0.5">
-                              Esta orden está pendiente de ejecución en campo por el ingeniero asignado. Como administrador, puede registrar la entrega o marcarla como realizada directamente:
+                              {userRole === 'admin'
+                                ? 'Esta orden está pendiente de ejecución en campo por el ingeniero asignado. Como administrador, puede registrar la entrega o marcarla como realizada directamente:'
+                                : 'Esta orden está pendiente de ejecución en campo por el ingeniero asignado. Solo un administrador puede registrar la entrega o marcarla como realizada manualmente.'}
                             </p>
                           </div>
-                          {infoWO.status !== 'Reportado' && infoWO.status !== 'Conciliado' && (
+                          {userRole === 'admin' && infoWO.status !== 'Reportado' && infoWO.status !== 'Conciliado' && (
                             <div className="flex justify-center gap-2 pt-1">
                               {infoWO.status !== 'Realizado' && (
                                 <button

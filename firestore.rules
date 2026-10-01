@@ -105,10 +105,36 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // 6. Órdenes de Trabajo (Work Orders) — operativa compartida entre Admin, Ventas e Ingeniería
+    // 6. Órdenes de Trabajo (Work Orders) — operativa compartida entre Admin, Ventas e Ingeniería.
+    // Antes cualquier usuario aprobado podía crear/editar CUALQUIER OT sin importar a quién
+    // estuviera asignada. Ahora: admin sin restricciones; Ventas puede agendar/reasignar/editar
+    // datos pero no marcar el trabajo como ejecutado ni borrarlo (eso certifica que se hizo en
+    // campo); el ingeniero asignado (o su soporte) puede cambiar estado/reportar pero no
+    // reasignarse la orden a otro ingeniero ni borrarla.
     match /workOrders/{workOrderId} {
       allow read: if isAuthenticated() && isApproved() && !isOrimecOnly();
-      allow create, update: if isAuthenticated() && isApproved() && !isOrimecOnly();
+
+      allow create: if isAuthenticated() && isApproved() && !isOrimecOnly() && (
+        isBackoffice() ||
+        (isFieldStaff() && (
+          request.resource.data.engineerId == '' ||
+          request.resource.data.engineerId == myEngineerId() ||
+          request.resource.data.supportEngineerId == myEngineerId()
+        ))
+      );
+
+      allow update: if isAdmin() || (
+        isAuthenticated() && isApproved() && !isOrimecOnly() && (
+          (isBackoffice() &&
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'deleted'])) ||
+          (isFieldStaff() &&
+            (resource.data.engineerId == myEngineerId() ||
+             resource.data.supportEngineerId == myEngineerId() ||
+             myEngineerId() in resource.data.get('supportEngineerIds', [])) &&
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['engineerId', 'deleted']))
+        )
+      );
+
       allow delete: if isAdmin();
     }
 

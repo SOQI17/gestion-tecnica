@@ -524,20 +524,22 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                     </span>
                   )}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setIsReportMonthModalOpen(true)}
-                  disabled={currentMonthWOs.filter(wo => wo.status !== 'Reportado' && wo.status !== 'Conciliado').length === 0}
-                  className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
-                    currentMonthWOs.filter(wo => wo.status !== 'Reportado' && wo.status !== 'Conciliado').length === 0
-                      ? 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50'
-                      : 'bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700'
-                  }`}
-                  title="Reportar todas las órdenes de este mes que no tengan reporte"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Reportar Mes</span>
-                </button>
+                {effectivePermissions.canChangeWorkOrderStatus !== false && (
+                  <button
+                    type="button"
+                    onClick={() => setIsReportMonthModalOpen(true)}
+                    disabled={currentMonthWOs.filter(wo => wo.status !== 'Reportado' && wo.status !== 'Conciliado').length === 0}
+                    className={`font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border ${
+                      currentMonthWOs.filter(wo => wo.status !== 'Reportado' && wo.status !== 'Conciliado').length === 0
+                        ? 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50'
+                        : 'bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700'
+                    }`}
+                    title="Reportar todas las órdenes de este mes que no tengan reporte"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Reportar Mes</span>
+                  </button>
+                )}
 
                 {effectivePermissions.canDeleteWorkOrders !== false && (
                   <button
@@ -1552,7 +1554,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                       <button
                                         type="button"
                                         id={`toggle-deliver-state-${wo.id}`}
-                                        disabled={!matchedReport && !isDelivered}
+                                        disabled={(!matchedReport && !isDelivered) || effectivePermissions.canApproveReports === false}
                                         onClick={() => {
                                           if (isDelivered) {
                                             onValidateReport(wo.id, 'rechazado', 'Se cambia estatus manualmente a Reportado desde tabla de conciliación.');
@@ -1562,8 +1564,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
                                         }}
                                         className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-205 focus:outline-hidden ${
                                           isDelivered ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-700'
-                                        } ${!matchedReport && !isDelivered ? 'opacity-40 cursor-not-allowed' : ''}`}
-                                        title={!matchedReport ? "El ingeniero de soporte debe subir el reporte primero para habilitar conciliación" : "Cambiar estatus de conciliación"}
+                                        } ${(!matchedReport && !isDelivered) || effectivePermissions.canApproveReports === false ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                        title={effectivePermissions.canApproveReports === false ? 'Solo un administrador o ingeniero puede conciliar reportes' : !matchedReport ? "El ingeniero de soporte debe subir el reporte primero para habilitar conciliación" : "Cambiar estatus de conciliación"}
                                       >
                                         <span
                                           className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-205 ${
@@ -1835,7 +1837,11 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
 
                                 {/* Action footer */}
                                 <div className="bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-700 p-4 md:p-6 space-y-4">
-                                  {isRechazando ? (
+                                  {effectivePermissions.canApproveReports === false ? (
+                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center py-1">
+                                      Solo un administrador o ingeniero puede aprobar/rechazar y conciliar este reporte.
+                                    </p>
+                                  ) : isRechazando ? (
                                     <div className="space-y-3">
                                       <label className="block text-xs font-bold text-red-600 dark:text-red-400 uppercase">Motivo del rechazo técnico</label>
                                       <textarea
