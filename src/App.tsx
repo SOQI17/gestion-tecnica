@@ -1943,7 +1943,7 @@ export default function App() {
                   <p className="hidden sm:block text-[9px] font-extrabold text-slate-900 dark:text-slate-100 leading-none">{currentUser.email}</p>
                   <p className="text-[8px] font-bold text-indigo-650 dark:text-indigo-400 mt-1 leading-none uppercase tracking-wide">
                     {currentUser.role === 'admin'
-                      ? 'Administrador'
+                      ? (isSuperAdmin ? '👑 Super Admin' : 'Administrador')
                       : (userEmailClean === 'johana.ruales@orimec.com.ec' || matchedCurrentEng?.customPermissions)
                       ? 'Especial (IT & Administración)'
                       : currentUser.role === 'sales' ? 'Vendedor' : currentUser.role === 'orimec' ? 'Personal ORIMEC' : 'Ingeniero'}

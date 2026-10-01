@@ -10842,19 +10842,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                               <div className="flex items-center gap-2 flex-wrap text-[10px]">
                                 <span className="text-slate-500 dark:text-slate-500 font-semibold">Rol Asignado:</span>
-                                <span className={`font-black uppercase px-2 py-0.5 rounded text-[9px] border ${
-                                  user.role === 'admin'
-                                    ? 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800'
-                                    : user.role === 'engineer'
-                                    ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
-                                    : user.role === 'sales'
-                                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                                    : user.role === 'orimec'
-                                    ? 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800'
-                                    : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-                                }`}>
-                                  {user.role === 'admin' ? '👑 Administrador' : user.role === 'engineer' ? '🛠️ Ingeniero/Técnico' : user.role === 'sales' ? '💼 Ventas/Comercial' : user.role === 'orimec' ? '🏢 Personal ORIMEC' : '⚠️ Sin Asignar'}
-                                </span>
+                                {user.role === 'admin' && (user.email || '').trim().toLowerCase() === 'alexis.guerra@orimec.com.ec' ? (
+                                  <span className="font-black uppercase px-2 py-0.5 rounded text-[9px] border bg-gradient-to-r from-amber-100 to-purple-100 dark:from-amber-950 dark:to-purple-950 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700">
+                                    👑 Super Admin
+                                  </span>
+                                ) : (
+                                  <span className={`font-black uppercase px-2 py-0.5 rounded text-[9px] border ${
+                                    user.role === 'admin'
+                                      ? 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                      : user.role === 'engineer'
+                                      ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+                                      : user.role === 'sales'
+                                      ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                      : user.role === 'orimec'
+                                      ? 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800'
+                                      : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                                  }`}>
+                                    {user.role === 'admin' ? '👑 Administrador' : user.role === 'engineer' ? '🛠️ Ingeniero/Técnico' : user.role === 'sales' ? '💼 Ventas/Comercial' : user.role === 'orimec' ? '🏢 Personal ORIMEC' : '⚠️ Sin Asignar'}
+                                  </span>
+                                )}
 
                                 {user.signupRoleLabel && (
                                   <span className="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[9px] font-bold px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
