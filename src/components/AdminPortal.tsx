@@ -52,6 +52,7 @@ import { VacacionesTab } from './admin/VacacionesTab';
 import { AgendamientoTab, DashboardPrintColumns, DEFAULT_DASHBOARD_PRINT_COLUMNS } from './admin/AgendamientoTab';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl, triggerDirectDownload } from '../utils/cloudinary';
 import { DEFAULT_GLOBAL_ROLE_TEMPLATES, getDefaultPermissionsForSpecialty } from '../utils/permissions';
+import { findMatchingClient } from '../utils/clientMatching';
 
 const cleanStr = (s: string) => (s || '')
   .toLowerCase()
@@ -2704,19 +2705,8 @@ export default function AdminPortal({
           return 'CLI-101';
         }
 
-        const foundExact = tempClients.find(c => {
-          const normC = c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-          return normC === normClean;
-        });
-        if (foundExact) return foundExact.id;
-
-        const foundSoft = tempClients.find(c => {
-          const normC = c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-          const cleanNormC = normC.replace(/[^a-z0-9]/g, '');
-          if (!cleanNormC) return false;
-          return normC.includes(normClean) || normClean.includes(normC);
-        });
-        if (foundSoft) return foundSoft.id;
+        const found = findMatchingClient(cleanName, tempClients);
+        if (found) return found.id;
 
         const newId = `CLI-DYN-${100 + tempClients.length}-${Math.floor(Math.random()*100)}`;
         const newCli: Client = {
@@ -5726,24 +5716,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           // Check if client RUC/ID is already in currentClients
           let foundClient = resolvedClientId ? currentClients.find(c => c.id === resolvedClientId) : undefined;
           if (!foundClient && clientNameVal) {
-            // Check if there is a soft-match by name in currentClients
-            const cleanClientName = (str: string): string => {
-              return str.toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .replace(/\b(s\.?a\.?|c\.?a\.?|cia\.?|ltda\.?|limitada|corp\.?|corporation|inc\.?|incorporated|s\.?a\.?s\.?|de|el|la|los|las)\b/g, '')
-                .replace(/-?\s*\b(cue|uio|gye|quito|guayaquil|cuenca|ambato|loja|manta|portoviejo|riobamba)\b/gi, '')
-                .replace(/[^a-z0-9]/g, '')
-                .trim();
-            };
-            const cleanTarget = cleanClientName(clientNameVal);
-            if (cleanTarget) {
-              foundClient = currentClients.find(c => {
-                const cleanDbName = cleanClientName(c.name);
-                if (!cleanDbName) return false;
-                return cleanDbName.includes(cleanTarget) || cleanTarget.includes(cleanDbName);
-              });
-            }
+            foundClient = findMatchingClient(clientNameVal, currentClients);
           }
 
           if (foundClient) {

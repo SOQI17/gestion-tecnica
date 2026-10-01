@@ -3,6 +3,7 @@ import { Smartphone, User, ArrowLeft, CheckCircle, Navigation, Play, FileText, C
 import { WorkOrder, Engineer, Client, TechnicalReport, MaterialUsed, Specialty, Vacation, EngineerPermission } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { uploadFileToCloudinary, compressImage } from '../utils/cloudinary';
+import { findMatchingClient } from '../utils/clientMatching';
 
 interface EngineerPortalProps {
   engineers: Engineer[];
@@ -356,12 +357,7 @@ export default function EngineerPortal({
         const alphaNumClean = lower.replace(/[^a-z0-9]/g, '');
         if (!alphaNumClean) return 'CLI-101';
 
-        const found = tempClients.find(c => {
-          const cNameLower = c.name.toLowerCase();
-          const cleanCName = cNameLower.replace(/[^a-z0-9]/g, '');
-          if (!cleanCName) return false;
-          return cNameLower === lower || cNameLower.includes(lower) || lower.includes(cNameLower);
-        });
+        const found = findMatchingClient(cleanName, tempClients);
         if (found) return found.id;
 
         if (lower.includes('arcos')) return 'CLI-101';
