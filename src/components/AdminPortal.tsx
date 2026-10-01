@@ -51,6 +51,7 @@ import { ContratosTab } from './admin/ContratosTab';
 import { VacacionesTab } from './admin/VacacionesTab';
 import { AgendamientoTab, DashboardPrintColumns, DEFAULT_DASHBOARD_PRINT_COLUMNS } from './admin/AgendamientoTab';
 import { uploadFileToCloudinary, getCleanCloudinaryUrl, triggerDirectDownload } from '../utils/cloudinary';
+import { DEFAULT_GLOBAL_ROLE_TEMPLATES, getDefaultPermissionsForSpecialty } from '../utils/permissions';
 
 const cleanStr = (s: string) => (s || '')
   .toLowerCase()
@@ -59,127 +60,6 @@ const cleanStr = (s: string) => (s || '')
   .replace(/[^a-z0-9]/g, " ")
   .replace(/\s+/g, " ")
   .trim();
-
-export const DEFAULT_GLOBAL_ROLE_TEMPLATES: RoleTemplates = {
-  Ventas: {
-    canViewWorkOrders: true,
-    canCreateWorkOrders: true,
-    canEditWorkOrders: true,
-    canDeleteWorkOrders: false,
-    canChangeWorkOrderStatus: false,
-
-    canViewContracts: true,
-    canCreateContracts: true,
-    canEditContracts: true,
-    canDeleteContracts: false,
-    canViewContractValues: true,
-
-    canViewReports: true,
-    canCreateReports: false,
-    canApproveReports: false,
-    canExportReportsPdf: true,
-
-    canViewClients: true,
-    canEditClients: true,
-    canViewEquipments: true,
-    canEditEquipments: true,
-
-    canViewRegistry: true,
-    canEditRegistry: false,
-
-    canViewVacations: false,
-    canManageVacations: false,
-
-    canViewTrainings: false,
-    canManageTrainings: false,
-
-    canManageUsers: false,
-    canViewAuditLogs: false,
-    canExportData: true
-  },
-  Ingeniería: {
-    canViewWorkOrders: true,
-    canCreateWorkOrders: true,
-    canEditWorkOrders: true,
-    canDeleteWorkOrders: false,
-    canChangeWorkOrderStatus: true,
-
-    canViewContracts: true,
-    canCreateContracts: true,
-    canEditContracts: true,
-    canDeleteContracts: false,
-    canViewContractValues: false,
-
-    canViewReports: true,
-    canCreateReports: true,
-    canApproveReports: true,
-    canExportReportsPdf: true,
-
-    canViewClients: true,
-    canEditClients: true,
-    canViewEquipments: true,
-    canEditEquipments: true,
-
-    canViewRegistry: true,
-    canEditRegistry: true,
-
-    canViewVacations: true,
-    canManageVacations: true,
-
-    canViewTrainings: true,
-    canManageTrainings: true,
-
-    canManageUsers: false,
-    canViewAuditLogs: true,
-    canExportData: true
-  },
-  Admin: {
-    canViewWorkOrders: true,
-    canCreateWorkOrders: true,
-    canEditWorkOrders: true,
-    canDeleteWorkOrders: true,
-    canChangeWorkOrderStatus: true,
-
-    canViewContracts: true,
-    canCreateContracts: true,
-    canEditContracts: true,
-    canDeleteContracts: true,
-    canViewContractValues: true,
-
-    canViewReports: true,
-    canCreateReports: true,
-    canApproveReports: true,
-    canExportReportsPdf: true,
-
-    canViewClients: true,
-    canEditClients: true,
-    canViewEquipments: true,
-    canEditEquipments: true,
-
-    canViewRegistry: true,
-    canEditRegistry: true,
-
-    canViewVacations: true,
-    canManageVacations: true,
-
-    canViewTrainings: true,
-    canManageTrainings: true,
-
-    canManageUsers: true,
-    canViewAuditLogs: true,
-    canExportData: true
-  }
-};
-
-export const getDefaultPermissionsForSpecialty = (specialty: Specialty | 'Admin', customTemplates?: RoleTemplates): UserPermissions => {
-  const templates = customTemplates || DEFAULT_GLOBAL_ROLE_TEMPLATES;
-  if (specialty === 'Ventas') {
-    return templates.Ventas;
-  } else if (specialty === 'Ingeniería' || specialty === 'Aplicaciones' || specialty === 'IT') {
-    return templates.Ingeniería;
-  }
-  return templates.Admin;
-};
 
 interface AdminPortalProps {
   userRole?: 'admin' | 'engineer' | 'sales';

@@ -1,11 +1,23 @@
-import React, { useState, useEffect, useCallback, useMemo, startTransition } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, startTransition, Suspense, lazy } from 'react';
 import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity, Sun, Moon, Wrench, Settings, Bell, FileText, History, X } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
 import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360, OrimecDocumentRecord, AdminAlert, AuditLogEntry } from './types';
-import AdminPortal, { getDefaultPermissionsForSpecialty } from './components/AdminPortal';
-import EngineerPortal from './components/EngineerPortal';
-import OrimecPortal from './components/OrimecPortal';
+import { getDefaultPermissionsForSpecialty } from './utils/permissions';
 import Login from './components/Login';
+
+// AdminPortal/EngineerPortal/OrimecPortal son enormes (AdminPortal solo pasa de 15k líneas e
+// incluye a CapacitacionesPortal) pero un usuario dado solo usa uno a la vez según su rol; se
+// cargan de forma perezosa para no obligar a todos a descargar los tres portales de entrada.
+const AdminPortal = lazy(() => import('./components/AdminPortal'));
+const EngineerPortal = lazy(() => import('./components/EngineerPortal'));
+const OrimecPortal = lazy(() => import('./components/OrimecPortal'));
+
+const PortalLoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
+    <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Cargando módulo...</p>
+  </div>
+);
 import { db, auth, handleFirestoreError, OperationType, registerFirebaseUserSecondary } from './firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, getDocs, getDoc, enableNetwork } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -2149,6 +2161,7 @@ export default function App() {
               </div>
             )}
             {(activeTab === 'admin' || activeTab === 'sales') && (
+              <Suspense fallback={<PortalLoadingFallback />}>
               <AdminPortal
                 userRole={activeTab === 'sales' ? 'sales' : (currentUser.role === 'orimec' ? 'sales' : currentUser.role)}
                 currentUserEmail={currentUser.email}
@@ -2211,8 +2224,10 @@ export default function App() {
                 onApproveUser={handleApproveUser}
                 onToggleClientConfirmed={handleToggleClientConfirmed}
               />
+              </Suspense>
             )}
             {activeTab === 'orimec' && (
+              <Suspense fallback={<PortalLoadingFallback />}>
               <OrimecPortal
                 documents={orimecDocuments}
                 onAdd={handleAddOrimecDocument}
@@ -2221,8 +2236,10 @@ export default function App() {
                 currentUserEmail={currentUser.email}
                 userRole={currentUser.role}
               />
+              </Suspense>
             )}
             {activeTab === 'engineer' && (
+              <Suspense fallback={<PortalLoadingFallback />}>
               <EngineerPortal
                 engineers={engineers}
                 clients={clients}
@@ -2238,6 +2255,7 @@ export default function App() {
                 onAddPermission={handleAddPermission}
                 lockedEngineerId={currentUser.role === 'engineer' ? currentUser.engineerId : undefined}
               />
+              </Suspense>
             )}
           </>
         )}
