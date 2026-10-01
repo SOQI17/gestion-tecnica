@@ -570,6 +570,10 @@ export default function App() {
   }, [currentUser]);
 
   const handleClearAllData = async () => {
+    if ((currentUser?.email || '').trim().toLowerCase() !== 'alexis.guerra@orimec.com.ec') {
+      showNotification('Solo el Super Admin puede restablecer la base de datos.', 'warning');
+      return;
+    }
     if (window.confirm("¿Está seguro de que desea borrar toda la información (órdenes, reportes, clientes y técnicos) de Firestore para empezar desde cero?")) {
       try {
         showNotification("Borrando datos en Firestore...", "info");
@@ -1858,6 +1862,7 @@ export default function App() {
             : [engineerTab, orimecTab];
 
           const canSwitchPortals = visiblePortalTabs.length > 1;
+          const isSuperAdmin = (currentUser.email || '').trim().toLowerCase() === 'alexis.guerra@orimec.com.ec';
 
           return (
             <div className="flex items-center gap-3">
@@ -1990,14 +1995,16 @@ export default function App() {
                               <Wrench className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                               <span>Limpiar Auto-Asignados</span>
                             </button>
-                            <button
-                              onClick={() => { setIsAdminActionsOpen(false); handleClearAllData(); }}
-                              className="w-full text-left px-3 py-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-700 dark:hover:text-rose-400 transition-colors cursor-pointer flex items-center gap-2 border-t border-slate-100 dark:border-slate-800"
-                              title="Restablecer base de datos maestra"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                              <span>Restablecer BD</span>
-                            </button>
+                            {isSuperAdmin && (
+                              <button
+                                onClick={() => { setIsAdminActionsOpen(false); handleClearAllData(); }}
+                                className="w-full text-left px-3 py-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-700 dark:hover:text-rose-400 transition-colors cursor-pointer flex items-center gap-2 border-t border-slate-100 dark:border-slate-800"
+                                title="Restablecer base de datos maestra (solo Super Admin)"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                <span>Restablecer BD</span>
+                              </button>
+                            )}
                           </div>
                         </>
                       )}

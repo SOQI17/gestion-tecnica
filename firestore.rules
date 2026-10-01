@@ -35,6 +35,13 @@ service cloud.firestore {
       );
     }
 
+    // Super Admin: unica cuenta que puede restablecer la base de datos completa (ver reglas de
+    // cada coleccion) o ascender/crear nuevos administradores. El resto de administradores
+    // conservan todas las demas facultades de admin sin restriccion.
+    function isSuperAdmin() {
+      return isAuthenticated() && request.auth.token.email == 'alexis.guerra@orimec.com.ec';
+    }
+
     // Roles de "backoffice" (admin o ventas): gestionan clientes, contratos, equipos y capacitaciones
     function isBackoffice() {
       return isAdmin() || (isAuthenticated() && userRole() == 'sales');
@@ -66,17 +73,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // 3. Perfiles de Usuarios (Users)
+    // 3. Perfiles de Usuarios (Users). Ascender/crear un admin nuevo es exclusivo del Super Admin
+    // -- un admin normal puede registrar/editar cuentas de cualquier otro rol libremente.
     match /users/{userId} {
       allow read: if isAuthenticated();
-      // Permitir crear su propio perfil al registrarse (nunca con rol admin) o si es admin
       allow create: if isAuthenticated() && (
-        isAdmin() ||
+        isSuperAdmin() ||
+        (isAdmin() && request.resource.data.role != 'admin') ||
         (request.auth.uid == userId && request.resource.data.role != 'admin')
       );
       // Permitir actualizar su propio perfil (sin auto-escalar a admin, ni auto-aprobarse, a menos que sea admin)
       allow update: if isAuthenticated() && (
-        isAdmin() ||
+        isSuperAdmin() ||
+        (isAdmin() && !(request.resource.data.role == 'admin' && resource.data.role != 'admin')) ||
         (request.auth.uid == userId && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'status'])))
       );
       allow delete: if isAdmin();

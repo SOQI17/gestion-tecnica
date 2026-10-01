@@ -1164,6 +1164,11 @@ export default function AdminPortal({
     return perms;
   }, [userRole, currentUserEmail, currentUserPermissions, engineers]);
 
+  // Super Admin: la única cuenta que puede restablecer la base de datos completa o ascender a
+  // alguien más al rol de Administrador. El resto de administradores conservan todas las demás
+  // facultades de admin (eliminar, fusionar, aprobar usuarios, etc.) sin restricción.
+  const isSuperAdmin = (currentUserEmail || '').trim().toLowerCase() === 'alexis.guerra@orimec.com.ec';
+
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1; // 1-indexed (1-12)
@@ -10146,7 +10151,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                     >
                       <option value="engineer">🛠️ Ingeniero / Técnico (FSM & Órdenes)</option>
-                      <option value="admin">👑 Administrador (Acceso Total)</option>
+                      {isSuperAdmin && <option value="admin">👑 Administrador (Acceso Total)</option>}
                       <option value="sales">💼 Ventas / Comercial (Cotizaciones & Clientes)</option>
                       <option value="orimec">🏢 Personal ORIMEC (Solo Documentos ORIMEC)</option>
                     </select>
@@ -10880,7 +10885,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 <option value="engineer">🛠️ Ingeniero/Técnico</option>
                                 <option value="sales">💼 Vendedor / Comercial</option>
                                 <option value="orimec">🏢 Personal ORIMEC</option>
-                                <option value="admin">👑 Administrador</option>
+                                <option value="admin" disabled={!isSuperAdmin}>
+                                  👑 Administrador{!isSuperAdmin ? ' (solo Super Admin)' : ''}
+                                </option>
                               </select>
 
                               {curRole === 'engineer' && (
