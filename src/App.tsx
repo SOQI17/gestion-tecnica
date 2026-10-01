@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, startTransition } from 'react';
-import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity, Sun, Moon, Wrench, Settings, Bell, FileText } from 'lucide-react';
+import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity, Sun, Moon, Wrench, Settings, Bell, FileText, History, X } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
-import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360, OrimecDocumentRecord, AdminAlert } from './types';
+import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360, OrimecDocumentRecord, AdminAlert, AuditLogEntry } from './types';
 import AdminPortal, { getDefaultPermissionsForSpecialty } from './components/AdminPortal';
 import EngineerPortal from './components/EngineerPortal';
 import OrimecPortal from './components/OrimecPortal';
@@ -58,6 +58,7 @@ export default function App() {
   const [maintenanceRegistries, setMaintenanceRegistries] = useState<MaintenanceRegistry[]>([]);
   const [orimecDocuments, setOrimecDocuments] = useState<OrimecDocumentRecord[]>([]);
   const [adminAlerts, setAdminAlerts] = useState<AdminAlert[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [evaluations360, setEvaluations360] = useState<EngineerEvaluation360[]>(() => {
     try {
       const saved = localStorage.getItem('fsm_evaluations360');
@@ -92,6 +93,7 @@ export default function App() {
   const [staleConnectionWarning, setStaleConnectionWarning] = useState(false);
   const [isAdminActionsOpen, setIsAdminActionsOpen] = useState(false);
   const [isAlertsPanelOpen, setIsAlertsPanelOpen] = useState(false);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -518,6 +520,43 @@ export default function App() {
     return () => unsubAlerts();
   }, [currentUser?.role]);
 
+  // Bitácora de auditoría (acciones sensibles: fusiones, eliminaciones, cambios de rol, reset de BD):
+  // igual que las alertas, solo un admin puede leerla según firestore.rules.
+  useEffect(() => {
+    if (currentUser?.role !== 'admin') {
+      setAuditLogs([]);
+      return;
+    }
+    const unsubAudit = onSnapshot(collection(db, 'auditLogs'), (snapshot) => {
+      const list: AuditLogEntry[] = [];
+      snapshot.forEach(docSnap => {
+        list.push(docSnap.data() as AuditLogEntry);
+      });
+      list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+      startTransition(() => setAuditLogs(list));
+    }, (error) => {
+      console.warn("Error leyendo bitácora de auditoría:", error);
+    });
+    return () => unsubAudit();
+  }, [currentUser?.role]);
+
+  const logAuditEvent = useCallback(async (action: string, summary: string) => {
+    const logId = `LOG-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const entry: AuditLogEntry = {
+      id: logId,
+      action,
+      summary,
+      performedByEmail: currentUser?.email,
+      performedByName: currentUser?.name,
+      createdAt: new Date().toISOString()
+    };
+    try {
+      await setDoc(doc(db, 'auditLogs', logId), cleanUndefined(entry));
+    } catch (e) {
+      console.warn('No se pudo registrar el evento de auditoría:', e);
+    }
+  }, [currentUser]);
+
   const handleClearAllData = async () => {
     if (window.confirm("¿Está seguro de que desea borrar toda la información (órdenes, reportes, clientes y técnicos) de Firestore para empezar desde cero?")) {
       try {
@@ -581,6 +620,7 @@ export default function App() {
           setWorkOrders([]);
           setReports([]);
           showNotification("¡Todos los datos en Firestore se borraron con éxito y se reestablecieron los 11 técnicos maestros!", "success");
+          logAuditEvent('clear_all_data', `Restableció la base de datos completa (${engsToDelete.length} técnicos, ${clisToDelete.length} clientes, ${wosToDelete.length} órdenes, ${repsToDelete.length} reportes eliminados y técnicos maestros reinstalados).`);
         }
       } catch (error: any) {
         console.error("Error general limpiando Firestore:", error);
@@ -1273,6 +1313,7 @@ export default function App() {
   }, [showNotification]);
 
   const handleDeleteEngineer = useCallback(async (engId: string) => {
+    const eng = engineers.find(e => e.id === engId);
     try {
       await setDoc(doc(db, 'engineers', engId), {
         deleted: true,
@@ -1281,10 +1322,11 @@ export default function App() {
       }, { merge: true });
       setEngineers(prev => prev.filter(e => e.id !== engId));
       showNotification(`¡Técnico eliminado con éxito de Firestore!`, 'success');
+      logAuditEvent('delete_engineer', `Eliminó al técnico ${eng?.name || engId} (${engId}).`);
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `engineers/${engId}`);
     }
-  }, [currentUser, showNotification]);
+  }, [currentUser, showNotification, engineers, logAuditEvent]);
 
   const handleRegisterNewUser = useCallback(async (data: {
     name: string;
@@ -1389,12 +1431,15 @@ export default function App() {
         }, { merge: true });
       }
       showNotification(`¡Agendas del mes eliminadas con éxito (${woIds.length} órdenes)!`, 'success');
+      logAuditEvent('delete_work_orders', `Eliminó ${woIds.length} orden(es) de trabajo: ${woIds.join(', ')}.`);
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `workOrders`);
     }
-  }, [currentUser, showNotification]);
+  }, [currentUser, showNotification, logAuditEvent]);
 
   const handleMergeEngineers = useCallback(async (sourceId: string, targetId: string) => {
+    const sourceEng = engineers.find(e => e.id === sourceId);
+    const targetEng = engineers.find(e => e.id === targetId);
     try {
       const sourceWOs = workOrders.filter(wo => wo.engineerId === sourceId || wo.supportEngineerId === sourceId);
       for (const wo of sourceWOs) {
@@ -1410,10 +1455,11 @@ export default function App() {
         mergedInto: targetId
       }, { merge: true });
       showNotification(`¡Técnicos fusionados con éxito! Se reasignaron ${sourceWOs.length} órdenes de trabajo.`, 'success');
+      logAuditEvent('merge_engineers', `Fusionó al técnico ${sourceEng?.name || sourceId} dentro de ${targetEng?.name || targetId} (${sourceWOs.length} órdenes reasignadas).`);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `engineers/merge`);
     }
-  }, [currentUser, showNotification, workOrders]);
+  }, [currentUser, showNotification, workOrders, engineers, logAuditEvent]);
 
   const handleMergeClients = useCallback(async (sourceId: string, targetId: string) => {
     try {
@@ -1454,10 +1500,11 @@ export default function App() {
       }, { merge: true });
 
       showNotification(`¡Clientes fusionados con éxito! Se reasignaron ${sourceWOs.length} órdenes de trabajo, ${sourceEquipments.length} equipos y ${sourceContracts.length} contratos.`, 'success');
+      logAuditEvent('merge_clients', `Fusionó al cliente ${sourceClient.name} dentro de ${targetClient.name} (${sourceWOs.length} OTs, ${sourceEquipments.length} equipos, ${sourceContracts.length} contratos reasignados).`);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `clients/merge`);
     }
-  }, [currentUser, showNotification, workOrders, equipments, contracts, maintenanceRegistries, clients]);
+  }, [currentUser, showNotification, workOrders, equipments, contracts, maintenanceRegistries, clients, logAuditEvent]);
 
   // Utilidad de un solo uso: antes de la corrección, dos caminos distintos (cronograma
   // autogenerado desde contrato, y el formulario manual de "Nueva Orden de Trabajo" con el
@@ -1482,10 +1529,11 @@ export default function App() {
         await setDoc(doc(db, 'workOrders', wo.id), { engineerId: '' }, { merge: true });
       }
       showNotification(`¡Listo! Se desasignaron ${affected.length} órdenes que aún no se habían ejecutado.`, 'success');
+      logAuditEvent('cleanup_auto_assigned', `Desasignó ${affected.length} orden(es) que estaban por defecto en Andrés Vega sin ejecutarse.`);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, 'workOrders/cleanup-auto-assigned');
     }
-  }, [workOrders, showNotification]);
+  }, [workOrders, showNotification, logAuditEvent]);
 
   const handleMarkAlertRead = useCallback(async (alertId: string) => {
     try {
@@ -1650,11 +1698,12 @@ export default function App() {
       });
       const roleLabel = role === 'admin' ? 'Administrador' : role === 'engineer' ? 'Ingeniero/Técnico' : role === 'orimec' ? 'Personal ORIMEC' : 'Ventas';
       showNotification(`Rol del usuario actualizado a ${roleLabel} con éxito.`, 'success');
+      logAuditEvent('update_user_role', `Asignó el rol ${roleLabel} a ${existing.email || uid}.`);
     } catch (e) {
       console.error('Error actualizando rol de usuario:', e);
       showNotification('Error al actualizar el rol del usuario.', 'warning');
     }
-  }, [showNotification, allRegisteredUsers, engineers]);
+  }, [showNotification, allRegisteredUsers, engineers, logAuditEvent]);
 
   const handleApproveUser = useCallback(async (uid: string) => {
     try {
@@ -1664,11 +1713,12 @@ export default function App() {
       await setDoc(doc(db, 'users', uid), cleanUndefined(updatedUserDoc));
       setAllRegisteredUsers(prev => prev.map(u => u.uid === uid ? updatedUserDoc : u));
       showNotification(`Cuenta de ${existing.email} aprobada con éxito.`, 'success');
+      logAuditEvent('approve_user', `Aprobó la cuenta de ${existing.email} (rol: ${existing.role || 'sin asignar'}).`);
     } catch (e) {
       console.error('Error aprobando usuario:', e);
       showNotification('Error al aprobar la cuenta del usuario.', 'warning');
     }
-  }, [showNotification, allRegisteredUsers]);
+  }, [showNotification, allRegisteredUsers, logAuditEvent]);
 
   // ── Computed values (memoized to avoid recompute on every render) ──
   const currentUserPermissions = useMemo(() => {
@@ -1913,8 +1963,16 @@ export default function App() {
                           <div className="fixed inset-0 z-40" onClick={() => setIsAdminActionsOpen(false)} />
                           <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
                             <button
+                              onClick={() => { setIsAdminActionsOpen(false); setIsAuditModalOpen(true); }}
+                              className="w-full text-left px-3 py-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors cursor-pointer flex items-center gap-2"
+                              title="Ver bitácora de acciones administrativas sensibles (fusiones, eliminaciones, cambios de rol, reset de BD)"
+                            >
+                              <History className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                              <span>Historial de Auditoría</span>
+                            </button>
+                            <button
                               onClick={() => { setIsAdminActionsOpen(false); handleCleanupAutoAssignedWorkOrders(); }}
-                              className="w-full text-left px-3 py-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-950 hover:text-amber-700 dark:hover:text-amber-400 transition-colors cursor-pointer flex items-center gap-2"
+                              className="w-full text-left px-3 py-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-950 hover:text-amber-700 dark:hover:text-amber-400 transition-colors cursor-pointer flex items-center gap-2 border-t border-slate-100 dark:border-slate-800"
                               title="Quitar el ingeniero a todas las órdenes pendientes/en proceso que quedaron por defecto en Andrés Vega antes de la corrección"
                             >
                               <Wrench className="w-3.5 h-3.5 text-amber-500 shrink-0" />
@@ -1976,6 +2034,52 @@ export default function App() {
           );
         })()}
       </header>
+
+      {/* Modal: Historial de Auditoría */}
+      {isAuditModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setIsAuditModalOpen(false)} />
+          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">Historial de Auditoría</h3>
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{auditLogs.length}</span>
+              </div>
+              <button
+                onClick={() => setIsAuditModalOpen(false)}
+                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 dark:text-slate-500 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-4 space-y-2">
+              {auditLogs.length === 0 ? (
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold text-center py-10">
+                  Aún no se han registrado acciones administrativas sensibles.
+                </p>
+              ) : (
+                auditLogs.map(entry => (
+                  <div key={entry.id} className="border border-slate-100 dark:border-slate-800 rounded-xl p-3 bg-slate-50/60 dark:bg-slate-800/40">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[9px] font-black uppercase tracking-wide text-indigo-650 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-1.5 py-0.5 rounded border border-indigo-150 dark:border-indigo-800">
+                        {entry.action}
+                      </span>
+                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold shrink-0">
+                        {new Date(entry.createdAt).toLocaleString('es-EC', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-700 dark:text-slate-200 font-semibold mt-1.5 leading-snug">{entry.summary}</p>
+                    <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1">
+                      Por: {entry.performedByName || entry.performedByEmail || 'Desconocido'}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating System Messages */}
       {notification && (

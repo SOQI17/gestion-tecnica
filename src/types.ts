@@ -426,3 +426,16 @@ export interface AdminAlert {
   createdAt: string;
   read: boolean;
 }
+
+// Bitácora inmutable de acciones administrativas sensibles (fusiones, eliminaciones, cambios de
+// rol, restablecimiento de la base de datos). Se escribe en la coleccion 'auditLogs', ya protegida
+// en firestore.rules (solo lectura de admin, creacion de cualquier usuario autenticado, sin
+// update/delete). Es trazabilidad, no una alerta a atender: no tiene campo 'read'.
+export interface AuditLogEntry {
+  id: string;
+  action: string; // clave corta p.ej. 'delete_engineer', 'merge_clients', 'clear_all_data'
+  summary: string; // descripcion legible del evento
+  performedByEmail?: string;
+  performedByName?: string;
+  createdAt: string;
+}
