@@ -110,6 +110,11 @@ export interface WorkOrder extends SoftDeletable {
   clientConfirmed?: boolean; // true when client has confirmed the scheduled visit
   contractId?: string; // ID del contrato al que pertenece esta orden de agendamiento
   equipmentSerial?: string; // Número de serie del equipo vinculado
+  // Comentario/alerta administrativa libre (ej. "cliente no firmó, reagendar"), capturado desde
+  // la vista de detalle de la OT; al guardarse con texto genera una AdminAlert tipo 'wo_flag'.
+  adminFlagNote?: string;
+  adminFlagAt?: string;
+  adminFlagBy?: string;
   // Campos legacy: presentes en documentos antiguos de Firestore que guardaban estos datos
   // inline en lugar de resolverlos por clientId; se mantienen como fallback de compatibilidad.
   clientName?: string;
@@ -410,10 +415,11 @@ export interface EngineerEvaluation360 {
 
 export interface AdminAlert {
   id: string;
-  type: 'new_contract';
+  type: 'new_contract' | 'wo_flag';
   title: string;
   message: string;
   contractId?: string;
+  workOrderId?: string;
   clientName?: string;
   createdByEmail?: string;
   createdByName?: string;

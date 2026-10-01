@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useDeferredValue, useCallback } from 'react';
-import { ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag, UserPlus, Mail, Lock, Shield, Phone, MapPin, KeyRound, Pencil, Clock, DollarSign, Eye, ArrowUpRight } from 'lucide-react';
+import { ClipboardList, CheckCircle2, RotateCcw, UserCheck, AlertCircle, Plus, FileText, Check, X, ShieldAlert, Filter, Send, CircleAlert, Database, Printer, FileSpreadsheet, BarChart3, TrendingUp, PieChart, Percent, Award, CalendarRange, Trash2, Search, Users, Cpu, Briefcase, Palmtree, AlertTriangle, BookOpen, ExternalLink, Sparkles, Download, Upload, Tag, UserPlus, Mail, Lock, Shield, Phone, MapPin, KeyRound, Pencil, Clock, DollarSign, Eye, ArrowUpRight, Bell } from 'lucide-react';
 
 export const OFFICIAL_MODALITIES = [
   { code: 'MR', label: 'MR: Resonancia Magnética' },
@@ -195,6 +195,7 @@ interface AdminPortalProps {
   onAddWorkOrder: (wo: WorkOrder) => void;
   onUpdateWorkOrderStatus: (woId: string, status: any) => void;
   onUpdateWorkOrder: (wo: WorkOrder) => void;
+  onFlagWorkOrder?: (woId: string, comment: string) => void;
   onSubmitTechnicalReport: (report: TechnicalReport) => void;
   onValidateReport: (woId: string, state: 'aprobado' | 'rechazado', notes: string) => void;
   onImportData: (newOrders: WorkOrder[], newReports: TechnicalReport[], newClients: Client[], newEngineers: Engineer[]) => void;
@@ -1221,6 +1222,7 @@ export default function AdminPortal({
   onAddWorkOrder,
   onUpdateWorkOrderStatus,
   onUpdateWorkOrder,
+  onFlagWorkOrder,
   onSubmitTechnicalReport,
   onValidateReport,
   onImportData,
@@ -1360,6 +1362,7 @@ export default function AdminPortal({
   const [isEditingWOState, setIsEditingWOState] = useState(false);
   const [editedWO, setEditedWO] = useState<WorkOrder | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [woFlagComment, setWoFlagComment] = useState('');
   const [draggedOverDay, setDraggedOverDay] = useState<string | null>(null);
   const [highlightedEngineerId, setHighlightedEngineerId] = useState<string | null>(null);
   // Pending user assignment states (keyed by uid)
@@ -1382,6 +1385,11 @@ export default function AdminPortal({
   const [vacFormSearchOpen, setVacFormSearchOpen] = useState(false);
   const [vacationSubTab, setVacationSubTab] = useState<'saldos' | 'historial'>('saldos');
   const [auditEngId, setAuditEngId] = useState('');
+
+  // Sincroniza el borrador del comentario/alerta administrativa al abrir una OT distinta
+  useEffect(() => {
+    setWoFlagComment(infoWO?.adminFlagNote || '');
+  }, [infoWO?.id]);
 
   // Auto-seed Ecuador national holidays if not loaded
   useEffect(() => {
@@ -3669,6 +3677,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     setReportHours(3.5);
     setReportClientSignee('');
     setIsConfirmingDelete(false);
+    setWoFlagComment('');
   };
 
   const syncContractDatesForMovedWorkOrder = (clientId: string, oldDateStr: string, newDateStr: string, equipmentName?: string) => {
@@ -9172,6 +9181,48 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               </button>
                             </div>
                           )}
+
+                          <div className="pt-3 mt-1 border-t border-dashed border-slate-200 dark:border-slate-700 text-left">
+                            <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1">
+                              <Bell className="w-3 h-3" />
+                              Comentario / Alerta para Administración
+                            </label>
+                            <textarea
+                              value={woFlagComment}
+                              onChange={e => setWoFlagComment(e.target.value)}
+                              placeholder="Ej: Cliente no pudo recibir la visita, reagendar / Falta repuesto, pendiente de compra..."
+                              rows={2}
+                              className="w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-[10.5px] text-slate-700 dark:text-slate-200 outline-hidden focus:border-amber-400 dark:focus:border-amber-500 resize-none"
+                            />
+                            <div className="flex justify-end mt-1.5">
+                              {(() => {
+                                const savedComment = infoWO.adminFlagNote || '';
+                                const hasPendingChange = savedComment !== woFlagComment.trim();
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (onFlagWorkOrder && hasPendingChange) {
+                                        const trimmed = woFlagComment.trim();
+                                        onFlagWorkOrder(infoWO.id, trimmed);
+                                        setInfoWO({ ...infoWO, adminFlagNote: trimmed });
+                                      }
+                                    }}
+                                    disabled={!hasPendingChange}
+                                    title={hasPendingChange ? 'Guarda el comentario y, si no está vacío, notifica a los administradores' : 'No hay cambios por guardar'}
+                                    className={`font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+                                      hasPendingChange
+                                        ? 'bg-amber-600 hover:bg-amber-700 text-white cursor-pointer shadow-xs'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-350 dark:text-slate-500 cursor-not-allowed'
+                                    }`}
+                                  >
+                                    <Bell className="w-3 h-3" />
+                                    <span>{hasPendingChange ? 'Guardar y Avisar al Admin' : 'Guardado'}</span>
+                                  </button>
+                                );
+                              })()}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>

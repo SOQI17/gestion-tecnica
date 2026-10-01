@@ -1199,6 +1199,42 @@ export default function App() {
     }
   }, [showNotification]);
 
+  const handleFlagWorkOrder = useCallback(async (woId: string, comment: string) => {
+    const now = new Date().toISOString();
+    const flagUpdates = comment
+      ? { adminFlagNote: comment, adminFlagAt: now, adminFlagBy: currentUser?.name || currentUser?.email || '' }
+      : { adminFlagNote: '', adminFlagAt: '', adminFlagBy: '' };
+    try {
+      await setDoc(doc(db, 'workOrders', woId), flagUpdates, { merge: true });
+      setWorkOrders(prev => prev.map(w => w.id === woId ? { ...w, ...flagUpdates } : w));
+
+      if (comment) {
+        const wo = workOrders.find(w => w.id === woId);
+        const clientName = (wo && clients.find(c => c.id === wo.clientId)?.name) || wo?.clientName || 'Cliente sin nombre';
+        const alertId = `ALERT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const alert: AdminAlert = {
+          id: alertId,
+          type: 'wo_flag',
+          title: 'Nota pendiente en orden de trabajo',
+          message: `${currentUser?.name || currentUser?.email || 'Alguien'} dejó una nota en la OT ${woId} (${clientName}${wo?.equipmentName ? ' - ' + wo.equipmentName : ''}): "${comment}"`,
+          workOrderId: woId,
+          clientName,
+          createdByEmail: currentUser?.email,
+          createdByName: currentUser?.name,
+          createdAt: now,
+          read: false
+        };
+        try {
+          await setDoc(doc(db, 'adminAlerts', alertId), alert);
+        } catch (alertError) {
+          console.warn('No se pudo crear la alerta de administrador:', alertError);
+        }
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `workOrders/${woId}`);
+    }
+  }, [workOrders, clients, currentUser]);
+
   const handleUpdateEngineer = useCallback(async (updatedEng: Engineer) => {
     try {
       await setDoc(doc(db, 'engineers', updatedEng.id), cleanUndefined(updatedEng));
@@ -2023,6 +2059,7 @@ export default function App() {
                 onAddWorkOrder={handleAddWorkOrder}
                 onUpdateWorkOrderStatus={handleUpdateWorkOrderStatus}
                 onUpdateWorkOrder={handleUpdateWorkOrder}
+                onFlagWorkOrder={handleFlagWorkOrder}
                 onSubmitTechnicalReport={handleSubmitTechnicalReport}
                 onValidateReport={handleValidateReport}
                 onImportData={handleImportData}
