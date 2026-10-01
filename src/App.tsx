@@ -744,7 +744,7 @@ export default function App() {
           read: false
         };
         try {
-          await setDoc(doc(db, 'adminAlerts', alertId), alert);
+          await setDoc(doc(db, 'adminAlerts', alertId), cleanUndefined(alert));
         } catch (alertError) {
           console.warn('No se pudo crear la alerta de administrador:', alertError);
         }
@@ -1225,7 +1225,7 @@ export default function App() {
           read: false
         };
         try {
-          await setDoc(doc(db, 'adminAlerts', alertId), alert);
+          await setDoc(doc(db, 'adminAlerts', alertId), cleanUndefined(alert));
         } catch (alertError) {
           console.warn('No se pudo crear la alerta de administrador:', alertError);
         }
