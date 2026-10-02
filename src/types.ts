@@ -209,6 +209,10 @@ export interface ContractEquipmentItem {
   caPdfUrl?: string; // Documento Certificate of Acceptance (CA) específico del equipo
   podPdfUrl?: string; // Documento Proof of Delivery (POD) específico del equipo
   srPdfUrl?: string; // Alias legacy de serviceRecordPdfUrl (documentos antiguos en Firestore)
+  // Vínculo directo al registro creado en el módulo Equipos (ver "+ Registrar en Equipos" en el
+  // Detalle de Contrato). Necesario porque muchos de estos items no traen serie ni GON, con lo
+  // que no hay forma de cruzarlos de vuelta solo por esos campos.
+  linkedEquipmentId?: string;
 }
 
 export interface Contract extends SoftDeletable {

@@ -78,4 +78,17 @@ describe('findEquipmentForContractItem', () => {
     const found = findEquipmentForContractItem({ name: 'Nuevo', brand: 'GE', serial: 'NO-EXISTE' }, [baseEquip]);
     expect(found).toBeUndefined();
   });
+
+  // Caso real reportado: un item de contrato sin serie ni GON (ej. "PRODIGY ADVANCE") no se podía
+  // cruzar de vuelta tras registrarlo en Equipos, porque no había ningún campo en común para
+  // comparar. linkedEquipmentId resuelve esto guardando el vínculo explícito.
+  it('encuentra el equipo por linkedEquipmentId aunque el item no tenga serie ni GON', () => {
+    const found = findEquipmentForContractItem({ name: 'PRODIGY ADVANCE', brand: 'GE', linkedEquipmentId: 'EQ-1' }, [baseEquip]);
+    expect(found?.id).toBe('EQ-1');
+  });
+
+  it('devuelve undefined si linkedEquipmentId no corresponde a ningún equipo existente', () => {
+    const found = findEquipmentForContractItem({ name: 'PRODIGY ADVANCE', brand: 'GE', linkedEquipmentId: 'EQ-999' }, [baseEquip]);
+    expect(found).toBeUndefined();
+  });
 });

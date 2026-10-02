@@ -45,10 +45,17 @@ export function findContractForEquipment(equip: Equipment, contracts: Contract[]
 }
 
 /**
- * Para un equipo embebido en un contrato, busca si ya existe como registro en el módulo Equipos
- * (comparando por serie o GON).
+ * Para un equipo embebido en un contrato, busca si ya existe como registro en el módulo Equipos.
+ * Primero revisa `linkedEquipmentId` (vínculo explícito dejado por "+ Registrar en Equipos" --
+ * necesario porque muchos de estos items no traen serie ni GON y no habría forma de cruzarlos
+ * solo por esos campos), y si no lo tiene, cae a comparar por serie o GON.
  */
 export function findEquipmentForContractItem(item: ContractEquipmentItem, equipments: Equipment[]): Equipment | undefined {
+  if (item.linkedEquipmentId) {
+    const byId = equipments.find(eq => eq.id === item.linkedEquipmentId);
+    if (byId) return byId;
+  }
+
   const serial = normalizeIdentifier(item.serial);
   const gon = normalizeIdentifier(item.gon);
   if (!serial && !gon) return undefined;
