@@ -1423,6 +1423,7 @@ export default function AdminPortal({
   const [contractPage, setContractPage] = useState(1);
   const [contractFilterExpiration, setContractFilterExpiration] = useState<'1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null>(null);
   const [contractFilterBrand, setContractFilterBrand] = useState<string>('all');
+  const [contractNewEquipFilter, setContractNewEquipFilter] = useState<'all' | 'new' | 'notnew'>('all');
   const [contractValueFilter, setContractValueFilter] = useState<'all' | 'valued' | 'unvalued'>('all');
   const [contractDateSort, setContractDateSort] = useState<'none' | 'start_asc' | 'start_desc' | 'end_asc' | 'end_desc'>('none');
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
@@ -7073,6 +7074,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         setContractSectorFilter={setContractSectorFilter}
         contractFilterBrand={contractFilterBrand}
         setContractFilterBrand={setContractFilterBrand}
+        contractNewEquipFilter={contractNewEquipFilter}
+        setContractNewEquipFilter={setContractNewEquipFilter}
         contractFilterExpiration={contractFilterExpiration}
         setContractFilterExpiration={setContractFilterExpiration}
         contractDateSort={contractDateSort}

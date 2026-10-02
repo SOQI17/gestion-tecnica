@@ -18,6 +18,8 @@ interface ContratosTabProps {
   setContractSectorFilter?: (val: 'all' | 'Público' | 'Privado') => void;
   contractFilterBrand: string;
   setContractFilterBrand: (val: string) => void;
+  contractNewEquipFilter: 'all' | 'new' | 'notnew';
+  setContractNewEquipFilter: (val: 'all' | 'new' | 'notnew') => void;
   contractFilterExpiration: '1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null;
   setContractFilterExpiration: (val: '1m' | '3m' | 'expired' | 'pending_admin' | 'inactivo' | null) => void;
   contractDateSort: 'none' | 'start_asc' | 'start_desc' | 'end_asc' | 'end_desc';
@@ -73,6 +75,8 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
   setContractSectorFilter,
   contractFilterBrand,
   setContractFilterBrand,
+  contractNewEquipFilter,
+  setContractNewEquipFilter,
   contractFilterExpiration,
   setContractFilterExpiration,
   contractDateSort,
@@ -315,6 +319,10 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
           if (!hasBrand) return false;
         }
 
+        // 6b. Filtro por Equipo Nuevo
+        if (contractNewEquipFilter === 'new' && !con.isNewEquipment) return false;
+        if (contractNewEquipFilter === 'notnew' && con.isNewEquipment) return false;
+
         // 7. Filtro por Sector
         if (contractSectorFilter !== 'all') {
           const conSector = con.sector || (client?.industry?.toLowerCase().includes('público') || client?.industry?.toLowerCase().includes('publico') || client?.name.toUpperCase().includes('MSP') || client?.name.toUpperCase().includes('IESS') || client?.name.toUpperCase().includes('SOLCA') || client?.name.toUpperCase().includes('HOSPITAL') ? 'Público' : 'Privado');
@@ -333,6 +341,7 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
     contractEndDate,
     contractValueFilter,
     contractFilterBrand,
+    contractNewEquipFilter,
     contractSectorFilter,
     contractFilterExpiration,
     getContractExpirationAlert
@@ -1183,6 +1192,27 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
               <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
             </div>
 
+            {/* Equipo Nuevo Dropdown */}
+            <div className="relative">
+              <select
+                value={contractNewEquipFilter}
+                onChange={(e) => {
+                  setContractNewEquipFilter(e.target.value as 'all' | 'new' | 'notnew');
+                  setContractPage(1);
+                }}
+                className={`appearance-none bg-white dark:bg-slate-900 border text-xs font-extrabold px-3.5 py-2 pr-7 rounded-xl shadow-2xs transition-all cursor-pointer outline-hidden ${
+                  contractNewEquipFilter !== 'all'
+                    ? 'border-orange-400 dark:border-orange-700 bg-orange-50/60 dark:bg-orange-950/60 text-orange-950 dark:text-orange-300 ring-2 ring-orange-500/10 dark:ring-orange-400/10'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <option value="all">✨ EQUIPO NUEVO: Todos</option>
+                <option value="new">✨ Solo Equipo Nuevo</option>
+                <option value="notnew">Sin Equipo Nuevo</option>
+              </select>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+            </div>
+
             {/* Valor Dropdown */}
             <div className="relative">
               <select
@@ -1314,11 +1344,12 @@ export const ContratosTab: React.FC<ContratosTabProps> = ({
 
           <div className="flex items-center gap-2">
             {/* Reset Filters Pill */}
-            {(contractFilterBrand !== 'all' || contractValueFilter !== 'all' || contractSectorFilter !== 'all' || contractDateSort !== 'none' || localContractSearch.trim() !== '' || contractFilterExpiration !== null || contractTypeFilter !== 'all' || contractStatusFilter !== 'all' || contractStartDate || contractEndDate) && (
+            {(contractFilterBrand !== 'all' || contractNewEquipFilter !== 'all' || contractValueFilter !== 'all' || contractSectorFilter !== 'all' || contractDateSort !== 'none' || localContractSearch.trim() !== '' || contractFilterExpiration !== null || contractTypeFilter !== 'all' || contractStatusFilter !== 'all' || contractStartDate || contractEndDate) && (
               <button
                 type="button"
                 onClick={() => {
                   setContractFilterBrand('all');
+                  setContractNewEquipFilter('all');
                   setContractValueFilter('all');
                   if (setContractSectorFilter) setContractSectorFilter('all');
                   setContractDateSort('none');
