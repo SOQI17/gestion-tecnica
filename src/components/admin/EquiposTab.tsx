@@ -25,6 +25,7 @@ interface EquiposTabProps {
   setEquipFormStatus: (status: any) => void;
   setEquipFormInstalledDate: (date: string) => void;
   setIsEquipModalOpen: (open: boolean) => void;
+  onDeleteEquipment?: (equipId: string) => void;
 }
 
 export const EquiposTab: React.FC<EquiposTabProps> = ({
@@ -49,7 +50,9 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
   setEquipFormStatus,
   setEquipFormInstalledDate,
   setIsEquipModalOpen,
+  onDeleteEquipment,
 }) => {
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [equipSearch, setEquipSearch] = useState('');
   const deferredEquipSearch = useDeferredValue(equipSearch);
   const [equipPage, setEquipPage] = useState(1);
@@ -446,6 +449,35 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
                         >
                           Editar
                         </button>
+                        {onDeleteEquipment && (
+                          confirmDeleteId === eq.id ? (
+                            <span className="inline-flex items-center gap-1 ml-1.5">
+                              <button
+                                type="button"
+                                onClick={() => { onDeleteEquipment(eq.id); setConfirmDeleteId(null); }}
+                                className="text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-800 font-bold px-2 py-1 rounded-md transition-all cursor-pointer text-3xs"
+                              >
+                                ¿Seguro?
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded-md transition-all cursor-pointer text-3xs"
+                              >
+                                No
+                              </button>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteId(eq.id)}
+                              className="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950 font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer ml-1"
+                              title="Eliminar equipo (útil para quitar duplicados)"
+                            >
+                              Eliminar
+                            </button>
+                          )
+                        )}
                       </td>
                     </tr>
                   );

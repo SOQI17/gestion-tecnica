@@ -99,6 +99,7 @@ interface AdminPortalProps {
   onBulkUploadEquipments?: (equipments: Equipment[]) => void;
   onBulkUploadContracts?: (contracts: Contract[]) => void;
   onClearEquipments?: () => void;
+  onDeleteEquipment?: (equipId: string) => void;
   onAddVacation?: (vac: Vacation) => Promise<void>;
   onUpdateVacation?: (vac: Vacation) => Promise<void>;
   onDeleteVacation?: (vacId: string) => Promise<void>;
@@ -1018,6 +1019,7 @@ export default function AdminPortal({
   onBulkUploadEquipments,
   onBulkUploadContracts,
   onClearEquipments,
+  onDeleteEquipment,
   onAddVacation,
   onUpdateVacation,
   onDeleteVacation,
@@ -6436,6 +6438,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         clients={clients}
         contracts={contracts}
         userRole={userRole}
+        onDeleteEquipment={onDeleteEquipment}
         setEquipFormInstalledDate={setEquipFormInstalledDate}
         isEquipImporterOpen={isEquipImporterOpen}
         setIsEquipImporterOpen={setIsEquipImporterOpen}

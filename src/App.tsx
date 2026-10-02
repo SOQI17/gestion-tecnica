@@ -1034,6 +1034,21 @@ export default function App() {
     }
   }, [currentUser, showNotification]);
 
+  const handleDeleteEquipment = useCallback(async (equipId: string) => {
+    const equip = equipments.find(e => e.id === equipId);
+    try {
+      await setDoc(doc(db, 'equipments', equipId), {
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: currentUser?.email || 'admin'
+      }, { merge: true });
+      showNotification(`Equipo ${equip?.name || equipId} eliminado.`, 'success');
+      logAuditEvent('delete_equipment', `Eliminó el equipo ${equip?.name || equipId} (${equipId}).`);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `equipments/${equipId}`);
+    }
+  }, [currentUser, showNotification, equipments, logAuditEvent]);
+
   const handleBulkUploadContracts = useCallback(async (newContracts: Contract[]) => {
     try {
       showNotification(`Cargando ${newContracts.length} contratos en Firestore...`, 'info');
@@ -2203,6 +2218,7 @@ export default function App() {
                 onBulkUploadEquipments={handleBulkUploadEquipments}
                 onBulkUploadContracts={handleBulkUploadContracts}
                 onClearEquipments={handleClearEquipments}
+                onDeleteEquipment={handleDeleteEquipment}
                 onAddVacation={handleAddVacation}
                 onUpdateVacation={handleUpdateVacation}
                 onDeleteVacation={handleDeleteVacation}
