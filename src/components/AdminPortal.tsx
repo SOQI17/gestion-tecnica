@@ -54,6 +54,7 @@ import { uploadFileToCloudinary, getCleanCloudinaryUrl, triggerDirectDownload } 
 import { DEFAULT_GLOBAL_ROLE_TEMPLATES, getDefaultPermissionsForSpecialty } from '../utils/permissions';
 import { findMatchingClient } from '../utils/clientMatching';
 import { generateMaintenanceDates, getPeriodicityMonths } from '../utils/maintenanceSchedule';
+import { parseUSDate, splitClientNameAndAddress } from '../utils/installedBase';
 
 const cleanStr = (s: string) => (s || '')
   .toLowerCase()
@@ -5580,6 +5581,84 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           setEquipCsvSuccess(`Se cargaron con éxito ${loadedCount} modelos de referencia en el diccionario temporal (Total en cache: ${Object.keys(newLookup).length} modelos).`);
           setEquipCsvError(null);
           e.target.value = '';
+          return;
+        }
+
+        // Base Instalada (exportación GE con GON + System ID): formato distinto al CSV estándar
+        // de equipos, se detecta y procesa aparte para no interferir con los alias ya probados del
+        // importador genérico de abajo (ej. su columna "cliente" normalmente es un RUC, aquí es
+        // texto libre con nombre+dirección mezclados).
+        const isInstalledBaseSheet = hasKeyNormalized(['gon']) && hasKeyNormalized(['system id', 'systemid']);
+
+        if (isInstalledBaseSheet) {
+          const newClientsToRegister: Client[] = [];
+          const currentClients = [...clients];
+
+          const formatted: Equipment[] = parsed.map((row, idx) => {
+            const serialVal = getRowVal(row, ['serial number', 'serialnumber', 'serial', 'numero se']);
+            const gon = getRowVal(row, ['gon']);
+            const systemId = getRowVal(row, ['system id', 'systemid']);
+            const shippedDateRaw = getRowVal(row, ['shipped date', 'shippeddate']);
+            const installedDateRaw = getRowVal(row, ['installed date', 'installeddate']);
+            const modality = getRowVal(row, ['product modality', 'modality']);
+            const productName = getRowVal(row, ['product: product name', 'product product name', 'product name', 'productname']);
+            const clientRaw = getRowVal(row, ['cliente', 'client', 'customer']);
+            const statusRaw = getRowVal(row, ['status', 'estado']);
+
+            const id = gon || systemId || serialVal || `EQ-${Math.floor(Math.random() * 100050)}-${idx}`;
+            const serial = serialVal || id;
+            const name = productName || modality || 'Equipo Base Instalada';
+
+            let resolvedClientId = '';
+            if (clientRaw) {
+              const { name: clientName, addressHint } = splitClientNameAndAddress(clientRaw);
+              const found = clientName ? findMatchingClient(clientName, currentClients) : undefined;
+              if (found) {
+                resolvedClientId = found.id;
+              } else if (clientName) {
+                const newId = `CLI-DYN-${100 + currentClients.length}-${Math.floor(Math.random() * 100)}`;
+                const newCli: Client = {
+                  id: newId,
+                  name: clientName,
+                  address: addressHint || 'Dirección por registrar (Ingestor)',
+                  industry: 'General / Salud',
+                  contactName: 'Contacto por registrar',
+                  contactPhone: '',
+                  installedEquipments: [id]
+                };
+                currentClients.push(newCli);
+                newClientsToRegister.push(newCli);
+                resolvedClientId = newId;
+              }
+            }
+            if (!resolvedClientId) resolvedClientId = 'CLI-101';
+
+            return {
+              id,
+              name,
+              clientId: resolvedClientId,
+              brand: 'GENERAL ELECTRIC',
+              model: productName || name,
+              serialNumber: serial,
+              status: statusRaw.toLowerCase().includes('install') ? 'Operativo' : 'No Operativo',
+              gon: gon || undefined,
+              systemId: systemId || undefined,
+              shippedDate: parseUSDate(shippedDateRaw),
+              installedDate: parseUSDate(installedDateRaw)
+            } as Equipment;
+          });
+
+          if (newClientsToRegister.length > 0 && onBulkUploadClients) {
+            onBulkUploadClients(newClientsToRegister);
+          }
+
+          if (onBulkUploadEquipments) {
+            onBulkUploadEquipments(formatted);
+            setIsEquipImporterOpen(false);
+            setEquipCsvError(null);
+            setEquipCsvSuccess(`Se cargaron con éxito ${formatted.length} equipos de la base instalada y ${newClientsToRegister.length} clientes nuevos.`);
+            e.target.value = '';
+          }
           return;
         }
 

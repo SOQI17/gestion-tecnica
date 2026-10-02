@@ -61,7 +61,7 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
     return equipments.map(eq => ({
       ...eq,
       _clientName: clientNamesMap.get(eq.clientId) || '',
-      _searchStr: `${eq.name} ${eq.id} ${eq.brand} ${eq.model} ${eq.serialNumber} ${eq.sucursal || ''} ${clientNamesMap.get(eq.clientId) || ''}`.toLowerCase()
+      _searchStr: `${eq.name} ${eq.id} ${eq.brand} ${eq.model} ${eq.serialNumber} ${eq.sucursal || ''} ${eq.gon || ''} ${eq.systemId || ''} ${clientNamesMap.get(eq.clientId) || ''}`.toLowerCase()
     }));
   }, [equipments, clientNamesMap]);
 
@@ -252,6 +252,15 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
                           <span className="font-mono text-xs font-bold text-indigo-700 dark:text-indigo-300">{eq.serialNumber || '-'}</span>
                           {eq.softwareVersion && (
                             <span className="text-3xs text-slate-400 dark:text-slate-500 font-mono">SW: {eq.softwareVersion}</span>
+                          )}
+                          {eq.gon && (
+                            <span className="text-3xs text-slate-400 dark:text-slate-500 font-mono">GON: {eq.gon}</span>
+                          )}
+                          {eq.systemId && (
+                            <span className="text-3xs text-slate-400 dark:text-slate-500 font-mono">SID: {eq.systemId}</span>
+                          )}
+                          {eq.installedDate && (
+                            <span className="text-3xs text-slate-400 dark:text-slate-500 font-mono">Instalado: {eq.installedDate}</span>
                           )}
                         </div>
                       </td>

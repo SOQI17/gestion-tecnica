@@ -190,6 +190,13 @@ export interface Equipment extends SoftDeletable {
   sucursal?: string;
   status: 'Operativo' | 'No Operativo';
   createdAt?: string;
+  // Campos propios de la Base Instalada (ingestor GE): GON = GE Order Number, System ID = ID del
+  // sistema en los registros de fábrica. Opcionales porque la mayoría de equipos cargados por
+  // otras vías (CSV normal, creación manual) nunca los tienen.
+  gon?: string;
+  systemId?: string;
+  shippedDate?: string; // YYYY-MM-DD
+  installedDate?: string; // YYYY-MM-DD
 }
 
 export interface ContractEquipmentItem {
