@@ -56,6 +56,7 @@ import { findMatchingClient } from '../utils/clientMatching';
 import { generateMaintenanceDates, getPeriodicityMonths } from '../utils/maintenanceSchedule';
 import { parseUSDate, splitClientNameAndAddress } from '../utils/installedBase';
 import { findEquipmentForContractItem } from '../utils/equipmentContractMatch';
+import { findPendingWorkOrdersForContract } from '../utils/contractCancellation';
 
 const cleanStr = (s: string) => (s || '')
   .toLowerCase()
@@ -95,6 +96,7 @@ interface AdminPortalProps {
   onAddContract?: (con: Contract) => void;
   onUpdateContract?: (con: Contract) => void;
   onDeleteContract?: (contractId: string) => void;
+  onCancelContract?: (contract: Contract) => void;
   onBulkUploadClients?: (clients: Client[]) => void;
   onBulkUploadEquipments?: (equipments: Equipment[]) => void;
   onBulkUploadContracts?: (contracts: Contract[]) => void;
@@ -1015,6 +1017,7 @@ export default function AdminPortal({
   onAddContract,
   onUpdateContract,
   onDeleteContract,
+  onCancelContract,
   onBulkUploadClients,
   onBulkUploadEquipments,
   onBulkUploadContracts,
@@ -6334,6 +6337,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             type: isQc ? 'Inspección' : 'Preventivo',
             status: 'Pendiente',
             equipmentName: eqName,
+            contractId: con.id,
             notes: `Mantenimiento preventivo autogenerado bajo Contrato: ${con.id}${isQc ? ' (Visita de Control de Calidad)' : ''}`
           };
           
@@ -13475,15 +13479,36 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 <Briefcase className="w-5 h-5 text-indigo-600 dark:text-indigo-300" />
                 <span>Detalle de Contrato: {selectedContractForDetails.id}</span>
               </h3>
-              <button
-                onClick={() => {
-                  setIsContractDetailsModalOpen(false);
-                  setSelectedContractForDetails(null);
-                }}
-                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                {userRole === 'admin' && onCancelContract && selectedContractForDetails.status !== 'Inactivo' && (
+                  <button
+                    onClick={() => {
+                      const pending = findPendingWorkOrdersForContract(selectedContractForDetails, workOrders);
+                      const confirmMsg = pending.length > 0
+                        ? `¿Dar de baja el contrato ${selectedContractForDetails.id}?\n\nSe cancelarán ${pending.length} orden(es) de trabajo futuras que ya no se ejecutarán, y el equipo cubierto se marcará como No Operativo (si ya está registrado en Equipos).\n\nEl historial de visitas ya realizadas NO se toca.`
+                        : `¿Dar de baja el contrato ${selectedContractForDetails.id}?\n\nNo tiene órdenes futuras pendientes. El equipo cubierto se marcará como No Operativo (si ya está registrado en Equipos).`;
+                      if (window.confirm(confirmMsg)) {
+                        onCancelContract(selectedContractForDetails);
+                        setIsContractDetailsModalOpen(false);
+                        setSelectedContractForDetails(null);
+                      }
+                    }}
+                    className="bg-rose-50 dark:bg-rose-950 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-extrabold text-[10px] px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors flex items-center gap-1"
+                    title="Inactiva el contrato, cancela sus órdenes futuras y marca el equipo como No Operativo"
+                  >
+                    🚫 Dar de Baja
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setIsContractDetailsModalOpen(false);
+                    setSelectedContractForDetails(null);
+                  }}
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4 text-xs max-h-[75vh] overflow-y-auto overscroll-contain pr-1">
@@ -13869,6 +13894,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             type: isQc ? 'Inspección' : 'Preventivo',
                             status: 'Pendiente',
                             equipmentName: eqName,
+                            contractId: selectedContractForDetails.id,
                             notes: `Mantenimiento preventivo autogenerado bajo Contrato: ${selectedContractForDetails.id}${isQc ? ' (Visita de Control de Calidad)' : ''}`
                           };
 

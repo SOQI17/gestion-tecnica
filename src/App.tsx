@@ -3,6 +3,8 @@ import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, Exte
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
 import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360, OrimecDocumentRecord, AdminAlert, AuditLogEntry } from './types';
 import { getDefaultPermissionsForSpecialty } from './utils/permissions';
+import { findPendingWorkOrdersForContract } from './utils/contractCancellation';
+import { findEquipmentForContractItem } from './utils/equipmentContractMatch';
 import Login from './components/Login';
 
 // AdminPortal/EngineerPortal/OrimecPortal son enormes (AdminPortal solo pasa de 15k líneas e
@@ -846,6 +848,51 @@ export default function App() {
       handleFirestoreError(error, OperationType.DELETE, `contracts/${contractId}`);
     }
   }, [currentUser, activeTab, showNotification]);
+
+  // "Dar de Baja": el cliente desistió o el equipo fue descontinuado. A diferencia de solo cambiar
+  // el estado del contrato (que no afecta nada más), esto además cancela las OTs futuras/pendientes
+  // de ese contrato para que dejen de aparecer en Agendamiento, y marca el equipo correspondiente
+  // como No Operativo si ya está registrado -- sin tocar el historial de visitas ya realizadas.
+  const handleCancelContract = useCallback(async (contract: Contract) => {
+    try {
+      const pendingWOs = findPendingWorkOrdersForContract(contract, workOrders);
+
+      const updatedContract: Contract = { ...contract, status: 'Inactivo' };
+      await setDoc(doc(db, 'contracts', contract.id), cleanUndefined(updatedContract));
+      setContracts(prev => prev.map(c => c.id === contract.id ? updatedContract : c));
+
+      for (const wo of pendingWOs) {
+        await setDoc(doc(db, 'workOrders', wo.id), {
+          deleted: true,
+          deletedAt: new Date().toISOString(),
+          deletedBy: currentUser?.email || 'admin'
+        }, { merge: true });
+      }
+      if (pendingWOs.length > 0) {
+        const cancelledIds = new Set(pendingWOs.map(p => p.id));
+        setWorkOrders(prev => prev.filter(wo => !cancelledIds.has(wo.id)));
+      }
+
+      let deactivatedEquipName: string | undefined;
+      for (const item of contract.equipmentItems || []) {
+        const matched = findEquipmentForContractItem(item, equipments);
+        if (matched && matched.status !== 'No Operativo') {
+          const updatedEquip: Equipment = { ...matched, status: 'No Operativo' };
+          await setDoc(doc(db, 'equipments', matched.id), cleanUndefined(updatedEquip));
+          setEquipments(prev => prev.map(e => e.id === matched.id ? updatedEquip : e));
+          deactivatedEquipName = matched.name;
+        }
+      }
+
+      showNotification(
+        `Contrato ${contract.id} dado de baja. Se cancelaron ${pendingWOs.length} orden(es) futuras${deactivatedEquipName ? ` y se marcó "${deactivatedEquipName}" como No Operativo` : ''}.`,
+        'success'
+      );
+      logAuditEvent('cancel_contract', `Dio de baja el contrato ${contract.id} (cliente ${contract.clientId}): canceló ${pendingWOs.length} OT(s) futuras${deactivatedEquipName ? `, equipo "${deactivatedEquipName}" marcado No Operativo` : ''}.`);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `contracts/${contract.id}/cancel`);
+    }
+  }, [workOrders, equipments, currentUser, showNotification, logAuditEvent]);
 
   const handleAddOrimecDocument = useCallback(async (newDoc: OrimecDocumentRecord) => {
     setOrimecDocuments(prev => [...prev.filter(d => d.id !== newDoc.id), newDoc]);
@@ -2214,6 +2261,7 @@ export default function App() {
                 onAddContract={handleAddContract}
                 onUpdateContract={handleUpdateContract}
                 onDeleteContract={handleDeleteContract}
+                onCancelContract={handleCancelContract}
                 onBulkUploadClients={handleBulkUploadClients}
                 onBulkUploadEquipments={handleBulkUploadEquipments}
                 onBulkUploadContracts={handleBulkUploadContracts}
