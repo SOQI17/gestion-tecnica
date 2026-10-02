@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useDeferredValue } from 'react';
-import { Cpu, Database, Plus, Search, Building, ShieldCheck, Zap } from 'lucide-react';
+import { Cpu, Database, Plus, Search, Building, ShieldCheck, Zap, CalendarCheck, AlertTriangle, HelpCircle, Boxes } from 'lucide-react';
 import { Equipment, Client } from '../../types';
 
 interface EquiposTabProps {
@@ -48,6 +48,36 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
   const [equipSearch, setEquipSearch] = useState('');
   const deferredEquipSearch = useDeferredValue(equipSearch);
   const [equipPage, setEquipPage] = useState(1);
+  const [installYearFilter, setInstallYearFilter] = useState<string>('all');
+
+  // Estadísticas y filtro de año de instalación: info clave de la Base Instalada (qué tan nuevo o
+  // viejo es el parque de equipos, cuántos faltan datos de instalación, etc.)
+  const currentYear = new Date().getFullYear();
+  const installedBaseStats = useMemo(() => {
+    let installedThisYear = 0;
+    let olderThan10Years = 0;
+    let missingInstallDate = 0;
+    const yearsSet = new Set<string>();
+
+    equipments.forEach(eq => {
+      const year = eq.installedDate?.slice(0, 4);
+      if (!year) {
+        missingInstallDate++;
+        return;
+      }
+      yearsSet.add(year);
+      if (Number(year) === currentYear) installedThisYear++;
+      if (currentYear - Number(year) >= 10) olderThan10Years++;
+    });
+
+    return {
+      total: equipments.length,
+      installedThisYear,
+      olderThan10Years,
+      missingInstallDate,
+      years: Array.from(yearsSet).sort((a, b) => Number(b) - Number(a))
+    };
+  }, [equipments, currentYear]);
 
   // Mapa de nombres de clientes para lookup instantáneo O(1)
   const clientNamesMap = useMemo(() => {
@@ -67,9 +97,16 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
 
   const filtered = useMemo(() => {
     const query = deferredEquipSearch.toLowerCase().trim();
-    if (!query) return indexedEquipments;
-    return indexedEquipments.filter(eq => eq._searchStr.includes(query));
-  }, [indexedEquipments, deferredEquipSearch]);
+    return indexedEquipments.filter(eq => {
+      const matchesQuery = !query || eq._searchStr.includes(query);
+      const matchesYear = installYearFilter === 'all'
+        ? true
+        : installYearFilter === 'missing'
+        ? !eq.installedDate
+        : eq.installedDate?.slice(0, 4) === installYearFilter;
+      return matchesQuery && matchesYear;
+    });
+  }, [indexedEquipments, deferredEquipSearch, installYearFilter]);
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
@@ -123,6 +160,54 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
             <span>Nuevo Equipo</span>
           </button>
         </div>
+      </div>
+
+      {/* Installed Base Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
+          <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950">
+            <Boxes className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <div>
+            <p className="text-3xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total Equipos</p>
+            <p className="text-sm font-black text-slate-800 dark:text-slate-100">{installedBaseStats.total}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setInstallYearFilter(String(currentYear)); setEquipPage(1); }}
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs text-left cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors"
+        >
+          <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950">
+            <CalendarCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div>
+            <p className="text-3xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Instalados en {currentYear}</p>
+            <p className="text-sm font-black text-slate-800 dark:text-slate-100">{installedBaseStats.installedThisYear}</p>
+          </div>
+        </button>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
+          <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <p className="text-3xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">10+ Años Instalados</p>
+            <p className="text-sm font-black text-slate-800 dark:text-slate-100">{installedBaseStats.olderThan10Years}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setInstallYearFilter('missing'); setEquipPage(1); }}
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs text-left cursor-pointer hover:border-slate-400 dark:hover:border-slate-600 transition-colors"
+        >
+          <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+            <HelpCircle className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+          </div>
+          <div>
+            <p className="text-3xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sin Fecha de Instalación</p>
+            <p className="text-sm font-black text-slate-800 dark:text-slate-100">{installedBaseStats.missingInstallDate}</p>
+          </div>
+        </button>
       </div>
 
       {/* CSV Importer Panel */}
@@ -182,18 +267,35 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
 
       {/* Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <input
-            type="text"
-            placeholder="Buscar por equipo, ID, marca, modelo, serie o cliente..."
-            value={equipSearch}
+        <div className="flex flex-wrap items-center gap-2 flex-1">
+          <div className="relative flex-1 max-w-md">
+            <input
+              type="text"
+              placeholder="Buscar por equipo, ID, marca, modelo, serie o cliente..."
+              value={equipSearch}
+              onChange={(e) => {
+                setEquipSearch(e.target.value);
+                setEquipPage(1);
+              }}
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 dark:placeholder-slate-500"
+            />
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          </div>
+          <select
+            value={installYearFilter}
             onChange={(e) => {
-              setEquipSearch(e.target.value);
+              setInstallYearFilter(e.target.value);
               setEquipPage(1);
             }}
-            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-4 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 dark:placeholder-slate-500"
-          />
-          <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 outline-hidden focus:ring-1 focus:ring-indigo-500"
+            title="Filtrar por año de instalación"
+          >
+            <option value="all">AÑO: Todos</option>
+            {installedBaseStats.years.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+            <option value="missing">Sin fecha</option>
+          </select>
         </div>
         <span className="text-3xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{filtered.length} equipos encontrados</span>
       </div>
