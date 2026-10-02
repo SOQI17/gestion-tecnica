@@ -55,6 +55,7 @@ import { DEFAULT_GLOBAL_ROLE_TEMPLATES, getDefaultPermissionsForSpecialty } from
 import { findMatchingClient } from '../utils/clientMatching';
 import { generateMaintenanceDates, getPeriodicityMonths } from '../utils/maintenanceSchedule';
 import { parseUSDate, splitClientNameAndAddress } from '../utils/installedBase';
+import { findEquipmentForContractItem } from '../utils/equipmentContractMatch';
 
 const cleanStr = (s: string) => (s || '')
   .toLowerCase()
@@ -1411,6 +1412,7 @@ export default function AdminPortal({
   const [equipFormSW, setEquipFormSW] = useState('');
   const [equipFormSucursal, setEquipFormSucursal] = useState('');
   const [equipFormStatus, setEquipFormStatus] = useState<'Operativo' | 'No Operativo'>('Operativo');
+  const [equipFormInstalledDate, setEquipFormInstalledDate] = useState('');
 
   // Contratos Tab states
   const showNotification = (msg: string, type?: 'success' | 'error' | 'info' | 'warning') => {
@@ -6164,7 +6166,11 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       serialNumber: equipFormSerial.trim(),
       softwareVersion: equipFormSW.trim(),
       sucursal: equipFormSucursal.trim(),
-      status: equipFormStatus
+      status: equipFormStatus,
+      ...(editingEquip?.gon ? { gon: editingEquip.gon } : {}),
+      ...(editingEquip?.systemId ? { systemId: editingEquip.systemId } : {}),
+      ...(editingEquip?.shippedDate ? { shippedDate: editingEquip.shippedDate } : {}),
+      ...(equipFormInstalledDate.trim() ? { installedDate: equipFormInstalledDate.trim() } : {})
     };
     if (editingEquip) {
       if (onUpdateEquipment) onUpdateEquipment(eq);
@@ -6427,7 +6433,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       <EquiposTab
         equipments={equipments}
         clients={clients}
+        contracts={contracts}
         userRole={userRole}
+        setEquipFormInstalledDate={setEquipFormInstalledDate}
         isEquipImporterOpen={isEquipImporterOpen}
         setIsEquipImporterOpen={setIsEquipImporterOpen}
         handleEquipCsvUpload={handleEquipCsvUpload}
@@ -11590,6 +11598,17 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 </div>
               </div>
 
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Fecha de Instalación</label>
+                <input
+                  type="date"
+                  value={equipFormInstalledDate}
+                  onChange={(e) => setEquipFormInstalledDate(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                />
+                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium">Necesaria para que este equipo aparezca en las estadísticas de "Instalados en el año X" de la Base Instalada.</p>
+              </div>
+
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700 font-sans">
                 <button
                   type="button"
@@ -13694,6 +13713,24 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               GON: {item.gon}
                             </span>
                           )}
+                          {(() => {
+                            const matchedEq = findEquipmentForContractItem(item, equipments);
+                            return matchedEq ? (
+                              <span
+                                className="bg-emerald-50 dark:bg-emerald-950 text-emerald-750 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.2 rounded text-[7.5px] font-black"
+                                title={`Ya registrado en Equipos (ID: ${matchedEq.id})`}
+                              >
+                                ✓ En Base Instalada
+                              </span>
+                            ) : (
+                              <span
+                                className="bg-amber-50 dark:bg-amber-950 text-amber-750 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-1.5 py-0.2 rounded text-[7.5px] font-black"
+                                title="Este equipo del contrato no existe todavía en el módulo Equipos"
+                              >
+                                ⚠ No Registrado en Equipos
+                              </span>
+                            );
+                          })()}
                         </div>
                         <div className="flex flex-wrap gap-1">
                           <button
