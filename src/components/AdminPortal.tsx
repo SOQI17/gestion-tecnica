@@ -13723,12 +13723,28 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 ✓ En Base Instalada
                               </span>
                             ) : (
-                              <span
-                                className="bg-amber-50 dark:bg-amber-950 text-amber-750 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-1.5 py-0.2 rounded text-[7.5px] font-black"
-                                title="Este equipo del contrato no existe todavía en el módulo Equipos"
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (!onAddEquipment) return;
+                                  const newEquip: Equipment = {
+                                    id: item.serial || item.gon || `EQ-${Date.now()}`,
+                                    name: item.name,
+                                    clientId: selectedContractForDetails.clientId,
+                                    brand: item.brand || 'GENERAL ELECTRIC',
+                                    model: item.name,
+                                    serialNumber: item.serial || '',
+                                    status: 'Operativo',
+                                    ...(item.gon ? { gon: item.gon } : {}),
+                                    ...(selectedContractForDetails.isNewEquipment ? { installedDate: selectedContractForDetails.startDate } : {})
+                                  };
+                                  onAddEquipment(newEquip);
+                                }}
+                                className="bg-amber-50 dark:bg-amber-950 hover:bg-amber-100 dark:hover:bg-amber-900 text-amber-750 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-1.5 py-0.2 rounded text-[7.5px] font-black cursor-pointer transition-colors"
+                                title="Este equipo del contrato no existe todavía en el módulo Equipos -- clic para registrarlo"
                               >
-                                ⚠ No Registrado en Equipos
-                              </span>
+                                ⚠ No Registrado · + Registrar en Equipos
+                              </button>
                             );
                           })()}
                         </div>
