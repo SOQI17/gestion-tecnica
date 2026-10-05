@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateMaintenanceDates, getPeriodicityMonths } from './maintenanceSchedule';
+import { generateMaintenanceDates, getPeriodicityMonths, generateMaintenanceDatesForContract } from './maintenanceSchedule';
 
 describe('getPeriodicityMonths', () => {
   // Regresión directa del bug real: "cuatrimestral" contiene "mestral", que también aparece en
@@ -64,5 +64,46 @@ describe('generateMaintenanceDates', () => {
   it('no agrega sufijo de equipo cuando el objetivo es "all"', () => {
     const dates = generateMaintenanceDates('2026-01-01', '2026-06-01', 'Bimestral', 'Garantía', undefined, 'all');
     dates.forEach(d => expect(d).not.toContain('|'));
+  });
+});
+
+describe('generateMaintenanceDatesForContract', () => {
+  // Regresión directa del bug real: contrato con 3 equipos y frecuencia Semestral generaba solo
+  // 2 fechas totales (repartidas round-robin), dejando al tercer equipo sin cronograma. Debe
+  // generar una tanda COMPLETA por cada equipo: 3 equipos × 2 visitas = 6 fechas.
+  it('con "Todos los Equipos" y varios equipos, genera una tanda completa por cada uno', () => {
+    const equipos = [{ name: 'FDR Smart' }, { name: 'FDR Nano' }, { name: 'FDR Nano' }];
+    const dates = generateMaintenanceDatesForContract(
+      '2026-01-15', '2027-01-15', 'Semestral', 'Garantía', undefined, 'all', undefined, equipos
+    );
+    expect(dates).toHaveLength(6);
+    expect(dates.filter(d => d.endsWith('|FDR Smart'))).toHaveLength(2);
+    expect(dates.filter(d => d.endsWith('|FDR Nano'))).toHaveLength(4);
+  });
+
+  it('devuelve las fechas ordenadas cronológicamente al combinar varios equipos', () => {
+    const equipos = [{ name: 'Equipo A' }, { name: 'Equipo B' }];
+    const dates = generateMaintenanceDatesForContract(
+      '2026-01-15', '2027-01-15', 'Semestral', 'Garantía', undefined, 'all', undefined, equipos
+    );
+    const sortedCopy = [...dates].sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
+    expect(dates).toEqual(sortedCopy);
+  });
+
+  it('sin equipos listados y "Todos", genera una sola tanda genérica sin etiqueta (comportamiento previo)', () => {
+    const dates = generateMaintenanceDatesForContract(
+      '2026-01-15', '2027-01-15', 'Semestral', 'Garantía', undefined, 'all', undefined, []
+    );
+    expect(dates).toHaveLength(2);
+    dates.forEach(d => expect(d).not.toContain('|'));
+  });
+
+  it('con un equipo especifico seleccionado, genera solo la tanda de ese equipo', () => {
+    const equipos = [{ name: 'FDR Smart' }, { name: 'FDR Nano' }];
+    const dates = generateMaintenanceDatesForContract(
+      '2026-01-15', '2027-01-15', 'Semestral', 'Garantía', undefined, 'FDR Nano', undefined, equipos
+    );
+    expect(dates).toHaveLength(2);
+    dates.forEach(d => expect(d.endsWith('|FDR Nano')).toBe(true));
   });
 });

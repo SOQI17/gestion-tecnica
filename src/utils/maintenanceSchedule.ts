@@ -142,3 +142,44 @@ export const getPeriodicityMonths = (periodicity: string): string => {
     : val.includes('mensual') ? '1'
     : val.includes('anual') ? '12' : '4';
 };
+
+export interface EquipmentForSchedule {
+  name: string;
+}
+
+/**
+ * Genera el cronograma de mantenimiento de un contrato, repartido correctamente entre sus
+ * equipos cuando aplica a "Todos los Equipos".
+ *
+ * Bug real que esto corrige: antes se generaba UNA sola tanda de fechas para todo el contrato y
+ * luego, al crear las órdenes de trabajo, se repartía esa misma tanda round-robin entre los
+ * equipos (`equipmentItems[idx % equipmentItems.length]`). Con una frecuencia que generaba menos
+ * fechas que equipos tenía el contrato (ej. 2 fechas semestrales para 3 equipos), el equipo
+ * sobrante nunca recibía cronograma -- el total de visitas no escalaba con la cantidad de
+ * equipos.
+ *
+ * Ahora: si hay equipos listados y se aplica a "Todos", cada equipo recibe su propia tanda
+ * COMPLETA e independiente de fechas (ej. 3 equipos × 2 visitas semestrales = 6 fechas en
+ * total), cada una etiquetada con el nombre de su equipo. Si dos equipos comparten el mismo
+ * nombre (ej. dos "FDR Nano"), cada uno igual recibe su propia tanda -- solo quedan etiquetados
+ * igual en el texto, lo cual es una limitación conocida del formato `fecha|nombreEquipo` (no hay
+ * un identificador único por equipo dentro del contrato).
+ */
+export function generateMaintenanceDatesForContract(
+  startDateStr: string,
+  endDateStr: string,
+  frequency: string,
+  contractType: string,
+  preferredDay: number | undefined,
+  targetEquipment: string,
+  preferredMonth: number | undefined,
+  equipmentItems: EquipmentForSchedule[]
+): string[] {
+  if (targetEquipment === 'all' && equipmentItems.length > 0) {
+    const allDates = equipmentItems.flatMap(item =>
+      generateMaintenanceDates(startDateStr, endDateStr, frequency, contractType, preferredDay, item.name, preferredMonth)
+    );
+    return allDates.sort((a, b) => a.split('|')[0].localeCompare(b.split('|')[0]));
+  }
+  return generateMaintenanceDates(startDateStr, endDateStr, frequency, contractType, preferredDay, targetEquipment, preferredMonth);
+}
