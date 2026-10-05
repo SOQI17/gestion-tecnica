@@ -693,6 +693,39 @@ const isWoMatchingContractDate = (
   return false;
 };
 
+// Por cada entrada de con.maintenanceDates (en el mismo orden/posición), indica si todavía le
+// falta una OT real agendada. Se recorre EN ORDEN y cada OT emparejada se descarta (`usedWoIds`)
+// antes de buscar la siguiente -- necesario porque si dos equipos del contrato comparten el mismo
+// nombre (ej. dos "FDR Nano"), con.maintenanceDates puede tener el mismo texto "fecha|FDR Nano"
+// repetido dos veces: hay que resolver cada OCURRENCIA por posición, no por el string (un Set de
+// strings no podría distinguir cuál de las dos ya tiene OT y cuál no).
+const getUnscheduledContractDateFlags = (
+  con: Contract,
+  workOrders: WorkOrder[],
+  allContracts: Contract[] = []
+): boolean[] => {
+  const usedWoIds = new Set<string>();
+  return (con.maintenanceDates || []).map(rawDate => {
+    const match = workOrders.find(wo => !usedWoIds.has(wo.id) && isWoMatchingContractDate(wo, con, rawDate, allContracts));
+    if (match) {
+      usedWoIds.add(match.id);
+      return false;
+    }
+    return true;
+  });
+};
+
+// Lista de fechas (strings) que todavía no tienen OT, para los lugares que solo necesitan el
+// listado (ej. el botón Auto-Agendar), preservando la correspondencia por posición de arriba.
+const getUnscheduledContractDates = (
+  con: Contract,
+  workOrders: WorkOrder[],
+  allContracts: Contract[] = []
+): string[] => {
+  const flags = getUnscheduledContractDateFlags(con, workOrders, allContracts);
+  return (con.maintenanceDates || []).filter((_, i) => flags[i]);
+};
+
 const isWorkOrderQc = (wo: WorkOrder, contractsList: Contract[] = []) => {
   if (!wo) return false;
   
@@ -6303,14 +6336,18 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     if (onAddWorkOrder && con.maintenanceDates && con.maintenanceDates.length > 0) {
       const activeQcDates = (con.qcDates && con.qcDates.length > 0) ? con.qcDates : (con.qcDate ? [con.qcDate] : computeDefaultQcDates(con.maintenanceDates));
       const wosToCreate: WorkOrder[] = [];
+      // Calculado una sola vez contra las OTs ya existentes, por POSICIÓN (no por texto): si dos
+      // equipos del contrato comparten nombre (ej. dos "FDR Nano"), con.maintenanceDates puede
+      // tener la misma entrada "fecha|FDR Nano" repetida dos veces, y hay que resolver cada
+      // ocurrencia por separado para que una misma OT real "ya agendada" no bloquee la creación de
+      // la que realmente falta para el segundo equipo.
+      const unscheduledFlags = getUnscheduledContractDateFlags(con, workOrders, contracts);
 
       con.maintenanceDates.forEach((rawDate, idx) => {
         const cleanDate = rawDate.split('|')[0].trim();
         const eqNameInEntry = rawDate.split('|')[1]?.trim();
 
-        const alreadyScheduled = workOrders.some(
-          wo => isWoMatchingContractDate(wo, con, rawDate, contracts)
-        );
+        const alreadyScheduled = !unscheduledFlags[idx];
 
         if (!alreadyScheduled) {
           const isQc = activeQcDates.some(qd => {
@@ -13846,14 +13883,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       <Printer className="w-3 h-3" />
                       <span>📄 Descargar Cronograma Oficial (PDF / Word)</span>
                     </button>
-                    {userRole === 'admin' && onAddWorkOrder && selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.some(d => !workOrders.some(wo => isWoMatchingContractDate(wo, selectedContractForDetails, d, contracts))) && (
+                    {userRole === 'admin' && onAddWorkOrder && selectedContractForDetails.maintenanceDates && getUnscheduledContractDates(selectedContractForDetails, workOrders, contracts).length > 0 && (
                     <button
                       type="button"
                       onClick={async (e) => {
                         e.stopPropagation();
-                        const unagendedDates = (selectedContractForDetails.maintenanceDates || []).filter(rawDate => {
-                          return !workOrders.some(wo => isWoMatchingContractDate(wo, selectedContractForDetails, rawDate, contracts));
-                        });
+                        const unagendedDates = getUnscheduledContractDates(selectedContractForDetails, workOrders, contracts);
 
                         if (unagendedDates.length === 0) return;
 
@@ -13906,20 +13941,27 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[8.5px] px-2.5 py-1 rounded-md cursor-pointer transition-all flex items-center gap-1 shadow-2xs active:scale-95 shrink-0"
                       title="Agendar automáticamente todas las visitas sin orden asignada en el calendario"
                     >
-                      <span>⚡ Auto-Agendar Visitas ({selectedContractForDetails.maintenanceDates.filter(d => !workOrders.some(wo => isWoMatchingContractDate(wo, selectedContractForDetails, d, contracts))).length})</span>
+                      <span>⚡ Auto-Agendar Visitas ({getUnscheduledContractDates(selectedContractForDetails, workOrders, contracts).length})</span>
                     </button>
                   )}
                   </div>
                 </div>
                 <div className="border border-slate-200 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-700 overflow-hidden bg-white dark:bg-slate-900 max-h-[220px] overflow-y-auto">
-                  {selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.length > 0 ? (
-                    selectedContractForDetails.maintenanceDates.map((date, idx) => {
+                  {selectedContractForDetails.maintenanceDates && selectedContractForDetails.maintenanceDates.length > 0 ? (() => {
+                      // Evita que una misma OT real cuente como "Agendado" para dos entradas del
+                      // cronograma a la vez -- pasa cuando dos equipos del contrato comparten el
+                      // mismo nombre (ej. dos "FDR Nano"): el matcher no puede distinguirlos por
+                      // nombre, así que sin esto ambas filas mostrarían "Agendado" aunque solo
+                      // exista una OT real, ocultando que en realidad falta agendar la otra.
+                      const usedWoIds = new Set<string>();
+                      return selectedContractForDetails.maintenanceDates.map((date, idx) => {
                       const [cleanDate, specificEquipInDate] = date.split('|');
 
-                      // Check for matching work order
+                      // Check for matching work order (una OT real no puede cubrir dos entradas)
                       const matchingWO = workOrders.find(
-                        wo => isWoMatchingContractDate(wo, selectedContractForDetails, date, contracts)
+                        wo => !usedWoIds.has(wo.id) && isWoMatchingContractDate(wo, selectedContractForDetails, date, contracts)
                       );
+                      if (matchingWO) usedWoIds.add(matchingWO.id);
 
                       // Determine equipment name
                       let targetEqName = specificEquipInDate?.trim() || matchingWO?.equipmentName;
@@ -14119,8 +14161,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                           </div>
                         </div>
                       );
-                    })
-                  ) : (
+                    });
+                  })() : (
                     <div className="p-5 text-center text-slate-400 dark:text-slate-500 italic text-[10px]">
                       Este contrato no posee visitas de mantenimiento agendadas.
                     </div>
