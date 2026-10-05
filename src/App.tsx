@@ -1633,6 +1633,26 @@ export default function App() {
     }
   }, [adminAlerts]);
 
+  // "Ya Realizado" en una alerta de nota de OT: además de marcar la alerta como resuelta (deja de
+  // contar como pendiente y desaparece de la lista), limpia la nota del administrador en la OT
+  // correspondiente -- resolver la alerta resuelve de verdad el problema que la generó, no solo la
+  // oculta.
+  const handleResolveAlert = useCallback(async (alert: AdminAlert) => {
+    try {
+      await setDoc(doc(db, 'adminAlerts', alert.id), {
+        read: true,
+        resolved: true,
+        resolvedAt: new Date().toISOString(),
+        resolvedBy: currentUser?.email || ''
+      }, { merge: true });
+      if (alert.type === 'wo_flag' && alert.workOrderId) {
+        await handleFlagWorkOrder(alert.workOrderId, '');
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `adminAlerts/${alert.id}/resolve`);
+    }
+  }, [currentUser, handleFlagWorkOrder]);
+
   const handleBatchReportWorkOrders = useCallback(async (
     newReports: TechnicalReport[],
     woUpdates: { id: string; status: WorkOrderStatus }[]
@@ -1926,6 +1946,13 @@ export default function App() {
           const canSwitchPortals = visiblePortalTabs.length > 1;
           const isSuperAdmin = (currentUser.email || '').trim().toLowerCase() === 'alexis.guerra@orimec.com.ec';
 
+          // Las alertas de nota de OT (wo_flag) tienen un flujo de resolución explícito: "Ya
+          // Realizado" las resuelve de verdad (desaparecen); "Pendiente" solo las marca leídas pero
+          // siguen contando como activas. Las demás (ej. contrato nuevo) usan el read simple de
+          // siempre, ya que no tienen un concepto de "resuelto" aparte.
+          const isAlertPending = (a: AdminAlert) => a.type === 'wo_flag' ? !a.resolved : !a.read;
+          const visibleAdminAlerts = adminAlerts.filter(a => !a.resolved);
+
           return (
             <div className="flex items-center gap-3">
               {/* Theme Toggle */}
@@ -1946,9 +1973,9 @@ export default function App() {
                     title="Alertas de administrador"
                   >
                     <Bell className="w-3.5 h-3.5" />
-                    {adminAlerts.some(a => !a.read) && (
+                    {visibleAdminAlerts.some(isAlertPending) && (
                       <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-rose-600 text-white text-[8px] font-extrabold flex items-center justify-center leading-none">
-                        {adminAlerts.filter(a => !a.read).length > 9 ? '9+' : adminAlerts.filter(a => !a.read).length}
+                        {visibleAdminAlerts.filter(isAlertPending).length > 9 ? '9+' : visibleAdminAlerts.filter(isAlertPending).length}
                       </span>
                     )}
                   </button>
@@ -1969,28 +1996,53 @@ export default function App() {
                           )}
                         </div>
                         <div className="max-h-80 overflow-y-auto">
-                          {adminAlerts.length === 0 ? (
+                          {visibleAdminAlerts.length === 0 ? (
                             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold text-center py-6 px-3">No hay alertas por el momento.</p>
                           ) : (
-                            adminAlerts.map(alert => (
-                              <button
-                                key={alert.id}
-                                onClick={() => { if (!alert.read) handleMarkAlertRead(alert.id); }}
-                                className={`w-full text-left px-3 py-2.5 border-b border-slate-50 dark:border-slate-800 last:border-b-0 flex gap-2.5 transition-colors cursor-pointer ${
-                                  alert.read ? 'hover:bg-slate-50 dark:hover:bg-slate-800/60' : 'bg-indigo-50/60 dark:bg-indigo-950/40 hover:bg-indigo-50 dark:hover:bg-indigo-950/60'
-                                }`}
-                              >
-                                <FileText className={`w-4 h-4 shrink-0 mt-0.5 ${alert.read ? 'text-slate-400 dark:text-slate-500' : 'text-indigo-600 dark:text-indigo-400'}`} />
-                                <div className="min-w-0 flex-1">
-                                  <p className={`text-[10px] leading-snug ${alert.read ? 'font-semibold text-slate-600 dark:text-slate-300' : 'font-extrabold text-slate-800 dark:text-slate-100'}`}>{alert.title}</p>
-                                  <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">{alert.message}</p>
-                                  <p className="text-[8px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
-                                    {new Date(alert.createdAt).toLocaleString('es-EC', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                  </p>
+                            visibleAdminAlerts.map(alert => {
+                              const isWoFlag = alert.type === 'wo_flag';
+                              return (
+                                <div
+                                  key={alert.id}
+                                  onClick={() => { if (!isWoFlag && !alert.read) handleMarkAlertRead(alert.id); }}
+                                  className={`w-full text-left px-3 py-2.5 border-b border-slate-50 dark:border-slate-800 last:border-b-0 flex gap-2.5 transition-colors ${
+                                    !isWoFlag ? 'cursor-pointer' : ''
+                                  } ${
+                                    alert.read ? 'hover:bg-slate-50 dark:hover:bg-slate-800/60' : 'bg-indigo-50/60 dark:bg-indigo-950/40 hover:bg-indigo-50 dark:hover:bg-indigo-950/60'
+                                  }`}
+                                >
+                                  <FileText className={`w-4 h-4 shrink-0 mt-0.5 ${alert.read ? 'text-slate-400 dark:text-slate-500' : 'text-indigo-600 dark:text-indigo-400'}`} />
+                                  <div className="min-w-0 flex-1">
+                                    <p className={`text-[10px] leading-snug ${alert.read ? 'font-semibold text-slate-600 dark:text-slate-300' : 'font-extrabold text-slate-800 dark:text-slate-100'}`}>{alert.title}</p>
+                                    <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">{alert.message}</p>
+                                    <p className="text-[8px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
+                                      {new Date(alert.createdAt).toLocaleString('es-EC', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                    {isWoFlag && (
+                                      <div className="flex items-center gap-1.5 mt-2">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.stopPropagation(); handleResolveAlert(alert); }}
+                                          className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold px-2 py-1 rounded-md cursor-pointer transition-colors"
+                                        >
+                                          <Check className="w-3 h-3" />
+                                          Ya Realizado
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.stopPropagation(); if (!alert.read) handleMarkAlertRead(alert.id); }}
+                                          className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-bold px-2 py-1 rounded-md cursor-pointer transition-colors"
+                                        >
+                                          <RefreshCw className="w-3 h-3" />
+                                          Pendiente
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {!alert.read && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 shrink-0 mt-1.5" />}
                                 </div>
-                                {!alert.read && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 shrink-0 mt-1.5" />}
-                              </button>
-                            ))
+                              );
+                            })
                           )}
                         </div>
                       </div>

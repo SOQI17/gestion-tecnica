@@ -436,6 +436,11 @@ export interface AdminAlert {
   createdByName?: string;
   createdAt: string;
   read: boolean;
+  // Resolución explícita (hoy solo aplica a type: 'wo_flag'): "Ya Realizado" la marca resuelta y
+  // desaparece de la lista; "Pendiente" solo marca `read` y la alerta sigue contando como activa.
+  resolved?: boolean;
+  resolvedAt?: string;
+  resolvedBy?: string;
 }
 
 // Bitácora inmutable de acciones administrativas sensibles (fusiones, eliminaciones, cambios de
