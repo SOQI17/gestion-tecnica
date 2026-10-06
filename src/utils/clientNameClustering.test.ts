@@ -2,6 +2,16 @@ import { describe, it, expect } from 'vitest';
 import { clusterClientNames } from './clientNameClustering';
 
 describe('clusterClientNames', () => {
+  // Caso real reportado: un nombre guardado alguna vez con codificación incorrecta ("Mar�a"
+  // en vez de "María") no agrupaba con la versión bien escrita del mismo cliente.
+  it('agrupa un nombre con carácter de reemplazo Unicode con su versión bien escrita', () => {
+    const names = ['Dra. Mar�a Teresa Ram�rez', 'Dra. María Teresa Ramirez'];
+    const clusters = clusterClientNames(names);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].variants).toHaveLength(2);
+  });
+
+
   // Caso real reportado: buscar "rafael" en facturas GE mostraba 5 variantes del mismo cliente.
   // "SAN RAFAEL MEDIC CIA. LTDA." queda aparte a propósito: su similitud con las otras 4 (~0.63)
   // está por debajo del umbral conservador -- podría ser una razón social distinta de la misma

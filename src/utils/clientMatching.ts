@@ -6,11 +6,18 @@
 
 // Normaliza un nombre de cliente para comparación: quita tildes, pasa a minúsculas, quita
 // sufijos legales comunes (S.A., CIA LTDA, etc.) y nombres de ciudad, colapsa espacios.
+//
+// El "�" (carácter de reemplazo Unicode, se ve como "�") aparece cuando un nombre con tildes
+// se guardó alguna vez con una codificación de texto incorrecta (ej. "María" -> "Mar�a") -- la
+// letra original se perdió para siempre, no se puede "arreglar". Se lo QUITA (no se reemplaza por
+// espacio) para no partir la palabra en dos (evita "Mar�a" -> "mar a", que ya no se parece en nada
+// a "maria" para la comparación de similitud).
 export function normalizeClientName(raw: string): string {
   return (raw || '')
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
+    .replace(/�/g, '')
     .replace(/\b(s\.?a\.?|c\.?a\.?|cia\.?|ltda\.?|limitada|corp\.?|corporation|inc\.?|incorporated|s\.?a\.?s\.?|de|el|la|los|las)\b/g, '')
     .replace(/-?\s*\b(cue|uio|gye|quito|guayaquil|cuenca|ambato|loja|manta|portoviejo|riobamba)\b/gi, '')
     .replace(/[^a-z0-9]/g, ' ')

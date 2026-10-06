@@ -18,6 +18,13 @@ describe('normalizeClientName', () => {
     expect(normalizeClientName('')).toBe('');
     expect(normalizeClientName(undefined as unknown as string)).toBe('');
   });
+
+  // Caso real: un nombre con tildes guardado alguna vez con codificación incorrecta queda con el
+  // carácter de reemplazo Unicode "�" (U+FFFD) en vez de la letra original -- se quita (no se
+  // reemplaza por espacio) para no partir la palabra en dos.
+  it('quita el carácter de reemplazo Unicode "�" sin partir la palabra', () => {
+    expect(normalizeClientName('Mar�a')).toBe('mara');
+  });
 });
 
 describe('findMatchingClient', () => {
