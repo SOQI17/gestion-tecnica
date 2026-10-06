@@ -1194,6 +1194,27 @@ export default function App() {
     }
   }, [showNotification]);
 
+  // Fusión manual de nombres de cliente en facturas GE: cuando el agrupado automático por
+  // similitud no alcanza a confiar (ej. "SAN RAFAEL MEDIC CIA. LTDA." queda por debajo del umbral
+  // frente a "CLINICA SAN RAFAEL"), el admin confirma que son el mismo cliente y esto reescribe
+  // de forma permanente el campo `cliente` de todos los registros con cualquiera de las variantes
+  // de origen hacia el nombre destino -- a diferencia del agrupado en memoria, esto sí persiste.
+  const handleMergeGeClientNames = useCallback(async (sourceVariants: string[], targetName: string) => {
+    const sourceSet = new Set(sourceVariants.map(v => v.trim().toLowerCase()));
+    const affected = contractsGE.filter(c => c.cliente && sourceSet.has(c.cliente.trim().toLowerCase()));
+    if (affected.length === 0) return;
+    try {
+      for (const c of affected) {
+        await setDoc(doc(db, 'contractsGE', c.id), { cliente: targetName }, { merge: true });
+      }
+      setContractsGE(prev => prev.map(c => affected.some(a => a.id === c.id) ? { ...c, cliente: targetName } : c));
+      showNotification(`Se fusionaron ${affected.length} factura(s) GE bajo "${targetName}".`, 'success');
+      logAuditEvent('merge_ge_client_names', `Fusionó ${affected.length} factura(s) GE de "${sourceVariants.join(', ')}" dentro de "${targetName}".`);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'contractsGE/merge-client-names');
+    }
+  }, [contractsGE, showNotification, logAuditEvent]);
+
   const handleDeleteContractGE = useCallback(async (id: string) => {
     setContractsGE(prev => {
       const next = prev.filter(x => x.id !== id);
@@ -2374,6 +2395,7 @@ export default function App() {
                 onAddContractGE={handleAddContractGE}
                 onUpdateContractGE={handleUpdateContractGE}
                 onDeleteContractGE={handleDeleteContractGE}
+                onMergeGeClientNames={handleMergeGeClientNames}
                 onBulkUploadContractsGE={handleBulkUploadContractsGE}
                 allRegisteredUsers={allRegisteredUsers}
                 onRegisterNewUser={handleRegisterNewUser}

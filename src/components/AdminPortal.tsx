@@ -128,6 +128,7 @@ interface AdminPortalProps {
   onAddContractGE?: (cGE: ContractGE) => void;
   onUpdateContractGE?: (cGE: ContractGE) => void;
   onDeleteContractGE?: (id: string) => void;
+  onMergeGeClientNames?: (sourceVariants: string[], targetName: string) => void;
   onBulkUploadContractsGE?: (cGEs: ContractGE[]) => void;
   allRegisteredUsers?: AppUser[];
   onUpdateUserRole?: (uid: string, role: 'admin' | 'engineer' | 'sales' | 'orimec', engineerId?: string) => void;
@@ -1082,6 +1083,7 @@ export default function AdminPortal({
   onAddContractGE,
   onUpdateContractGE,
   onDeleteContractGE,
+  onMergeGeClientNames,
   onBulkUploadContractsGE,
   allRegisteredUsers,
   onUpdateUserRole,
@@ -1500,6 +1502,11 @@ export default function AdminPortal({
   const [geFormMode, setGeFormMode] = useState<'existing' | 'new'>('existing');
   const [geClientSearchQuery, setGeClientSearchQuery] = useState('');
   const [isGeClientDropdownOpen, setIsGeClientDropdownOpen] = useState(false);
+  // Cuando el agrupado automático por similitud no alcanza (ej. "SAN RAFAEL MEDIC CIA. LTDA."
+  // queda aparte de "CLINICA SAN RAFAEL" por quedar bajo el umbral conservador), el admin puede
+  // confirmar manualmente que son el mismo cliente: guarda cuál grupo se marcó para fusionar,
+  // a la espera de que se elija el grupo destino.
+  const [geMergeSourceCluster, setGeMergeSourceCluster] = useState<{ canonicalName: string; variants: string[] } | null>(null);
   const [geFormCliente, setGeFormCliente] = useState('');
   const [geFormSid, setGeFormSid] = useState('');
   const [geFormModalidad, setGeFormModalidad] = useState('');
@@ -7216,6 +7223,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
           setGeFormMonthNum('');
           setGeFormContractNum('');
           setGeFormObs('');
+          setGeMergeSourceCluster(null);
           setIsContractGeModalOpen(true);
         }}
       />
@@ -15219,7 +15227,19 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                         className="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 outline-hidden focus:ring-2 focus:ring-indigo-500"
                       />
                       {isGeClientDropdownOpen && (
-                        <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
+                        <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
+                          {geMergeSourceCluster && (
+                            <div className="p-2 bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 text-[10px] font-bold text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2 sticky top-0">
+                              <span>🔗 Fusionando "{geMergeSourceCluster.canonicalName}" — elige el cliente destino:</span>
+                              <button
+                                type="button"
+                                onClick={() => setGeMergeSourceCluster(null)}
+                                className="text-amber-700 dark:text-amber-400 hover:underline cursor-pointer shrink-0"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          )}
                           {(() => {
                             // Datos (SID/modalidad/equipo) por nombre de factura GE tal cual se escribió,
                             // para poder autocompletar sin importar cuál variante del cluster se eligió.
@@ -15250,23 +15270,48 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
                             return matchingClusters.map((cluster, idx) => {
                               const data = cluster.variants.map(v => geDataByRawName.get(v.trim().toLowerCase())).find(Boolean);
+                              const isMergeSource = geMergeSourceCluster?.canonicalName === cluster.canonicalName;
+
+                              if (geMergeSourceCluster && !isMergeSource) {
+                                // Modo fusión activo: esta fila es un posible DESTINO.
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => {
+                                      if (!onMergeGeClientNames || !geMergeSourceCluster) return;
+                                      if (!window.confirm(`¿Fusionar "${geMergeSourceCluster.canonicalName}" (${geMergeSourceCluster.variants.length} variante(s)) dentro de "${cluster.canonicalName}"? Esto actualiza los registros de facturas GE de forma permanente.`)) return;
+                                      onMergeGeClientNames(geMergeSourceCluster.variants, cluster.canonicalName);
+                                      setGeMergeSourceCluster(null);
+                                    }}
+                                    className="w-full text-left p-2.5 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors flex justify-between items-center cursor-pointer"
+                                  >
+                                    <span className="font-extrabold text-slate-800 dark:text-slate-100 text-xs">{cluster.canonicalName}</span>
+                                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">Fusionar aquí →</span>
+                                  </button>
+                                );
+                              }
+
                               return (
-                                <button
+                                <div
                                   key={idx}
-                                  type="button"
-                                  onClick={() => {
-                                    setGeFormCliente(cluster.canonicalName);
-                                    if (data?.sid) setGeFormSid(data.sid);
-                                    if (data?.modalidad) setGeFormModalidad(data.modalidad);
-                                    if (data?.equipo) setGeFormEquipo(data.equipo);
-                                    if (data?.equipmentNum) setGeFormEquipmentNum(String(data.equipmentNum));
-                                    const nextM = autoCalculateGeNextMonth(cluster.canonicalName);
-                                    setGeFormMonthNum(nextM);
-                                    setIsGeClientDropdownOpen(false);
-                                  }}
-                                  className="w-full text-left p-2.5 hover:bg-indigo-50 dark:hover:bg-indigo-900 transition-colors flex justify-between items-center cursor-pointer"
+                                  className={`w-full p-2.5 flex justify-between items-center gap-2 transition-colors ${isMergeSource ? 'bg-amber-50/60 dark:bg-amber-950/40' : 'hover:bg-indigo-50 dark:hover:bg-indigo-900'}`}
                                 >
-                                  <div>
+                                  <button
+                                    type="button"
+                                    disabled={isMergeSource}
+                                    onClick={() => {
+                                      setGeFormCliente(cluster.canonicalName);
+                                      if (data?.sid) setGeFormSid(data.sid);
+                                      if (data?.modalidad) setGeFormModalidad(data.modalidad);
+                                      if (data?.equipo) setGeFormEquipo(data.equipo);
+                                      if (data?.equipmentNum) setGeFormEquipmentNum(String(data.equipmentNum));
+                                      const nextM = autoCalculateGeNextMonth(cluster.canonicalName);
+                                      setGeFormMonthNum(nextM);
+                                      setIsGeClientDropdownOpen(false);
+                                    }}
+                                    className="flex-1 text-left cursor-pointer disabled:cursor-default"
+                                  >
                                     <span className="font-extrabold text-slate-800 dark:text-slate-100 text-xs block">{cluster.canonicalName}</span>
                                     {data?.equipo && <span className="text-[10px] text-slate-500 dark:text-slate-500 font-semibold">{data.equipo} {data.modalidad ? `• ${data.modalidad}` : ''}</span>}
                                     {cluster.variants.length > 1 && (
@@ -15274,9 +15319,25 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                         agrupa {cluster.variants.length} variantes de escritura
                                       </span>
                                     )}
-                                  </div>
-                                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded border border-indigo-100 dark:border-indigo-800">Seleccionar</span>
-                                </button>
+                                  </button>
+                                  {isMergeSource ? (
+                                    <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400 shrink-0">Se va a fusionar...</span>
+                                  ) : (
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      {onMergeGeClientNames && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.stopPropagation(); setGeMergeSourceCluster(cluster); }}
+                                          title="¿No calza con el agrupado automático? Fusionar manualmente con otro cliente de esta lista"
+                                          className="text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                                        >
+                                          🔗
+                                        </button>
+                                      )}
+                                      <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded border border-indigo-100 dark:border-indigo-800">Seleccionar</span>
+                                    </div>
+                                  )}
+                                </div>
                               );
                             });
                           })()}
