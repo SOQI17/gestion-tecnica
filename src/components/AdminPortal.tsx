@@ -15271,6 +15271,10 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                             return matchingClusters.map((cluster, idx) => {
                               const data = cluster.variants.map(v => geDataByRawName.get(v.trim().toLowerCase())).find(Boolean);
                               const isMergeSource = geMergeSourceCluster?.canonicalName === cluster.canonicalName;
+                              // Si ninguna variante tiene una factura GE real detrás (el nombre solo viene de
+                              // un Client registrado), no hay nada que fusionar -- se oculta el botón para
+                              // evitar el "no pasa nada" confuso.
+                              const hasGeHistory = cluster.variants.some(v => geDataByRawName.has(v.trim().toLowerCase()));
 
                               if (geMergeSourceCluster && !isMergeSource) {
                                 // Modo fusión activo: esta fila es un posible DESTINO.
@@ -15324,7 +15328,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                     <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400 shrink-0">Se va a fusionar...</span>
                                   ) : (
                                     <div className="flex items-center gap-1 shrink-0">
-                                      {onMergeGeClientNames && (
+                                      {onMergeGeClientNames && hasGeHistory && (
                                         <button
                                           type="button"
                                           onClick={(e) => { e.stopPropagation(); setGeMergeSourceCluster(cluster); }}

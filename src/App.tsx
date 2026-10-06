@@ -1202,7 +1202,12 @@ export default function App() {
   const handleMergeGeClientNames = useCallback(async (sourceVariants: string[], targetName: string) => {
     const sourceSet = new Set(sourceVariants.map(v => v.trim().toLowerCase()));
     const affected = contractsGE.filter(c => c.cliente && sourceSet.has(c.cliente.trim().toLowerCase()));
-    if (affected.length === 0) return;
+    if (affected.length === 0) {
+      // Puede pasar si el grupo de origen solo venía de un Client registrado (sin facturas GE
+      // propias) -- no hay ningún registro de contractsGE con ese nombre para reescribir.
+      showNotification(`No se encontraron facturas GE registradas bajo "${sourceVariants.join(', ')}" para fusionar.`, 'info');
+      return;
+    }
     try {
       for (const c of affected) {
         await setDoc(doc(db, 'contractsGE', c.id), { cliente: targetName }, { merge: true });
