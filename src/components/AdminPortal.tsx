@@ -1446,6 +1446,8 @@ export default function AdminPortal({
   const [equipFormId, setEquipFormId] = useState('');
   const [equipFormName, setEquipFormName] = useState('');
   const [equipFormClientId, setEquipFormClientId] = useState('');
+  const [equipFormClientSearch, setEquipFormClientSearch] = useState('');
+  const [isEquipClientDropdownOpen, setIsEquipClientDropdownOpen] = useState(false);
   const [equipFormBrand, setEquipFormBrand] = useState('GENERAL ELECTRIC');
   const [equipFormModel, setEquipFormModel] = useState('');
   const [equipFormSerial, setEquipFormSerial] = useState('');
@@ -6492,6 +6494,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         setEquipFormId={setEquipFormId}
         setEquipFormName={setEquipFormName}
         setEquipFormClientId={setEquipFormClientId}
+        setEquipFormClientSearch={setEquipFormClientSearch}
         setEquipFormBrand={setEquipFormBrand}
         setEquipFormModel={setEquipFormModel}
         setEquipFormSerial={setEquipFormSerial}
@@ -11521,6 +11524,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                 onClick={() => {
                   setIsEquipModalOpen(false);
                   setEditingEquip(null);
+                  setIsEquipClientDropdownOpen(false);
                 }}
                 className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
               >
@@ -11543,19 +11547,67 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   />
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1 relative">
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Cliente Propietario</label>
-                  <select
-                    required
-                    value={equipFormClientId}
-                    onChange={(e) => setEquipFormClientId(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
-                  >
-                    <option value="">Seleccione cliente...</option>
-                    {clients.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Buscar cliente por nombre..."
+                      value={equipFormClientSearch}
+                      onChange={(e) => {
+                        setEquipFormClientSearch(e.target.value);
+                        setIsEquipClientDropdownOpen(true);
+                        const found = clients.find(c => c.name.toLowerCase() === e.target.value.toLowerCase());
+                        setEquipFormClientId(found ? found.id : '');
+                      }}
+                      onFocus={() => setIsEquipClientDropdownOpen(true)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-hidden focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    />
+                    {equipFormClientSearch && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEquipFormClientSearch('');
+                          setEquipFormClientId('');
+                          setIsEquipClientDropdownOpen(true);
+                        }}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xs font-bold cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {isEquipClientDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-20" onClick={() => setIsEquipClientDropdownOpen(false)} />
+                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-30 max-h-40 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
+                        {clients
+                          .filter(c => c.name.toLowerCase().includes(equipFormClientSearch.toLowerCase()))
+                          .map(c => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => {
+                                setEquipFormClientId(c.id);
+                                setEquipFormClientSearch(c.name);
+                                setIsEquipClientDropdownOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium transition-colors flex items-center justify-between cursor-pointer"
+                            >
+                              <span>{c.name}</span>
+                              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold font-mono">{c.id}</span>
+                            </button>
+                          ))}
+                        {clients.filter(c => c.name.toLowerCase().includes(equipFormClientSearch.toLowerCase())).length === 0 && (
+                          <div className="p-3 text-slate-400 dark:text-slate-500 italic text-center text-[10px]">
+                            No se encontraron clientes.
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -11664,6 +11716,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   onClick={() => {
                     setIsEquipModalOpen(false);
                     setEditingEquip(null);
+                    setIsEquipClientDropdownOpen(false);
                   }}
                   className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors"
                 >

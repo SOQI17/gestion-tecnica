@@ -17,6 +17,7 @@ interface EquiposTabProps {
   setEquipFormId: (id: string) => void;
   setEquipFormName: (name: string) => void;
   setEquipFormClientId: (clientId: string) => void;
+  setEquipFormClientSearch: (search: string) => void;
   setEquipFormBrand: (brand: string) => void;
   setEquipFormModel: (model: string) => void;
   setEquipFormSerial: (serial: string) => void;
@@ -42,6 +43,7 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
   setEquipFormId,
   setEquipFormName,
   setEquipFormClientId,
+  setEquipFormClientSearch,
   setEquipFormBrand,
   setEquipFormModel,
   setEquipFormSerial,
@@ -163,6 +165,7 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
               setEquipFormId('');
               setEquipFormName('');
               setEquipFormClientId(clients[0]?.id || '');
+              setEquipFormClientSearch(clients[0]?.name || '');
               setEquipFormBrand('GENERAL ELECTRIC');
               setEquipFormModel('');
               setEquipFormSerial('');
@@ -436,6 +439,7 @@ export const EquiposTab: React.FC<EquiposTabProps> = ({
                             setEquipFormId(eq.id);
                             setEquipFormName(eq.name);
                             setEquipFormClientId(eq.clientId);
+                            setEquipFormClientSearch(clients.find(c => c.id === eq.clientId)?.name || '');
                             setEquipFormBrand(eq.brand);
                             setEquipFormModel(eq.model);
                             setEquipFormSerial(eq.serialNumber);
