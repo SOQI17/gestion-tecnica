@@ -1613,6 +1613,32 @@ export default function App() {
     }
   }, [workOrders, showNotification, logAuditEvent]);
 
+  // Utilidad de un solo uso: el importador de facturas GE guardaba montos como "1.400"/"1.500"
+  // (formato latinoamericano, punto como separador de miles) interpretando el punto como decimal,
+  // dejando 1.4/1.5 en vez de 1400/1500 -- 1000 veces menos. Ya se corrigió el parser para que no
+  // vuelva a pasar; esto repara los registros que quedaron mal ANTES del arreglo. Un monto real de
+  // factura GE nunca es menor a $10, así que es un criterio seguro para detectar los corruptos.
+  const handleRepairGeAmounts = useCallback(async () => {
+    const affected = contractsGE.filter(c => c.invoiceAmount > 0 && c.invoiceAmount < 10);
+    if (affected.length === 0) {
+      showNotification('No se encontraron montos de facturas GE que parezcan corruptos (menores a $10).', 'info');
+      return;
+    }
+    if (!window.confirm(`Se encontraron ${affected.length} factura(s) GE con montos sospechosamente bajos (menores a $10), probablemente corrompidos por el bug del separador de miles (ej. $1.40 en vez de $1400).\n\nSe multiplicará su monto x1000. Revísalos después para confirmar.\n\n¿Continuar?`)) {
+      return;
+    }
+    try {
+      for (const c of affected) {
+        await setDoc(doc(db, 'contractsGE', c.id), { invoiceAmount: c.invoiceAmount * 1000 }, { merge: true });
+      }
+      setContractsGE(prev => prev.map(c => affected.some(a => a.id === c.id) ? { ...c, invoiceAmount: c.invoiceAmount * 1000 } : c));
+      showNotification(`¡Listo! Se corrigieron ${affected.length} montos de facturas GE.`, 'success');
+      logAuditEvent('repair_ge_amounts', `Corrigió (x1000) ${affected.length} monto(s) de facturas GE corrompidos por el bug del separador de miles.`);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'contractsGE/repair-amounts');
+    }
+  }, [contractsGE, showNotification, logAuditEvent]);
+
   const handleMarkAlertRead = useCallback(async (alertId: string) => {
     try {
       await setDoc(doc(db, 'adminAlerts', alertId), { read: true }, { merge: true });
@@ -2108,6 +2134,14 @@ export default function App() {
                             >
                               <Wrench className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                               <span>Limpiar Auto-Asignados</span>
+                            </button>
+                            <button
+                              onClick={() => { setIsAdminActionsOpen(false); handleRepairGeAmounts(); }}
+                              className="w-full text-left px-3 py-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-950 hover:text-amber-700 dark:hover:text-amber-400 transition-colors cursor-pointer flex items-center gap-2 border-t border-slate-100 dark:border-slate-800"
+                              title="Corregir (x1000) montos de facturas GE corrompidos por el bug del separador de miles (ej. $1.40 en vez de $1400)"
+                            >
+                              <Wrench className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                              <span>Reparar Montos GE</span>
                             </button>
                             {isSuperAdmin && (
                               <button

@@ -18,7 +18,7 @@ export function normalizeClientName(raw: string): string {
     .trim();
 }
 
-function diceCoefficient(a: string, b: string): number {
+export function diceCoefficient(a: string, b: string): number {
   if (a === b) return 1;
   if (a.length < 2 || b.length < 2) return 0;
   const bigrams = (s: string) => {

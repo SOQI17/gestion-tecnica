@@ -57,6 +57,8 @@ import { generateMaintenanceDates, getPeriodicityMonths, generateMaintenanceDate
 import { parseUSDate, splitClientNameAndAddress } from '../utils/installedBase';
 import { findEquipmentForContractItem } from '../utils/equipmentContractMatch';
 import { findPendingWorkOrdersForContract } from '../utils/contractCancellation';
+import { clusterClientNames } from '../utils/clientNameClustering';
+import { parseDollarAmount } from '../utils/parseAmount';
 import { ORIMEC_LOGO_BASE64 } from '../utils/orimecLogoBase64';
 import orimecLogoUrl from '../assets/orimec-logo.png';
 
@@ -1103,6 +1105,21 @@ export default function AdminPortal({
   // alguien más al rol de Administrador. El resto de administradores conservan todas las demás
   // facultades de admin (eliminar, fusionar, aprobar usuarios, etc.) sin restricción.
   const isSuperAdmin = (currentUserEmail || '').trim().toLowerCase() === 'alexis.guerra@orimec.com.ec';
+
+  // Agrupa variantes de escritura del mismo cliente en las facturas GE (texto libre, sin FK real a
+  // Client) -- ej. "CLIN.SaN.RAFAEL" / "CLINICA SAN RAFAEL" / "Clínica San Rafael" aparecían como
+  // 3 clientes distintos al buscar, y su historial de montos/próximo mes se fragmentaba entre ellas.
+  const geClientClusters = useMemo(() => {
+    const clientNames = clients.map(c => c.name);
+    return clusterClientNames([...contractsGE.map(c => c.cliente), ...clientNames], clientNames);
+  }, [contractsGE, clients]);
+  // Para un nombre dado, devuelve todas las variantes de escritura agrupadas con él (o solo el
+  // nombre mismo si no pertenece a ningún cluster con más de una variante).
+  const getGeClusterVariants = (name: string): string[] => {
+    if (!name) return [];
+    const cluster = geClientClusters.find(c => c.variants.some(v => v.trim().toLowerCase() === name.trim().toLowerCase()));
+    return cluster ? cluster.variants : [name];
+  };
 
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -6613,35 +6630,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     reader.readAsText(file, 'UTF-8');
   };
 
-  const parseGeCsvAmount = (rawStr: string | number): number => {
-    if (typeof rawStr === 'number') return rawStr;
-    if (!rawStr) return 0;
-    let str = String(rawStr).trim().replace(/[\$\s]/g, '');
-    if (!str) return 0;
-
-    if (str.includes(',') && str.includes('.')) {
-      const lastComma = str.lastIndexOf(',');
-      const lastDot = str.lastIndexOf('.');
-      if (lastComma > lastDot) {
-        // e.g. 3.557,25 -> 3557.25
-        str = str.replace(/\./g, '').replace(',', '.');
-      } else {
-        // e.g. 3,557.25 -> 3557.25
-        str = str.replace(/,/g, '');
-      }
-    } else if (str.includes(',')) {
-      // Comma is decimal separator! e.g. "400,83" -> "400.83", "362,04" -> "362.04"
-      str = str.replace(',', '.');
-    }
-
-    const val = parseFloat(str);
-    return isNaN(val) ? 0 : val;
-  };
+  const parseGeCsvAmount = parseDollarAmount;
 
   const autoCalculateGeNextMonth = (clientName: string) => {
     if (!clientName) return '1';
-    const clientRecords = contractsGE.filter(c => 
-      c.cliente && c.cliente.trim().toLowerCase() === clientName.trim().toLowerCase()
+    const variantNames = new Set(getGeClusterVariants(clientName).map(v => v.trim().toLowerCase()));
+    const clientRecords = contractsGE.filter(c =>
+      c.cliente && variantNames.has(c.cliente.trim().toLowerCase())
     );
     if (clientRecords.length === 0) return '1';
     let maxMonth = 0;
@@ -15151,7 +15146,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   return;
                 }
 
-                const parsedAmount = parseFloat(geFormAmount.replace(/[\$\,\s]/g, '')) || 0;
+                const parsedAmount = parseDollarAmount(geFormAmount);
 
                 const geItem: ContractGE = {
                   id: editingContractGe ? editingContractGe.id : `GE-${geFormInvoice}-${Date.now()}`,
@@ -15226,16 +15221,12 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       {isGeClientDropdownOpen && (
                         <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
                           {(() => {
-                            const existingMap = new Map<string, { name: string; sid?: string; modalidad?: string; equipo?: string; equipmentNum?: string | number }>();
-                            clients.forEach(c => {
-                              if (c.name && !existingMap.has(c.name.trim().toLowerCase())) {
-                                existingMap.set(c.name.trim().toLowerCase(), { name: c.name.trim() });
-                              }
-                            });
+                            // Datos (SID/modalidad/equipo) por nombre de factura GE tal cual se escribió,
+                            // para poder autocompletar sin importar cuál variante del cluster se eligió.
+                            const geDataByRawName = new Map<string, { sid?: string; modalidad?: string; equipo?: string; equipmentNum?: string | number }>();
                             contractsGE.forEach(c => {
-                              if (c.cliente && !existingMap.has(c.cliente.trim().toLowerCase())) {
-                                existingMap.set(c.cliente.trim().toLowerCase(), {
-                                  name: c.cliente.trim(),
+                              if (c.cliente && !geDataByRawName.has(c.cliente.trim().toLowerCase())) {
+                                geDataByRawName.set(c.cliente.trim().toLowerCase(), {
                                   sid: c.sid,
                                   modalidad: c.modalidad,
                                   equipo: c.equipo,
@@ -15243,11 +15234,13 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                                 });
                               }
                             });
-                            const clientList = Array.from(existingMap.values()).filter(c =>
-                              c.name.toLowerCase().includes(geClientSearchQuery.toLowerCase().trim())
+
+                            const query = geClientSearchQuery.toLowerCase().trim();
+                            const matchingClusters = geClientClusters.filter(cl =>
+                              cl.variants.some(v => v.toLowerCase().includes(query))
                             );
 
-                            if (clientList.length === 0) {
+                            if (matchingClusters.length === 0) {
                               return (
                                 <div className="p-3 text-center text-slate-400 dark:text-slate-500 text-3xs italic">
                                   No se encontraron clientes coincidentes. Pruebe a cambiar a "✨ Nuevo Cliente GE".
@@ -15255,29 +15248,37 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                               );
                             }
 
-                            return clientList.map((client, idx) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => {
-                                  setGeFormCliente(client.name);
-                                  if (client.sid) setGeFormSid(client.sid);
-                                  if (client.modalidad) setGeFormModalidad(client.modalidad);
-                                  if (client.equipo) setGeFormEquipo(client.equipo);
-                                  if (client.equipmentNum) setGeFormEquipmentNum(String(client.equipmentNum));
-                                  const nextM = autoCalculateGeNextMonth(client.name);
-                                  setGeFormMonthNum(nextM);
-                                  setIsGeClientDropdownOpen(false);
-                                }}
-                                className="w-full text-left p-2.5 hover:bg-indigo-50 dark:hover:bg-indigo-900 transition-colors flex justify-between items-center cursor-pointer"
-                              >
-                                <div>
-                                  <span className="font-extrabold text-slate-800 dark:text-slate-100 text-xs block">{client.name}</span>
-                                  {client.equipo && <span className="text-[10px] text-slate-500 dark:text-slate-500 font-semibold">{client.equipo} {client.modalidad ? `• ${client.modalidad}` : ''}</span>}
-                                </div>
-                                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded border border-indigo-100 dark:border-indigo-800">Seleccionar</span>
-                              </button>
-                            ));
+                            return matchingClusters.map((cluster, idx) => {
+                              const data = cluster.variants.map(v => geDataByRawName.get(v.trim().toLowerCase())).find(Boolean);
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => {
+                                    setGeFormCliente(cluster.canonicalName);
+                                    if (data?.sid) setGeFormSid(data.sid);
+                                    if (data?.modalidad) setGeFormModalidad(data.modalidad);
+                                    if (data?.equipo) setGeFormEquipo(data.equipo);
+                                    if (data?.equipmentNum) setGeFormEquipmentNum(String(data.equipmentNum));
+                                    const nextM = autoCalculateGeNextMonth(cluster.canonicalName);
+                                    setGeFormMonthNum(nextM);
+                                    setIsGeClientDropdownOpen(false);
+                                  }}
+                                  className="w-full text-left p-2.5 hover:bg-indigo-50 dark:hover:bg-indigo-900 transition-colors flex justify-between items-center cursor-pointer"
+                                >
+                                  <div>
+                                    <span className="font-extrabold text-slate-800 dark:text-slate-100 text-xs block">{cluster.canonicalName}</span>
+                                    {data?.equipo && <span className="text-[10px] text-slate-500 dark:text-slate-500 font-semibold">{data.equipo} {data.modalidad ? `• ${data.modalidad}` : ''}</span>}
+                                    {cluster.variants.length > 1 && (
+                                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium block" title={cluster.variants.join(', ')}>
+                                        agrupa {cluster.variants.length} variantes de escritura
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded border border-indigo-100 dark:border-indigo-800">Seleccionar</span>
+                                </button>
+                              );
+                            });
                           })()}
                         </div>
                       )}
@@ -15353,8 +15354,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
               {geFormMode === 'existing' && geFormCliente && (
                 (() => {
                   const amountsMap = new Map<number, { count: number; maxMonth: number }>();
+                  const clusterVariants = new Set(getGeClusterVariants(geFormCliente).map(v => v.trim().toLowerCase()));
                   contractsGE.forEach(c => {
-                    if (c.cliente && c.cliente.trim().toLowerCase() === geFormCliente.trim().toLowerCase()) {
+                    if (c.cliente && clusterVariants.has(c.cliente.trim().toLowerCase())) {
                       const amt = c.invoiceAmount || 0;
                       if (amt > 0) {
                         const existing = amountsMap.get(amt) || { count: 0, maxMonth: 0 };
@@ -15381,7 +15383,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {prevAmounts.map((item, idx) => {
-                          const isSelected = parseFloat(geFormAmount.replace(/[\$\,\s]/g, '')) === item.amount;
+                          const isSelected = parseDollarAmount(geFormAmount) === item.amount;
                           return (
                             <button
                               key={idx}
