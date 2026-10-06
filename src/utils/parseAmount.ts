@@ -5,6 +5,8 @@
 //
 // Bug real que esto corrige: facturas GE importadas por CSV con montos como "1.400" o "1.500"
 // (mil cuatrocientos, mil quinientos) se guardaban como 1.4 y 1.5 -- 1000 veces menos de lo real.
+// La misma ambigüedad aplica con coma sola (alguien tipeando "1,400" al estilo EEUU en el
+// formulario manual): se trata igual, para no corromperlo a 1.4 por el camino opuesto.
 export function parseDollarAmount(rawStr: string | number): number {
   if (typeof rawStr === 'number') return rawStr;
   if (!rawStr) return 0;
@@ -22,8 +24,15 @@ export function parseDollarAmount(rawStr: string | number): number {
       str = str.replace(/,/g, '');
     }
   } else if (str.includes(',')) {
-    // Coma como separador decimal: "400,83" -> "400.83"
-    str = str.replace(',', '.');
+    const commaCount = (str.match(/,/g) || []).length;
+    const afterLastComma = str.slice(str.lastIndexOf(',') + 1);
+    if (commaCount > 1 || afterLastComma.length === 3) {
+      // Coma como separador de miles: "1,400" -> "1400"
+      str = str.replace(/,/g, '');
+    } else {
+      // Coma como separador decimal: "400,83" -> "400.83"
+      str = str.replace(',', '.');
+    }
   } else if (str.includes('.')) {
     const dotCount = (str.match(/\./g) || []).length;
     const afterLastDot = str.slice(str.lastIndexOf('.') + 1);

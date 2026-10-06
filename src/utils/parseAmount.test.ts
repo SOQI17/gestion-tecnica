@@ -32,6 +32,18 @@ describe('parseDollarAmount', () => {
     expect(parseDollarAmount('400,83')).toBe(400.83);
   });
 
+  // Regresión: tipear "1,400" al estilo EEUU (coma de miles, sin decimales) en el formulario
+  // manual se interpretaba como decimal ("1,400" -> 1.4), el mismo bug que con el punto pero al
+  // revés -- dejaba el mismo problema de "1000 veces menos" que ya se había corregido para el punto.
+  it('interpreta una coma con exactamente 3 dígitos como separador de miles, no decimal', () => {
+    expect(parseDollarAmount('1,400')).toBe(1400);
+    expect(parseDollarAmount('25,000')).toBe(25000);
+  });
+
+  it('interpreta varias comas como separadores de miles', () => {
+    expect(parseDollarAmount('1,400,000')).toBe(1400000);
+  });
+
   it('acepta números planos, con simbolo de dolar y espacios', () => {
     expect(parseDollarAmount('1400')).toBe(1400);
     expect(parseDollarAmount('$1400')).toBe(1400);

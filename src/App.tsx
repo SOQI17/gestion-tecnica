@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, startTransition, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, startTransition, Suspense, lazy } from 'react';
 import { Layers, CalendarDays, Smartphone, Sparkles, Database, Copy, Check, ExternalLink, ShieldAlert, RefreshCw, Info, Trash2, Briefcase, Activity, Sun, Moon, Wrench, Settings, Bell, FileText, History, X } from 'lucide-react';
 import { masterEngineers, mockClients, mockWorkOrders, mockReports } from './mockData';
 import { WorkOrder, TechnicalReport, WorkOrderStatus, Engineer, Client, Equipment, Contract, Vacation, EngineerPermission, MaintenanceRegistry, ScheduledTraining, ContractGE, AppUser, Specialty, EngineerEvaluation360, OrimecDocumentRecord, AdminAlert, AuditLogEntry } from './types';
@@ -1644,24 +1644,45 @@ export default function App() {
   // dejando 1.4/1.5 en vez de 1400/1500 -- 1000 veces menos. Ya se corrigió el parser para que no
   // vuelva a pasar; esto repara los registros que quedaron mal ANTES del arreglo. Un monto real de
   // factura GE nunca es menor a $10, así que es un criterio seguro para detectar los corruptos.
+  //
+  // También corrige el caso inverso (x1,000,000 en vez de x1,000): si esta misma herramienta se
+  // dispara dos veces sobre el mismo registro (doble clic, o un segundo clic mientras el primer
+  // lote todavía está escribiendo en Firestore), un monto ya corregido a 1400 puede terminar
+  // multiplicado otra vez. Un monto real de factura GE nunca llega a $100,000, así que valores por
+  // encima de eso también se consideran corruptos y se dividen x1000. `isRepairingGeRef` evita que
+  // una segunda invocación se dispare mientras la primera sigue escribiendo.
+  const isRepairingGeRef = useRef(false);
   const handleRepairGeAmounts = useCallback(async () => {
-    const affected = contractsGE.filter(c => c.invoiceAmount > 0 && c.invoiceAmount < 10);
-    if (affected.length === 0) {
-      showNotification('No se encontraron montos de facturas GE que parezcan corruptos (menores a $10).', 'info');
+    if (isRepairingGeRef.current) return;
+    const tooLow = contractsGE.filter(c => c.invoiceAmount > 0 && c.invoiceAmount < 10);
+    const tooHigh = contractsGE.filter(c => c.invoiceAmount >= 100000);
+    const affectedCount = tooLow.length + tooHigh.length;
+    if (affectedCount === 0) {
+      showNotification('No se encontraron montos de facturas GE que parezcan corruptos.', 'info');
       return;
     }
-    if (!window.confirm(`Se encontraron ${affected.length} factura(s) GE con montos sospechosamente bajos (menores a $10), probablemente corrompidos por el bug del separador de miles (ej. $1.40 en vez de $1400).\n\nSe multiplicará su monto x1000. Revísalos después para confirmar.\n\n¿Continuar?`)) {
+    if (!window.confirm(`Se encontraron ${affectedCount} factura(s) GE con montos sospechosos, probablemente corrompidos por el bug del separador de miles (ej. $1.40 en vez de $1400, o al revés).\n\nSe corregirá su monto automáticamente (${tooLow.length} x1000, ${tooHigh.length} ÷1000). Revísalos después para confirmar.\n\n¿Continuar?`)) {
       return;
     }
+    isRepairingGeRef.current = true;
     try {
-      for (const c of affected) {
+      for (const c of tooLow) {
         await setDoc(doc(db, 'contractsGE', c.id), { invoiceAmount: c.invoiceAmount * 1000 }, { merge: true });
       }
-      setContractsGE(prev => prev.map(c => affected.some(a => a.id === c.id) ? { ...c, invoiceAmount: c.invoiceAmount * 1000 } : c));
-      showNotification(`¡Listo! Se corrigieron ${affected.length} montos de facturas GE.`, 'success');
-      logAuditEvent('repair_ge_amounts', `Corrigió (x1000) ${affected.length} monto(s) de facturas GE corrompidos por el bug del separador de miles.`);
+      for (const c of tooHigh) {
+        await setDoc(doc(db, 'contractsGE', c.id), { invoiceAmount: c.invoiceAmount / 1000 }, { merge: true });
+      }
+      setContractsGE(prev => prev.map(c => {
+        if (tooLow.some(a => a.id === c.id)) return { ...c, invoiceAmount: c.invoiceAmount * 1000 };
+        if (tooHigh.some(a => a.id === c.id)) return { ...c, invoiceAmount: c.invoiceAmount / 1000 };
+        return c;
+      }));
+      showNotification(`¡Listo! Se corrigieron ${affectedCount} montos de facturas GE.`, 'success');
+      logAuditEvent('repair_ge_amounts', `Corrigió ${tooLow.length} monto(s) GE x1000 y ${tooHigh.length} monto(s) GE ÷1000 (bug del separador de miles).`);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, 'contractsGE/repair-amounts');
+    } finally {
+      isRepairingGeRef.current = false;
     }
   }, [contractsGE, showNotification, logAuditEvent]);
 
