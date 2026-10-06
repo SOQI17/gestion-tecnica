@@ -57,6 +57,8 @@ import { generateMaintenanceDates, getPeriodicityMonths, generateMaintenanceDate
 import { parseUSDate, splitClientNameAndAddress } from '../utils/installedBase';
 import { findEquipmentForContractItem } from '../utils/equipmentContractMatch';
 import { findPendingWorkOrdersForContract } from '../utils/contractCancellation';
+import { ORIMEC_LOGO_BASE64 } from '../utils/orimecLogoBase64';
+import orimecLogoUrl from '../assets/orimec-logo.png';
 
 const cleanStr = (s: string) => (s || '')
   .toLowerCase()
@@ -14630,8 +14632,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
             <body>
               <!-- Encabezado ORIMEC -->
               <div style="text-align: center; margin-bottom: 12pt;">
-                <h1 style="font-size: 22pt; font-weight: bold; color: #020617; margin: 0;">ORIMEC</h1>
-                <p style="font-size: 8.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 1.5pt; margin-top: 2pt;">ORIENTAL MEDICAL DEL ECUADOR C.A.</p>
+                <img src="${ORIMEC_LOGO_BASE64}" alt="ORIMEC" style="height: 50pt; width: auto;" />
               </div>
 
               <div style="border-top: 1.5pt solid #0f172a; border-bottom: 2pt solid #0f172a; padding: 6pt 0; text-align: center; margin-bottom: 14pt;">
@@ -14795,15 +14796,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
                   
                   {/* Header Logo & Title */}
                   <div className="flex flex-col items-center justify-center border-b-2 border-slate-900 pb-5 mb-6 text-center">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-black text-xl flex items-center justify-center tracking-tighter shadow-sm">
-                        ORI
-                      </div>
-                      <div className="text-left">
-                        <h1 className="font-black text-2xl tracking-tighter text-slate-950 leading-none">ORIMEC</h1>
-                        <p className="text-[10px] text-slate-600 font-extrabold uppercase tracking-widest mt-0.5">Oriental Medical del Ecuador C.A.</p>
-                      </div>
-                    </div>
+                    <img src={orimecLogoUrl} alt="ORIMEC" className="h-14 w-auto mb-2" />
                     <h2 className="font-black text-sm uppercase tracking-widest text-slate-900 mt-3 pt-3 border-t border-slate-300 w-full">
                       CRONOGRAMA DE MANTENIMIENTOS PREVENTIVOS
                     </h2>
