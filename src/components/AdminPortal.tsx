@@ -3183,7 +3183,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
   // Metrics computing
   const totalPlanned = workOrders.length;
   const pendingValidation = workOrders.filter(wo => wo.status === 'Reportado').length;
-  const completedConciliado = workOrders.filter(wo => wo.status === 'Conciliado').length;
+  // "Realizados este mes": visitas que ya se ejecutaron en campo (Realizado/Reportado/Conciliado,
+  // sin importar en qué etapa de papeleo/auditoría estén) cuya fecha planificada cae en el mes
+  // calendario actual. Reemplaza a "Conciliados (Saldados)" -- a pedido del usuario, le interesa
+  // más el trabajo operativo hecho este mes que el estado de conciliación contable.
+  const now = new Date();
+  const completedThisMonth = workOrders.filter(wo => {
+    if (!['Realizado', 'Reportado', 'Conciliado'].includes(wo.status)) return false;
+    const d = new Date(`${wo.plannedDate}T00:00:00`);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).length;
   const activeFieldCount = engineers.filter(e => e.availability === 'En Campo').length;
 
   const handleCreateWO = (e: React.FormEvent) => {
@@ -7359,7 +7368,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
       <AgendamientoTab
         totalPlanned={totalPlanned}
         pendingValidation={pendingValidation}
-        completedConciliado={completedConciliado}
+        completedThisMonth={completedThisMonth}
         activeFieldCount={activeFieldCount}
         engineers={engineers}
         setIsEngsModalOpen={setIsEngsModalOpen}

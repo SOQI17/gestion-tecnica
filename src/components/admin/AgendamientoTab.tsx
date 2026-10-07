@@ -48,7 +48,7 @@ const DASHBOARD_COLUMN_LABELS: { id: keyof DashboardPrintColumns; label: string 
 export interface AgendamientoTabProps {
   totalPlanned: number;
   pendingValidation: number;
-  completedConciliado: number;
+  completedThisMonth: number;
   activeFieldCount: number;
   engineers: Engineer[];
   setIsEngsModalOpen: (open: boolean) => void;
@@ -174,7 +174,7 @@ export interface AgendamientoTabProps {
 export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
   totalPlanned,
   pendingValidation,
-  completedConciliado,
+  completedThisMonth,
   activeFieldCount,
   engineers,
   setIsEngsModalOpen,
@@ -358,9 +358,9 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
         {/* Metric 3 */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
           <div>
-            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Conciliados (Saldados)</span>
-            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{completedConciliado}</h3>
-            <p className="text-3xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">Verificados al 100% vs Excel</p>
+            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Realizados Este Mes</span>
+            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{completedThisMonth}</h3>
+            <p className="text-3xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1 capitalize">Visitas ejecutadas en {new Date().toLocaleDateString('es-ES', { month: 'long' })}</p>
           </div>
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-lg">
             <CheckCircle2 className="w-5 h-5" />
