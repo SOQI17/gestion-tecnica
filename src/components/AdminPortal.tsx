@@ -3212,20 +3212,16 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     return d >= next7Start && d < next7End;
   });
   const upcoming7Days = upcoming7DaysList.length;
-  // "Sin Ingeniero Asignado": OTs pendientes que todavía no tienen técnico asignado
+  // "Sin Ingeniero Asignado": OTs pendientes de este mes que todavía no tienen técnico asignado
   // (engineerId === '', el valor con el que se crean antes de asignar) -- hueco de planificación
-  // que se puede pasar por alto fácilmente. Acotado a los próximos 30 días: el cronograma
-  // autogenerado de un contrato recurrente crea de una vez TODAS las visitas futuras (a veces
-  // años hacia adelante) sin ingeniero asignado, porque nadie asigna técnico con años de
-  // anticipación -- sin este límite, la tarjeta queda inundada de "pendientes" que en realidad no
-  // son accionables todavía.
-  const next30End = new Date(next7Start);
-  next30End.setDate(next30End.getDate() + 30);
-  const unassignedPendingList = workOrders.filter(wo => {
-    if (!['Pendiente', 'En Proceso'].includes(wo.status) || wo.engineerId) return false;
-    const d = new Date(`${wo.plannedDate}T00:00:00`);
-    return d < next30End;
-  });
+  // que se puede pasar por alto fácilmente. Acotado al mes calendario actual (igual que "Avance
+  // del mes"): el cronograma autogenerado de un contrato recurrente crea de una vez TODAS las
+  // visitas futuras (a veces años hacia adelante) sin ingeniero asignado, porque nadie asigna
+  // técnico con años de anticipación -- sin este límite, la tarjeta queda inundada de "pendientes"
+  // que en realidad no son accionables todavía.
+  const unassignedPendingList = workOrders.filter(wo =>
+    ['Pendiente', 'En Proceso'].includes(wo.status) && !wo.engineerId && isThisMonth(wo)
+  );
   const unassignedPending = unassignedPendingList.length;
   const activeFieldCount = engineers.filter(e => e.availability === 'En Campo').length;
 

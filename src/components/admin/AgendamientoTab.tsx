@@ -405,7 +405,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
           <div>
             <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sin Ingeniero</span>
             <h3 className={`text-2xl font-bold mt-1 ${unassignedPending > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-100'}`}>{unassignedPending}</h3>
-            <p className="text-3xs text-slate-500 mt-1">Sin técnico, en los próximos 30 días</p>
+            <p className="text-3xs text-slate-500 mt-1 capitalize">Sin técnico, agendadas en {new Date().toLocaleDateString('es-ES', { month: 'long' })}</p>
           </div>
           <div className="p-3 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg">
             <AlertTriangle className="w-5 h-5" />
@@ -434,7 +434,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
         const config = {
           pending: { title: `Faltan Por Hacer Este Mes (${pendingThisMonthList.length})`, headerClass: 'bg-emerald-50/50 dark:bg-emerald-950/20', orders: pendingThisMonthList, empty: 'No falta ninguna OT por hacer este mes.' },
           upcoming: { title: `Visitas de los Próximos 7 Días (${upcoming7DaysList.length})`, headerClass: 'bg-indigo-50/50 dark:bg-indigo-950/20', orders: upcoming7DaysList, empty: 'No hay visitas agendadas para la próxima semana.' },
-          unassigned: { title: `OTs Sin Técnico Asignado, Próximos 30 Días (${unassignedPendingList.length})`, headerClass: 'bg-red-50/50 dark:bg-red-950/20', orders: unassignedPendingList, empty: 'Todas las OTs de los próximos 30 días ya tienen técnico asignado.' },
+          unassigned: { title: `OTs Sin Técnico Asignado Este Mes (${unassignedPendingList.length})`, headerClass: 'bg-red-50/50 dark:bg-red-950/20', orders: unassignedPendingList, empty: 'Todas las OTs de este mes ya tienen técnico asignado.' },
         }[expandedOverviewCard];
         const sortedOrders = [...config.orders].sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
         return (
