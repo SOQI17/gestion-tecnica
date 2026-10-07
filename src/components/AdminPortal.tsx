@@ -3182,17 +3182,21 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
 
   // Metrics computing
   const totalPlanned = workOrders.length;
-  const pendingValidation = workOrders.filter(wo => wo.status === 'Reportado').length;
-  // "Realizados este mes": visitas que ya se ejecutaron en campo (Realizado/Reportado/Conciliado,
-  // sin importar en qué etapa de papeleo/auditoría estén) cuya fecha planificada cae en el mes
-  // calendario actual. Reemplaza a "Conciliados (Saldados)" -- a pedido del usuario, le interesa
-  // más el trabajo operativo hecho este mes que el estado de conciliación contable.
+  // "Realizados este mes" / "Faltan este mes": ambas acotadas al mismo mes calendario actual para
+  // que sean comparables entre sí (de lo agendado este mes, cuánto ya se hizo vs. cuánto falta).
+  // Reemplazan a "Por Conciliar"/"Conciliados (Saldados)" -- a pedido del usuario, le interesa más
+  // el avance operativo del mes que el estado de conciliación contable.
   const now = new Date();
-  const completedThisMonth = workOrders.filter(wo => {
-    if (!['Realizado', 'Reportado', 'Conciliado'].includes(wo.status)) return false;
+  const isThisMonth = (wo: WorkOrder) => {
     const d = new Date(`${wo.plannedDate}T00:00:00`);
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-  }).length;
+  };
+  const completedThisMonth = workOrders.filter(wo =>
+    ['Realizado', 'Reportado', 'Conciliado'].includes(wo.status) && isThisMonth(wo)
+  ).length;
+  const pendingThisMonth = workOrders.filter(wo =>
+    ['Pendiente', 'En Proceso'].includes(wo.status) && isThisMonth(wo)
+  ).length;
   const activeFieldCount = engineers.filter(e => e.availability === 'En Campo').length;
 
   const handleCreateWO = (e: React.FormEvent) => {
@@ -7367,7 +7371,7 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
     return (
       <AgendamientoTab
         totalPlanned={totalPlanned}
-        pendingValidation={pendingValidation}
+        pendingThisMonth={pendingThisMonth}
         completedThisMonth={completedThisMonth}
         activeFieldCount={activeFieldCount}
         engineers={engineers}

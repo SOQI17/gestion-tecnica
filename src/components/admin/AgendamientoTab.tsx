@@ -47,7 +47,7 @@ const DASHBOARD_COLUMN_LABELS: { id: keyof DashboardPrintColumns; label: string 
 
 export interface AgendamientoTabProps {
   totalPlanned: number;
-  pendingValidation: number;
+  pendingThisMonth: number;
   completedThisMonth: number;
   activeFieldCount: number;
   engineers: Engineer[];
@@ -173,7 +173,7 @@ export interface AgendamientoTabProps {
 
 export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
   totalPlanned,
-  pendingValidation,
+  pendingThisMonth,
   completedThisMonth,
   activeFieldCount,
   engineers,
@@ -346,9 +346,9 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
         {/* Metric 2 */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
           <div>
-            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Por Conciliar</span>
-            <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{pendingValidation}</h3>
-            <p className="text-3xs text-amber-600 dark:text-amber-400 font-semibold mt-1 animate-pulse">Reportes subidos esperando auditoría</p>
+            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Faltan Este Mes</span>
+            <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{pendingThisMonth}</h3>
+            <p className="text-3xs text-amber-600 dark:text-amber-400 font-semibold mt-1 capitalize">Trabajos pendientes en {new Date().toLocaleDateString('es-ES', { month: 'long' })}</p>
           </div>
           <div className="p-3 bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-lg">
             <ClipboardList className="w-5 h-5" />
