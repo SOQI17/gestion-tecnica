@@ -3194,26 +3194,31 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
   const completedThisMonth = workOrders.filter(wo =>
     ['Realizado', 'Reportado', 'Conciliado'].includes(wo.status) && isThisMonth(wo)
   ).length;
-  const pendingThisMonth = workOrders.filter(wo =>
+  // Las listas (no solo el conteo) se guardan para que las tarjetas de KPI puedan abrir un detalle
+  // al hacer clic, mostrando exactamente cuáles son esas OTs en vez de solo un número.
+  const pendingThisMonthList = workOrders.filter(wo =>
     ['Pendiente', 'En Proceso'].includes(wo.status) && isThisMonth(wo)
-  ).length;
+  );
+  const pendingThisMonth = pendingThisMonthList.length;
   // "Próximos 7 días": visitas aún no realizadas con fecha entre hoy y los próximos 7 días --
   // ayuda a planificar la semana (técnico, equipo, confirmación de cliente) en vez de solo medir
   // lo ya ocurrido.
   const next7Start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const next7End = new Date(next7Start);
   next7End.setDate(next7End.getDate() + 7);
-  const upcoming7Days = workOrders.filter(wo => {
+  const upcoming7DaysList = workOrders.filter(wo => {
     if (!['Pendiente', 'En Proceso'].includes(wo.status)) return false;
     const d = new Date(`${wo.plannedDate}T00:00:00`);
     return d >= next7Start && d < next7End;
-  }).length;
+  });
+  const upcoming7Days = upcoming7DaysList.length;
   // "Sin Ingeniero Asignado": OTs pendientes que todavía no tienen técnico asignado
   // (engineerId === '', el valor con el que se crean antes de asignar) -- hueco de planificación
   // que se puede pasar por alto fácilmente.
-  const unassignedPending = workOrders.filter(wo =>
+  const unassignedPendingList = workOrders.filter(wo =>
     ['Pendiente', 'En Proceso'].includes(wo.status) && !wo.engineerId
-  ).length;
+  );
+  const unassignedPending = unassignedPendingList.length;
   const activeFieldCount = engineers.filter(e => e.availability === 'En Campo').length;
 
   const handleCreateWO = (e: React.FormEvent) => {
@@ -7392,6 +7397,9 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         completedThisMonth={completedThisMonth}
         upcoming7Days={upcoming7Days}
         unassignedPending={unassignedPending}
+        pendingThisMonthList={pendingThisMonthList}
+        upcoming7DaysList={upcoming7DaysList}
+        unassignedPendingList={unassignedPendingList}
         activeFieldCount={activeFieldCount}
         engineers={engineers}
         setIsEngsModalOpen={setIsEngsModalOpen}

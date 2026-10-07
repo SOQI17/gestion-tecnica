@@ -51,6 +51,9 @@ export interface AgendamientoTabProps {
   completedThisMonth: number;
   upcoming7Days: number;
   unassignedPending: number;
+  pendingThisMonthList: WorkOrder[];
+  upcoming7DaysList: WorkOrder[];
+  unassignedPendingList: WorkOrder[];
   activeFieldCount: number;
   engineers: Engineer[];
   setIsEngsModalOpen: (open: boolean) => void;
@@ -179,6 +182,9 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
   completedThisMonth,
   upcoming7Days,
   unassignedPending,
+  pendingThisMonthList,
+  upcoming7DaysList,
+  unassignedPendingList,
   activeFieldCount,
   engineers,
   setIsEngsModalOpen,
@@ -304,6 +310,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
   const [dashboardColumns, setDashboardColumns] = useState<DashboardPrintColumns>(DEFAULT_DASHBOARD_PRINT_COLUMNS);
   const [isColumnConfigOpen, setIsColumnConfigOpen] = useState(false);
+  // Qué tarjeta de KPI del resumen está expandida mostrando el detalle de sus OTs (null = ninguna).
+  const [expandedOverviewCard, setExpandedOverviewCard] = useState<'pending' | 'upcoming' | 'unassigned' | null>(null);
 
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
@@ -348,7 +356,11 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
         </div>
 
         {/* Metric 2 - Avance del mes: realizados vs. faltan, en una sola tarjeta comparable */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-xs">
+        <div
+          onClick={() => setExpandedOverviewCard(prev => prev === 'pending' ? null : 'pending')}
+          title="Haga clic para ver cuáles OTs faltan por hacer este mes"
+          className={`bg-white dark:bg-slate-900 border rounded-xl p-5 shadow-xs cursor-pointer transition-all select-none ${expandedOverviewCard === 'pending' ? 'ring-2 ring-emerald-500 border-emerald-500' : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700'}`}
+        >
           <div className="flex items-center justify-between">
             <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider capitalize">Avance de {new Date().toLocaleDateString('es-ES', { month: 'long' })}</span>
             <div className="p-2 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-lg">
@@ -369,7 +381,11 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
         </div>
 
         {/* Metric 3 */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
+        <div
+          onClick={() => setExpandedOverviewCard(prev => prev === 'upcoming' ? null : 'upcoming')}
+          title="Haga clic para ver cuáles son las visitas de la próxima semana"
+          className={`bg-white dark:bg-slate-900 border rounded-xl p-5 flex items-center justify-between shadow-xs cursor-pointer transition-all select-none ${expandedOverviewCard === 'upcoming' ? 'ring-2 ring-indigo-500 border-indigo-500' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'}`}
+        >
           <div>
             <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Próximos 7 Días</span>
             <h3 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{upcoming7Days}</h3>
@@ -381,7 +397,11 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
         </div>
 
         {/* Metric 4 */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
+        <div
+          onClick={() => setExpandedOverviewCard(prev => prev === 'unassigned' ? null : 'unassigned')}
+          title="Haga clic para ver cuáles OTs no tienen técnico asignado"
+          className={`bg-white dark:bg-slate-900 border rounded-xl p-5 flex items-center justify-between shadow-xs cursor-pointer transition-all select-none ${expandedOverviewCard === 'unassigned' ? 'ring-2 ring-red-500 border-red-500' : 'border-slate-200 dark:border-slate-700 hover:border-red-300 dark:hover:border-red-700'}`}
+        >
           <div>
             <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sin Ingeniero</span>
             <h3 className={`text-2xl font-bold mt-1 ${unassignedPending > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-100'}`}>{unassignedPending}</h3>
@@ -408,6 +428,54 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Detalle expandido de la tarjeta de KPI seleccionada (lista de OTs, clic en una fila abre su detalle) */}
+      {expandedOverviewCard && (() => {
+        const config = {
+          pending: { title: `Faltan Por Hacer Este Mes (${pendingThisMonthList.length})`, headerClass: 'bg-emerald-50/50 dark:bg-emerald-950/20', orders: pendingThisMonthList, empty: 'No falta ninguna OT por hacer este mes.' },
+          upcoming: { title: `Visitas de los Próximos 7 Días (${upcoming7DaysList.length})`, headerClass: 'bg-indigo-50/50 dark:bg-indigo-950/20', orders: upcoming7DaysList, empty: 'No hay visitas agendadas para la próxima semana.' },
+          unassigned: { title: `OTs Sin Técnico Asignado (${unassignedPendingList.length})`, headerClass: 'bg-red-50/50 dark:bg-red-950/20', orders: unassignedPendingList, empty: 'Todas las OTs pendientes tienen técnico asignado.' },
+        }[expandedOverviewCard];
+        const sortedOrders = [...config.orders].sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
+        return (
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xs no-print -mt-2 overflow-hidden">
+            <div className={`flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-slate-700 ${config.headerClass}`}>
+              <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">{config.title}</h4>
+              <button
+                onClick={() => setExpandedOverviewCard(null)}
+                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {sortedOrders.length === 0 ? (
+              <p className="text-xs text-slate-500 px-5 py-4">{config.empty}</p>
+            ) : (
+              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+                {sortedOrders.map(wo => {
+                  const eng = engineers.find(e => e.id === wo.engineerId);
+                  return (
+                    <div
+                      key={wo.id}
+                      onClick={() => { setInfoWO(wo); setExpandedOverviewCard(null); }}
+                      className="flex items-center justify-between gap-3 px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{getWOClientDisplayName(wo)}</p>
+                        <p className="text-3xs text-slate-500 truncate">{wo.equipmentName} · {eng?.name || 'Sin asignar'}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-3xs font-mono font-bold text-slate-500 dark:text-slate-400">{wo.plannedDate}</span>
+                        <span className="text-3xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">{getWOEffectiveStatus(wo)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Sub Navigation */}
       <div className="border-b border-slate-200 dark:border-slate-700 no-print mb-6">
