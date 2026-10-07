@@ -49,6 +49,8 @@ export interface AgendamientoTabProps {
   totalPlanned: number;
   pendingThisMonth: number;
   completedThisMonth: number;
+  upcoming7Days: number;
+  unassignedPending: number;
   activeFieldCount: number;
   engineers: Engineer[];
   setIsEngsModalOpen: (open: boolean) => void;
@@ -175,6 +177,8 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
   totalPlanned,
   pendingThisMonth,
   completedThisMonth,
+  upcoming7Days,
+  unassignedPending,
   activeFieldCount,
   engineers,
   setIsEngsModalOpen,
@@ -330,7 +334,7 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
   return (
     <>
       {/* KPI Overview Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 no-print">
         {/* Metric 1 */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
           <div>
@@ -343,31 +347,52 @@ export const AgendamientoTab: React.FC<AgendamientoTabProps> = ({
           </div>
         </div>
 
-        {/* Metric 2 */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
-          <div>
-            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Faltan Este Mes</span>
-            <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{pendingThisMonth}</h3>
-            <p className="text-3xs text-amber-600 dark:text-amber-400 font-semibold mt-1 capitalize">Trabajos pendientes en {new Date().toLocaleDateString('es-ES', { month: 'long' })}</p>
+        {/* Metric 2 - Avance del mes: realizados vs. faltan, en una sola tarjeta comparable */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider capitalize">Avance de {new Date().toLocaleDateString('es-ES', { month: 'long' })}</span>
+            <div className="p-2 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-lg">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
           </div>
-          <div className="p-3 bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-lg">
-            <ClipboardList className="w-5 h-5" />
+          <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">
+            {completedThisMonth}
+            <span className="text-slate-400 dark:text-slate-500 text-base font-semibold">/{completedThisMonth + pendingThisMonth}</span>
+          </h3>
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-2 overflow-hidden">
+            <div
+              className="h-full bg-emerald-500 rounded-full transition-all"
+              style={{ width: `${completedThisMonth + pendingThisMonth > 0 ? (completedThisMonth / (completedThisMonth + pendingThisMonth)) * 100 : 0}%` }}
+            />
           </div>
+          <p className="text-3xs text-amber-600 dark:text-amber-400 font-semibold mt-1.5">{pendingThisMonth} faltan por hacer</p>
         </div>
 
         {/* Metric 3 */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
           <div>
-            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Realizados Este Mes</span>
-            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{completedThisMonth}</h3>
-            <p className="text-3xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1 capitalize">Visitas ejecutadas en {new Date().toLocaleDateString('es-ES', { month: 'long' })}</p>
+            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Próximos 7 Días</span>
+            <h3 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{upcoming7Days}</h3>
+            <p className="text-3xs text-slate-500 mt-1">Visitas agendadas la próxima semana</p>
           </div>
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-lg">
-            <CheckCircle2 className="w-5 h-5" />
+          <div className="p-3 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-lg">
+            <CalendarRange className="w-5 h-5" />
           </div>
         </div>
 
-        {/* Metric 4 - Clickable to open technicians list & management modal */}
+        {/* Metric 4 */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-xs">
+          <div>
+            <span className="text-2xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sin Ingeniero</span>
+            <h3 className={`text-2xl font-bold mt-1 ${unassignedPending > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-100'}`}>{unassignedPending}</h3>
+            <p className="text-3xs text-slate-500 mt-1">OTs pendientes sin técnico asignado</p>
+          </div>
+          <div className="p-3 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* Metric 5 - Clickable to open technicians list & management modal */}
         <div
           onClick={() => setIsEngsModalOpen(true)}
           title="Haga clic para ver y gestionar la lista de técnicos registrados"

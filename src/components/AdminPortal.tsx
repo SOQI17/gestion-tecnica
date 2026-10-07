@@ -3197,6 +3197,23 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
   const pendingThisMonth = workOrders.filter(wo =>
     ['Pendiente', 'En Proceso'].includes(wo.status) && isThisMonth(wo)
   ).length;
+  // "Próximos 7 días": visitas aún no realizadas con fecha entre hoy y los próximos 7 días --
+  // ayuda a planificar la semana (técnico, equipo, confirmación de cliente) en vez de solo medir
+  // lo ya ocurrido.
+  const next7Start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const next7End = new Date(next7Start);
+  next7End.setDate(next7End.getDate() + 7);
+  const upcoming7Days = workOrders.filter(wo => {
+    if (!['Pendiente', 'En Proceso'].includes(wo.status)) return false;
+    const d = new Date(`${wo.plannedDate}T00:00:00`);
+    return d >= next7Start && d < next7End;
+  }).length;
+  // "Sin Ingeniero Asignado": OTs pendientes que todavía no tienen técnico asignado
+  // (engineerId === '', el valor con el que se crean antes de asignar) -- hueco de planificación
+  // que se puede pasar por alto fácilmente.
+  const unassignedPending = workOrders.filter(wo =>
+    ['Pendiente', 'En Proceso'].includes(wo.status) && !wo.engineerId
+  ).length;
   const activeFieldCount = engineers.filter(e => e.availability === 'En Campo').length;
 
   const handleCreateWO = (e: React.FormEvent) => {
@@ -7373,6 +7390,8 @@ Torre Titanium,REP-CSV-053,CCTV Bosch 48 Cams,2026-03-15,Marzo,Semana 11,SI,Limp
         totalPlanned={totalPlanned}
         pendingThisMonth={pendingThisMonth}
         completedThisMonth={completedThisMonth}
+        upcoming7Days={upcoming7Days}
+        unassignedPending={unassignedPending}
         activeFieldCount={activeFieldCount}
         engineers={engineers}
         setIsEngsModalOpen={setIsEngsModalOpen}
